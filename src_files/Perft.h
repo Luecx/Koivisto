@@ -7,8 +7,9 @@
 
 
 #include "Board.h"
+#include "TranspositionTable.h"
 
-U64 perft(Board &b, int depth, bool print=true, bool d1=true);
+U64 perft(Board &b, int depth, bool print=true, bool d1=true, int ply=0);
 
 void printRes();
 

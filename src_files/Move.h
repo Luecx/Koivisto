@@ -64,43 +64,134 @@ constexpr Type ROOK_PROMOTION_CAPTURE         = 14;
 constexpr Type QUEEN_PROMOTION_CAPTURE        = 15;
 
 
+
+Move genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece);
+
 Move genMove(
-        const bb::Square &from,
-        const bb::Square &to,
-        const Type &type,
-        const bb::Piece &movingPiece,
-        const bb::Piece &capturedPiece);
-Move genMove(const bb::Square &from,
-             const bb::Square &to,
-             const Type &type,
-             const bb::Piece &movingPiece);
-
-void printMoveBits(Move &move);
-
-bb::Square getSquareFrom(const Move &move);
-bb::Square getSquareTo(const Move &move);
-
-Type getType(const Move &move);
-bb::Piece getMovingPiece(const Move &move);
-bb::Piece getCapturedPiece(const Move &move);
+              const bb::Square from,
+              const bb::Square to,
+              const Type type,
+              const bb::Piece movingPiece,
+              const bb::Piece capturedPiece);
 
 
-void setSquareFrom(Move &move,const bb::Square &from);
-void setSquareTo(Move &move,const bb::Square &to);
 
-void setType(Move &move, const Type &type);
-void setMovingPiece(Move &move,const bb::Piece &movingPiece);
-void setCapturedPiece(Move &move,const bb::Piece &capturedPiece);
+void printMoveBits(Move move);
 
-bool isDoubledPawnPush(const Move &move);
-bool isCapture(const Move &move);
-bool isCastle(const Move &move);
-bool isEnPassant(const Move &move);
-bool isPromotion(const Move &move);
-bb::Piece promotionPiece(const Move &move);
 
-std::string toString(const Move &move);
+inline bb::Square getSquareFrom(const Move &move){
+    return ((move >> SHIFT_FROM) & MASK_6);
 }
+inline bb::Square getSquareTo(const Move &move){
+    return ((move >> SHIFT_TO) & MASK_6);
+}
+inline Type getType(const  Move &move){
+    return ((move >> SHIFT_TYPE) & MASK_4);
+}
+inline bb::Piece getMovingPiece(const Move &move){
+    return ((move >> SHIFT_MOVING_PIECE) & MASK_4);
+}
+inline bb::Piece getCapturedPiece(const Move &move){
+    return ((move >> SHIFT_CAPTURED_PIECE) & MASK_4);
+}
+
+
+
+inline void setSquareFrom(Move &move, const bb::Square from){
+    //move = (move & ~(MASK_6 << SHIFT_FROM));  //clearing
+    move |= (from << SHIFT_FROM);
+}
+inline void setSquareTo(Move &move, const bb::Square to){
+    //move = (move & ~(MASK_6 << SHIFT_TO));  //clearing
+    move |= (to << SHIFT_TO);
+}
+
+inline void setType(Move &move, const Type type){
+    //move = (move & ~(MASK_6 << SHIFT_TYPE));  //clearing
+    move |= (type << SHIFT_TYPE);
+}
+inline void setMovingPiece(Move &move,const  bb::Piece movingPiece){
+    //move = (move & ~(MASK_6 << SHIFT_MOVING_PIECE));  //clearing
+    move |= (movingPiece << SHIFT_MOVING_PIECE);
+}
+inline void setCapturedPiece(Move &move, const bb::Piece capturedPiece){
+    //move = (move & ~(MASK_6 << SHIFT_CAPTURED_PIECE));  //clearing
+    move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
+}
+
+// void setSquareFrom(Move &move,const bb::Square &from);
+// void setSquareTo(Move &move,const bb::Square &to);
+// void setType(Move &move, const Type &type);
+// void setMovingPiece(Move &move,const bb::Piece &movingPiece);
+// void setCapturedPiece(Move &move,const bb::Piece &capturedPiece);
+
+bool isDoubledPawnPush(Move move);
+bool isCapture(Move move);
+bool isCastle(Move move);
+bool isEnPassant(Move move);
+bool isPromotion(Move move);
+bb::Piece promotionPiece(Move move);
+
+
+
+//inline Move &genMove(Move &m, const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece){
+//    setSquareFrom(m, from);
+//    setSquareTo(m, to);
+//    setType(m, type);
+//    setMovingPiece(m, movingPiece);
+//    return m;
+//}
+//
+//inline Move &genMove(Move &m,
+//                     const bb::Square &from,
+//                     const bb::Square &to,
+//                     const Type &type,
+//                     const bb::Piece &movingPiece,
+//                     const bb::Piece &capturedPiece){
+//
+//
+//    setSquareFrom(m, from);
+//    setSquareTo(m, to);
+//    setType(m, type);
+//    setMovingPiece(m, movingPiece);
+//    setCapturedPiece(m, capturedPiece);
+//
+//
+//    return m;
+//}
+
+
+std::string toString(const Move move);
+
+
+
+
+class MoveList{
+    
+    private:
+        move::Move* moves;
+        int size;
+    
+    public:
+        MoveList();
+        
+        virtual ~MoveList();
+        
+        move::Move getMove(int index);
+        
+        void clear();
+        
+        void add(move::Move move);
+        
+        int getSize() const;
+    
+};
+
+
+
+}
+
+
 
 
 

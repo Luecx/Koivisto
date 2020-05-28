@@ -7,39 +7,51 @@
 using namespace std;
 
 
-std::vector<Move> *buffer[100]{nullptr};
+MoveList *buffer[100]{nullptr};
+TranspositionTable tt{128};
 
-int generations;
-int checks;
-int moves;
+//int generations;
+//int checks;
+//int moves;
 
-void printRes(){
-    std::cout << "generations: " << generations << " checks: " << checks << " moves: " << moves;
-}
+//void printRes(){
+//    std::cout << "generations: " << generations << " checks: " << checks << " moves: " << moves;
+//}
 
-U64 perft(Board &b, int depth, bool print, bool d1){
+U64 perft(Board &b, int depth, bool print, bool d1, int ply){
     
+//    U64 zob = b.zobrist();
+//    Entry* en = tt.get(zob);
+//    if (en != nullptr && en->depth == depth && en->zobrist == zob) [[unlikely]] {
+//        return tt.get(zob)->move;
+//        //std::cout << zob << std::endl;
+//    }
     
     if(buffer[depth] == nullptr){
-        buffer[depth] = new std::vector<Move>();
+        buffer[depth] = new MoveList();
     }
     
+    if(ply == 0){
+        tt.clear();
+    }
     
     int i;
     U64 nodes = 0;
     
     if (depth == 0) return 1;
     
-    std::vector<Move> ar = *(buffer[depth]);
     
-    b.getPseudoLegalMoves(&ar);
-    generations ++;
+    b.getPseudoLegalMoves(buffer[depth]);
+//    generations ++;
     
-    for (i = 0; i < (ar).size(); i++) {
+    for (i = 0; i < buffer[depth]->getSize(); i++) {
         
-        Move m = (ar).at(i);
-        checks ++;
-        if (!b.isLegal(m)) { continue; }
+        Move m = buffer[depth]->getMove(i);
+//        checks ++;
+        
+        
+        
+         if (!b.isLegal(m)) { continue; }
     
         if(d1 && depth == 1){
             nodes += 1;
@@ -47,9 +59,9 @@ U64 perft(Board &b, int depth, bool print, bool d1){
     
             
             b.move(m);
-            moves ++;
+//            moves ++;
     
-            U64 np = perft(b, depth - 1, false, d1);
+            U64 np = perft(b, depth - 1, false, d1, ply+1);
             //if(np == 0) np = 1;
     
             if (print) {
@@ -61,10 +73,9 @@ U64 perft(Board &b, int depth, bool print, bool d1){
             b.undoMove();
             
         }
-        
-        
-        
-        
     }
+    
+//    tt.put(zob, 0,nodes,0,depth);
+    
     return nodes;
 }

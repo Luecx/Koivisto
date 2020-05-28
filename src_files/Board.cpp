@@ -23,8 +23,7 @@ Board::Board(std::string fen) {
     }
     
     
-    
-    BoardStatus boardStatus{0, 0, 0, 0, ONE,ONE,0};
+    BoardStatus boardStatus{0, 0, 0, 0, ONE, ONE, 0};
     this->boardStatusHistory.push_back(boardStatus);
     
     
@@ -206,7 +205,6 @@ std::string Board::fen() {
     ss << " " << getBoardStatus()->moveCounter;
     
     
-    
     return ss.str();
 }
 
@@ -252,13 +250,13 @@ void Board::unsetPiece(Square sq) {
     pieces[p] &= sqBB;
     teamOccupied[p / 6] &= sqBB;
     *occupied &= sqBB;
-   
+    
     st->zobrist ^= getHash(p, sq);
     
     pieceBoard[sq] = -1;
 }
 
-void Board::replacePiece(Square sq, Piece piece){
+void Board::replacePiece(Square sq, Piece piece) {
     Piece p = getPiece(sq);
     
     U64 sqBB = (ONE << sq);
@@ -275,94 +273,85 @@ void Board::replacePiece(Square sq, Piece piece){
 }
 
 void Board::changeActivePlayer() {
-    activePlayer = 1-activePlayer;
+    activePlayer = 1 - activePlayer;
 }
 
 void Board::move(Move m) {
-        BoardStatus *previousStatus = getBoardStatus();
+    BoardStatus *previousStatus = getBoardStatus();
     BoardStatus newBoardStatus = {
             previousStatus->zobrist,                                           //zobrist will be changed later
             0ULL,                                                 //reset en passant. might be set later
             previousStatus->metaInformation,                                   //copy meta. might be changed
-            previousStatus->fiftyMoveCounter+1,                  //increment fifty move counter. might be reset
+            previousStatus->fiftyMoveCounter + 1,                  //increment fifty move counter. might be reset
             1ULL,                                                //set rep to 1 (no rep)
             previousStatus->moveCounter + getActivePlayer(),        //increment move counter
             m
     };
-            
     
     
-    
-            
     Square sqFrom = getSquareFrom(m);
     Square sqTo = getSquareTo(m);
     Piece pFrom = getMovingPiece(m);
     Type mType = getType(m);
     Color color = getActivePlayer();
-    int factor = getActivePlayer() == 0 ? 1:-1;
+    int factor = getActivePlayer() == 0 ? 1 : -1;
     
     
-    
-    
-    if(isCapture(m)){
+    if (isCapture(m)) {
         //reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
     }
     
     
-    if(pFrom % 6 == PAWN){
-    
+    if (pFrom % 6 == PAWN) {
+        
         //reset fifty move counter if pawn has moved
         newBoardStatus.fiftyMoveCounter = 0;
         
         //if a pawn advances by 2 squares, enabled enPassant capture next move
-        if(mType == DOUBLED_PAWN_PUSH){
+        if (mType == DOUBLED_PAWN_PUSH) {
             newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
         }
-        //promotions are handled differently because the new piece at the target square is not the piece that initially moved.
-        else if(isPromotion(m)){
+            //promotions are handled differently because the new piece at the target square is not the piece that initially moved.
+        else if (isPromotion(m)) {
             boardStatusHistory.emplace_back(newBoardStatus);
-        
+            
             //setting pieces
             this->unsetPiece(sqFrom);
             
-            if(isCapture(m)){
-    
+            if (isCapture(m)) {
+                
                 this->replacePiece(sqTo, promotionPiece(m));
-            }else{
+            } else {
                 this->setPiece(sqTo, promotionPiece(m));
             }
             
             this->changeActivePlayer();
             return;
-        }else if(mType == EN_PASSANT){
+        } else if (mType == EN_PASSANT) {
             //make sure to capture the pawn
             unsetPiece(sqTo - 8 * factor);
         }
-    }
-    
-    
-    
-    else if(pFrom % 6 == KING){
-        if(isCastle(m)){
+    } else if (pFrom % 6 == KING) {
+        if (isCastle(m)) {
             //move the rook as well. castling rights are handled below
-            Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4:3);
-            Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1:-1);
+            Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+            Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
             unsetPiece(rookSquare);
-            setPiece(rookTarget, ROOK + 6*color);
+            setPiece(rookTarget, ROOK + 6 * color);
         }
-    
+        
         //revoke castling rights if king moves
         newBoardStatus.metaInformation &= ~(ONE << (color * 2));
         newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
     }
-    
-    //revoke castling rights if rook moves. It is also done if the rook is not on the initial square.
-    else if(pFrom % 6 == ROOK){
+        
+        //revoke castling rights if rook moves. It is also done if the rook is not on the initial square.
+    else if (pFrom % 6 == ROOK) {
         File f = fileIndex(sqFrom);
-        if(f == 0){
+        if (f == 0) {
             newBoardStatus.metaInformation &= ~(ONE << (color * 2));
-        }else{
+        } else {
             newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
         }
     }
@@ -375,24 +364,23 @@ void Board::move(Move m) {
     //doing the initial move
     this->unsetPiece(sqFrom);
     
-    if(mType != EN_PASSANT && isCapture(m)){
+    if (mType != EN_PASSANT && isCapture(m)) {
         this->replacePiece(sqTo, pFrom);
-    }else{
+    } else {
         this->setPiece(sqTo, pFrom);
     }
     this->changeActivePlayer();
     this->computeNewRepetition();
     
     
-   
 }
 
 void Board::undoMove() {
     
     Move m = getBoardStatus()->move;
-
+    
     changeActivePlayer();
-
+    
     Square sqFrom = getSquareFrom(m);
     Square sqTo = getSquareTo(m);
     Piece pFrom = getMovingPiece(m);
@@ -400,25 +388,25 @@ void Board::undoMove() {
     Piece captured = getCapturedPiece(m);
     bool isCap = isCapture(m);
     Color color = getActivePlayer();
-    int factor = getActivePlayer() == 0 ? 1:-1;
-
-    if(mType == EN_PASSANT){
-        setPiece(sqTo - 8 * factor,(1-color)*6);
+    int factor = getActivePlayer() == 0 ? 1 : -1;
+    
+    if (mType == EN_PASSANT) {
+        setPiece(sqTo - 8 * factor, (1 - color) * 6);
     }
-
-    if(pFrom % 6 == KING && isCastle(m)){
-        Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4:3);
-        Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1:-1);
+    
+    if (pFrom % 6 == KING && isCastle(m)) {
+        Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+        Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
         setPiece(rookSquare, ROOK + 6 * color);
         unsetPiece(rookTarget);
     }
-
-    if(!(mType == EN_PASSANT) && isCap){
+    
+    if (mType != EN_PASSANT && isCap) {
         replacePiece(sqTo, captured);
-    }else{
+    } else {
         unsetPiece(sqTo);
     }
-
+    
     setPiece(sqFrom, pFrom);
     
     
@@ -433,7 +421,7 @@ void Board::undoMove_null() {
 
 }
 
-void Board::getPseudoLegalMoves(std::vector<Move> *moves){
+void Board::getPseudoLegalMoves(MoveList *moves) {
     
     U64 attackableSquares;
     U64 opponents;
@@ -454,7 +442,7 @@ void Board::getPseudoLegalMoves(std::vector<Move> *moves){
     U64 attacks;
     
     
-    if(getActivePlayer() == WHITE){
+    if (getActivePlayer() == WHITE) {
         
         attackableSquares = ~teamOccupied[WHITE];
         opponents = teamOccupied[BLACK];
@@ -464,248 +452,290 @@ void Board::getPseudoLegalMoves(std::vector<Move> *moves){
         rooks = pieces[WHITE_ROOK];
         queens = pieces[WHITE_QUEEN];
         kings = pieces[WHITE_KING];
-    
-        U64 pawnsLeft = shiftNorthWest(pieces[WHITE_PAWN] & ~FILE_A) ;
-        U64 pawnsRight = shiftNorthEast(pieces[WHITE_PAWN] & ~FILE_H) ;
+        
+        U64 pawnsLeft = shiftNorthWest(pieces[WHITE_PAWN] & ~FILE_A);
+        U64 pawnsRight = shiftNorthEast(pieces[WHITE_PAWN] & ~FILE_H);
         U64 pawnsCenter = shiftNorth(pieces[WHITE_PAWN]) & ~*occupied;
         
         
-        
-        
         attacks = pawnsLeft & opponents & ~RANK_8;
-        for(; attacks != 0; lsbReset(attacks)){
+        
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target-7, target, CAPTURE, WHITE_PAWN, getPiece(target)));
+            moves->add(genMove(target - 7, target, CAPTURE, WHITE_PAWN, getPiece(target)));
+            attacks = lsbReset(attacks);
         }
-    
+        
+        
         attacks = pawnsRight & opponents & ~RANK_8;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target-9, target, CAPTURE, WHITE_PAWN, getPiece(target)));
+            moves->add(genMove(target - 9, target, CAPTURE, WHITE_PAWN, getPiece(target)));
+            attacks = lsbReset(attacks);
+            
         }
         
         U64 h = pawnsCenter & ~RANK_8;
         attacks = h;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target-8, target, QUIET, WHITE_PAWN));
+            moves->add(genMove(target - 8, target, QUIET, WHITE_PAWN));
+            attacks = lsbReset(attacks);
+            
         }
         
         attacks = shiftNorth(h) & RANK_4 & ~*occupied;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target-16, target, DOUBLED_PAWN_PUSH, WHITE_PAWN));
+            moves->add(genMove(target - 16, target, DOUBLED_PAWN_PUSH, WHITE_PAWN));
+            attacks = lsbReset(attacks);
+            
         }
-    
-        if(pawnsLeft & getBoardStatus()->enPassantTarget){
+        
+        if (pawnsLeft & getBoardStatus()->enPassantTarget) {
             target = getEnPassantSquare();
-            moves->push_back(genMove(target-7, target, EN_PASSANT, WHITE_PAWN));
+            moves->add(genMove(target - 7, target, EN_PASSANT, WHITE_PAWN));
+            attacks = lsbReset(attacks);
+            
         }
-    
-        if(pawnsRight & getBoardStatus()->enPassantTarget){
+        
+        if (pawnsRight & getBoardStatus()->enPassantTarget) {
             target = getEnPassantSquare();
-            moves->push_back(genMove(target-9, target, EN_PASSANT, WHITE_PAWN));
+            moves->add(genMove(target - 9, target, EN_PASSANT, WHITE_PAWN));
+            attacks = lsbReset(attacks);
+            
         }
-    
-        if(pieces[WHITE_PAWN] & RANK_7){
+        
+        if (pieces[WHITE_PAWN] & RANK_7) {
             attacks = pawnsCenter & RANK_8;
-            for(; attacks != 0; lsbReset(attacks)){
+            while (attacks) {
                 target = bitscanForward(attacks);
-                moves->push_back(genMove(target-8, target, QUEEN_PROMOTION, WHITE_PAWN));
-                moves->push_back(genMove(target-8, target, ROOK_PROMOTION, WHITE_PAWN));
-                moves->push_back(genMove(target-8, target, BISHOP_PROMOTION, WHITE_PAWN));
-                moves->push_back(genMove(target-8, target, KNIGHT_PROMOTION, WHITE_PAWN));
+                moves->add(genMove(target - 8, target, QUEEN_PROMOTION, WHITE_PAWN));
+                moves->add(genMove(target - 8, target, ROOK_PROMOTION, WHITE_PAWN));
+                moves->add(genMove(target - 8, target, BISHOP_PROMOTION, WHITE_PAWN));
+                moves->add(genMove(target - 8, target, KNIGHT_PROMOTION, WHITE_PAWN));
+                attacks = lsbReset(attacks);
+                
             }
-    
+            
             attacks = pawnsLeft & RANK_8 & opponents;
-            for(; attacks != 0; lsbReset(attacks)){
+            while (attacks) {
                 target = bitscanForward(attacks);
-                moves->push_back(genMove(target-7, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->push_back(genMove(target-7, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->push_back(genMove(target-7, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->push_back(genMove(target-7, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 7, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 7, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 7, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 7, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                attacks = lsbReset(attacks);
+                
             }
             
             attacks = pawnsRight & RANK_8 & opponents;
-            for(; attacks != 0; lsbReset(attacks)){
+            while (attacks) {
                 target = bitscanForward(attacks);
-                moves->push_back(genMove(target-9, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->push_back(genMove(target-9, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->push_back(genMove(target-9, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->push_back(genMove(target-9, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 9, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 9, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 9, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                moves->add(genMove(target - 9, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
+                attacks = lsbReset(attacks);
+                
             }
-        
+            
         }
         
         
-    }else{
-    
+    } else {
+        
         attackableSquares = ~teamOccupied[BLACK];
         opponents = teamOccupied[WHITE];
-    
+        
         knights = pieces[BLACK_KNIGHT];
         bishops = pieces[BLACK_BISHOP];
         rooks = pieces[BLACK_ROOK];
         queens = pieces[BLACK_QUEEN];
         kings = pieces[BLACK_KING];
-    
-        U64 pawnsLeft = shiftSouthWest(pieces[BLACK_PAWN] & ~FILE_A) ;
-        U64 pawnsRight = shiftSouthEast(pieces[BLACK_PAWN] & ~FILE_H) ;
+        
+        U64 pawnsLeft = shiftSouthWest(pieces[BLACK_PAWN] & ~FILE_A);
+        U64 pawnsRight = shiftSouthEast(pieces[BLACK_PAWN] & ~FILE_H);
         U64 pawnsCenter = shiftSouth(pieces[BLACK_PAWN]) & ~*occupied;
         
         
         attacks = pawnsLeft & opponents & ~RANK_1;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target+9, target, CAPTURE, BLACK_PAWN, getPiece(target)));
+            moves->add(genMove(target + 9, target, CAPTURE, BLACK_PAWN, getPiece(target)));
+            attacks = lsbReset(attacks);
         }
-    
+        
         attacks = pawnsRight & opponents & ~RANK_1;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target+7, target, CAPTURE, BLACK_PAWN, getPiece(target)));
+            moves->add(genMove(target + 7, target, CAPTURE, BLACK_PAWN, getPiece(target)));
+            attacks = lsbReset(attacks);
         }
-    
+        
         U64 h = pawnsCenter & ~RANK_1;
         attacks = h;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target+8, target, QUIET, BLACK_PAWN));
+            moves->add(genMove(target + 8, target, QUIET, BLACK_PAWN));
+            attacks = lsbReset(attacks);
         }
         
         attacks = shiftSouth(h) & RANK_5 & ~*occupied;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-            moves->push_back(genMove(target+16, target, DOUBLED_PAWN_PUSH, BLACK_PAWN));
+            moves->add(genMove(target + 16, target, DOUBLED_PAWN_PUSH, BLACK_PAWN));
+            attacks = lsbReset(attacks);
         }
         
-        if(pawnsLeft & getBoardStatus()->enPassantTarget){
+        if (pawnsLeft & getBoardStatus()->enPassantTarget) {
             target = getEnPassantSquare();
-            moves->push_back(genMove(target+9, target, EN_PASSANT, BLACK_PAWN));
+            moves->add(genMove(target + 9, target, EN_PASSANT, BLACK_PAWN));
         }
         
-        if(pawnsRight & getBoardStatus()->enPassantTarget){
+        if (pawnsRight & getBoardStatus()->enPassantTarget) {
             target = getEnPassantSquare();
-            moves->push_back(genMove(target+7, target, EN_PASSANT, BLACK_PAWN));
+            moves->add(genMove(target + 7, target, EN_PASSANT, BLACK_PAWN));
         }
-    
-    
-        if(pieces[BLACK_PAWN] & RANK_2){
+        
+        
+        if (pieces[BLACK_PAWN] & RANK_2) {
             attacks = pawnsCenter & RANK_1;
-            for(; attacks != 0; lsbReset(attacks)){
+            while (attacks) {
                 target = bitscanForward(attacks);
-                moves->push_back(genMove(target+8, target, QUEEN_PROMOTION, BLACK_PAWN));
-                moves->push_back(genMove(target+8, target, ROOK_PROMOTION, BLACK_PAWN));
-                moves->push_back(genMove(target+8, target, BISHOP_PROMOTION, BLACK_PAWN));
-                moves->push_back(genMove(target+8, target, KNIGHT_PROMOTION, BLACK_PAWN));
+                moves->add(genMove(target + 8, target, QUEEN_PROMOTION, BLACK_PAWN));
+                moves->add(genMove(target + 8, target, ROOK_PROMOTION, BLACK_PAWN));
+                moves->add(genMove(target + 8, target, BISHOP_PROMOTION, BLACK_PAWN));
+                moves->add(genMove(target + 8, target, KNIGHT_PROMOTION, BLACK_PAWN));
+                attacks = lsbReset(attacks);
             }
-        
+            
             attacks = pawnsLeft & RANK_1 & opponents;
-            for(; attacks != 0; lsbReset(attacks)){
+            while (attacks) {
                 target = bitscanForward(attacks);
-                moves->push_back(genMove(target+9, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->push_back(genMove(target+9, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->push_back(genMove(target+9, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->push_back(genMove(target+9, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 9, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 9, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 9, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 9, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                attacks = lsbReset(attacks);
             }
-        
+            
             attacks = pawnsRight & RANK_1 & opponents;
-            for(; attacks != 0; lsbReset(attacks)){
+            while (attacks) {
                 target = bitscanForward(attacks);
-                moves->push_back(genMove(target+7, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->push_back(genMove(target+7, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->push_back(genMove(target+7, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->push_back(genMove(target+7, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 7, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 7, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 7, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                moves->add(genMove(target + 7, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
+                attacks = lsbReset(attacks);
             }
-        
+            
         }
     }
     
     
-    for(; knights != 0; lsbReset(knights)){
+    while (knights) {
         s = bitscanForward(knights);
         attacks = KNIGHT_ATTACKS[s] & attackableSquares;
-        for(; attacks != 0; lsbReset(attacks)){
+        while (attacks) {
             target = bitscanForward(attacks);
-
-            if(getPiece(target) >= 0){
-                moves->push_back(genMove(s, target, CAPTURE, KNIGHT + pieceOffset, getPiece(target)));
-            }else{
-                moves->push_back(genMove(s, target, QUIET, KNIGHT + pieceOffset));
+            
+            if (getPiece(target) >= 0) {
+                moves->add(genMove(s, target, CAPTURE, KNIGHT + pieceOffset, getPiece(target)));
+            } else {
+                moves->add(genMove(s, target, QUIET, KNIGHT + pieceOffset));
             }
-
+            
+            attacks = lsbReset(attacks);
         }
+        knights = lsbReset(knights);
     }
-    for(; bishops != 0; lsbReset(bishops)){
+    while (bishops) {
         s = bitscanForward(bishops);
         attacks = lookUpBishopAttack(s, *occupied) & attackableSquares;
-        for(; attacks != 0; lsbReset(attacks)){
-             target = bitscanForward(attacks);
-            if(getPiece(target) >= 0){
-                moves->push_back(genMove(s, target, CAPTURE, BISHOP + pieceOffset, getPiece(target)));
-            }else{
-                moves->push_back(genMove(s, target, QUIET, BISHOP + pieceOffset));
+        while (attacks) {
+            target = bitscanForward(attacks);
+            if (getPiece(target) >= 0) {
+                moves->add(genMove(s, target, CAPTURE, BISHOP + pieceOffset, getPiece(target)));
+            } else {
+                moves->add(genMove(s, target, QUIET, BISHOP + pieceOffset));
             }
+            attacks = lsbReset(attacks);
         }
+        bishops = lsbReset(bishops);
     }
-    for(; rooks != 0; lsbReset(rooks)){
+    
+    while (rooks) {
         s = bitscanForward(rooks);
         attacks = lookUpRookAttack(s, *occupied) & attackableSquares;
-        for(; attacks != 0; lsbReset(attacks)){
-             target = bitscanForward(attacks);
-
-            if(getPiece(target) >= 0){
-                moves->push_back(genMove(s, target, CAPTURE, ROOK + pieceOffset, getPiece(target)));
-            }else{
-                moves->push_back(genMove(s, target, QUIET, ROOK + pieceOffset));
+        
+        while (attacks) {
+            target = bitscanForward(attacks);
+            
+            if (getPiece(target) >= 0) {
+                moves->add(genMove(s, target, CAPTURE, ROOK + pieceOffset, getPiece(target)));
+            } else {
+                moves->add(genMove(s, target, QUIET, ROOK + pieceOffset));
             }
-
+            attacks = lsbReset(attacks);
+            
         }
+        rooks = lsbReset(rooks);
     }
-    for(; queens != 0; lsbReset(queens)){
+    
+    
+    while (queens) {
         s = bitscanForward(queens);
-        attacks = (lookUpRookAttack(s, *occupied) | lookUpBishopAttack(s, * occupied))
-                & attackableSquares;
-        for(; attacks != 0; lsbReset(attacks)){
-             target = bitscanForward(attacks);
-
-            if(getPiece(target) >= 0){
-                moves->push_back(genMove(s, target, CAPTURE, QUEEN + pieceOffset, getPiece(target)));
-            }else{
-                moves->push_back(genMove(s, target, QUIET, QUEEN + pieceOffset));
+        
+        attacks = (lookUpRookAttack(s, *occupied) | lookUpBishopAttack(s, *occupied))
+                  & attackableSquares;
+        
+        while (attacks) {
+            target = bitscanForward(attacks);
+            
+            if (getPiece(target) >= 0) {
+                //genMove(s, target, CAPTURE, QUEEN + pieceOffset, getPiece(target));
+                moves->add(genMove(s, target, CAPTURE, QUEEN + pieceOffset, getPiece(target)));
+            } else {
+                //genMove(s, target, QUIET, QUEEN + pieceOffset);
+                moves->add(genMove(s, target, QUIET, QUEEN + pieceOffset));
             }
-
+            attacks &= (attacks - 1);
         }
+        
+        queens &= (queens - 1);
     }
-    for(; kings != 0; lsbReset(kings)){
+    
+    while (kings) {
         s = bitscanForward(kings);
         attacks = KING_ATTACKS[s] & attackableSquares;
-        for(; attacks != 0; lsbReset(attacks)){
-             target = bitscanForward(attacks);
-
-            if(getPiece(target) >= 0){
-                moves->push_back(genMove(s, target, CAPTURE, KING + pieceOffset, getPiece(target)));
-            }else{
-                moves->push_back(genMove(s, target, QUIET, KING + pieceOffset));
+        while (attacks) {
+            target = bitscanForward(attacks);
+            
+            if (getPiece(target) >= 0) {
+                moves->add(genMove(s, target, CAPTURE, KING + pieceOffset, getPiece(target)));
+            } else {
+                moves->add(genMove(s, target, QUIET, KING + pieceOffset));
             }
-
+            
+            attacks = lsbReset(attacks);
         }
-
+        
         int castlingOffset = getActivePlayer() * 2;
         //QUEENSIDE
-        if(getCastlingChance(castlingOffset + 0)){
-            if(!(*occupied & CASTLING_MASKS[castlingOffset + 0])){
-                moves->push_back(genMove(s, s-2, QUEEN_CASTLE, KING + pieceOffset));
+        if (getCastlingChance(castlingOffset + 0)) {
+            if (!(*occupied & CASTLING_MASKS[castlingOffset + 0])) {
+                moves->add(genMove(s, s - 2, QUEEN_CASTLE, KING + pieceOffset));
             }
         }
         //KINGSIDE
-        if(getCastlingChance(castlingOffset + 1)){
-            if(!(*occupied & CASTLING_MASKS[castlingOffset + 1])){
-                moves->push_back(genMove(s, s+2, KING_CASTLE, KING + pieceOffset));
+        if (getCastlingChance(castlingOffset + 1)) {
+            if (!(*occupied & CASTLING_MASKS[castlingOffset + 1])) {
+                moves->add(genMove(s, s + 2, KING_CASTLE, KING + pieceOffset));
             }
         }
+        kings = lsbReset(kings);
     }
-
 }
 
 /**
@@ -714,7 +744,7 @@ void Board::getPseudoLegalMoves(std::vector<Move> *moves){
  * @param attacker
  * @return
  */
-U64 Board::getAttackedSquares(Color attacker){
+U64 Board::getAttackedSquares(Color attacker) {
     
     U64 attacks = ZERO;
     
@@ -727,28 +757,33 @@ U64 Board::getAttackedSquares(Color attacker){
     U64 kings(pieces[KING + 6 * attacker]);
     
     
-    
-    for(; knights != 0; lsbReset(knights)){
+    while (knights) {
         Square s = bitscanForward(knights);
         attacks |= KNIGHT_ATTACKS[s];
+        knights = lsbReset(knights);
     }
-    for(; bishops != 0; lsbReset(bishops)){
+    while (bishops) {
         Square s = bitscanForward(bishops);
         attacks |= lookUpBishopAttack(s, *occupied);
+        bishops = lsbReset(bishops);
     }
-    for(; rooks != 0; lsbReset(rooks)){
+    while (rooks) {
         Square s = bitscanForward(rooks);
         attacks |= lookUpRookAttack(s, *occupied);
+        rooks = lsbReset(rooks);
     }
-    for(; queens != 0; lsbReset(queens)){
+    while (queens) {
         Square s = bitscanForward(queens);
         attacks |= lookUpRookAttack(s, *occupied);
         attacks |= lookUpBishopAttack(s, *occupied);
+        queens = lsbReset(queens);
     }
-    for(; kings != 0; lsbReset(kings)){
+    while (kings) {
         Square s = bitscanForward(kings);
         attacks |= KING_ATTACKS[s];
+        kings = lsbReset(kings);
     }
+    
     
     return attacks;
     
@@ -760,18 +795,18 @@ U64 Board::getAttackedSquares(Color attacker){
  * @param attacker
  * @return
  */
-bool Board::isUnderAttack(Square square, Color attacker){
+bool Board::isUnderAttack(Square square, Color attacker) {
     U64 sqBB = ONE << square;
     
     
-    if(attacker == WHITE){
+    if (attacker == WHITE) {
         return
                 (lookUpRookAttack(square, *occupied) & (pieces[WHITE_QUEEN] | pieces[WHITE_ROOK])) != 0 ||
                 (lookUpBishopAttack(square, *occupied) & (pieces[WHITE_QUEEN] | pieces[WHITE_BISHOP])) != 0 ||
                 (KNIGHT_ATTACKS[square] & pieces[WHITE_KNIGHT]) != 0 ||
                 ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB)) & pieces[WHITE_PAWN]) != 0 ||
                 (KING_ATTACKS[square] & pieces[WHITE_KING]) != 0;
-    }else{
+    } else {
         return
                 (lookUpRookAttack(square, *occupied) & (pieces[BLACK_QUEEN] | pieces[BLACK_ROOK])) != 0 ||
                 (lookUpBishopAttack(square, *occupied) & (pieces[BLACK_QUEEN] | pieces[BLACK_BISHOP])) != 0 ||
@@ -797,55 +832,52 @@ bool Board::givesCheck(Move m) {
  */
 bool Board::isLegal(Move m) {
     
-    Square  thisKing;
+    Square thisKing;
     U64 opponentQueenBitboard;
     U64 opponentRookBitboard;
     U64 opponentBishopBitboard;
     
     
-    if(this->getActivePlayer() == WHITE){
+    if (this->getActivePlayer() == WHITE) {
         thisKing = bitscanForward(pieces[WHITE_KING]);
-        opponentQueenBitboard =     pieces[BLACK_QUEEN];
-        opponentRookBitboard =      pieces[BLACK_ROOK];
-        opponentBishopBitboard =    pieces[BLACK_BISHOP];
-    }else{
+        opponentQueenBitboard = pieces[BLACK_QUEEN];
+        opponentRookBitboard = pieces[BLACK_ROOK];
+        opponentBishopBitboard = pieces[BLACK_BISHOP];
+    } else {
         thisKing = bitscanForward(pieces[BLACK_KING]);
-        opponentQueenBitboard =     pieces[WHITE_QUEEN];
-        opponentRookBitboard =      pieces[WHITE_ROOK];
-        opponentBishopBitboard =    pieces[WHITE_BISHOP];
+        opponentQueenBitboard = pieces[WHITE_QUEEN];
+        opponentRookBitboard = pieces[WHITE_ROOK];
+        opponentBishopBitboard = pieces[WHITE_BISHOP];
     }
     
-
-    if(isEnPassant(m)){
-
+    
+    if (isEnPassant(m)) [[unlikely]] {
+        
         this->move(m);
         bool isOk =
                 (bb::lookUpRookAttack(thisKing, *occupied) & (opponentQueenBitboard | opponentRookBitboard)) == 0 &&
                 (bb::lookUpBishopAttack(thisKing, *occupied) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
         this->undoMove();
+        
         return isOk;
-    }
-
-    else if(isCastle(m)){
+    } else if (isCastle(m)) [[unlikely]] {
         U64 secure = ZERO;
-
+        
         Type t = getType(m);
-
-        if(this->getActivePlayer() == WHITE){
-            secure = (t == QUEEN_CASTLE) ? bb::CASTLING_WHITE_QUEENSIDE_SAFE:bb::CASTLING_WHITE_KINGSIDE_SAFE;
+        
+        if (this->getActivePlayer() == WHITE) {
+            secure = (t == QUEEN_CASTLE) ? bb::CASTLING_WHITE_QUEENSIDE_SAFE : bb::CASTLING_WHITE_KINGSIDE_SAFE;
             return (getAttackedSquares(BLACK) & secure) == 0;
-        }
-        else{
-            secure = (t == QUEEN_CASTLE) ? bb::CASTLING_BLACK_QUEENSIDE_SAFE:bb::CASTLING_BLACK_KINGSIDE_SAFE;
+        } else {
+            secure = (t == QUEEN_CASTLE) ? bb::CASTLING_BLACK_QUEENSIDE_SAFE : bb::CASTLING_BLACK_KINGSIDE_SAFE;
             return (getAttackedSquares(BLACK) & secure) == 0;
         }
     }
-
+    
     
     Square sqFrom = getSquareFrom(m);
     Square sqTo = getSquareTo(m);
     bool isCap = isCapture(m);
-    
     
     
     unsetBit(*occupied, sqFrom);
@@ -855,16 +887,16 @@ bool Board::isLegal(Move m) {
     bool isAttacked = false;
     
     
-    if(getMovingPiece(m) % 6 == KING){
+    if (getMovingPiece(m) % 6 == KING) {
         thisKing = sqTo;
     }
     
-    if(isCap){
+    if (isCap) {
         Piece captured = getCapturedPiece(m);
-
-
+        
+        
         unsetBit(this->pieces[captured], sqTo);
-        isAttacked = isUnderAttack(thisKing, 1-this->getActivePlayer());
+        isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
         setBit(this->pieces[captured], sqTo);
 
 //        if(this->getActivePlayer() == WHITE){
@@ -876,19 +908,18 @@ bool Board::isLegal(Move m) {
 //            isAttacked = isUnderAttack(thisKing, -this.getActivePlayer());
 //            this.white_values[m.getPieceTo()-1] = BitBoard.setBit(this.white_values[m.getPieceTo()-1], m.getTo());
 //        }
-    }else{
-        isAttacked = isUnderAttack(thisKing, 1-this->getActivePlayer());
-    }
-
-
-    setBit(*occupied, sqFrom);
-
-    if(isCap){
-        setBit(*occupied, sqTo);
-    }else{
-        unsetBit(*occupied, sqTo);
+    } else {
+        isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
     }
     
+    
+    setBit(*occupied, sqFrom);
+    
+    if (isCap) {
+        setBit(*occupied, sqTo);
+    } else {
+        unsetBit(*occupied, sqTo);
+    }
     
     
     return !isAttacked;
@@ -918,9 +949,9 @@ void Board::computeNewRepetition() {
     
     int lim = boardStatusHistory.size() - 1 - maxChecks;
     
-    for (int i = boardStatusHistory.size() - 3; i >= lim; i-=2) {
-        if(boardStatusHistory.at(i).zobrist == getBoardStatus()->zobrist){
-            getBoardStatus()->repetitionCounter = boardStatusHistory.at(i).repetitionCounter +1;
+    for (int i = boardStatusHistory.size() - 3; i >= lim; i -= 2) {
+        if (boardStatusHistory.at(i).zobrist == getBoardStatus()->zobrist) {
+            getBoardStatus()->repetitionCounter = boardStatusHistory.at(i).repetitionCounter + 1;
         }
     }
 }
@@ -990,7 +1021,6 @@ std::ostream &operator<<(std::ostream &os, Board &board) {
     os << "fen: " << board.fen() << std::endl;
     return os;
 }
-
 
 
 U64 *Board::getOccupied() {

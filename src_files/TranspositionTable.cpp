@@ -19,8 +19,6 @@ void TranspositionTable::init(U64 MB) {
     size /= 2;
     mask = size-1;
     
-    printBitmap(mask);
-    std::cout << size << std::endl;
     
     entries = (Entry *)(calloc(size, sizeof(Entry)));
     clear();

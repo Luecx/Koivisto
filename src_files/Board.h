@@ -90,12 +90,7 @@ struct BoardStatus{
             BoardStatus b{zobrist, enPassantTarget, metaInformation, fiftyMoveCounter, repetitionCounter, moveCounter, move};
             return b;
         }
-        
-        
-    
 };
-
-
 
 class Board {
     private:
@@ -146,7 +141,7 @@ class Board {
         
         void undoMove_null();
         
-        void getPseudoLegalMoves(std::vector<Move> *moves);
+        void getPseudoLegalMoves(MoveList *moves);
     
         U64 getAttackedSquares(Color attacker);
         

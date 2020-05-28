@@ -17,118 +17,18 @@
 #include <string>
 
 
-
-namespace bb{
+namespace bb {
 
 typedef uint64_t U64;
-typedef int8_t   Square;
-typedef int8_t   Diagonal;
-typedef int8_t   AntiDiagonal;
-typedef int8_t   Direction;
+typedef int8_t Square;
+typedef int8_t Diagonal;
+typedef int8_t AntiDiagonal;
+typedef int8_t Direction;
 
-typedef int8_t   File;
-typedef int8_t   Rank;
-typedef int8_t   Piece;
-typedef uint8_t  Color;
-
-
-
-
-template<class T>
-T abs(const T &a);
-
-template<class T>
-T max(const T &a, const T &b);
-
-void generateData();
-    
-U64 generateSlidingAttacks(Square sq, Direction direction, U64 occ);
-
-U64 shiftWest(U64 b);
-
-U64 shiftEast(U64 b);
-
-U64 shiftSouth(U64 b);
-
-U64 shiftNorth(U64 b);
-
-U64 shiftNorthEast(U64 b);
-
-U64 shiftSouthEast(U64 b);
-
-U64 shiftSouthWest(U64 b);
-
-U64 shiftNorthWest(U64 b);
-
-Rank rankIndex(Square &square_index);
-
-File fileIndex(Square &square_index);
-
-Square squareIndex(Rank &rank, File &file);
-
-Square squareIndex(std::string &str);
-
-Diagonal diagonalIndex(Square &square_index);
-
-AntiDiagonal antiDiagonalIndex(Square &square_index);
-
-Diagonal diagonalIndex(Rank &rank, File &file);
-
-AntiDiagonal antiDiagonalIndex(Rank &rank, File &file);
-
-void toggleBit(U64 &number, Square &index);
-
-void setBit(U64 &number, Square &index);
-
-void unsetBit(U64 &number, Square &index);
-
-bool getBit(U64 &number, Square &index);
-
-U64 &lsbIsolation(U64 &number);
-
-U64 &lsbReset(U64 &number);
-
-U64 _xor(U64 &a, U64 &b);
-
-U64 _or(U64 &a, U64 &b);
-
-U64 _and(U64 &a, U64 &b);
-
-U64 _not(U64 &a);
-
-U64 getHash(Piece piece, Square sq);
-
-void printBitmap(U64 bb);
-
-void generateZobristKeys();
-
-U64 lookUpRookAttack(Square index, U64 occupied);
-
-U64 lookUpBishopAttack(Square index, U64 occupied);
-
-U64 populateMask(U64 mask, U64 index);
-
-U64 generateRookAttack(Square sq, U64 occupied);
-
-U64 generateBishopAttack(Square sq, U64 occupied);
-
-void init();
-
-U64 randU64();
-
-Square bitscanForward(U64 &bb);
-
-Square bitscanReverse(U64 &bb);
-
-int bitCount(U64 &bb);
-
-int chebyshevDistance(File &f1, Rank &r1, File &f2, Rank &r2);
-
-int chebyshevDistance(Square &sq1, Square &sq2);
-
-int manhattanDistance(File &f1, Rank &r1, File &f2, Rank &r2);
-
-int manhattanDistance(Square &sq1, Square &sq2);
+typedef int8_t File;
+typedef int8_t Rank;
+typedef int8_t Piece;
+typedef uint8_t Color;
 
 
 constexpr Color WHITE = 0;
@@ -153,7 +53,6 @@ constexpr Piece BLACK_BISHOP = 8;
 constexpr Piece BLACK_ROOK = 9;
 constexpr Piece BLACK_QUEEN = 10;
 constexpr Piece BLACK_KING = 11;
-
 
 
 constexpr Square A1 = 0;
@@ -228,19 +127,19 @@ constexpr Square F8 = 61;
 constexpr Square G8 = 62;
 constexpr Square H8 = 63;
 
-constexpr char const* SQUARE_IDENTIFIER[]{
-        "a1","b1","c1","d1","e1","f1","g1","h1",
-        "a2","b2","c2","d2","e2","f2","g2","h2",
-        "a3","b3","c3","d3","e3","f3","g3","h3",
-        "a4","b4","c4","d4","e4","f4","g4","h4",
-        "a5","b5","c5","d5","e5","f5","g5","h5",
-        "a6","b6","c6","d6","e6","f6","g6","h6",
-        "a7","b7","c7","d7","e7","f7","g7","h7",
-        "a8","b8","c8","d8","e8","f8","g8","h8",
+constexpr char const *SQUARE_IDENTIFIER[]{
+        "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+        "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+        "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+        "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+        "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+        "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+        "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+        "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 };
 
 constexpr char PIECE_IDENTIFER[]{
-    'P','N','B','R','Q','K','p','n','b','r','q','k'
+        'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'
 };
 
 constexpr Direction NORTH = 8;
@@ -263,8 +162,8 @@ constexpr Square index64[64] = {
         25, 14, 19, 9, 13, 8, 7, 6
 };
 
-constexpr U64 ONE    = (U64) 1;
-constexpr U64 ZERO    = (U64) 0;
+constexpr U64 ONE = (U64) 1;
+constexpr U64 ZERO = (U64) 0;
 
 
 constexpr U64 FILE_H = 0x8080808080808080L;
@@ -355,24 +254,23 @@ constexpr U64 ANTI_DIAGONALS[]{
         ANTI_DIAGONAL_10, ANTI_DIAGONAL_11, ANTI_DIAGONAL_12, ANTI_DIAGONAL_13, ANTI_DIAGONAL_14};
 
 
-constexpr U64 CASTLING_WHITE_QUEENSIDE_MASK          = 0x000000000000000EL;
-constexpr U64 CASTLING_WHITE_KINGSIDE_MASK           = 0x0000000000000060L;
-constexpr U64 CASTLING_BLACK_QUEENSIDE_MASK          = CASTLING_WHITE_QUEENSIDE_MASK << (7 * 8);
-constexpr U64 CASTLING_BLACK_KINGSIDE_MASK           = CASTLING_WHITE_KINGSIDE_MASK  << (7 * 8);
+constexpr U64 CASTLING_WHITE_QUEENSIDE_MASK = 0x000000000000000EL;
+constexpr U64 CASTLING_WHITE_KINGSIDE_MASK = 0x0000000000000060L;
+constexpr U64 CASTLING_BLACK_QUEENSIDE_MASK = CASTLING_WHITE_QUEENSIDE_MASK << (7 * 8);
+constexpr U64 CASTLING_BLACK_KINGSIDE_MASK = CASTLING_WHITE_KINGSIDE_MASK << (7 * 8);
 
 //describes the fields that must not be attacked
-constexpr U64 CASTLING_WHITE_QUEENSIDE_SAFE          = 0x000000000000001CL;
-constexpr U64 CASTLING_WHITE_KINGSIDE_SAFE           = CASTLING_WHITE_QUEENSIDE_SAFE << 2;
-constexpr U64 CASTLING_BLACK_QUEENSIDE_SAFE          = CASTLING_WHITE_QUEENSIDE_SAFE << (7 * 8);
-constexpr U64 CASTLING_BLACK_KINGSIDE_SAFE           = CASTLING_WHITE_KINGSIDE_SAFE  << (7 * 8);
+constexpr U64 CASTLING_WHITE_QUEENSIDE_SAFE = 0x000000000000001CL;
+constexpr U64 CASTLING_WHITE_KINGSIDE_SAFE = CASTLING_WHITE_QUEENSIDE_SAFE << 2;
+constexpr U64 CASTLING_BLACK_QUEENSIDE_SAFE = CASTLING_WHITE_QUEENSIDE_SAFE << (7 * 8);
+constexpr U64 CASTLING_BLACK_KINGSIDE_SAFE = CASTLING_WHITE_KINGSIDE_SAFE << (7 * 8);
 
-constexpr U64 CASTLING_MASKS[]                        = {CASTLING_WHITE_QUEENSIDE_MASK,
-                                                        CASTLING_WHITE_KINGSIDE_MASK,
-                                                        CASTLING_BLACK_QUEENSIDE_MASK,
-                                                        CASTLING_BLACK_KINGSIDE_MASK};
+constexpr U64 CASTLING_MASKS[] = {CASTLING_WHITE_QUEENSIDE_MASK,
+                                  CASTLING_WHITE_KINGSIDE_MASK,
+                                  CASTLING_BLACK_QUEENSIDE_MASK,
+                                  CASTLING_BLACK_KINGSIDE_MASK};
 
 constexpr U64 seed = 11291283;
-
 
 
 constexpr U64 whitePassedPawnMask[]{
@@ -548,6 +446,279 @@ constexpr U64 KNIGHT_ATTACKS[]{
         0x0004020000000000L, 0x0008050000000000L, 0x00110a0000000000L, 0x0022140000000000L,
         0x0044280000000000L, 0x0088500000000000L, 0x0010a00000000000L, 0x0020400000000000L
 };
+
+
+
+template<class T>
+inline T abs(const T a) {
+    if (a < 0) return -a;
+    return a;
+}
+
+template<class T>
+inline T max(const T a, const T &b) {
+    return (a < b) ? b : a;     // or: return comp(a,b)?b:a; for version (2)
+}
+
+
+void generateData();
+
+U64 generateSlidingAttacks(Square sq, Direction direction, U64 occ);
+
+
+inline Rank rankIndex(Square &square_index) {
+    return square_index >> 3;
+}
+
+inline File fileIndex(Square &square_index) {
+    return square_index & 7;
+}
+
+inline Square squareIndex(Rank &rank, File &file) {
+    return 8 * rank + file;
+}
+
+inline Square squareIndex(std::string &str) {
+    
+    Rank r = str.at(1) - '1';
+    File f = toupper(str.at(0)) - 'A';
+    
+    return squareIndex(r, f);
+}
+
+inline Diagonal diagonalIndex(Square &square_index) {
+    return 7 + rankIndex(square_index) - fileIndex(square_index);
+}
+
+inline AntiDiagonal antiDiagonalIndex(Square &square_index) {
+    return rankIndex(square_index) + fileIndex(square_index);
+}
+
+inline Diagonal diagonalIndex(Rank &rank, File file) {
+    return 7 + rank - file;
+}
+
+inline AntiDiagonal antiDiagonalIndex(Rank rank, File file) {
+    return rank + file;
+}
+
+/**
+ * toggles the bit
+ * @param number    number to manipulate
+ * @param index     index of bit starting at the LST
+ * @return          the manipulated number
+ */
+inline void toggleBit(U64 &number, Square index) {
+    number ^= (1ULL << index);
+}
+
+/**
+ * set the bit
+ * @param number    number to manipulate
+ * @param index     index of bit starting at the LST
+ * @return          the manipulated number
+ */
+inline void setBit(U64 &number, Square index) {
+    number |= (1ULL << index);
+}
+
+/**
+ * unset the bit
+ * @param number    number to manipulate
+ * @param index     index of bit starting at the LST
+ * @return          the manipulated number
+ */
+inline void unsetBit(U64 &number, Square index) {
+    number &= ~(1ULL << index);
+}
+
+/**
+ * get the bit
+ * @param number    number to manipulate
+ * @param index     index of bit starting at the LST
+ * @return          the manipulated number
+ */
+inline bool getBit(U64 &number, Square index) {
+    return ((number >> index) & 1ULL) == 1;
+}
+
+inline U64 _xor(U64 a, U64 b) {
+    return a ^ b;
+}
+
+inline U64 _or(U64 a, U64 b) {
+    return a | b;
+}
+
+inline U64 _and(U64 a, U64 b) {
+    return a & b;
+}
+
+inline U64 _not(U64 a) {
+    return ~a;
+}
+
+inline U64 shiftWest(U64 b) {
+    b = (b >> 1) & NOT_FILE_H;
+    return b;
+}
+
+inline U64 shiftEast(U64 b) {
+    b = (b << 1) & NOT_FILE_A;
+    return b;
+}
+
+inline U64 shiftSouth(U64 b) {
+    b = b >> 8;
+    return b;
+}
+
+inline U64 shiftNorth(U64 b) {
+    b = b << 8;
+    return b;
+}
+
+inline U64 shiftNorthEast(U64 b) {
+    b = (b << 9) & NOT_FILE_A;
+    return b;
+}
+inline U64 shiftSouthEast(U64 b) {
+    b = (b >> 7) & NOT_FILE_A;
+    return b;
+}
+
+inline U64 shiftSouthWest(U64 b) {
+    b = (b >> 9) & NOT_FILE_H;
+    return b;
+}
+
+inline U64 shiftNorthWest(U64 b) {
+    b = (b << 7) & NOT_FILE_H;
+    return b;
+}
+
+
+inline U64 lsbIsolation(U64 number) {
+    return number & -number;
+}
+
+inline U64 lsbReset(U64 number) {
+    return number & (number - 1);;
+}
+
+
+U64 getHash(Piece piece, Square sq);
+
+void printBitmap(U64 bb);
+
+void generateZobristKeys();
+
+U64 lookUpRookAttack(Square index, U64 occupied);
+
+U64 lookUpBishopAttack(Square index, U64 occupied);
+
+U64 populateMask(U64 mask, U64 index);
+
+U64 generateRookAttack(Square sq, U64 occupied);
+
+U64 generateBishopAttack(Square sq, U64 occupied);
+
+void init();
+
+U64 randU64();
+
+/**
+ * returns the index of the LSB
+ * @param bb
+ * @return
+ */
+inline Square bitscanForward(U64 &bb) {
+    assert(bb != 0);
+    return __builtin_ctzll(bb);
+}
+
+/**
+ * returns the index of the MSB
+ * @param bb
+ * @return
+ */
+inline Square bitscanReverse(U64 &bb) {
+    assert(bb != 0);
+    return __builtin_clzll(bb) ^ 63;
+}
+
+/**
+ * returns the amount of set bits in the given bitboard.
+ * @param bb
+ * @return
+ */
+inline int bitCount(U64 &bb) {
+    return __builtin_popcountll(bb);
+//        int counter = 0;
+//        while(bb != 0){
+//            bb = lsbReset(bb);
+//            counter ++;
+//        }
+//        return counter;
+}
+
+/**
+ * The Chebyshev distance is the maximum of the absolute rank- and file-distance of both squares.
+ * @param f1
+ * @param r1
+ * @param f2
+ * @param r2
+ * @return
+ */
+inline int chebyshevDistance(File &f1, Rank &r1, File &f2, Rank &r2) {
+    return max(abs(r2 - r1), abs(f2 - f1));
+}
+
+/**
+ * The Chebyshev distance is the maximum of the absolute rank- and file-distance of both squares.
+ * @param sq1
+ * @param sq2
+ * @return
+ */
+inline int chebyshevDistance(Square &sq1, Square &sq2) {
+
+    File fI1 = fileIndex(sq1);
+    Rank rI1 = rankIndex(sq1);
+    File fI2 = fileIndex(sq2);
+    Rank rI2 = rankIndex(sq2);
+
+    return chebyshevDistance(fI1, rI1, fI2, rI2);
+}
+
+/**
+ * the orthogonal Manhattan-Distance is the sum of both absolute rank- and file-distance distances
+ * @param f1
+ * @param r1
+ * @param f2
+ * @param r2
+ * @return
+ */
+
+inline int manhattanDistance(File &f1, Rank &r1, File &f2, Rank &r2) {
+    return max(abs(r2 - r1), abs(f2 - f1));
+}
+
+/**
+ * the orthogonal Manhattan-Distance is the sum of both absolute rank- and file-distance distances
+ * @param sq1
+ * @param sq2
+ * @return
+ */
+inline int manhattanDistance(Square &sq1, Square &sq2) {
+    File fI1 = fileIndex(sq1);
+    Rank rI1 = rankIndex(sq1);
+    File fI2 = fileIndex(sq2);
+    Rank rI2 = rankIndex(sq2);
+    
+    return manhattanDistance(fI1, rI1, fI2, rI2);
+}
+
+
 
 
 }
