@@ -246,11 +246,11 @@ void Board::unsetPiece(Square sq) {
     Piece p = getPiece(sq);
     
     U64 sqBB = ~(ONE << sq);
-    BoardStatus *st = getBoardStatus();
     pieces[p] &= sqBB;
     teamOccupied[p / 6] &= sqBB;
     *occupied &= sqBB;
     
+    BoardStatus *st = getBoardStatus();
     st->zobrist ^= getHash(p, sq);
     
     pieceBoard[sq] = -1;
@@ -853,18 +853,21 @@ bool Board::isLegal(Move m) {
     
     if (isEnPassant(m)) [[unlikely]] {
         
+        
+        
         this->move(m);
         bool isOk =
                 (bb::lookUpRookAttack(thisKing, *occupied) & (opponentQueenBitboard | opponentRookBitboard)) == 0 &&
                 (bb::lookUpBishopAttack(thisKing, *occupied) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
         this->undoMove();
-        
+
         return isOk;
     } else if (isCastle(m)) [[unlikely]] {
+        
         U64 secure = ZERO;
-        
+
         Type t = getType(m);
-        
+
         if (this->getActivePlayer() == WHITE) {
             secure = (t == QUEEN_CASTLE) ? bb::CASTLING_WHITE_QUEENSIDE_SAFE : bb::CASTLING_WHITE_KINGSIDE_SAFE;
             return (getAttackedSquares(BLACK) & secure) == 0;
@@ -879,6 +882,8 @@ bool Board::isLegal(Move m) {
     Square sqTo = getSquareTo(m);
     bool isCap = isCapture(m);
     
+    
+    U64 occCopy = *occupied;
     
     unsetBit(*occupied, sqFrom);
     setBit(*occupied, sqTo);
@@ -899,32 +904,15 @@ bool Board::isLegal(Move m) {
         isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
         setBit(this->pieces[captured], sqTo);
 
-//        if(this->getActivePlayer() == WHITE){
-//            this.black_values[-m.getPieceTo()-1] = BitBoard.unsetBit(this.black_values[-m.getPieceTo()-1], m.getTo());
-//            isAttacked = isUnderAttack(thisKing, -this.getActivePlayer());
-//            this.black_values[-m.getPieceTo()-1] = BitBoard.setBit(this.black_values[-m.getPieceTo()-1], m.getTo());
-//        }else{
-//            this.white_values[m.getPieceTo()-1] = BitBoard.unsetBit(this.white_values[m.getPieceTo()-1], m.getTo());
-//            isAttacked = isUnderAttack(thisKing, -this.getActivePlayer());
-//            this.white_values[m.getPieceTo()-1] = BitBoard.setBit(this.white_values[m.getPieceTo()-1], m.getTo());
-//        }
     } else {
         isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
     }
     
     
-    setBit(*occupied, sqFrom);
-    
-    if (isCap) {
-        setBit(*occupied, sqTo);
-    } else {
-        unsetBit(*occupied, sqTo);
-    }
-    
+    *occupied = occCopy;
+
     
     return !isAttacked;
-    
-    //return false;
 }
 
 bool Board::getCastlingChance(Square index) {

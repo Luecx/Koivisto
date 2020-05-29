@@ -270,7 +270,7 @@ constexpr U64 CASTLING_MASKS[] = {CASTLING_WHITE_QUEENSIDE_MASK,
                                   CASTLING_BLACK_QUEENSIDE_MASK,
                                   CASTLING_BLACK_KINGSIDE_MASK};
 
-constexpr U64 seed = 11291283;
+constexpr U64 seed = 4;
 
 
 constexpr U64 whitePassedPawnMask[]{

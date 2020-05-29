@@ -7,32 +7,61 @@
 using namespace std;
 
 
-MoveList *buffer[100]{nullptr};
-TranspositionTable tt{128};
+MoveList **buffer;
+TranspositionTable *tt;
 
 //int generations;
 //int checks;
 //int moves;
 
-//void printRes(){
+//void perft_res(){
 //    std::cout << "generations: " << generations << " checks: " << checks << " moves: " << moves;
 //}
 
-U64 perft(Board &b, int depth, bool print, bool d1, int ply){
+
+void perft_prepare(bool hash){
+    if(hash)
+        tt = new TranspositionTable(512);
     
-//    U64 zob = b.zobrist();
-//    Entry* en = tt.get(zob);
-//    if (en != nullptr && en->depth == depth && en->zobrist == zob) [[unlikely]] {
-//        return tt.get(zob)->move;
-//        //std::cout << zob << std::endl;
-//    }
+    buffer = new MoveList*[100];
     
-    if(buffer[depth] == nullptr){
-        buffer[depth] = new MoveList();
+    for(int i = 0; i < 100; i++){
+        buffer[i] = new MoveList();
     }
     
-    if(ply == 0){
-        tt.clear();
+}
+
+void perft_clean(){
+    
+    if(tt != nullptr)
+        delete tt;
+    
+    for(int i = 0; i < 100; i++){
+        delete buffer[i];
+    }
+    
+    delete buffer;
+}
+
+void perft_res(){
+
+}
+
+
+U64 perft(Board &b, int depth, bool print, bool d1, bool hash, int ply){
+    
+    U64 zob;
+    if(hash){
+    
+        if(ply == 0){
+            tt->clear();
+        }
+        
+        zob = b.zobrist();
+        Entry* en = tt->get(zob);
+        if (en != nullptr && en->depth == depth && en->zobrist == zob) [[unlikely]] {
+            return tt->get(zob)->move;
+        }
     }
     
     int i;
@@ -61,7 +90,7 @@ U64 perft(Board &b, int depth, bool print, bool d1, int ply){
             b.move(m);
 //            moves ++;
     
-            U64 np = perft(b, depth - 1, false, d1, ply+1);
+            U64 np = perft(b, depth - 1, false, d1, hash,ply+1);
             //if(np == 0) np = 1;
     
             if (print) {
@@ -75,7 +104,10 @@ U64 perft(Board &b, int depth, bool print, bool d1, int ply){
         }
     }
     
-//    tt.put(zob, 0,nodes,0,depth);
+    if(hash){
+        tt->put(zob, 0,nodes,0,depth);
+    }
+    
     
     return nodes;
 }
