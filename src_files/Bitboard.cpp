@@ -2,15 +2,15 @@
 
 #include "Bitboard.h"
 
+
 using namespace bb;
 
-U64 ROOK_ATTACKS[64][4096] = {};
-U64 BISHOP_ATTACKS[64][1024] = {};
-U64 **all_hashes = {};
-U64 **white_hashes = {};
-U64 **black_hashes= {};
+U64 **bb::ROOK_ATTACKS = new U64*[64];
+U64 **bb::BISHOP_ATTACKS = new U64*[64];
 
-void bb::init() {
+U64 **bb::all_hashes = {};
+
+void bb::bb_init() {
     
     std::cout << "generating bitboards...";
     
@@ -26,6 +26,17 @@ void bb::init() {
     std::chrono::duration<double> diff = end-start;
     
     std::cout << "       done! [" << round(diff.count() * 1000) << " ms]" << std::endl;
+}
+
+void bb::bb_cleanUp() {
+    for(int i = 0; i < 64; i++){
+        delete ROOK_ATTACKS[i];
+        delete BISHOP_ATTACKS[i];
+    }
+    
+    for(int i = 0; i <12; i++){
+        delete all_hashes[i];
+    }
 }
 
 U64 bb::randU64(){
@@ -90,6 +101,9 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ){
 
 void bb::generateData() {
     for (int n = 0; n < 64; n++) {
+        ROOK_ATTACKS[n] = new U64[ONE << (64-rookShifts[n])];
+        BISHOP_ATTACKS[n] = new U64[ONE << (64-bishopShifts[n])];
+        
         for(int i = 0; i < pow(2, 64 - rookShifts[n]); i++){
             U64 rel_occ = populateMask(rookMasks[n], i);
             int index = (int) ((rel_occ * rookMagics[n]) >> rookShifts[n]);
@@ -108,7 +122,7 @@ void bb::generateData() {
 /**
  * populates the given bitboard with 1 and zeros.
  * The population is unique for the given index.
- * A 1 or 0 will only be placed where there is a 1 in the input.
+ * A 1 or 0 will only be placed where there is a 1 in the mask.
  * @param mask
  * @param index
  * @return
@@ -139,37 +153,16 @@ U64 bb::populateMask(U64 mask, U64 index) {
 }
 
 void bb::generateZobristKeys() {
-    white_hashes = new U64*[6];
-    black_hashes = new U64*[6];
+   
     all_hashes = new U64*[12];
     for (int i = 0; i < 6; i++) {
-        white_hashes[i] = new U64[64];
-        black_hashes[i] = new U64[64];
+        all_hashes[i] = new U64[64];
+        all_hashes[i+6] = new U64[64];
         for (int n = 0; n < 64; n++) {
-            white_hashes[i][n] = randU64();
-            black_hashes[i][n] = randU64();
+            all_hashes[i][n] = randU64();
+            all_hashes[i + 6][n] = randU64();
         }
-        all_hashes[i] = white_hashes[i];
-        all_hashes[i + 6] = black_hashes[i];
     }
-}
-
-U64 bb::getHash(Piece piece, Square sq) {
-    return all_hashes[piece][sq];
-}
-
-U64 bb::lookUpRookAttack(Square index, U64 occupied) {
-    
-    
-    return ROOK_ATTACKS[index][(int) ((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
-    
-    //return generateRookAttack(index, occupied);
-}
-
-U64 bb::lookUpBishopAttack(Square index, U64 occupied) {
-    return BISHOP_ATTACKS[index][(int) ((occupied & bishopMasks[index]) *
-                                        bishopMagics[index] >> (bishopShifts[index]))];
-    //return generateBishopAttack(index, occupied);
 }
 
 U64 bb::generateRookAttack(Square sq, U64 occupied) {

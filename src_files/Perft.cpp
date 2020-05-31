@@ -18,8 +18,11 @@ TranspositionTable *tt;
 //    std::cout << "generations: " << generations << " checks: " << checks << " moves: " << moves;
 //}
 
-
-void perft_prepare(bool hash){
+/**
+ * called at the start of the program
+ * @param hash
+ */
+void perft_init(bool hash){
     if(hash)
         tt = new TranspositionTable(512);
     
@@ -31,7 +34,10 @@ void perft_prepare(bool hash){
     
 }
 
-void perft_clean(){
+/**
+ * called at the end of the program.
+ */
+void perft_cleanUp(){
     
     if(tt != nullptr)
         delete tt;
@@ -43,6 +49,11 @@ void perft_clean(){
     delete buffer;
 }
 
+
+/**
+ * does nothing yet.
+ * Supposed to print an overview of the previous perft call.
+ */
 void perft_res(){
 
 }

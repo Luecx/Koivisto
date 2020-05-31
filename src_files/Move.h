@@ -64,7 +64,6 @@ constexpr Type ROOK_PROMOTION_CAPTURE         = 14;
 constexpr Type QUEEN_PROMOTION_CAPTURE        = 15;
 
 
-
 Move genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece);
 
 Move genMove(

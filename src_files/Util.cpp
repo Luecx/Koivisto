@@ -73,16 +73,25 @@ std::vector<std::string> & splitString(const std::string &txt, std::vector<std::
 
 auto start = std::chrono::system_clock::now();
 
+/**
+ * starts the time measurement.
+ */
 void startMeasure(){
-    std::cout << "starting measurement!";
+    //std::cout << "starting measurement!\n";
     start = std::chrono::system_clock::now();
 }
 
-void stopMeasure(){
+/**
+ * stops the time measurement and returns the elapsed milliseconds.
+ * @return
+ */
+int stopMeasure(){
     
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end-start;
-    std::cout << "measurement finished! [" << round(diff.count() * 1000) << " ms]" << std::endl;
+    
+    return round(diff.count() * 1000);
+    //std::cout << "measurement finished! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
 

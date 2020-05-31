@@ -6,6 +6,15 @@
 
 using namespace move;
 
+/**
+ * generates a new non-capture by taking the fromSq, toSq, type and the moving piece.
+ * For a List of types, look at Move.h.
+ * @param from
+ * @param to
+ * @param type
+ * @param movingPiece
+ * @return
+ */
 Move move::genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece){
     
     
@@ -17,6 +26,15 @@ Move move::genMove(const bb::Square from, const bb::Square to, const Type type, 
     return m;
 }
 
+/**
+ * generates a new capture by taking the fromSq, toSq, type and the moving piece.
+ * For a List of types, look at Move.h.
+ * @param from
+ * @param to
+ * @param type
+ * @param movingPiece
+ * @return
+ */
 Move move::genMove(
                     const bb::Square from,
                    const bb::Square to,
@@ -37,6 +55,11 @@ Move move::genMove(
 }
 
 
+/**
+ * prints the bits of the move.
+ * Useful for debugging.
+ * @param move
+ */
 void move::printMoveBits( Move move){
     std::cout << " ";
     for(int i = 0; i < 8; i++){
@@ -80,49 +103,68 @@ void move::printMoveBits( Move move){
 
 
 
-
-//void move::setSquareFrom(Move &move, const bb::Square &from){
-//    //move = (move & ~(MASK_6 << SHIFT_FROM));  //clearing
-//    move |= (from << SHIFT_FROM);
-//}
-//void move::setSquareTo(Move &move, const bb::Square &to){
-//    //move = (move & ~(MASK_6 << SHIFT_TO));  //clearing
-//    move |= (to << SHIFT_TO);
-//}
-//
-//void move::setType(Move &move, const Type &type){
-//    //move = (move & ~(MASK_6 << SHIFT_TYPE));  //clearing
-//    move |= (type << SHIFT_TYPE);
-//}
-//void move::setMovingPiece(Move &move,const  bb::Piece &movingPiece){
-//    //move = (move & ~(MASK_6 << SHIFT_MOVING_PIECE));  //clearing
-//    move |= (movingPiece << SHIFT_MOVING_PIECE);
-//}
-//void move::setCapturedPiece(Move &move, const bb::Piece &capturedPiece){
-//    //move = (move & ~(MASK_6 << SHIFT_CAPTURED_PIECE));  //clearing
-//    move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
-//}
-
+/**
+ * checks if the given move is a doubled pawn push
+ * @param move
+ * @return
+ */
 bool move::isDoubledPawnPush(const Move move) {
     return getType(move) == DOUBLED_PAWN_PUSH;
 }
+
+/**
+ * checks if the given move is a capture
+ * @param move
+ * @return
+ */
 bool move::isCapture( Move move){
     return move & 0x4000;
 }
+
+/**
+ * checks if the given move castles
+ * @param move
+ * @return
+ */
 bool move::isCastle( Move move){
     Type t = getType(move);
     return t == KING_CASTLE || t == QUEEN_CASTLE;
 }
+
+/**
+ * checks if the given move captures e.p.
+ * @param move
+ * @return
+ */
 bool move::isEnPassant( Move move){
  return getType(move) == EN_PASSANT;
 }
+
+/**
+ * checks if the given move is a promotion
+ * @param move
+ * @return
+ */
 bool move::isPromotion( Move move){
     return move & 0x8000;
 }
+
+/**
+ * returns the piece that has been promoted to.
+ * @param move
+ * @return
+ */
 bb::Piece move::promotionPiece(Move move){
     return ((move & 0x3000) >> SHIFT_TYPE)+getMovingPiece(move)+1;
 }
 
+/**
+ * returns a string used for uci-output of the given move like: a2e3
+ * Does process promotions.
+ *
+ * @param move
+ * @return
+ */
 std::string move::toString(Move move) {
     
     std::string res{};
@@ -138,27 +180,50 @@ std::string move::toString(Move move) {
 
 
 
-
+/**
+ * destructor for the move-list.
+ */
 MoveList::~MoveList() {
     delete moves;
 }
 
+/**
+ * constructor for the move-list.
+ * Initiated to 256 entries.
+ * maximum moves per position is 220 or something like that so 256 should be enough.
+ */
 MoveList::MoveList() {
     moves = new Move[256];
 }
 
+/**
+ * returns the move stored at the given index
+ * @param index
+ * @return
+ */
 move::Move MoveList::getMove(int index) {
     return moves[index];
 }
 
+/**
+ * removes all moves
+ */
 void MoveList::clear() {
     size = 0;
 }
 
+/**
+ * adds a move
+ * @param move
+ */
 void MoveList::add(Move move) {
     moves[size++] = move;
 }
 
+/**
+ * returns the amount of stored moves
+ * @return
+ */
 int MoveList::getSize() const {
     return size;
 }

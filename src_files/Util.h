@@ -37,6 +37,6 @@ std::vector<std::string> & splitString(const std::string &txt, std::vector<std::
 
 void startMeasure();
 
-void stopMeasure();
+int  stopMeasure();
 
 #endif //CHESSCOMPUTER_UTIL_H

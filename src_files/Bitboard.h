@@ -30,6 +30,10 @@ typedef int8_t Rank;
 typedef int8_t Piece;
 typedef uint8_t Color;
 
+typedef int8_t Depth;
+typedef int16_t Score;
+
+
 
 constexpr Color WHITE = 0;
 constexpr Color BLACK = 1;
@@ -447,7 +451,13 @@ constexpr U64 KNIGHT_ATTACKS[]{
         0x0044280000000000L, 0x0088500000000000L, 0x0010a00000000000L, 0x0020400000000000L
 };
 
+extern U64 **ROOK_ATTACKS;
+extern U64 **BISHOP_ATTACKS;
 
+extern U64 **all_hashes;
+
+//extern U64 **ROOK_ATTACKS;
+//extern U64 **BISHOP_ATTACKS;
 
 template<class T>
 inline T abs(const T a) {
@@ -597,25 +607,27 @@ inline U64 shiftNorthWest(U64 b) {
     return b;
 }
 
-
+/**
+ * isolates the lsb in the given number and returns the result.
+ * @param number
+ * @return
+ */
 inline U64 lsbIsolation(U64 number) {
     return number & -number;
 }
 
+/**
+ * resets the lsb in the given number and returns the result.
+ * @param number
+ * @return
+ */
 inline U64 lsbReset(U64 number) {
     return number & (number - 1);;
 }
 
-
-U64 getHash(Piece piece, Square sq);
-
 void printBitmap(U64 bb);
 
 void generateZobristKeys();
-
-U64 lookUpRookAttack(Square index, U64 occupied);
-
-U64 lookUpBishopAttack(Square index, U64 occupied);
 
 U64 populateMask(U64 mask, U64 index);
 
@@ -623,9 +635,47 @@ U64 generateRookAttack(Square sq, U64 occupied);
 
 U64 generateBishopAttack(Square sq, U64 occupied);
 
-void init();
+void bb_init();
+
+void bb_cleanUp();
 
 U64 randU64();
+
+
+/**
+ * returns the zobrist hash key for a given piece on a given square.
+ * @param piece
+ * @param sq
+ * @return
+ */
+inline U64 getHash(Piece piece, Square sq) {
+    return all_hashes[piece][sq];
+}
+
+/**
+ * looks up the rook attack for a rook on the given square.
+ * It returns a bitmap with all attackable squares highlighted.
+ * @param index
+ * @param occupied
+ * @return
+ */
+inline U64 lookUpRookAttack(Square index, U64 occupied) {
+    return ROOK_ATTACKS[index][(int) ((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
+    
+//    return generateRookAttack(index, occupied);
+}
+
+/**
+ * looks up the bishop attack using magic bitboards
+ * @param index
+ * @param occupied
+ * @return
+ */
+inline U64 lookUpBishopAttack(Square index, U64 occupied) {
+    return BISHOP_ATTACKS[index][(int) ((occupied & bishopMasks[index]) * bishopMagics[index] >> (bishopShifts[index]))];
+//    return generateBishopAttack(index, occupied);
+}
+
 
 /**
  * returns the index of the LSB
@@ -633,7 +683,7 @@ U64 randU64();
  * @return
  */
 inline Square bitscanForward(U64 &bb) {
-    assert(bb != 0);
+//    assert(bb != 0);
     return __builtin_ctzll(bb);
 }
 
@@ -643,7 +693,7 @@ inline Square bitscanForward(U64 &bb) {
  * @return
  */
 inline Square bitscanReverse(U64 &bb) {
-    assert(bb != 0);
+//    assert(bb != 0);
     return __builtin_clzll(bb) ^ 63;
 }
 

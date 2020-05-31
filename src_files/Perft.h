@@ -13,9 +13,9 @@
 
 U64 perft(Board &b, int depth, bool print=true, bool d1=true, bool hash=false, int ply=0);
 
-void perft_prepare(bool hash);
+void perft_init(bool hash);
 
-void perft_clean();
+void perft_cleanUp();
 
 void perft_res();
 

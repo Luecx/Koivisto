@@ -18,9 +18,11 @@ using namespace bb;
 using namespace std;
 using namespace move;
 
-constexpr uint8_t PV_NODE = 0;
-constexpr uint8_t CUT_NODE = 1;
-constexpr uint8_t ALL_NODE = 2;
+typedef uint8_t NodeType;
+
+constexpr NodeType PV_NODE = 0;
+constexpr NodeType CUT_NODE = 1;
+constexpr NodeType ALL_NODE = 2;
 
 
 struct Entry{
@@ -34,7 +36,7 @@ struct Entry{
         return os;
     }
     
-    void set(U64 zobrist, int score, Move move, int type, int depth){
+    void set(U64 zobrist, Score score, Move move, NodeType type, Depth depth){
         this->zobrist = zobrist;
         this->score = score;
         this->move = move;
@@ -44,9 +46,9 @@ struct Entry{
     
     U64         zobrist;        //64 bit
     Move        move;           //32 bit
-    uint8_t     depth;          //8 bit
-    uint8_t     type;           //8 bit
-    int16_t     score;          //16 bit -> 128 bit = 16 byte
+    Depth       depth;          //8 bit
+    NodeType    type;           //8 bit
+    Score       score;          //16 bit -> 128 bit = 16 byte
 };
 
 
@@ -67,14 +69,16 @@ class TranspositionTable {
         ~TranspositionTable();
         
         Entry* get(U64 zobrist);
-        bool put(U64 zobrist, int score, Move move, int type, int depth);
+        bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
         
         void clear();
         U64 getSize();
         void setSize(U64 mb);
         double usage();
+        int entryCount();
         
         friend ostream &operator<<(ostream &os, const TranspositionTable &map);
+        
 };
 
 

@@ -142,7 +142,9 @@ class Board {
         void undoMove_null();
         
         void getPseudoLegalMoves(MoveList *moves);
-    
+        
+        void getNonQuietMoves(MoveList *moves);
+        
         U64 getAttackedSquares(Color attacker);
         
         bool isUnderAttack(Square sq, Color attacker);
