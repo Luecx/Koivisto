@@ -19,13 +19,6 @@ void uci_loop(){
     std::atexit(uci_quit);
     std::string line;
     
-    uci_processCommand("position startpos moves e2e4 a7a6 d2d4 a6a5 c2c4 a5a4 f2f4 a4a3 b2b3 b7b6 d4d5 b6b5 e4e5 b5c4 f1c4 c7c6 d5c6 d7c6 d1d8 e8d8 c1e3");
-    
-    
-    std::cout << *board;
-    printBitmap(board->getPieces()[BLACK_QUEEN]);
-    printBitmap(board->getPieces()[WHITE_QUEEN]);
-    
     
     while(true){
         getline(cin, line);
