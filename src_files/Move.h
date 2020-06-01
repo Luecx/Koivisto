@@ -63,6 +63,7 @@ constexpr Type BISHOP_PROMOTION_CAPTURE       = 13;
 constexpr Type ROOK_PROMOTION_CAPTURE         = 14;
 constexpr Type QUEEN_PROMOTION_CAPTURE        = 15;
 
+//Move genMove(const std::string str);
 
 Move genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece);
 
@@ -118,12 +119,6 @@ inline void setCapturedPiece(Move &move, const bb::Piece capturedPiece){
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
 
-// void setSquareFrom(Move &move,const bb::Square &from);
-// void setSquareTo(Move &move,const bb::Square &to);
-// void setType(Move &move, const Type &type);
-// void setMovingPiece(Move &move,const bb::Piece &movingPiece);
-// void setCapturedPiece(Move &move,const bb::Piece &capturedPiece);
-
 bool isDoubledPawnPush(Move move);
 bool isCapture(Move move);
 bool isCastle(Move move);
@@ -131,33 +126,6 @@ bool isEnPassant(Move move);
 bool isPromotion(Move move);
 bb::Piece promotionPiece(Move move);
 
-
-
-//inline Move &genMove(Move &m, const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece){
-//    setSquareFrom(m, from);
-//    setSquareTo(m, to);
-//    setType(m, type);
-//    setMovingPiece(m, movingPiece);
-//    return m;
-//}
-//
-//inline Move &genMove(Move &m,
-//                     const bb::Square &from,
-//                     const bb::Square &to,
-//                     const Type &type,
-//                     const bb::Piece &movingPiece,
-//                     const bb::Piece &capturedPiece){
-//
-//
-//    setSquareFrom(m, from);
-//    setSquareTo(m, to);
-//    setType(m, type);
-//    setMovingPiece(m, movingPiece);
-//    setCapturedPiece(m, capturedPiece);
-//
-//
-//    return m;
-//}
 
 
 std::string toString(const Move move);

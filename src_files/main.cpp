@@ -8,7 +8,7 @@
 #include "Board.h"
 #include "Perft.h"
 #include "search.h"
-
+#include "uci.h"
 
 using namespace bb;
 
@@ -17,6 +17,9 @@ using namespace move;
 
 
 int main() {
+    
+    uci_loop();
+    
     
     
 //    bb_init();

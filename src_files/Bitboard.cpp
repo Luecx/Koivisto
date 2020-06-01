@@ -31,11 +31,14 @@ void bb::bb_init() {
 void bb::bb_cleanUp() {
     for(int i = 0; i < 64; i++){
         delete ROOK_ATTACKS[i];
+        ROOK_ATTACKS[i] = nullptr;
         delete BISHOP_ATTACKS[i];
+        BISHOP_ATTACKS[i] = nullptr;
     }
     
     for(int i = 0; i <12; i++){
         delete all_hashes[i];
+        all_hashes[i] = nullptr;
     }
 }
 

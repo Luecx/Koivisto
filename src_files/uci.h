@@ -15,6 +15,7 @@
 #include "search.h"
 #include "Util.h"
 
+void uci_loop();
 
 void uci_processCommand(std::string str);
 

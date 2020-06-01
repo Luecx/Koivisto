@@ -1297,7 +1297,7 @@ bool Board::isLegal(Move m) {
         setBit(this->pieces[captured], sqTo);
 
     } else {
-        isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
+            isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
     }
     
     

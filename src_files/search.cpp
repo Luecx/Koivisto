@@ -39,9 +39,12 @@ void search_init(int hashSize) {
 void search_cleanUp() {
     for(int i = 0; i < MAX_PLY; i++){
         delete moves[i];
+        moves[i] = nullptr;
     }
     delete moves;
+    moves = nullptr;
     delete table;
+    table = nullptr;
 }
 
 
@@ -84,7 +87,7 @@ void printInfoString(Board *b, Depth d, Score score, int time){
     int nps = (int) (_nodes) / (int) (time+1) * 1000;
     
     std::cout << "info"
-                 " score " << score;
+                 " score cp " << score;
     
     if(abs(score) > MIN_MATE_SCORE){
         std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2;
@@ -105,6 +108,7 @@ void printInfoString(Board *b, Depth d, Score score, int time){
         std::cout << " " << toString(em->getMove(i)) ;
     }
     
+    
     std::cout << "\n";
 }
 
@@ -117,7 +121,7 @@ Move bestMove(Board *b) {
     
     _nodes = 0;
     
-    for(Depth d = 1; d <= 7; d++){
+    for(Depth d = 1; d <= 6; d++){
         
         startMeasure();
         
@@ -126,7 +130,7 @@ Move bestMove(Board *b) {
        
     }
     
-    return 0;
+    return table->get(b->zobrist())->move;
 }
 
 /**
@@ -166,7 +170,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         
         if(!b->isLegal(m)) continue;
         legalMoves ++;
-    
+        
         b->move(m);
     
         Score score;
@@ -218,7 +222,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
  * @return
  */
 Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
-    return evaluate(b);
+    return evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
 //    return 0;
 }
 
