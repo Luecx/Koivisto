@@ -23,11 +23,12 @@
 
 constexpr Depth ONE_PLY = 1;
 constexpr Depth MAX_PLY = 127;
-constexpr Score MAX_MATE_SCORE = (Score)(1 << 14);
-constexpr Score MIN_MATE_SCORE = (Score)(1 << 13);
+constexpr Score MAX_MATE_SCORE = (Score)((1 << 15) - 1);
+constexpr Score MIN_MATE_SCORE = (Score)(1 << 14);
 
-void search_init();     //used to create arrays, movelists etc
-void search_cleanUp();     //used to clean up the memory
+void search_setHashSize(int hashSize);
+void search_init(int hashSize);     //used to create arrays, movelists etc
+void search_cleanUp();              //used to clean up the memory
 
 Move bestMove(Board *b);
 Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut);

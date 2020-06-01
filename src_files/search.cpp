@@ -12,15 +12,25 @@ TranspositionTable *table;
 
 int _nodes;
 
+
+/**
+ * used to change the hash size
+ * @param hashSize
+ */
+void search_setHashSize(int hashSize) {
+    delete table;
+    table = new TranspositionTable(hashSize);
+}
+
 /**
  * called at the start of the program
  */
-void search_init() {
+void search_init(int hashSize) {
     moves = new MoveList*[MAX_PLY];
     for(int i = 0; i < MAX_PLY; i++){
         moves[i] = new MoveList();
     }
-    table = new TranspositionTable(1);
+    table = new TranspositionTable(hashSize);
 }
 
 /**
@@ -74,7 +84,13 @@ void printInfoString(Board *b, Depth d, Score score, int time){
     int nps = (int) (_nodes) / (int) (time+1) * 1000;
     
     std::cout << "info"
-                 " score " << score <<
+                 " score " << score;
+    
+    if(abs(score) > MIN_MATE_SCORE){
+        std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2;
+    }
+    
+    std::cout <<
                  " depth " << (int)d <<
                  " nodes " << _nodes <<
                  " nps " << nps <<
@@ -175,6 +191,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
     }
     
+    if(legalMoves == 0){
+        if(b->isDraw()){
+            return 0;
+        }else{
+            return  -MAX_MATE_SCORE + ply;
+        }
+    }
     
     
     if(alpha > originalAlpha){

@@ -357,6 +357,7 @@ void Board::move(Move m) {
     }
     
     
+    newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
     boardStatusHistory.emplace_back(std::move(newBoardStatus));
     
     
@@ -407,16 +408,29 @@ void Board::undoMove() {
     
     setPiece(sqFrom, pFrom);
     
-    
     boardStatusHistory.pop_back();
 }
 
 void Board::move_null() {
-
+    BoardStatus *previousStatus = getBoardStatus();
+    BoardStatus newBoardStatus = {
+            previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
+            0ULL,
+            previousStatus->metaInformation,
+            previousStatus->fiftyMoveCounter + 1,
+            1ULL,
+            previousStatus->moveCounter + getActivePlayer(),
+            0ULL,
+    };
+    
+    changeActivePlayer();
+    
 }
 
 void Board::undoMove_null() {
-
+    
+    boardStatusHistory.pop_back();
+    changeActivePlayer();
 }
 
 void Board::getPseudoLegalMoves(MoveList *moves) {

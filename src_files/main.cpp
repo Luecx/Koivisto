@@ -19,33 +19,33 @@ using namespace move;
 int main() {
     
     
-    bb_init();
-    perft_init(true);
-    search_init();
-    
-    
-
-//    Board *b = new Board{"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -"};
-    Board *b = new Board{};
-
-    std::cout << *b;
-
-    
-    
+//    bb_init();
+//    perft_init(true);
+//    search_init();
+//
+//
+//
+//    Board *b = new Board{"2bqkbn1/2pppp2/np2N3/r3P1p1/p2N2B1/5Q2/PPPPKPP1/RNB2r2 w KQkq - 0 1"};
+////    Board *b = new Board{};
+//
+//    std::cout << *b;
+//
+//
+//
+////    startMeasure();
+////    std::cout << perft(*b, 6, true, true, false) << std::endl;
+////    stopMeasure();
+//
+//
+//
 //    startMeasure();
-//    std::cout << perft(*b, 6, true, true, false) << std::endl;
+//    bestMove(b);
 //    stopMeasure();
-    
-    
-    
-    startMeasure();
-    bestMove(b);
-    stopMeasure();
-    
-    search_cleanUp();
-    perft_cleanUp();
-    bb_cleanUp();
-    
+//
+//    search_cleanUp();
+//    perft_cleanUp();
+//    bb_cleanUp();
+//
     return 0;
     
 }

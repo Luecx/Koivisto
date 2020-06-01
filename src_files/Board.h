@@ -22,6 +22,8 @@ using namespace move;
     constexpr U64 STATUS_INDEX_WHITE_KINGSIDE_CASTLING      = 1;
     constexpr U64 STATUS_INDEX_BLACK_QUEENSIDE_CASTLING     = 2;
     constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING      = 3;
+    
+    constexpr U64 ZOBRIST_WHITE_BLACK_SWAP                  = 1;
 
 
 /**
