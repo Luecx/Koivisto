@@ -117,11 +117,11 @@ void printInfoString(Board *b, Depth d, Score score, int time){
  * @param b
  * @return
  */
-Move bestMove(Board *b) {
+Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     
     _nodes = 0;
     
-    for(Depth d = 1; d <= 6; d++){
+    for(Depth d = 1; d <= maxDepth; d++){
         
         startMeasure();
         
@@ -149,13 +149,26 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     _nodes++;
     
     
-    if( depth == 0 ) return qSearch(b, alpha, beta, ply);
+    if( depth <= 0 ) return qSearch(b, alpha, beta, ply);
     
     
     U64 zobrist                 = b->zobrist();
     bool pv                     = (beta-alpha) != 1;
     Score originalAlpha         = alpha;
     Move bestMove               = 0;
+    
+    
+    /*
+     * null move pruning
+     */
+    if ( !pv ) {
+        b->move_null();
+        Score score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false);
+        b->undoMove_null();
+        if ( score >= beta ) {
+            return beta;
+        }
+    }
     
     
     MoveList *mv = moves[ply];

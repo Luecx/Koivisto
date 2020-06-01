@@ -14,6 +14,8 @@
 #include "Perft.h"
 #include "search.h"
 #include "Util.h"
+#include <cstdlib>
+#include <unistd.h>
 
 void uci_loop();
 

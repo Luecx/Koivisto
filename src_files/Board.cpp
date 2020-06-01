@@ -423,6 +423,7 @@ void Board::move_null() {
             0ULL,
     };
     
+    boardStatusHistory.emplace_back(std::move(newBoardStatus));
     changeActivePlayer();
     
 }

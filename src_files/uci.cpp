@@ -7,6 +7,8 @@
 
 Board *board;
 
+
+
 void uci_loop(){
 
     bb_init();
@@ -20,15 +22,18 @@ void uci_loop(){
     std::string line;
     
     
-    while(true){
+    while (true) {
         getline(cin, line);
         
-        if(line == "quit"){
+        if (line == "quit") {
             exit(0);
-        }else{
+        } else {
             uci_processCommand(line);
         }
     }
+    
+    exit(0);
+    
 }
 
 void uci_uci() {
@@ -86,10 +91,10 @@ void uci_processCommand(std::string str) {
             string mvtog = uci_getValue(split, "movestogo");
             
             uci_go_match(
-                    stoi(wtime),
-                    stoi(btime),
-                    stoi(wincr),
-                    stoi(bincr),
+                    (wtime.empty()) ? 60000000:stoi(wtime),
+                    (btime.empty()) ? 60000000:stoi(btime),
+                    (wincr.empty()) ? 60000:stoi(wincr),
+                    (bincr.empty()) ? 60000:stoi(bincr),
                     (mvtog.empty()) ? 1000:stoi(mvtog));
         
         }else if(str.find("depth") != string::npos){
@@ -133,12 +138,13 @@ void uci_processCommand(std::string str) {
 }
 
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
-    Move m = bestMove(board);
+    Move m = bestMove(board, 8, ONE << 30);
     std::cout << "bestmove " << toString(m) << std::endl;
 }
 
 void uci_go_depth(int depth) {
-
+    Move m = bestMove(board, depth, ONE << 30);
+    std::cout << "bestmove " << toString(m) << std::endl;
 }
 
 void uci_go_nodes(int nodes) {
