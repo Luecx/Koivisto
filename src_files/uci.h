@@ -16,6 +16,8 @@
 #include "Util.h"
 #include <cstdlib>
 #include <unistd.h>
+#include <io.h>
+#include <fcntl.h>
 
 void uci_loop();
 

@@ -213,7 +213,12 @@ U64 Board::zobrist() {
 }
 
 bool Board::isInCheck(Color player) {
-    return false;
+    if(player == WHITE){
+        return isUnderAttack(bitscanForward(pieces[WHITE_KING]), BLACK);
+    }else{
+    
+        return isUnderAttack(bitscanForward(pieces[BLACK_KING]), WHITE);
+    }
 }
 
 bool Board::isDraw() {
@@ -1021,7 +1026,11 @@ U64 Board::getAttackedSquares(Color attacker) {
     
     U64 attacks = ZERO;
     
-    attacks |= shiftNorthEast(pieces[WHITE_PAWN]) | shiftNorthWest((pieces[WHITE_PAWN]));
+    if(attacker == WHITE){
+        attacks |= shiftNorthEast(pieces[WHITE_PAWN]) | shiftNorthWest((pieces[WHITE_PAWN]));
+    }else{
+        attacks |= shiftSouthEast(pieces[BLACK_PAWN]) | shiftSouthWest((pieces[BLACK_PAWN]));
+    }
     
     U64 knights(pieces[KNIGHT + 6 * attacker]);
     U64 bishops(pieces[BISHOP + 6 * attacker]);
@@ -1097,7 +1106,6 @@ bool Board::isUnderAttack(Square square, Color attacker) {
 bool Board::givesCheck(Move m) {
     
     
-    U64 thisPos = ONE << getSquareFrom(m);
     int  opponentKingPos;
     U64 opponentKing;
     U64 thisQueenBitboard;
@@ -1109,19 +1117,25 @@ bool Board::givesCheck(Move m) {
     Square sqFrom = getSquareFrom(m);
     
     if(getActivePlayer() == BLACK){
-        opponentKing =          pieces[BLACK_KING];
+        opponentKing =          pieces[WHITE_KING];
         opponentKingPos =       bitscanForward(opponentKing);
         thisQueenBitboard =     pieces[BLACK_QUEEN];
         thisRookBitboard =      pieces[BLACK_ROOK];
         thisBishopBitboard =    pieces[BLACK_BISHOP];
     }else{
-        opponentKing =          pieces[WHITE_KING];
+        opponentKing =          pieces[BLACK_KING];
         opponentKingPos =       bitscanForward(opponentKing);
         thisQueenBitboard =     pieces[WHITE_QUEEN];
         thisRookBitboard =      pieces[WHITE_ROOK];
         thisBishopBitboard =    pieces[WHITE_BISHOP];
     }
     
+    //replace the moving piece with the piece to promote to if promotion to detect direct check
+    if(isPromotion(m)){
+        pFrom = promotionPiece(m);
+    }
+    
+//    std::cout << (int)pFrom << "---";
     
     //direct check
     switch (pFrom % 6){
@@ -1152,12 +1166,14 @@ bool Board::givesCheck(Move m) {
             }
             break;
         }case PAWN: {
+            U64 toBB = ONE << sqTo;
+            
             if(getActivePlayer() == WHITE){
-                if(((shiftNorthEast(thisPos) | shiftNorthWest(thisPos)) & opponentKing)!= 0){
+                if(((shiftNorthEast(toBB) | shiftNorthWest(toBB)) & opponentKing)!= 0){
                     return true;
                 }
             }else{
-                if(((shiftSouthEast(thisPos) | shiftSouthWest(thisPos)) & opponentKing)!= 0){
+                if(((shiftSouthEast(toBB) | shiftSouthWest(toBB)) & opponentKing)!= 0){
                     return true;
                 }
             }
@@ -1166,56 +1182,53 @@ bool Board::givesCheck(Move m) {
     }
     
     //discovered check
-//
-//    U64 occ = *occupied;
-//
-//    unsetBit(*occupied, sqFrom);
-//    setBit(*occupied, sqTo);
-//
-//    if(isUnderAttack(opponentKingPos, getActivePlayer())){
-//        *occupied = occ;
-//        return true;
-//    }
-//
-//
-//    if(!isCapture(m)){
-//        unsetBit(*occupied, sqTo);
-//    }
-//    unsetBit(*occupied, sqFrom);
-//
-//
-//    if(isCastle(m)){
-//        unsetBit(*occupied, m.getFrom());
-//        int rookSquare = getActivePlayer() == 1 ?
-//                         m.getTo()-m.getFrom()>0?5:3:
-//                         m.getTo()-m.getFrom()>0?5+56:3+56;
-//        if((lookUpRookAttack(rookSquare, occupied) & opponentKing) != 0){
-//            this.occupied = unsetBit(this.occupied, m.getFrom());
-//            return true;
-//        }
-//        this.occupied = unsetBit(this.occupied, m.getFrom());
-//    }
-//
-//    if(m.isEn_passent_capture()){
-//        if(this.getActivePlayer() == 1){
-//            this.occupied = unsetBit(this.occupied, m.getTo()-8);
-//            if(isUnderAttack(opponentKingPos, 1)){
-//                this.occupied = setBit(this.occupied, m.getTo()-8);
-//                return true;
-//            }
-//            this.occupied = setBit(this.occupied, m.getTo()-8);
-//        }else{
-//            this.occupied = unsetBit(this.occupied, m.getTo()+8);
-//            if(isUnderAttack(opponentKingPos, -1)){
-//                this.occupied = setBit(this.occupied, m.getTo()+8);
-//                return true;
-//            }
-//            this.occupied = setBit(this.occupied, m.getTo()+8);
-//        }
-//    }
-//    return false;
+    U64 occ = *occupied;
+
+    unsetBit(*occupied, sqFrom);
+    setBit(*occupied, sqTo);
+
+    if(isUnderAttack(opponentKingPos, getActivePlayer())){
+        *occupied = occ;
+        return true;
+    }
+    *occupied = occ;
     
+  
+    
+    //castling check
+    if(isCastle(m)){
+        unsetBit(*occupied, sqFrom);
+        Square rookSquare = getActivePlayer() == WHITE ?
+                         (sqTo-sqFrom)>0?F1:D1:
+                         (sqTo-sqFrom)>0?F8:D8;
+        if((lookUpRookAttack(rookSquare, *occupied) & opponentKing) != 0){
+            *occupied = occ;
+            return true;
+        }
+        *occupied = occ;
+    }
+    
+    
+    //en passant
+    if(isEnPassant(m)){
+        if(getActivePlayer() == WHITE){
+            unsetBit(*occupied, sqTo-8);
+            if(isUnderAttack(opponentKingPos, WHITE)){
+                *occupied = occ;
+                return true;
+            }
+            *occupied = occ;
+        }else{
+            unsetBit(*occupied, sqTo+8);
+            if(isUnderAttack(opponentKingPos, BLACK)){
+                *occupied = occ;
+                return true;
+            }
+            *occupied = occ;
+        }
+    }
     return false;
+    
 }
 
 /**
@@ -1260,7 +1273,6 @@ bool Board::isLegal(Move m) {
         U64 secure = ZERO;
 
         Type t = getType(m);
-
         if (this->getActivePlayer() == WHITE) {
             secure = (t == QUEEN_CASTLE) ? bb::CASTLING_WHITE_QUEENSIDE_SAFE : bb::CASTLING_WHITE_KINGSIDE_SAFE;
             return (getAttackedSquares(BLACK) & secure) == 0;
@@ -1298,6 +1310,21 @@ bool Board::isLegal(Move m) {
         setBit(this->pieces[captured], sqTo);
 
     } else {
+        if(thisKing == 64){
+            std::cout << *this;
+    
+            *occupied = occCopy;
+            undoMove();
+            std::cout << *this;
+            undoMove();
+            std::cout << *this;
+            undoMove();
+            std::cout << *this;
+            undoMove();
+            std::cout << *this;
+            
+            exit(-1);
+        }
             isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
     }
     

@@ -15,12 +15,17 @@ void uci_loop(){
     search_init(128);
 //    perft_init(false);
     
+    
+    std::wcout << "Koivisto 64 bit by K. Kahre, F. Eggers" << std::endl;
+
     board = new Board();
     
     
     std::atexit(uci_quit);
     std::string line;
     
+//    uci_processCommand("position startpos moves d2d4 g8f6 c2c4 e7e6 g1f3 b7b6 g2g3 c8b7 f1g2 b8c6 b1c3 f8b4 e1g1 d7d5 c4d5 e6d5 a2a3 b4c3 b2c3 h7h6 f1e1 e8g8 f3e5 d8e8 f2f4 c6e7 a3a4 f6e4 g2e4");
+//    uci_processCommand("go depth 8");
     
     while (true) {
         getline(cin, line);
@@ -32,13 +37,11 @@ void uci_loop(){
         }
     }
     
-    exit(0);
-    
 }
 
 void uci_uci() {
     std::cout << "id name Koivisto" << std::endl;
-    std::cout << "id author Kim/Finn" << std::endl;
+    std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 128 min 1 max 4096" <<std::endl;
     
     

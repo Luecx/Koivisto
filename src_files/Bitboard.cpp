@@ -12,20 +12,19 @@ U64 **bb::all_hashes = {};
 
 void bb::bb_init() {
     
-    std::cout << "generating bitboards...";
+    //std::cout << "generating bitboards...";
     
     std::srand(seed);
     
-    auto start = std::chrono::system_clock::now();
+    //auto start = std::chrono::system_clock::now();
     
     
     generateZobristKeys();
     generateData();
     
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end-start;
-    
-    std::cout << "       done! [" << round(diff.count() * 1000) << " ms]" << std::endl;
+    //auto end = std::chrono::system_clock::now();
+    //std::chrono::duration<double> diff = end-start;
+    //std::cout << "       done! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
 void bb::bb_cleanUp() {

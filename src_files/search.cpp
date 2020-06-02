@@ -109,7 +109,7 @@ void printInfoString(Board *b, Depth d, Score score, int time){
     }
     
     
-    std::cout << "\n";
+    std::cout << std::endl;
 }
 
 /**
@@ -161,7 +161,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     /*
      * null move pruning
      */
-    if ( !pv ) {
+    if ( !pv && !b->isInCheck(b->getActivePlayer())) {
         b->move_null();
         Score score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false);
         b->undoMove_null();
@@ -182,10 +182,15 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Move m = mv->getMove(i);
         
         if(!b->isLegal(m)) continue;
-        legalMoves ++;
+        
+        bool givesCheck = b->givesCheck(m);
+        
         
         b->move(m);
-    
+        
+        //verify that givesCheck is correct
+        assert(givesCheck == b->isInCheck(b->getActivePlayer()));
+        
         Score score;
         if (legalMoves == 1 && pv) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY, ply + ONE_PLY, false);
@@ -201,11 +206,15 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         
     
         if( score >= beta )
-            return beta;   // fail-hard beta-cutoff
+            return beta;
         if( score > alpha ) {
-            alpha = score; // alpha acts like max in MiniMax
+            alpha = score;
             bestMove = m;
         }
+    
+    
+    
+        legalMoves ++;
     }
     
     if(legalMoves == 0){
