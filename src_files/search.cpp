@@ -250,7 +250,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         assert(givesCheck == b->isInCheck(b->getActivePlayer()));
         
         Score score;
-        if (legalMoves == 1 && pv) {
+        if (legalMoves == 0 && pv) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY, ply + ONE_PLY, false);
         } else {
             score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY, ply+ONE_PLY,false);
@@ -333,7 +333,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         b->move(m);
         
         //verify that givesCheck is correct
-        assert(givesCheck == b->isInCheck(b->getActivePlayer()));
+       // assert(givesCheck == b->isInCheck(b->getActivePlayer()));
         
         Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY);
         
