@@ -141,7 +141,7 @@ void uci_processCommand(std::string str) {
 }
 
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
-    Move m = bestMove(board, 8, ONE << 30);
+    Move m = bestMove(board, MAX_PLY, wtime);
     std::cout << "bestmove " << toString(m) << std::endl;
 }
 

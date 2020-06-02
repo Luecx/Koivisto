@@ -10,8 +10,46 @@
 MoveList **moves;
 TranspositionTable *table;
 
-int _nodes;
 
+int _nodes;
+int _maxTime;
+auto _startTime = std::chrono::system_clock::now();
+
+
+
+
+/**
+ * =================================================================================
+ *                              S E A R C H
+ *                             H E L P E R S
+ * =================================================================================
+ */
+
+
+/**
+ * sets the start time
+ */
+void setStartTime(){
+    _startTime = std::chrono::system_clock::now();
+}
+
+/**
+ * returns the amount of elapsed time since _startTime
+ * @return
+ */
+int elapsedTime(){
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = end-_startTime;
+    return round(diff.count() * 1000);
+}
+
+/**
+ * checks if there is time left and the search should continue.
+ * @return
+ */
+bool isTimeLeft(){
+    return elapsedTime() < _maxTime;
+}
 
 /**
  * used to change the hash size
@@ -46,7 +84,6 @@ void search_cleanUp() {
     delete table;
     table = nullptr;
 }
-
 
 /**
  * extracts the pv for the given board using the transposition table.
@@ -97,7 +134,7 @@ void printInfoString(Board *b, Depth d, Score score, int time){
                  " depth " << (int)d <<
                  " nodes " << _nodes <<
                  " nps " << nps <<
-                 " time " << time <<
+                 " time " << elapsedTime() <<
                  " hashfull " << (int)(table->usage() * 1000);
     
     MoveList* em = moves[0];
@@ -112,22 +149,38 @@ void printInfoString(Board *b, Depth d, Score score, int time){
     std::cout << std::endl;
 }
 
+
+/**
+ * =================================================================================
+ *                                M A I N
+ *                              S E A R C H
+ * =================================================================================
+ */
+
+
+
+ 
+
 /**
  * returns the best move for the given board.
+ * the search will stop if either the max depth of max time is reached
  * @param b
  * @return
  */
 Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     
-    _nodes = 0;
+    _startTime = std::chrono::system_clock::now();
+    _maxTime = maxTime;
     
     for(Depth d = 1; d <= maxDepth; d++){
-        
+    
+        //start measure for time this iteration takes
         startMeasure();
-        
+        _nodes = 0;
         Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false);
         printInfoString(b, d, score, stopMeasure());
        
+        if(!isTimeLeft()) break;
     }
     
     return table->get(b->zobrist())->move;
@@ -148,6 +201,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
     _nodes++;
     
+    if(!isTimeLeft()){
+        return alpha;
+    }
     
     if( depth <= 0 ) return qSearch(b, alpha, beta, ply);
     
@@ -175,6 +231,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     b->getPseudoLegalMoves(mv);
     
     
+    //count the legal moves
     int legalMoves = 0;
     
     for(int i = 0; i < mv->getSize(); i++){
@@ -217,6 +274,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         legalMoves ++;
     }
     
+    //if there are no legal moves, its either stalemate or checkmate.
     if(legalMoves == 0){
         if(b->isDraw()){
             return 0;
