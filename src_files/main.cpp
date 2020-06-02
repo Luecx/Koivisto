@@ -6,14 +6,22 @@
 #include "Board.h"
 #include "Move.h"
 
+
 using namespace std;
 using namespace bb;
 using namespace move;
+
 
 int main() {
     
     
     
+//    std::thread* thread = new std::thread{func};
+//
+//    sleep(1000);
+//    thread->join();
+
+
     uci_loop();
     
 //

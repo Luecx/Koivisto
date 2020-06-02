@@ -183,7 +183,8 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
         if(!isTimeLeft()) break;
     }
     
-    return table->get(b->zobrist())->move;
+    Move best = table->get(b->zobrist())->move;
+    return best;
 }
 
 /**

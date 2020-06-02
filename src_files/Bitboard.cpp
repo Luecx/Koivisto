@@ -34,11 +34,18 @@ void bb::bb_cleanUp() {
         delete BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
     }
+    delete ROOK_ATTACKS;
+    ROOK_ATTACKS = nullptr;
+    delete BISHOP_ATTACKS;
+    BISHOP_ATTACKS = nullptr;
     
     for(int i = 0; i <12; i++){
         delete all_hashes[i];
         all_hashes[i] = nullptr;
     }
+    
+    delete all_hashes;
+    all_hashes = nullptr;
 }
 
 U64 bb::randU64(){

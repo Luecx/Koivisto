@@ -59,6 +59,11 @@ std::string uci_getValue(std::vector<std::string> &vec, std::string key){
     return "";
 }
 
+void uci_searchAndPrint(Depth maxDepth, int maxTime){
+    Move m = bestMove(board, maxDepth, maxTime);
+    std::cout << "bestmove " << toString(m) << std::endl;
+}
+
 void uci_processCommand(std::string str) {
     
     str = trim(str);
@@ -141,6 +146,9 @@ void uci_processCommand(std::string str) {
 }
 
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
+    
+    
+    
     Move m = bestMove(board, MAX_PLY, wtime);
     std::cout << "bestmove " << toString(m) << std::endl;
 }

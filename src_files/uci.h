@@ -6,18 +6,20 @@
 #define KOIVISTO_UCI_H
 
 #include <cstdlib>
-#include <string>
+#include <fcntl.h>
+#include <io.h>
 #include <iostream>
+#include <string>
+#include <thread>
+#include <unistd.h>
+
 #include "Bitboard.h"
 #include "Move.h"
 #include "Board.h"
 #include "Perft.h"
 #include "search.h"
 #include "Util.h"
-#include <cstdlib>
-#include <unistd.h>
-#include <io.h>
-#include <fcntl.h>
+
 
 void uci_loop();
 
