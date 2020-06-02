@@ -202,7 +202,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     _nodes++;
     
     if(!isTimeLeft()){
-        return alpha;
+        return beta;
     }
     
     if( depth <= 0 ) return qSearch(b, alpha, beta, ply);
@@ -302,7 +302,55 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
  * @return
  */
 Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
-    return evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
+    Score stand_pat = evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
+    
+    //shall we count qSearch nodes?
+    _nodes ++;
+    
+    if( stand_pat >= beta )
+        return beta;
+    if( alpha < stand_pat )
+        alpha = stand_pat;
+    
+    /**
+     * extract all:
+     *  - captures (including e.p.)
+     *  - promotions
+     *
+     *  moves that give check are not considered non-quiet in
+     *  getNonQuietMoves() allthough they are not quiet.
+     */
+    MoveList *mv = moves[ply];
+    b->getNonQuietMoves(mv);
+    
+    for(int i = 0; i < mv->getSize(); i++){
+        
+        Move m = mv->getMove(i);
+        
+        if(!b->isLegal(m)) continue;
+        
+        b->move(m);
+        
+        //verify that givesCheck is correct
+        assert(givesCheck == b->isInCheck(b->getActivePlayer()));
+        
+        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY);
+        
+        
+        
+        b->undoMove();
+    
+    
+    
+        if( score >= beta )
+            return beta;
+        if( score > alpha )
+            alpha = score;
+        
+        
+    }
+    return alpha;
+    
 //    return 0;
 }
 

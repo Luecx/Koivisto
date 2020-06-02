@@ -197,6 +197,15 @@ MoveList::MoveList() {
 }
 
 /**
+ * swaps the move object at index i1 and index i2
+ */
+void MoveList::swap(int i1, int i2){
+    Move m1 = moves[i1];
+    moves[i1] = moves[i2];
+    moves[i2] = m1;
+}
+
+/**
  * returns the move stored at the given index
  * @param index
  * @return

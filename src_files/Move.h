@@ -144,6 +144,8 @@ class MoveList{
         
         virtual ~MoveList();
         
+        void swap(int i1, int i2);
+        
         move::Move getMove(int index);
         
         void clear();
