@@ -322,7 +322,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
 
-        Depth lmr = (pv || givesCheck || depth < 2 || isCapture(m)) ? 0:(depth+3)/3;
+        Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || isCapture(m)) ? 0:(depth+3)/3;
         
         if (legalMoves == 0 && pv) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false);
