@@ -273,16 +273,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 if(en->score  >= beta){
                     return beta;
                 }
-                if(alpha < en->score  && !pv){
-                    alpha = en->score ;
-                }
+
             } else if (en->type == ALL_NODE) {
                 if (en->score  <= alpha) {
                     return alpha;
                 }
-                if(beta > en->score  && !pv){
-                    beta = en->score;
-                }
+
             }
         }
         
