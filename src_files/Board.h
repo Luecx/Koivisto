@@ -147,7 +147,13 @@ class Board {
         
         void getNonQuietMoves(MoveList *moves);
         
+        Score staticExchangeEvaluation(Move m);
+        
+        U64 attacksTo(U64 occupied, Square sq);
+        
         U64 getAttackedSquares(Color attacker);
+        
+        U64 getLeastValuablePiece(U64 attadef, Score bySide, Piece &piece);
         
         bool isUnderAttack(Square sq, Color attacker);
         

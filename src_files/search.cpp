@@ -282,7 +282,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             }
         }
         
-        
     }
     
     /*
@@ -370,7 +369,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     if(alpha > originalAlpha){
         table->put(zobrist, alpha, bestMove,PV_NODE,depth);
     }else{
-        table->put(zobrist, alpha, bestMove, ALL_NODE, depth);
+        table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
     }
     
     

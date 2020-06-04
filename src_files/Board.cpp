@@ -1073,6 +1073,96 @@ U64 Board::getAttackedSquares(Color attacker) {
 }
 
 /**
+ * returns a bitboard of the least valuable piece which is in the attadef bitboard.
+ * The piece itself will be stored in the given piece variable.
+ * @param attadef
+ * @param bySide
+ * @param piece
+ * @return
+ */
+U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece &piece){
+    for (piece = PAWN + bySide * 6; piece <= KING + bySide * 6; piece += 1) {
+        U64 subset = attadef & pieces[piece];
+        if ( subset )
+            return subset & -subset; // single bit
+    }
+    return 0; // empty set
+}
+
+Score Board::staticExchangeEvaluation(Move m){
+
+    static constexpr Score vals[]{100,325,325,500,1000,10000};
+    
+    Square sqFrom = getSquareFrom(m);
+    Square sqTo = getSquareTo(m);
+    Piece capturedPiece = isCapture(m) ? getCapturedPiece(m):-1;
+    Piece capturingPiece = getMovingPiece(m);
+    
+    
+    Color attacker = capturingPiece < BLACK_PAWN ? WHITE:BLACK;
+
+    Score gain[32], d = 0;
+    U64 fromSet = ONE << sqFrom;
+    U64 occ     = *occupied;
+    U64 attadef = attacksTo( occ, sqTo );
+    
+    if(isCapture(m))
+        gain[d]     = vals[capturedPiece % 6];
+    else{
+        gain[d] = 0;
+    }
+   
+    do {
+        d++;
+        attacker = 1-attacker;
+        
+        gain[d]  = vals[capturingPiece % 6] - gain[d-1];
+        
+        
+        
+        if (-gain[d-1] < 0 && gain[d] < 0) break; // pruning does not influence the result
+        
+        attadef ^= fromSet; // reset bit in set to traverse
+        occ     ^= fromSet;
+        attadef |= (attacksTo(occ, sqTo) & occ);
+        fromSet  = getLeastValuablePiece (attadef, attacker, capturingPiece);
+
+    } while (fromSet);
+    
+    while (--d){
+        gain[d-1] = -(-gain[d-1] > gain[d] ? -gain[d-1]:gain[d]);
+    }
+    
+    
+    return gain[0];
+}
+
+/**
+ * returns a bitboard with all squares highlighted which either attack or defend the given square
+ * @param occupied
+ * @param sq
+ * @return
+ */
+U64 Board::attacksTo(U64 occupied, Square sq) {
+    U64 sqBB = ONE << sq;
+    U64 knights, kings, bishopsQueens, rooksQueens;
+    knights        = pieces[WHITE_KNIGHT] | pieces[BLACK_KNIGHT];
+    kings          = pieces[WHITE_KING]   | pieces[BLACK_KING];
+    rooksQueens    =
+    bishopsQueens  = pieces[WHITE_QUEEN]  | pieces[BLACK_QUEEN];
+    rooksQueens   |= pieces[WHITE_ROOK]   | pieces[BLACK_ROOK];
+    bishopsQueens |= pieces[WHITE_BISHOP] | pieces[BLACK_BISHOP];
+    
+    
+    return ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & pieces[BLACK_PAWN])
+           | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & pieces[WHITE_PAWN])
+           | (KNIGHT_ATTACKS      [sq] & knights)
+           | (KING_ATTACKS        [sq] & kings)
+           | (lookUpBishopAttack(sq, occupied) & bishopsQueens)
+           | (lookUpRookAttack(sq, occupied) & rooksQueens);
+}
+
+/**
  * this does not check for en passent attacks!
  * @param square
  * @param attacker

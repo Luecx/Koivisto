@@ -466,7 +466,7 @@ inline T abs(const T a) {
 }
 
 template<class T>
-inline T max(const T a, const T &b) {
+inline T max(const T a, const T b) {
     return (a < b) ? b : a;     // or: return comp(a,b)?b:a; for version (2)
 }
 
