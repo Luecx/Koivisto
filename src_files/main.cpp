@@ -5,6 +5,7 @@
 #include "Bitboard.h"
 #include "Board.h"
 #include "Move.h"
+#include "MoveOrderer.h"
 
 
 using namespace std;
@@ -21,14 +22,24 @@ int main() {
 //    sleep(1000);
 //    thread->join();
 
+   
 
-    uci_loop();
+      uci_loop();
     
+
+//    bb_init();
+//    perft_init(false);
+//
+//    perft(b, 7, true, true, false);
+//
+//    perft_cleanUp();
+//    bb_cleanUp();
+
 //
 //    bb_init();
 //
 //
-//    Board b{"rnbqkbnr/ppp1pppp/3p4/8/Q7/2P5/PP1PPPPP/RNB1KBNR w QKqk - 2 3"};
+//
 //    std::cout << b.givesCheck(262360);
 //
 //    bb_cleanUp();

@@ -35,6 +35,7 @@ namespace move{
 
 typedef uint32_t            Move;
 typedef uint8_t             Type;
+typedef uint8_t             MoveScore;
 
 constexpr Move MASK_4                         = 15;
 constexpr Move MASK_6                         = 63;
@@ -118,6 +119,10 @@ inline void setCapturedPiece(Move &move, const bb::Piece capturedPiece){
     //move = (move & ~(MASK_6 << SHIFT_CAPTURED_PIECE));  //clearing
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
+inline void setScore(Move &move, const MoveScore moveScore){
+    move = (move & ~(MASK_8 << SHIFT_SCORE_INFO));  //clearing
+    move |= (moveScore << SHIFT_SCORE_INFO);
+}
 
 bool isDoubledPawnPush(Move move);
 bool isCapture(Move move);
@@ -151,6 +156,8 @@ class MoveList{
         void clear();
         
         void add(move::Move move);
+        
+        void scoreMove(int index, MoveScore score);
         
         int getSize() const;
     

@@ -140,6 +140,7 @@ Board::~Board() {
     delete Board::teamOccupied;
     delete Board::occupied;
     std::vector<BoardStatus> boardStatusHistory;
+    boardStatusHistory.reserve(1024);
 }
 
 std::string Board::fen() {

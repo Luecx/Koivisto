@@ -6,7 +6,7 @@
 
 
 Board *board;
-
+std::thread *searchThread = nullptr;
 
 
 void uci_loop(){
@@ -59,9 +59,19 @@ std::string uci_getValue(std::vector<std::string> &vec, std::string key){
     return "";
 }
 
+
+
+void uci_endThread(){
+    if(searchThread != nullptr){
+        delete searchThread;
+        searchThread = nullptr;
+    }
+}
+
 void uci_searchAndPrint(Depth maxDepth, int maxTime){
     Move m = bestMove(board, maxDepth, maxTime);
     std::cout << "bestmove " << toString(m) << std::endl;
+    uci_endThread();
 }
 
 void uci_processCommand(std::string str) {
@@ -101,9 +111,9 @@ void uci_processCommand(std::string str) {
             uci_go_match(
                     (wtime.empty()) ? 60000000:stoi(wtime),
                     (btime.empty()) ? 60000000:stoi(btime),
-                    (wincr.empty()) ? 60000:stoi(wincr),
-                    (bincr.empty()) ? 60000:stoi(bincr),
-                    (mvtog.empty()) ? 1000:stoi(mvtog));
+                    (wincr.empty()) ? 0:stoi(wincr),
+                    (bincr.empty()) ? 0:stoi(bincr),
+                    (mvtog.empty()) ? 40:stoi(mvtog));
         
         }else if(str.find("depth") != string::npos){
             uci_go_depth(stoi(uci_getValue(split, "depth")));
@@ -147,15 +157,26 @@ void uci_processCommand(std::string str) {
 
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
     
+    if(searchThread != nullptr){
+        return;
+    }
     
+    int timeToUse = board->getActivePlayer() == WHITE ? (wtime/40 + winc) : (btime/40 + binc);
+    std::cout << timeToUse << std::endl;
     
-    Move m = bestMove(board, MAX_PLY, wtime);
-    std::cout << "bestmove " << toString(m) << std::endl;
+    searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeToUse);
+    searchThread->detach();
+    
 }
 
 void uci_go_depth(int depth) {
-    Move m = bestMove(board, depth, ONE << 30);
-    std::cout << "bestmove " << toString(m) << std::endl;
+    
+    if(searchThread != nullptr){
+        return;
+    }
+    
+    searchThread = new std::thread(uci_searchAndPrint,  depth, ONE << 30);
+    searchThread->detach();
 }
 
 void uci_go_nodes(int nodes) {
@@ -175,7 +196,7 @@ void uci_go_mate(int depth) {
 }
 
 void uci_stop() {
-
+    search_stop();
 }
 
 void uci_set_option(std::string name, std::string value) {
@@ -184,6 +205,7 @@ void uci_set_option(std::string name, std::string value) {
 
 void uci_isReady() {
     //TODO check if its running
+    
     std::cout << "readyok" << std::endl;
 }
 

@@ -14,7 +14,7 @@ TranspositionTable *table;
 int _nodes;
 int _maxTime;
 auto _startTime = std::chrono::system_clock::now();
-
+bool _forceStop = false;
 
 
 
@@ -25,6 +25,13 @@ auto _startTime = std::chrono::system_clock::now();
  * =================================================================================
  */
 
+
+/**
+ * stops the search
+ */
+void search_stop() {
+    _forceStop = true;
+}
 
 /**
  * sets the start time
@@ -48,7 +55,7 @@ int elapsedTime(){
  * @return
  */
 bool isTimeLeft(){
-    return elapsedTime() < _maxTime;
+    return elapsedTime() < _maxTime && !_forceStop;
 }
 
 /**
@@ -89,20 +96,45 @@ void search_cleanUp() {
  * extracts the pv for the given board using the transposition table.
  * It stores the moves recursively in the given list.
  * It does not clear the list so this has to be done beforehand.
+ * to avoid infinite sequences, this search is limited by the depth
  * @param b
  * @param mvList
  */
-void extractPV(Board *b, MoveList* mvList){
+void extractPV(Board *b, MoveList* mvList, Depth depth){
+    
+    if(depth <= 0) return;
     
     U64 zob = b->zobrist();
     if(table->get(zob) != nullptr){
-        Move mov = table->get(zob)->move;
         
+        //extract the move from the table
+        Move mov = table->get(zob)->move;
+        //reset score information to check if the move is contained in pseudo legal moves
+        setScore(mov, 0);
+        
+        //get a movelist which can be used to store all pseudo legal moves
+        MoveList* mvStorage = moves[depth];
+        //extract pseudo legal moves
+        b->getPseudoLegalMoves(mvStorage);
+        
+        bool moveContained = false;
+        //check if the move is actually valid for the position
+        for(int i = 0; i < mvStorage->getSize(); i++){
+            if(mvStorage->getMove(i) == mov){
+                moveContained = true;
+            }
+        }
+        
+        
+        //return if the move doesnt exist for this board
+        if(!moveContained) return;
+        
+        //check if its also legal
         if(!b->isLegal(mov)) return;
         
         mvList->add(mov);
         b->move(table->get(zob)->move);
-        extractPV(b, mvList);
+        extractPV(b, mvList, depth -1);
         b->undoMove();
     }
 }
@@ -118,12 +150,13 @@ void extractPV(Board *b, MoveList* mvList){
  * @param d
  * @param score
  */
-void printInfoString(Board *b, Depth d, Score score, int time){
+void printInfoString(Board *b, Depth d, Score score){
     
     
-    int nps = (int) (_nodes) / (int) (time+1) * 1000;
+    int nps = (int) (_nodes) / (int) (elapsedTime()+1) * 1000;
     
     std::cout << "info"
+                 " depth " << (int)d <<
                  " score cp " << score;
     
     if(abs(score) > MIN_MATE_SCORE){
@@ -131,7 +164,7 @@ void printInfoString(Board *b, Depth d, Score score, int time){
     }
     
     std::cout <<
-                 " depth " << (int)d <<
+                 
                  " nodes " << _nodes <<
                  " nps " << nps <<
                  " time " << elapsedTime() <<
@@ -139,7 +172,7 @@ void printInfoString(Board *b, Depth d, Score score, int time){
     
     MoveList* em = moves[0];
     em->clear();
-    extractPV(b, em);
+    extractPV(b, em, d);
     std::cout << " pv";
     for(int i = 0; i < em->getSize(); i++){
         std::cout << " " << toString(em->getMove(i)) ;
@@ -169,16 +202,17 @@ void printInfoString(Board *b, Depth d, Score score, int time){
  */
 Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     
-    _startTime = std::chrono::system_clock::now();
     _maxTime = maxTime;
+    _forceStop = false;
+    _nodes = 0;
+    table->clear();
+    setStartTime();
     
     for(Depth d = 1; d <= maxDepth; d++){
     
         //start measure for time this iteration takes
-        startMeasure();
-        _nodes = 0;
         Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false);
-        printInfoString(b, d, score, stopMeasure());
+        printInfoString(b, d, score);
        
         if(!isTimeLeft()) break;
     }
@@ -206,21 +240,61 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         return beta;
     }
     
-    if( depth <= 0 ) return qSearch(b, alpha, beta, ply);
+    if(b->isDraw()){
+        return 0;
+    }
     
+    if( depth <= 0 ) {
+        return qSearch(b, alpha, beta, ply);
+    }
+    
+   
     
     U64 zobrist                 = b->zobrist();
     bool pv                     = (beta-alpha) != 1;
     Score originalAlpha         = alpha;
+    Score highestScore          = -MAX_MATE_SCORE;
+    Score score                 = -MAX_MATE_SCORE;
     Move bestMove               = 0;
+    Move hashMove               = 0;
     
+    
+    /*
+     * checking
+     */
+    Entry* en = table->get(zobrist);
+    if(en != nullptr){
+        hashMove = en->move;
+        
+        if(en->depth >= depth){
+            if (en->type == PV_NODE && en->score >= alpha){
+                return en->score;
+            }else if (en->type == CUT_NODE) {
+                if(en->score  >= beta){
+                    return beta;
+                }
+                if(alpha < en->score  && !pv){
+                    alpha = en->score ;
+                }
+            } else if (en->type == ALL_NODE) {
+                if (en->score  <= alpha) {
+                    return alpha;
+                }
+                if(beta > en->score  && !pv){
+                    beta = en->score;
+                }
+            }
+        }
+        
+        
+    }
     
     /*
      * null move pruning
      */
-    if ( !pv && !b->isInCheck(b->getActivePlayer())) {
+    if ( !pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
-        Score score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false);
+        score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false);
         b->undoMove_null();
         if ( score >= beta ) {
             return beta;
@@ -232,12 +306,15 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     b->getPseudoLegalMoves(mv);
     
     
+    MoveOrderer moveOrderer{};
+    moveOrderer.setMovesPVSearch(mv, hashMove);
+    
     //count the legal moves
     int legalMoves = 0;
     
-    for(int i = 0; i < mv->getSize(); i++){
+    while(moveOrderer.hasNext()){
         
-        Move m = mv->getMove(i);
+        Move m = moveOrderer.next();
         
         if(!b->isLegal(m)) continue;
         
@@ -247,15 +324,16 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         b->move(m);
         
         //verify that givesCheck is correct
-        assert(givesCheck == b->isInCheck(b->getActivePlayer()));
+        //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
+
+        Depth lmr = (pv || givesCheck || depth < 2 || isCapture(m)) ? 0:(depth+3)/3;
         
-        Score score;
         if (legalMoves == 0 && pv) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY, ply + ONE_PLY, false);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false);
         } else {
-            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY, ply+ONE_PLY,false);
+            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr, ply+ONE_PLY,false);
             if ( score > alpha ) // in fail-soft ... && score < beta ) is common
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY, ply + ONE_PLY, false); // re-search
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false); // re-search
         }
         
         
@@ -263,12 +341,20 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
         
     
-        if( score >= beta )
+        if( score >= beta ){
+            table->put(zobrist, beta, m, CUT_NODE, depth);
             return beta;
+        }
+    
+        if( score > highestScore){
+            highestScore = score;
+            bestMove = m;
+        }
         if( score > alpha ) {
             alpha = score;
             bestMove = m;
         }
+        
     
     
     
@@ -277,7 +363,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
     //if there are no legal moves, its either stalemate or checkmate.
     if(legalMoves == 0){
-        if(b->isDraw()){
+        if(!b->isInCheck(b->getActivePlayer())){
             return 0;
         }else{
             return  -MAX_MATE_SCORE + ply;
@@ -287,6 +373,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
     if(alpha > originalAlpha){
         table->put(zobrist, alpha, bestMove,PV_NODE,depth);
+    }else{
+        table->put(zobrist, alpha, bestMove, ALL_NODE, depth);
     }
     
     
@@ -331,9 +419,6 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         if(!b->isLegal(m)) continue;
         
         b->move(m);
-        
-        //verify that givesCheck is correct
-       // assert(givesCheck == b->isInCheck(b->getActivePlayer()));
         
         Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY);
         
