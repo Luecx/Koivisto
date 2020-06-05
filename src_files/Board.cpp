@@ -223,7 +223,7 @@ bool Board::isInCheck(Color player) {
 }
 
 bool Board::isDraw() {
-    return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 3;
+    return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 2;
 }
 
 Piece Board::getPiece(Square sq) {
