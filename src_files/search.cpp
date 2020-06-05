@@ -55,7 +55,7 @@ int elapsedTime(){
  * @return
  */
 bool isTimeLeft(){
-    return elapsedTime() < _maxTime && !_forceStop;
+    return elapsedTime()+1 < _maxTime && !_forceStop;
 }
 
 /**
