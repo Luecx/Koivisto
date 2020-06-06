@@ -12,6 +12,7 @@ TranspositionTable *table;
 
 int _nodes;
 int _maxTime;
+int _selDepth;
 auto _startTime = std::chrono::system_clock::now();
 bool _forceStop = false;
 
@@ -171,6 +172,7 @@ void printInfoString(Board *b, Depth d, Score score){
     
     std::cout << "info"
                  " depth " << (int)d <<
+                 " seldepth " << (int)_selDepth <<
                  " score cp " << score;
     
     if(abs(score) > MIN_MATE_SCORE){
@@ -219,6 +221,7 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     _maxTime = maxTime;
     _forceStop = false;
     _nodes = 0;
+    _selDepth = 0;
     table->clear();
     setStartTime();
 
@@ -260,7 +263,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     if(b->isDraw() && ply>0){
         return 0;
     }
-    
+
+    if (ply>_selDepth){
+        _selDepth = ply;
+    }
+
     if( depth <= 0 ) {
         return qSearch(b, alpha, beta, ply);
     }
@@ -332,7 +339,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         
         bool givesCheck = b->givesCheck(m);
         
-        
+        int extension = 0;
+
+        if (b->givesCheck(m) && b->staticExchangeEvaluation(m)>=0){
+            extension = 1;
+        }
+
         b->move(m);
         
         //verify that givesCheck is correct
@@ -341,11 +353,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || isCapture(m)) ? 0:lmrReductions[depth][legalMoves];
 
         if (legalMoves == 0 && pv) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false ,sd);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false ,sd);
         } else {
-            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr, ply+ONE_PLY,false, sd);
+            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr + extension, ply+ONE_PLY,false, sd);
             if ( score > alpha ) // in fail-soft ... && score < beta ) is common
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false, sd); // re-search
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
         }
         
         
