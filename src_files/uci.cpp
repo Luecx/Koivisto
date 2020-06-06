@@ -188,7 +188,7 @@ void uci_go_time(int movetime) {
 }
 
 void uci_go_infinite() {
-
+    uci_go_depth(100);
 }
 
 void uci_go_mate(int depth) {
