@@ -3,8 +3,7 @@
 //
 
 #include "search.h"
-
-
+#include "History.h"
 
 
 MoveList **moves;
@@ -16,7 +15,21 @@ int _maxTime;
 auto _startTime = std::chrono::system_clock::now();
 bool _forceStop = false;
 
+/*
+ * Lmr table
+ */
 
+int lmrReductions[256][256];
+
+
+void initLmr()
+{
+    int d, m;
+
+    for (d = 0; d < 256; d ++)
+        for (m = 0; m < 256; m ++)
+            lmrReductions[d][m] = 1.0 + log(d) * log(m) * 0.5;
+}
 
 /**
  * =================================================================================
@@ -76,6 +89,7 @@ void search_init(int hashSize) {
         moves[i] = new MoveList();
     }
     table = new TranspositionTable(hashSize);
+    initLmr();
 }
 
 /**
@@ -207,16 +221,19 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     _nodes = 0;
     table->clear();
     setStartTime();
-    
+
+    SearchData sd;
+
+
     for(Depth d = 1; d <= maxDepth; d++){
     
         //start measure for time this iteration takes
-        Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false);
+        Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false, &sd);
         printInfoString(b, d, score);
        
         if(!isTimeLeft()) break;
     }
-    
+
     Move best = table->get(b->zobrist())->move;
     return best;
 }
@@ -231,7 +248,7 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
  * @param expectedCut
  * @return
  */
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut) {
+Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, SearchData *sd) {
     
     
     _nodes++;
@@ -287,9 +304,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     /*
      * null move pruning
      */
-    if ( !pv && !b->isInCheck(b->getActivePlayer()) ) {
+    if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
-        score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false);
+        score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false, sd);
         b->undoMove_null();
         if ( score >= beta ) {
             return beta;
@@ -302,7 +319,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
     
     MoveOrderer moveOrderer{};
-    moveOrderer.setMovesPVSearch(mv, hashMove);
+    moveOrderer.setMovesPVSearch(mv, hashMove, sd);
     
     //count the legal moves
     int legalMoves = 0;
@@ -321,14 +338,14 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
 
-        Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || isCapture(m)) ? 0:(depth)/3;
-        
+        Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || isCapture(m)) ? 0:lmrReductions[depth][legalMoves];
+
         if (legalMoves == 0 && pv) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false ,sd);
         } else {
-            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr, ply+ONE_PLY,false);
+            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr, ply+ONE_PLY,false, sd);
             if ( score > alpha ) // in fail-soft ... && score < beta ) is common
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false); // re-search
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, false, sd); // re-search
         }
         
         
@@ -338,6 +355,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
         if( score >= beta ){
             table->put(zobrist, beta, m, CUT_NODE, depth);
+            sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
             return beta;
         }
     
@@ -348,6 +366,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         if( score > alpha ) {
             alpha = score;
             bestMove = m;
+        }else{
+            sd->subtractHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
         }
         
     
@@ -406,10 +426,14 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
      */
     MoveList *mv = moves[ply];
     b->getNonQuietMoves(mv);
-    
+
+    MoveOrderer moveOrderer{};
+    moveOrderer.setMovesQSearch(mv);
+
+
     for(int i = 0; i < mv->getSize(); i++){
         
-        Move m = mv->getMove(i);
+        Move m = moveOrderer.next();
         
         if(!b->isLegal(m)) continue;
         

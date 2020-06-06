@@ -7,6 +7,7 @@
 
 
 #include "Move.h"
+#include "History.h"
 
 class MoveOrderer {
 
@@ -19,7 +20,7 @@ class MoveOrderer {
         
         virtual ~MoveOrderer();
         
-        void setMovesPVSearch(move::MoveList* moves, move::Move hashMove);
+        void setMovesPVSearch(move::MoveList* moves, move::Move hashMove, SearchData *sd);
         
         void setMovesQSearch(move::MoveList* moves);
         
