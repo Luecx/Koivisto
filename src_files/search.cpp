@@ -345,6 +345,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             extension = 1;
         }
 
+        
         b->move(m);
         
         //verify that givesCheck is correct

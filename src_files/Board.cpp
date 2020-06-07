@@ -104,16 +104,20 @@ Board::Board(std::string fen) {
         for (char c:split[2]) {
             switch (c) {
                 case 'K':
-                    setCastlingChance(1, true);
+                    if(getPiece(E1) == WHITE_KING)
+                        setCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING, true);
                     break;
                 case 'Q':
-                    setCastlingChance(0, true);
+                    if(getPiece(E1) == WHITE_KING)
+                        setCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING, true);
                     break;
                 case 'k':
-                    setCastlingChance(3, true);
+                    if(getPiece(E8) == BLACK_KING)
+                        setCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING, true);
                     break;
                 case 'q':
-                    setCastlingChance(2, true);
+                    if(getPiece(E8) == BLACK_KING)
+                        setCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING, true);
                     break;
             }
         }
@@ -174,19 +178,19 @@ std::string Board::fen() {
     ss << ((getActivePlayer() == 0) ? "w" : "b");
     ss << " ";
     bool anyCastling = false;
-    if (getCastlingChance(0)) {
+    if (getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)) {
         anyCastling = true;
         ss << "Q";
     }
-    if (getCastlingChance(1)) {
+    if (getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)) {
         anyCastling = true;
         ss << "K";
     }
-    if (getCastlingChance(2)) {
+    if (getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)) {
         anyCastling = true;
         ss << "q";
     }
-    if (getCastlingChance(3)) {
+    if (getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING)) {
         anyCastling = true;
         ss << "k";
     }
