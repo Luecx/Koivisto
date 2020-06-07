@@ -161,7 +161,7 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
         return;
     }
     
-    int timeToUse = board->getActivePlayer() == WHITE ? (wtime/40 + winc) : (btime/40 + binc);
+    int timeToUse = board->getActivePlayer() == WHITE ? (wtime/40 + winc)-10 : (btime/40 + binc)-10;
     std::cout << timeToUse << std::endl;
     
     searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeToUse);
