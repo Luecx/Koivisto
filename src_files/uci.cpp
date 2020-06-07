@@ -2,6 +2,7 @@
 // Created by finne on 5/31/2020.
 //
 
+#include <fstream>
 #include "uci.h"
 
 
@@ -16,8 +17,8 @@ void uci_loop(){
 //    perft_init(false);
     
     
-    std::wcout << "Koivisto 64 bit by K. Kahre, F. Eggers" << std::endl;
-
+    std::cout << "Koivisto 64 bit by K. Kahre, F. Eggers" << std::endl;
+    
     board = new Board();
     
     
@@ -36,13 +37,12 @@ void uci_loop(){
             uci_processCommand(line);
         }
     }
-    
 }
 
 void uci_uci() {
     std::cout << "id name Koivisto" << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
-    std::cout << "option name Hash type spin default 128 min 1 max 4096" <<std::endl;
+    std::cout << "option name Hash type spin default 128 min 1 max " << maxTTSize() <<std::endl;
     
     
     std::cout << "uciok" << std::endl;
@@ -81,6 +81,20 @@ void uci_processCommand(std::string str) {
     std::vector<std::string> split{};
     splitString(str, split, ' ');
 
+    
+    
+    /**
+     * used for input debugging to check what information has been given to the engine.
+     */
+    if(false){
+        ofstream myfile;
+        myfile.open ("input.debug", fstream::app);
+        myfile << str << "\n";
+        myfile.close();
+    }
+    
+    
+
 //    std::cout << str << std::endl;
     
 //    std::cout << "...";
@@ -97,7 +111,7 @@ void uci_processCommand(std::string str) {
         string name = uci_getValue(split, "name");
         string value = uci_getValue(split, "value");
         
-        std::cout<< "-" << name << "-  -"<<value<<"-"<<std::endl;
+        //std::cout<< "-" << name << "-  -"<<value<<"-"<<std::endl;
         
         uci_set_option(name, value);
     }else if (split.at(0) == "go"){
@@ -184,11 +198,16 @@ void uci_go_nodes(int nodes) {
 }
 
 void uci_go_time(int movetime) {
-
+    if(searchThread != nullptr){
+        return;
+    }
+    
+    searchThread = new std::thread(uci_searchAndPrint,  MAX_PLY, movetime);
+    searchThread->detach();
 }
 
 void uci_go_infinite() {
-    uci_go_depth(100);
+    uci_go_depth(MAX_PLY);
 }
 
 void uci_go_mate(int depth) {
@@ -200,7 +219,9 @@ void uci_stop() {
 }
 
 void uci_set_option(std::string name, std::string value) {
-    if(name == "hash") search_setHashSize(stoi(value));
+    if(name == "Hash") {
+        search_setHashSize(stoi(value));
+    }
 }
 
 void uci_isReady() {

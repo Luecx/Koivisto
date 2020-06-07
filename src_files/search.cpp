@@ -188,7 +188,7 @@ void printInfoString(Board *b, Depth d, Score score){
     
     MoveList* em = moves[0];
     em->clear();
-    extractPV(b, em, d);
+    extractPV(b, em, _selDepth);
     std::cout << " pv";
     for(int i = 0; i < em->getSize(); i++){
         std::cout << " " << toString(em->getMove(i)) ;

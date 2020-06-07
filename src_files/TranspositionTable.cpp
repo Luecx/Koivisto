@@ -149,6 +149,12 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
     }
     
     return false;
-    
-    
+}
+
+/**
+ * returns the maximum TT size in MB
+ * @return
+ */
+int maxTTSize(){
+    return (ONE << (32-20)) * sizeof(Entry);
 }

@@ -81,5 +81,10 @@ class TranspositionTable {
         
 };
 
+/**
+ * returns the maximum TT size in MB
+ * @return
+ */
+int maxTTSize();
 
 #endif //CHESSCOMPUTER_HASHMAP_H
