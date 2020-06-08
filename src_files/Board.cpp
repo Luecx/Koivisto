@@ -1102,13 +1102,32 @@ Score Board::staticExchangeEvaluation(Move m){
     Piece capturedPiece = isCapture(m) ? getCapturedPiece(m):-1;
     Piece capturingPiece = getMovingPiece(m);
     
-    
     Color attacker = capturingPiece < BLACK_PAWN ? WHITE:BLACK;
 
     Score gain[32], d = 0;
     U64 fromSet = ONE << sqFrom;
     U64 occ     = *occupied;
-    U64 attadef = attacksTo( occ, sqTo );
+    
+    U64 sqBB = ONE << sqTo;
+    U64 bishopsQueens, rooksQueens;
+    rooksQueens    =
+    bishopsQueens  = pieces[WHITE_QUEEN]  | pieces[BLACK_QUEEN];
+    rooksQueens   |= pieces[WHITE_ROOK]   | pieces[BLACK_ROOK];
+    bishopsQueens |= pieces[WHITE_BISHOP] | pieces[BLACK_BISHOP];
+    
+    
+    U64 fixed = ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & pieces[BLACK_PAWN])
+                | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & pieces[WHITE_PAWN])
+                | (KNIGHT_ATTACKS      [sqTo] & (pieces[WHITE_KNIGHT] | pieces[BLACK_KNIGHT]))
+                | (KING_ATTACKS        [sqTo] & (pieces[WHITE_KING]   | pieces[BLACK_KING]));
+    
+    //fixed is the attackset of attackers that cannot pin other pieces like pawns, kings, knights
+    
+    
+    U64 attadef =  (fixed
+            | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens)
+            | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
+
     
     if(isCapture(m))
         gain[d]     = vals[capturedPiece % 6];
@@ -1128,7 +1147,8 @@ Score Board::staticExchangeEvaluation(Move m){
         
         attadef ^= fromSet; // reset bit in set to traverse
         occ     ^= fromSet;
-        attadef |= (attacksTo(occ, sqTo) & occ);
+        attadef |=  occ & (lookUpBishopAttack(sqTo, occ) & bishopsQueens | (lookUpRookAttack(sqTo, occ) & rooksQueens));
+        //attadef |= (attacksTo(occ, sqTo) & occ);
         fromSet  = getLeastValuablePiece (attadef, attacker, capturingPiece);
 
     } while (fromSet);
