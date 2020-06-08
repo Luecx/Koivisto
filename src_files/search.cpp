@@ -391,7 +391,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false ,sd);
         } else {
             score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr + extension, ply+ONE_PLY,false, sd);
-            if ( score > alpha ) // in fail-soft ... && score < beta ) is common
+            if ( score > alpha && pv) // in fail-soft ... && score < beta ) is common
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
         }
         
