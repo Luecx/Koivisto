@@ -321,7 +321,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      */
     if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
-        score = -pvSearch(b, 1-alpha,-alpha,depth-3*ONE_PLY, ply + ONE_PLY,false, sd);
+        score = -pvSearch(b, -beta, -beta + 1,depth-3*ONE_PLY, ply + ONE_PLY,false, sd);
         b->undoMove_null();
         if ( score >= beta ) {
             return beta;
@@ -392,7 +392,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         } else {
             score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr + extension, ply+ONE_PLY,false, sd);
             if (lmr && score > alpha )
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
+                score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
         }
