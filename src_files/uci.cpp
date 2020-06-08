@@ -158,7 +158,7 @@ void uci_processCommand(std::string str) {
         }
         
         if(fenPos != string::npos){
-            string fen = str.substr(fenPos+3, movePos);
+            string fen = str.substr(fenPos+3);
             fen = trim(fen);
             uci_position_fen(fen, moves);
         }else{

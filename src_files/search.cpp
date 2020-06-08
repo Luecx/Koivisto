@@ -85,8 +85,8 @@ void search_setHashSize(int hashSize) {
  * called at the start of the program
  */
 void search_init(int hashSize) {
-    moves = new MoveList*[MAX_PLY];
-    for(int i = 0; i < MAX_PLY; i++){
+    moves = new MoveList*[MAX_INTERNAL_PLY];
+    for(int i = 0; i < MAX_INTERNAL_PLY; i++){
         moves[i] = new MoveList();
     }
     table = new TranspositionTable(hashSize);
@@ -97,7 +97,7 @@ void search_init(int hashSize) {
  * called at the exit of the program
  */
 void search_cleanUp() {
-    for(int i = 0; i < MAX_PLY; i++){
+    for(int i = 0; i < MAX_INTERNAL_PLY; i++){
         delete moves[i];
         moves[i] = nullptr;
     }
@@ -119,16 +119,17 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
     
     if(depth <= 0) return;
     
+    
     U64 zob = b->zobrist();
     if(table->get(zob) != nullptr){
         
         //extract the move from the table
         Move mov = table->get(zob)->move;
         //reset score information to check if the move is contained in pseudo legal moves
-        setScore(mov, 0);
+        setScore(mov,0);
         
         //get a movelist which can be used to store all pseudo legal moves
-        MoveList* mvStorage = moves[depth];
+        MoveList* mvStorage = new MoveList();
         //extract pseudo legal moves
         b->getPseudoLegalMoves(mvStorage);
         
@@ -139,6 +140,8 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
                 moveContained = true;
             }
         }
+        
+        delete mvStorage;
         
         
         //return if the move doesnt exist for this board
@@ -186,13 +189,15 @@ void printInfoString(Board *b, Depth d, Score score){
                  " time " << elapsedTime() <<
                  " hashfull " << (int)(table->usage() * 1000);
     
-    MoveList* em = moves[0];
+    MoveList* em = new MoveList();
     em->clear();
     extractPV(b, em, _selDepth);
     std::cout << " pv";
     for(int i = 0; i < em->getSize(); i++){
         std::cout << " " << toString(em->getMove(i)) ;
     }
+    
+    delete em;
     
     
     std::cout << std::endl;
@@ -218,6 +223,8 @@ void printInfoString(Board *b, Depth d, Score score){
  */
 Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     
+    if(maxDepth > MAX_PLY) maxDepth = MAX_PLY;
+    
     _maxTime = maxTime;
     _forceStop = false;
     _nodes = 0;
@@ -232,7 +239,7 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     
         //start measure for time this iteration takes
         Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false, &sd);
-        printInfoString(b, d, score);
+        //printInfoString(b, d, score);
        
         if(!isTimeLeft()) break;
     }
@@ -264,11 +271,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         return 0;
     }
 
-    if (ply>_selDepth){
+    if (ply > _selDepth){
         _selDepth = ply;
     }
 
-    if( depth <= 0 ) {
+    //depth > MAX_PLY means that it overflowed because depth is unsigned.
+    if( depth == 0 || depth > MAX_PLY) {
         return qSearch(b, alpha, beta, ply);
     }
     
@@ -320,6 +328,28 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
     }
     
+    /*
+     * mate distance pruning
+     */
+    Score matingValue = MAX_MATE_SCORE - ply;
+    if (matingValue < beta) {
+        beta = matingValue;
+        if (alpha >= matingValue) return matingValue;
+    }
+    matingValue = -MAX_MATE_SCORE + ply;
+    if (matingValue > alpha) {
+        alpha = matingValue;
+        if (beta <= matingValue) return matingValue;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     MoveList *mv = moves[ply];
     b->getPseudoLegalMoves(mv);
@@ -344,8 +374,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         if (b->givesCheck(m) && b->staticExchangeEvaluation(m)>=0){
             extension = 1;
         }
-
-        
+    
+    
         b->move(m);
         
         //verify that givesCheck is correct
@@ -377,6 +407,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             bestMove = m;
         }
         if( score > alpha ) {
+            
+            if(ply == 0) {
+                //we need to put the transposition in here so that printInfoString displays the correct pv
+                table->put(zobrist, alpha, bestMove,PV_NODE,depth);
+                printInfoString(b, depth, score);
+            }
+            
             alpha = score;
             bestMove = m;
         }else{
@@ -449,6 +486,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         Move m = moveOrderer.next();
         
         if(!b->isLegal(m)) continue;
+        
         
         b->move(m);
         

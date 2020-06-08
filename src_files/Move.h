@@ -77,7 +77,7 @@ Move genMove(
 
 
 
-void printMoveBits(Move move);
+void printMoveBits(Move move, bool bitInfo = true);
 
 
 inline bb::Square getSquareFrom(const Move &move){
@@ -158,6 +158,8 @@ class MoveList{
         void add(move::Move move);
         
         void scoreMove(int index, MoveScore score);
+  
+        void printMoveBits();
         
         int getSize() const;
     

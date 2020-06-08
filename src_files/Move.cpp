@@ -60,7 +60,7 @@ Move move::genMove(
  * Useful for debugging.
  * @param move
  */
-void move::printMoveBits( Move move){
+void move::printMoveBits( Move move, bool bitInfo){
     std::cout << " ";
     for(int i = 0; i < 8; i++){
         std::cout << ((move >> (31-i)) & 1UL) ? "1":"0";
@@ -85,19 +85,26 @@ void move::printMoveBits( Move move){
     for(int i = 0; i < 6; i++){
         std::cout << ((move >> (5-i)) & 1UL) ? "1":"0";
     }
-    std::cout << "\n";
-    std::cout << "|        |    |    |    |      |      squareFrom\n"
-                 "|        |    |    |    |      +--------------------------\n"
-                 "|        |    |    |    |             squareTo\n"
-                 "|        |    |    |    +---------------------------------\n"
-                 "|        |    |    |                  type information\n"
-                 "|        |    |    +--------------------------------------\n"
-                 "|        |    |                       moving piece\n"
-                 "|        |    +-------------------------------------------\n"
-                 "|        |                            captured piece\n"
-                 "|        +------------------------------------------------\n"
-                 "|                                     score information\n"
-                 "+---------------------------------------------------------" << std::endl;
+    
+    
+    if(bitInfo){
+        std::cout << "\n";
+        std::cout << "|        |    |    |    |      |      squareFrom\n"
+                     "|        |    |    |    |      +--------------------------\n"
+                     "|        |    |    |    |             squareTo\n"
+                     "|        |    |    |    +---------------------------------\n"
+                     "|        |    |    |                  type information\n"
+                     "|        |    |    +--------------------------------------\n"
+                     "|        |    |                       moving piece\n"
+                     "|        |    +-------------------------------------------\n"
+                     "|        |                            captured piece\n"
+                     "|        +------------------------------------------------\n"
+                     "|                                     score information\n"
+                     "+---------------------------------------------------------" << std::endl;
+    }else{
+        std::cout << std::endl;
+    }
+    
     
 }
 
@@ -242,6 +249,15 @@ int MoveList::getSize() const {
  */
 void MoveList::scoreMove(int index, MoveScore score) {
     setScore(moves[index], score);
+}
+
+/**
+ * prints the bits of all the moves
+ */
+void MoveList::printMoveBits() {
+    for(int i = 0; i < this->size; i++){
+        ::move::printMoveBits(getMove(i), false);
+    }
 }
 
 

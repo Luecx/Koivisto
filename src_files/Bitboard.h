@@ -30,7 +30,7 @@ typedef int8_t Rank;
 typedef int8_t Piece;
 typedef uint8_t Color;
 
-typedef int8_t Depth;
+typedef uint8_t Depth;
 typedef int16_t Score;
 
 
