@@ -238,7 +238,7 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     for(Depth d = 1; d <= maxDepth; d++){
     
         //start measure for time this iteration takes
-        Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false, 0,&sd);
+        Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd);
         //printInfoString(b, d, score);
        
         if(!isTimeLeft()) break;
@@ -258,7 +258,7 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
  * @param expectedCut
  * @return
  */
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, int nullMoveCount, SearchData *sd) {
+Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut,SearchData *sd) {
     
     
     _nodes++;
@@ -327,26 +327,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      * used to reduce the bounds for the zw-search.
      * It is defines as the amount of moves with a positive history score.
      */
-//    int numPGAM = 0;
-//    for(int i = 0; i < mv->getSize(); i++){
-//        Move m = mv->getMove(i);
-//        Square sqFrom = getSquareFrom(m);
-//        Square sqTo =   getSquareTo(m);
-//        if(sd->history[sqFrom][sqTo] > 0){
-//            numPGAM ++;
-//        }
-//    }
+
     
     if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
-//        Score bound = beta;
-//        if(nullMoveCount == 0){
-//
-//            Score tempo = 10*(numPGAM > 0) + 10* (numPGAM > 15);
-//            bound -= tempo; // variable bound
-//        }
         
-        score = -pvSearch(b, -beta,1-beta,depth-3*ONE_PLY, ply + ONE_PLY,false, nullMoveCount+1, sd);
+        score = -pvSearch(b, -beta,1-beta,depth-3*ONE_PLY, ply + ONE_PLY,false,  sd);
         b->undoMove_null();
         if ( score >= beta ) {
             return beta;
@@ -358,7 +344,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      */
     if (depth >= 6 && pv && !hashMove)
     {
-        pvSearch(b, alpha, beta, depth - 2, ply, false , nullMoveCount, sd);
+        pvSearch(b, alpha, beta, depth - 2, ply, false ,  sd);
         en = table->get(zobrist);
         if(en != nullptr){
             hashMove = en->move;
@@ -410,13 +396,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || isCapture(m)) ? 0:lmrReductions[depth][legalMoves];
 
         if (legalMoves == 0 && pv) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false , nullMoveCount, sd);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false ,  sd);
         } else {
-            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr + extension, ply+ONE_PLY,false, nullMoveCount, sd);
+            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr + extension, ply+ONE_PLY,false,  sd);
             if (lmr && score > alpha )
-                score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
+                score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false,  sd); // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false,nullMoveCount, sd); // re-search
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
             
         }
 

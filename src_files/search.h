@@ -36,7 +36,7 @@ void search_init(int hashSize);     //used to create arrays, movelists etc
 void search_cleanUp();              //used to clean up the memory
 
 Move bestMove(Board *b, Depth maxDepth, int maxTime);
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, int nullMoveCount, SearchData *sd);
+Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, SearchData *sd);
 Score  qSearch(Board *b, Score alpha, Score beta, Depth ply);
 
 
