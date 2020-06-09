@@ -238,8 +238,9 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     for(Depth d = 1; d <= maxDepth; d++){
     
         //start measure for time this iteration takes
-        Score score = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd);
-        //printInfoString(b, d, score);
+//        Score score =
+//        //printInfoString(b, d, score);
+        pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd);
        
         if(!isTimeLeft()) break;
     }
@@ -291,9 +292,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     Move hashMove               = 0;
     
     
-    /*
-     * checking
-     */
+    /**************************************************************************************
+     *                  T R A N S P O S I T I O N - T A B L E   P R O B E                 *
+     **************************************************************************************/
     Entry* en = table->get(zobrist);
     if(en != nullptr){
         hashMove = en->move;
@@ -301,7 +302,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         if(en->depth >= depth){
             if (en->type == PV_NODE && en->score >= alpha){
                 return en->score;
-            }else if (en->type == CUT_NODE) {
+            }
+            else if (en->type == CUT_NODE) {
                 if(en->score  >= beta){
                     return beta;
                 }
@@ -320,15 +322,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     b->getPseudoLegalMoves(mv);
     
     
-    /*
-     * null move pruning
-     *
-     * numPGAM = number of possible good alternative moves.
-     * used to reduce the bounds for the zw-search.
-     * It is defines as the amount of moves with a positive history score.
-     */
-
-    
+    /**************************************************************************************
+     *                  N U L L - M O V E   P R U N I N G                                 *
+     **************************************************************************************/
     if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
         
@@ -338,7 +334,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             return beta;
         }
     }
-
+    
+    
+    /**************************************************************************************
+     *        I N T E R N A L   I T E R A T I V E   D E E P E N I N G                     *
+     **************************************************************************************/
+    
     /*
      * internal iterative deepening
      */
@@ -350,10 +351,10 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             hashMove = en->move;
         }
     }
-
-    /*
-     * mate distance pruning
-     */
+    
+    /**************************************************************************************
+     *              M A T E - D I S T A N C E   P R U N I N G                             *
+     **************************************************************************************/
     Score matingValue = MAX_MATE_SCORE - ply;
     if (matingValue < beta) {
         beta = matingValue;
@@ -414,7 +415,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
         if( score >= beta ){
             table->put(zobrist, beta, m, CUT_NODE, depth);
-            sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+            if(getType(m) == QUIET){
+                sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+            }
             return beta;
         }
     
@@ -433,7 +436,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             alpha = score;
             bestMove = m;
         }else{
-            sd->subtractHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+            if(getType(m) == QUIET){
+                sd->subtractHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+            }
         }
         
     
