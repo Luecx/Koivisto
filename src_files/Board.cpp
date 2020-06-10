@@ -1425,22 +1425,22 @@ bool Board::isLegal(Move m) {
         setBit(this->pieces[captured], sqTo);
 
     } else {
-        if(thisKing == 64){
-            std::cout << *this;
-    
-            *occupied = occCopy;
-            undoMove();
-            std::cout << *this;
-            undoMove();
-            std::cout << *this;
-            undoMove();
-            std::cout << *this;
-            undoMove();
-            std::cout << *this;
-            
-            exit(-1);
-        }
-            isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
+//        if(thisKing == 64){
+//            std::cout << *this;
+//
+//            *occupied = occCopy;
+//            undoMove();
+//            std::cout << *this;
+//            undoMove();
+//            std::cout << *this;
+//            undoMove();
+//            std::cout << *this;
+//            undoMove();
+//            std::cout << *this;
+//
+//            exit(-1);
+//        }
+        isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
     }
     
     

@@ -10,7 +10,42 @@
 #include "Board.h"
 
 
-bb::Score evaluate(Board* b);
+class Evaluator{
+    public:
+        
+        bb::Score evaluate(Board *b);
+        
+        /**
+         * returns the phase of the last calculation
+         * @return
+         */
+        double getPhase();
+        
+        /**
+         * returns a list of features of the last calculation
+         * @return
+         */
+        double *getFeatures();
+        
+        /**
+         * returns a list of early game parameters
+         * @return
+         */
+        double *getEarlyGameParams();
+        
+        /**
+         * returns a list of late game parameters
+         */
+        double *getLateGameParams();
+    
+        /**
+         * returns the amount of tunable parameters
+         */
+        int paramCount();
+};
+
+
+
 
 
 #endif //KOIVISTO_EVAL_H

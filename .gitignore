@@ -4,3 +4,7 @@
 cmake-build-debug/
 
 cmake-build-release/
+
+tuning/lichess-new-labeled.epd
+
+tuning/quiet-labeled.epd

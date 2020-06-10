@@ -21,6 +21,7 @@ bool _forceStop = false;
  */
 
 int lmrReductions[256][256];
+Evaluator evaluator{};
 
 
 void initLmr()
@@ -280,7 +281,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     if( depth == 0 || depth > MAX_PLY) {
         //Don't drop into qsearch if in check
         if (b->isInCheck(b->getActivePlayer())){
-            depth++;
+            depth ++;
         }else{
             return qSearch(b, alpha, beta, ply);
         }
@@ -332,7 +333,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      **************************************************************************************/
     if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
-        
+
         score = -pvSearch(b, -beta,1-beta,depth-3*ONE_PLY, ply + ONE_PLY,false,  sd);
         b->undoMove_null();
         if ( score >= beta ) {
@@ -482,7 +483,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
  * @return
  */
 Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
-    Score stand_pat = evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
+    Score stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
     
     //shall we count qSearch nodes?
     _nodes ++;

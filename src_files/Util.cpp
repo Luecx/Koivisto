@@ -71,6 +71,31 @@ std::vector<std::string> & splitString(const std::string &txt, std::vector<std::
 }
 
 
+
+std::string loadingBar(int count, int max, std::string msg){
+    std::stringstream ss{};
+    double p = count / (double)max;
+    
+    ss << (int)(100*p) << "% [";
+    for(int i = 0; i < 50 * p; i++){
+        ss << "=";
+    }
+    ss << ">";
+    for(int i = 0; i < 50*(1-p); i++){
+        ss << " ";
+    }
+    ss << "] ";
+    ss << count << "/" << max << " " << msg;
+    return ss.str();
+}
+
+
+
+
+
+
+
+
 auto start = std::chrono::system_clock::now();
 
 /**

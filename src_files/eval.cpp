@@ -83,12 +83,29 @@ Score psqt_king_endgame[] = {
         -50,-30,-30,-30,-30,-30,-30,-50
 };
 
+
+double* _pieceValuesEarly = new double[5]{
+        106.497,
+        273.137,
+        293.337,
+        522.083,
+        967.347};
+double* _pieceValuesLate = new double[5]{
+        75.0143,
+        357.231,
+        377.351,
+        452.35,
+        941.283};
+double* _features          = new double[5];
+
+double  _phase;
+
 /**
  * evaluates the board.
  * @param b
  * @return
  */
-bb::Score evaluate(Board *b) {
+bb::Score Evaluator::evaluate(Board *b) {
     
     Score res = 0;
     
@@ -177,13 +194,47 @@ bb::Score evaluate(Board *b) {
         k = lsbReset(k);
     }
     
-    res += (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP])) * 325;
-    res += (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT])) * 310;
-    res += (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]))   * 500;
-    res += (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]))  * 920;
-    res += (bitCount(b->getPieces()[WHITE_PAWN])   - bitCount(b->getPieces()[BLACK_PAWN]))   * 100;
+    
+    _features[0] = (bitCount(b->getPieces()[WHITE_PAWN])   - bitCount(b->getPieces()[BLACK_PAWN]));
+    _features[1] = (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT]));
+    _features[2] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
+    _features[3] = (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]));
+    _features[4] = (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]));
+
+    _phase = (double)(18 - phase) / 18;
+
+
+    for(int i = 0; i < 5; i++){
+        res += _features[i] * (_phase * _pieceValuesEarly[i] + (1-_phase) * _pieceValuesLate[i]);
+    }
+    
+//    res += (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP])) * 325;
+//    res += (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT])) * 310;
+//    res += (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]))   * 500;
+//    res += (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]))  * 920;
+//    res += (bitCount(b->getPieces()[WHITE_PAWN])   - bitCount(b->getPieces()[BLACK_PAWN]))   * 100;
     
     return res;
     
 
+}
+
+double *Evaluator::getFeatures() {
+    return _features;
+}
+
+double Evaluator::getPhase() {
+        return _phase;
+}
+
+double *Evaluator::getEarlyGameParams() {
+    return _pieceValuesEarly;
+}
+
+double *Evaluator::getLateGameParams() {
+    return _pieceValuesLate;
+}
+
+int Evaluator::paramCount(){
+    return 5;
 }

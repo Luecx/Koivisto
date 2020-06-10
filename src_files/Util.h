@@ -23,6 +23,10 @@ std::string& ltrim(std::string& s, const char* t = ws_t);
 // trim from both ends of string (right then left)
 std::string& trim(std::string& s, const char* t = ws_t);
 
+// prints a loading bar
+std::string loadingBar(int count, int max, std::string msg);
+
+
 /**
  * https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
  * @param data
