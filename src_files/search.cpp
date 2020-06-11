@@ -180,7 +180,7 @@ void printInfoString(Board *b, Depth d, Score score){
                  " score cp " << score;
     
     if(abs(score) > MIN_MATE_SCORE){
-        std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2;
+        std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2 * (score > 0 ? 1:-1);
     }
     
     std::cout <<
@@ -433,7 +433,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
         if( score > alpha ) {
             
-            if(ply == 0) {
+            if(ply == 0 && isTimeLeft()) {
                 //we need to put the transposition in here so that printInfoString displays the correct pv
                 table->put(zobrist, alpha, bestMove,PV_NODE,depth);
                 printInfoString(b, depth, score);

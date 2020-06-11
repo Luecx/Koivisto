@@ -84,19 +84,39 @@ Score psqt_king_endgame[] = {
 };
 
 
-double* _pieceValuesEarly = new double[5]{
-        106.497,
-        273.137,
-        293.337,
-        522.083,
-        967.347};
-double* _pieceValuesLate = new double[5]{
-        75.0143,
-        357.231,
-        377.351,
-        452.35,
-        941.283};
-double* _features          = new double[5];
+int unusedVariable = 0;
+
+int INDEX_PAWN_VALUE = unusedVariable++;
+int INDEX_PAWN_STRUCTURE = unusedVariable++;
+int INDEX_PAWN_PASSED = unusedVariable++;
+int INDEX_PAWN_ISOLATED = unusedVariable++;
+int INDEX_KNIGHT_VALUE = unusedVariable++;
+int INDEX_BISHOP_VALUE = unusedVariable++;
+int INDEX_ROOK_VALUE = unusedVariable++;
+int INDEX_QUEEN_VALUE = unusedVariable++;
+
+
+double* _pieceValuesEarly = new double[8]{
+        89.3043,
+        -0.247742,
+        31.2267,
+        -6.77693,
+        275.173,
+        297.261,
+        528.165,
+        969.582
+};
+double* _pieceValuesLate = new double[8]{
+        67.7815,
+        5.50031,
+        19.58,
+        -21.7177,
+        355.969,
+        383.607,
+        454.861,
+        942.713
+};
+double* _features          = new double[8];
 
 double  _phase;
 
@@ -111,18 +131,71 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     U64 k;
     int phase = 0;
-
-    k = b->getPieces()[WHITE_PAWN];
+    
+    /**********************************************************************************
+     *                                  P A W N S                                     *
+     **********************************************************************************/
+    
+    
+    U64 whitePawns = b->getPieces()[WHITE_PAWN];
+    U64 blackPawns = b->getPieces()[BLACK_PAWN];
+    
+    k = whitePawns;
+    _features[INDEX_PAWN_PASSED] = 0;
+    _features[INDEX_PAWN_ISOLATED] = 0;
     while(k){
-        res += psqt_pawn[63 - bitscanForward(k)];
+        Square s = bitscanForward(k);
+        
+        //isolated pawns
+        if((FILES_NEIGHBOUR[fileIndex(s)] & whitePawns) == 0){
+            _features[INDEX_PAWN_ISOLATED] += 1;
+        }
+        
+        //passed pawn
+        if((whitePassedPawnMask[s] & blackPawns) == 0){
+            _features[INDEX_PAWN_PASSED] += 1;
+        }
+        
+        res += psqt_pawn[63 - s];
         k = lsbReset(k);
     }
     
     k = b->getPieces()[BLACK_PAWN];
     while(k){
-        res -= psqt_pawn[bitscanForward(k)];
+        Square s = bitscanForward(k);
+    
+        //isolated pawns
+        if((FILES_NEIGHBOUR[fileIndex(s)] & blackPawns) == 0){
+            _features[INDEX_PAWN_ISOLATED] -= 1;
+        }
+        //passed pawn
+        if((blackPassedPawnMask[s] & whitePawns) == 0){
+            _features[INDEX_PAWN_PASSED] -= 1;
+        }
+        
+        res -= psqt_pawn[s];
         k = lsbReset(k);
     }
+    
+    
+    
+    U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
+    U64 whitePawnWestCover = shiftNorthEast(whitePawns) & whitePawns;
+    U64 blackPawnEastCover = shiftNorthEast(blackPawns) & blackPawns;
+    U64 blackPawnWestCover = shiftNorthEast(blackPawns) & blackPawns;
+    
+    _features[INDEX_PAWN_VALUE] =
+            + bitCount(b->getPieces()[WHITE_PAWN])
+            - bitCount(b->getPieces()[BLACK_PAWN]);
+    _features[INDEX_PAWN_STRUCTURE] =
+            + bitCount(whitePawnEastCover)
+            + bitCount(whitePawnWestCover)
+            - bitCount(blackPawnEastCover)
+            - bitCount(blackPawnWestCover);
+    
+    /**********************************************************************************
+     *                                  K N I G H T S                                 *
+     **********************************************************************************/
     
     k = b->getPieces()[WHITE_KNIGHT];
     while(k){
@@ -137,7 +210,10 @@ bb::Score Evaluator::evaluate(Board *b) {
         k = lsbReset(k);
         phase++;
     }
-    
+    _features[INDEX_KNIGHT_VALUE] = (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT]));
+    /**********************************************************************************
+     *                                  B I S H O P S                                 *
+     **********************************************************************************/
     k = b->getPieces()[WHITE_BISHOP];
     while(k){
         res += psqt_bishop[63 - bitscanForward(k)];
@@ -151,7 +227,10 @@ bb::Score Evaluator::evaluate(Board *b) {
         k = lsbReset(k);
         phase++;
     }
-    
+    _features[INDEX_BISHOP_VALUE] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
+    /**********************************************************************************
+     *                                  R O O K S                                     *
+     **********************************************************************************/
     k = b->getPieces()[WHITE_ROOK];
     while(k){
         res += psqt_rook[63 - bitscanForward(k)];
@@ -165,7 +244,10 @@ bb::Score Evaluator::evaluate(Board *b) {
         k = lsbReset(k);
         phase++;
     }
-    
+    _features[INDEX_ROOK_VALUE] = (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]));
+    /**********************************************************************************
+     *                                  Q U E E N S                                   *
+     **********************************************************************************/
     k = b->getPieces()[WHITE_QUEEN];
     while(k){
         res += psqt_queen[63 - bitscanForward(k)];
@@ -179,7 +261,11 @@ bb::Score Evaluator::evaluate(Board *b) {
         k = lsbReset(k);
         phase+=3;
     }
+    _features[INDEX_QUEEN_VALUE] = (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]));
     
+    /**********************************************************************************
+     *                                  K I N G S                                     *
+     **********************************************************************************/
     k = b->getPieces()[WHITE_KING];
     while(k){
         res += psqt_king[63 - bitscanForward(k)]*phase/18;
@@ -195,16 +281,11 @@ bb::Score Evaluator::evaluate(Board *b) {
     }
     
     
-    _features[0] = (bitCount(b->getPieces()[WHITE_PAWN])   - bitCount(b->getPieces()[BLACK_PAWN]));
-    _features[1] = (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT]));
-    _features[2] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
-    _features[3] = (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]));
-    _features[4] = (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]));
 
     _phase = (double)(18 - phase) / 18;
 
 
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < 8; i++){
         res += _features[i] * (_phase * _pieceValuesEarly[i] + (1-_phase) * _pieceValuesLate[i]);
     }
     
@@ -236,5 +317,5 @@ double *Evaluator::getLateGameParams() {
 }
 
 int Evaluator::paramCount(){
-    return 5;
+    return 8;
 }
