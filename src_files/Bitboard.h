@@ -486,15 +486,15 @@ void generateData();
 U64 generateSlidingAttacks(Square sq, Direction direction, U64 occ);
 
 
-inline Rank rankIndex(Square &square_index) {
+inline Rank rankIndex(Square square_index) {
     return square_index >> 3;
 }
 
-inline File fileIndex(Square &square_index) {
+inline File fileIndex(Square square_index) {
     return square_index & 7;
 }
 
-inline Square squareIndex(Rank &rank, File &file) {
+inline Square squareIndex(Rank rank, File file) {
     return 8 * rank + file;
 }
 
@@ -514,7 +514,7 @@ inline AntiDiagonal antiDiagonalIndex(Square &square_index) {
     return rankIndex(square_index) + fileIndex(square_index);
 }
 
-inline Diagonal diagonalIndex(Rank &rank, File file) {
+inline Diagonal diagonalIndex(Rank rank, File file) {
     return 7 + rank - file;
 }
 
@@ -692,7 +692,7 @@ inline U64 lookUpBishopAttack(Square index, U64 occupied) {
  * @param bb
  * @return
  */
-inline Square bitscanForward(U64 &bb) {
+inline Square bitscanForward(U64 bb) {
 //    assert(bb != 0);
     return __builtin_ctzll(bb);
 }
@@ -702,7 +702,7 @@ inline Square bitscanForward(U64 &bb) {
  * @param bb
  * @return
  */
-inline Square bitscanReverse(U64 &bb) {
+inline Square bitscanReverse(U64 bb) {
 //    assert(bb != 0);
     return __builtin_clzll(bb) ^ 63;
 }
@@ -712,7 +712,7 @@ inline Square bitscanReverse(U64 &bb) {
  * @param bb
  * @return
  */
-inline int bitCount(U64 &bb) {
+inline int bitCount(U64 bb) {
     return __builtin_popcountll(bb);
 //        int counter = 0;
 //        while(bb != 0){
@@ -730,7 +730,7 @@ inline int bitCount(U64 &bb) {
  * @param r2
  * @return
  */
-inline int chebyshevDistance(File &f1, Rank &r1, File &f2, Rank &r2) {
+inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) {
     return max(abs(r2 - r1), abs(f2 - f1));
 }
 
@@ -740,7 +740,7 @@ inline int chebyshevDistance(File &f1, Rank &r1, File &f2, Rank &r2) {
  * @param sq2
  * @return
  */
-inline int chebyshevDistance(Square &sq1, Square &sq2) {
+inline int chebyshevDistance(Square sq1, Square sq2) {
 
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
@@ -759,7 +759,7 @@ inline int chebyshevDistance(Square &sq1, Square &sq2) {
  * @return
  */
 
-inline int manhattanDistance(File &f1, Rank &r1, File &f2, Rank &r2) {
+inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) {
     return max(abs(r2 - r1), abs(f2 - f1));
 }
 
@@ -769,7 +769,7 @@ inline int manhattanDistance(File &f1, Rank &r1, File &f2, Rank &r2) {
  * @param sq2
  * @return
  */
-inline int manhattanDistance(Square &sq1, Square &sq2) {
+inline int manhattanDistance(Square sq1, Square sq2) {
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);

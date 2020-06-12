@@ -1,4 +1,5 @@
 
+#include <iomanip>
 #include "uci.h"
 
 
@@ -20,7 +21,7 @@ int main() {
 
 
       uci_loop();
-   
+    
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
@@ -32,22 +33,28 @@ int main() {
 //    using namespace tuning;
 //
 //
-//    loadPositionFile("..\\resources\\quiet-labeled.epd", 1000000);
+//    loadPositionFile("..\\resources\\lichess-new-labeled.epd", 2500000);
 //
 //
-//    auto K = tuning::computeK(evaluator, 2.53741, 100, 1e-7);
+//    auto K = tuning::computeK(evaluator,3.41208, 100, 1e-7);
 //
-//    for(int i = 0; i < 1000; i++){
-//        std::cout << tuning::optimise(evaluator, K, 2e3) << std::endl;
+//    for(int i = 0; i < 500; i++){
+//
+//        std::cout << "--------------------------------------------------- ["<<i << "] ----------------------------------------------" << std::endl;
+//
+//        for(int k = 0; k < evaluator->paramCount(); k++){
+//            std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k]<< ",";
+//        }
+//        std::cout << std::endl;
+//        for(int k = 0; k < evaluator->paramCount(); k++){
+//            std::cout << std::setw(14) <<evaluator->getLateGameParams()[k] << ",";
+//        }
+//        std::cout << std::endl;
+//
+//
+//        std::cout << tuning::optimise(evaluator, K, 5e4) << std::endl;
 //    }
 //
-//    for(int k = 0; k < evaluator->paramCount(); k++){
-//        std::cout << evaluator->getEarlyGameParams()[k]<< ","<< std::endl;
-//    }
-//    std::cout << std::endl;
-//    for(int k = 0; k < evaluator->paramCount(); k++){
-//        std::cout << evaluator->getLateGameParams()[k] << ","<<std::endl;
-//    }
 //
 //
 //

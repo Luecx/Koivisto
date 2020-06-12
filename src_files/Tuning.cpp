@@ -105,8 +105,10 @@ void tuning::loadPositionFile(std::string path, int count) {
             posCount++;
     
             
-            if(posCount % 1000 == 0)
-                std::cout << "\r" << loadingBar(posCount, count, "Loading data");
+            if(posCount % 10000 == 0){
+    
+                std::cout << "\r" << loadingBar(posCount, count, "Loading data") << std::flush;
+            }
             
             if(posCount >= count) break;
     
@@ -157,6 +159,8 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
         double      phase           = evaluator->getPhase();
         
         for(int p = 0; p < paramCount; p++){
+       
+            
             earlyGrads[p] += features[p] * phase * sigPrime * lossPrime;
             lateGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
         }

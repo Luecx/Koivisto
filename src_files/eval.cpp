@@ -90,33 +90,25 @@ int INDEX_PAWN_VALUE = unusedVariable++;
 int INDEX_PAWN_STRUCTURE = unusedVariable++;
 int INDEX_PAWN_PASSED = unusedVariable++;
 int INDEX_PAWN_ISOLATED = unusedVariable++;
+
 int INDEX_KNIGHT_VALUE = unusedVariable++;
+int INDEX_KNIGHT_MOBILITY = unusedVariable++;
+
 int INDEX_BISHOP_VALUE = unusedVariable++;
+int INDEX_BISHOP_MOBILITY = unusedVariable++;
+
 int INDEX_ROOK_VALUE = unusedVariable++;
+
 int INDEX_QUEEN_VALUE = unusedVariable++;
 
 
-double* _pieceValuesEarly = new double[8]{
-        89.3043,
-        -0.247742,
-        31.2267,
-        -6.77693,
-        275.173,
-        297.261,
-        528.165,
-        969.582
+double* _pieceValuesEarly = new double[unusedVariable]{
+        96.4714,       2.47014,       43.3677,      -12.8585,        293.24,       25.0742,       308.606,       22.2103,       615.413,       1114.24
 };
-double* _pieceValuesLate = new double[8]{
-        67.7815,
-        5.50031,
-        19.58,
-        -21.7177,
-        355.969,
-        383.607,
-        454.861,
-        942.713
+double* _pieceValuesLate = new double[unusedVariable]{
+        75.9295,       4.77114,      -8.71766,      -17.5425,       317.898,        1.1097,       322.713,       16.6606,       457.324,       1041.56
 };
-double* _features          = new double[8];
+double* _features          = new double[unusedVariable];
 
 double  _phase;
 
@@ -131,6 +123,10 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     U64 k;
     int phase = 0;
+    
+    U64 whiteTeam = b->getTeamOccupied()[WHITE];
+    U64 blackTeam = b->getTeamOccupied()[BLACK];
+    U64 occupied = *b->getOccupied();
     
     /**********************************************************************************
      *                                  P A W N S                                     *
@@ -197,16 +193,29 @@ bb::Score Evaluator::evaluate(Board *b) {
      *                                  K N I G H T S                                 *
      **********************************************************************************/
     
+    _features[INDEX_KNIGHT_MOBILITY] = 0;
+    
     k = b->getPieces()[WHITE_KNIGHT];
     while(k){
-        res += psqt_knight[63 - bitscanForward(k)];
+        Square s = bitscanForward(k);
+        
+        res += psqt_knight[63 - s];
+    
+        _features[INDEX_KNIGHT_MOBILITY] += sqrt(bitCount(KNIGHT_ATTACKS[s] & ~whiteTeam));
+        
         k = lsbReset(k);
         phase++;
     }
     
     k = b->getPieces()[BLACK_KNIGHT];
     while(k){
-        res -= psqt_knight[bitscanForward(k)];
+    
+        Square s = bitscanForward(k);
+        
+        res -= psqt_knight[s];
+    
+        _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(KNIGHT_ATTACKS[s] & ~blackTeam));
+        
         k = lsbReset(k);
         phase++;
     }
@@ -214,16 +223,24 @@ bb::Score Evaluator::evaluate(Board *b) {
     /**********************************************************************************
      *                                  B I S H O P S                                 *
      **********************************************************************************/
+    _features[INDEX_BISHOP_MOBILITY] = 0;
     k = b->getPieces()[WHITE_BISHOP];
     while(k){
-        res += psqt_bishop[63 - bitscanForward(k)];
+        Square s = bitscanForward(k);
+        res += psqt_bishop[63 -s ];
+        
+        _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(lookUpBishopAttack(s, occupied) & ~blackTeam));
         k = lsbReset(k);
         phase++;
     }
     
     k = b->getPieces()[BLACK_BISHOP];
     while(k){
-        res -= psqt_bishop[bitscanForward(k)];
+        Square s = bitscanForward(k);
+        res -= psqt_bishop[s];
+        
+        _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(lookUpBishopAttack(s, occupied) & ~blackTeam));
+    
         k = lsbReset(k);
         phase++;
     }
@@ -285,7 +302,7 @@ bb::Score Evaluator::evaluate(Board *b) {
     _phase = (double)(18 - phase) / 18;
 
 
-    for(int i = 0; i < 8; i++){
+    for(int i = 0; i < unusedVariable; i++){
         res += _features[i] * (_phase * _pieceValuesEarly[i] + (1-_phase) * _pieceValuesLate[i]);
     }
     
@@ -317,5 +334,5 @@ double *Evaluator::getLateGameParams() {
 }
 
 int Evaluator::paramCount(){
-    return 8;
+    return unusedVariable;
 }
