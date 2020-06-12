@@ -96,17 +96,21 @@ int INDEX_KNIGHT_MOBILITY = unusedVariable++;
 
 int INDEX_BISHOP_VALUE = unusedVariable++;
 int INDEX_BISHOP_MOBILITY = unusedVariable++;
+int INDEX_BISHOP_DOUBLED = unusedVariable++;
 
 int INDEX_ROOK_VALUE = unusedVariable++;
+int INDEX_ROOK_MOBILITY = unusedVariable++;
 
 int INDEX_QUEEN_VALUE = unusedVariable++;
 
 
 double* _pieceValuesEarly = new double[unusedVariable]{
-        96.4714,       2.47014,       43.3677,      -12.8585,        293.24,       25.0742,       308.606,       22.2103,       615.413,       1114.24
+         103.34,       2.73169,       47.4446,      -13.3571,       314.486,       28.0681,
+        312.048,       30.8024,        56.437,       586.638,       26.4492,       1153.09
 };
 double* _pieceValuesLate = new double[unusedVariable]{
-        75.9295,       4.77114,      -8.71766,      -17.5425,       317.898,        1.1097,       322.713,       16.6606,       457.324,       1041.56
+         79.626,       5.04308,      -10.5165,      -19.3154,       324.666,      -3.50834,
+         300.89,       13.6052,       28.7572,        421.83,       12.2131,       1061.02
 };
 double* _features          = new double[unusedVariable];
 
@@ -245,19 +249,33 @@ bb::Score Evaluator::evaluate(Board *b) {
         phase++;
     }
     _features[INDEX_BISHOP_VALUE] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
+    _features[INDEX_BISHOP_DOUBLED] = (bitCount(b->getPieces()[WHITE_BISHOP])==2) - (bitCount(b->getPieces()[BLACK_BISHOP])==2);
     /**********************************************************************************
      *                                  R O O K S                                     *
      **********************************************************************************/
+    _features[INDEX_ROOK_MOBILITY] = 0;
     k = b->getPieces()[WHITE_ROOK];
     while(k){
-        res += psqt_rook[63 - bitscanForward(k)];
+        Square s = bitscanForward(k);
+        
+        
+        res += psqt_rook[63 - s];
+    
+        _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(lookUpRookAttack(s, occupied) & ~whiteTeam));
+        
         k = lsbReset(k);
         phase++;
     }
     
     k = b->getPieces()[BLACK_ROOK];
     while(k){
-        res -= psqt_rook[bitscanForward(k)];
+        Square s = bitscanForward(k);
+        
+        
+        res -= psqt_rook[s];
+        _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(lookUpRookAttack(s, occupied) & ~blackTeam));
+        
+        
         k = lsbReset(k);
         phase++;
     }
