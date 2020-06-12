@@ -73,11 +73,14 @@ def plotData(dat, type):
     plt.ylabel(type)
     plt.xlabel('Move')
 
+
     # plt.ylim(top=30)    #ymax is your value
     # plt.ylim(bottom=0)  #ymin is your value
 
-    plt.plot(x1, d1)
-    plt.plot(x2, d2)
+    plt.plot(x1, d1, label=p1)
+    plt.plot(x2, d2, label=p2)
+
+    plt.legend()
 
     plt.show()
 
@@ -85,4 +88,4 @@ if __name__ == "__main__":
 
 
     dat = read_file(sys.argv[1])
-    plotData(dat,"time")
+    plotData(dat,"depth")

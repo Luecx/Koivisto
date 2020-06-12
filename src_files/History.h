@@ -5,13 +5,21 @@
 #ifndef KOIVISTO_HISTORY_H
 #define KOIVISTO_HISTORY_H
 
+#include "Move.h"
+#include "Bitboard.h"
+
+using namespace bb;
+using namespace move;
+
 struct SearchData{
 
     //history table (from-to)
     int history[64][64] = {0};
 
-    void addHistoryScore(int from, int to, int depth);
-    void subtractHistoryScore(int from, int to, int depth);
+    
+    
+    void addHistoryScore(Square from, Square to, Depth depth);
+    void subtractHistoryScore(Square from, Square to, Depth depth);
 
 };
 

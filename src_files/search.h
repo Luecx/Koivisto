@@ -22,12 +22,6 @@
 #include "History.h"
 
 
-constexpr Depth ONE_PLY = 1;
-constexpr Depth MAX_PLY = 128;
-constexpr Depth MAX_INTERNAL_PLY = 255;
-
-constexpr Score MAX_MATE_SCORE = (Score)((1 << 15) - 1);
-constexpr Score MIN_MATE_SCORE = (Score)(1 << 14);
 
 void initLmr();
 void search_stop();

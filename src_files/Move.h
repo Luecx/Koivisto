@@ -40,6 +40,7 @@ typedef uint8_t             MoveScore;
 constexpr Move MASK_4                         = 15;
 constexpr Move MASK_6                         = 63;
 constexpr Move MASK_8                         = 255;
+constexpr Move MASK_24                        = (1 << 24) - 1;
 
 constexpr int SHIFT_FROM                      = 0;
 constexpr int SHIFT_TO                        = 6;
@@ -79,6 +80,10 @@ Move genMove(
 
 void printMoveBits(Move move, bool bitInfo = true);
 
+inline bool sameMove(Move &m1, Move &m2){
+    //toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
+    return ((m1 ^ m2) & MASK_24) == 0;
+}
 
 inline bb::Square getSquareFrom(const Move &move){
     return ((move >> SHIFT_FROM) & MASK_6);

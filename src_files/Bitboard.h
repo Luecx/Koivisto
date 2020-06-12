@@ -34,6 +34,13 @@ typedef uint8_t Depth;
 typedef int16_t Score;
 
 
+constexpr Depth ONE_PLY = 1;
+constexpr Depth MAX_PLY = 128;
+constexpr Depth MAX_INTERNAL_PLY = 255;
+
+constexpr Score MAX_MATE_SCORE = (Score)((1 << 15) - 1);
+constexpr Score MIN_MATE_SCORE = (Score)(1 << 14);
+
 
 constexpr Color WHITE = 0;
 constexpr Color BLACK = 1;
@@ -231,6 +238,9 @@ constexpr U64 CIRCLE_A = 0xFF818181818181FFL;
 constexpr U64 CIRCLE_B = 0x7E424242427E00L;
 constexpr U64 CIRCLE_C = 0x3C24243C0000L;
 constexpr U64 CIRCLE_D = 0x1818000000L;
+
+constexpr U64 WHITE_SQUARES = 0x55AA55AA55AA55AA;
+constexpr U64 BLACK_SQUARES = ~WHITE_SQUARES;
 
 constexpr U64 CENTER_SQUARES = CIRCLE_D;
 constexpr U64 CENTER_SQUARES_EXTENDED = CIRCLE_C | CIRCLE_D;
