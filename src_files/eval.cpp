@@ -97,6 +97,7 @@ int INDEX_KNIGHT_MOBILITY = unusedVariable++;
 int INDEX_BISHOP_VALUE = unusedVariable++;
 int INDEX_BISHOP_MOBILITY = unusedVariable++;
 int INDEX_BISHOP_DOUBLED = unusedVariable++;
+int INDEX_BISHOP_PAWN_SAME_SQUARE = unusedVariable++;
 
 int INDEX_ROOK_VALUE = unusedVariable++;
 int INDEX_ROOK_MOBILITY = unusedVariable++;
@@ -105,12 +106,16 @@ int INDEX_QUEEN_VALUE = unusedVariable++;
 
 
 double* _pieceValuesEarly = new double[unusedVariable]{
-         103.34,       2.73169,       47.4446,      -13.3571,       314.486,       28.0681,
-        312.048,       30.8024,        56.437,       586.638,       26.4492,       1153.09
+        105.173,       2.19368,       47.4996,      -13.6994,
+        329.475,        25.025,       316.434,       29.7741,
+        60.2109,       1.98854,       588.863,        28.618,
+        1173.93
 };
 double* _pieceValuesLate = new double[unusedVariable]{
-         79.626,       5.04308,      -10.5165,      -19.3154,       324.666,      -3.50834,
-         300.89,       13.6052,       28.7572,        421.83,       12.2131,       1061.02
+        76.6624,       4.90901,      -10.9936,       -18.541,
+        314.725,      -2.49379,       298.893,       16.9938,
+        27.6085,      -3.61678,       413.794,       11.4357,
+        1067.36
 };
 double* _features          = new double[unusedVariable];
 
@@ -139,6 +144,7 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     U64 whitePawns = b->getPieces()[WHITE_PAWN];
     U64 blackPawns = b->getPieces()[BLACK_PAWN];
+    
     
     k = whitePawns;
     _features[INDEX_PAWN_PASSED] = 0;
@@ -193,6 +199,13 @@ bb::Score Evaluator::evaluate(Board *b) {
             - bitCount(blackPawnEastCover)
             - bitCount(blackPawnWestCover);
     
+    
+    /*
+     * only these squares are counted for mobility
+     */
+    U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnEastCover | blackPawnWestCover);
+    U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnEastCover | whitePawnWestCover);
+    
     /**********************************************************************************
      *                                  K N I G H T S                                 *
      **********************************************************************************/
@@ -205,7 +218,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         res += psqt_knight[63 - s];
     
-        _features[INDEX_KNIGHT_MOBILITY] += sqrt(bitCount(KNIGHT_ATTACKS[s] & ~whiteTeam));
+        _features[INDEX_KNIGHT_MOBILITY] += sqrt(bitCount(KNIGHT_ATTACKS[s] & mobilitySquaresWhite));
         
         k = lsbReset(k);
         phase++;
@@ -218,7 +231,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         res -= psqt_knight[s];
     
-        _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(KNIGHT_ATTACKS[s] & ~blackTeam));
+        _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(KNIGHT_ATTACKS[s] & mobilitySquaresBlack));
         
         k = lsbReset(k);
         phase++;
@@ -228,12 +241,18 @@ bb::Score Evaluator::evaluate(Board *b) {
      *                                  B I S H O P S                                 *
      **********************************************************************************/
     _features[INDEX_BISHOP_MOBILITY] = 0;
+    _features[INDEX_BISHOP_PAWN_SAME_SQUARE] = 0;
     k = b->getPieces()[WHITE_BISHOP];
     while(k){
         Square s = bitscanForward(k);
+        
+        
+        
         res += psqt_bishop[63 -s ];
         
-        _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(lookUpBishopAttack(s, occupied) & ~blackTeam));
+        _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(lookUpBishopAttack(s, occupied) & mobilitySquaresWhite));
+        _features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(blackPawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
+        
         k = lsbReset(k);
         phase++;
     }
@@ -243,7 +262,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         Square s = bitscanForward(k);
         res -= psqt_bishop[s];
         
-        _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(lookUpBishopAttack(s, occupied) & ~blackTeam));
+        _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(lookUpBishopAttack(s, occupied) & mobilitySquaresBlack));
+        _features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(whitePawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
     
         k = lsbReset(k);
         phase++;
@@ -261,7 +281,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         res += psqt_rook[63 - s];
     
-        _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(lookUpRookAttack(s, occupied) & ~whiteTeam));
+        _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(lookUpRookAttack(s, occupied) & mobilitySquaresWhite));
         
         k = lsbReset(k);
         phase++;
@@ -273,7 +293,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         
         res -= psqt_rook[s];
-        _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(lookUpRookAttack(s, occupied) & ~blackTeam));
+        _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(lookUpRookAttack(s, occupied) & mobilitySquaresBlack));
         
         
         k = lsbReset(k);
