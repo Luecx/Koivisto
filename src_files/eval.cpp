@@ -2,6 +2,7 @@
 // Created by finne on 5/31/2020.
 //
 
+#include <iomanip>
 #include "eval.h"
 
 
@@ -104,22 +105,53 @@ int INDEX_ROOK_MOBILITY = unusedVariable++;
 
 int INDEX_QUEEN_VALUE = unusedVariable++;
 
+int INDEX_KING_SAFETY = unusedVariable++;       //multiplied with the king safety zone attack values
+
+//TODO tweak values
+double _kingSafetyTable[100] {
+        0,  0,   1,   2,   3,   5,   7,   9,  12,  15,
+        18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
+        68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
+        140, 150, 169, 180, 191, 202, 213, 225, 237, 248,
+        260, 272, 283, 295, 307, 319, 330, 342, 354, 366,
+        377, 389, 401, 412, 424, 436, 448, 459, 471, 483,
+        494, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+        500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+        500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+        500, 500, 500, 500, 500, 500, 500, 500, 500, 500
+};
 
 double* _pieceValuesEarly = new double[unusedVariable]{
         105.173,       2.19368,       47.4996,      -13.6994,
         329.475,        25.025,       316.434,       29.7741,
         60.2109,       1.98854,       588.863,        28.618,
-        1173.93
+        1173.93,  100
 };
 double* _pieceValuesLate = new double[unusedVariable]{
         76.6624,       4.90901,      -10.9936,       -18.541,
         314.725,      -2.49379,       298.893,       16.9938,
         27.6085,      -3.61678,       413.794,       11.4357,
-        1067.36
+        1067.36, 100
 };
 double* _features          = new double[unusedVariable];
 
 double  _phase;
+
+/**
+ * adds the factor to value of attacks if the piece attacks the kingzone
+ * @param attacks
+ * @param kingZone
+ * @param pieceCount
+ * @param valueOfAttacks
+ * @param factor
+ */
+void addToKingSafety(U64 attacks, U64 kingZone, int &pieceCount, int &valueOfAttacks, int factor){
+    if(attacks & kingZone){
+        pieceCount ++;
+        valueOfAttacks += factor * bitCount(attacks & kingZone);
+    }
+}
+
 
 /**
  * evaluates the board.
@@ -137,6 +169,18 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 blackTeam = b->getTeamOccupied()[BLACK];
     U64 occupied = *b->getOccupied();
     
+    U64 whiteKingZone = KING_ATTACKS[bitscanForward(b->getPieces()[WHITE_KING])];
+    U64 blackKingZone = KING_ATTACKS[bitscanForward(b->getPieces()[BLACK_KING])];
+    
+    Square s;
+    U64 attacks;
+    
+    
+    int whitekingSafety_attackingPiecesCount = 0;
+    int whitekingSafety_valueOfAttacks       = 0;
+    
+    int blackkingSafety_attackingPiecesCount = 0;
+    int blackkingSafety_valueOfAttacks       = 0;
     /**********************************************************************************
      *                                  P A W N S                                     *
      **********************************************************************************/
@@ -214,27 +258,34 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     k = b->getPieces()[WHITE_KNIGHT];
     while(k){
-        Square s = bitscanForward(k);
+        s = bitscanForward(k);
+        attacks = KNIGHT_ATTACKS[s];
+        
+        
         
         res += psqt_knight[63 - s];
-    
         _features[INDEX_KNIGHT_MOBILITY] += sqrt(bitCount(KNIGHT_ATTACKS[s] & mobilitySquaresWhite));
         
-        k = lsbReset(k);
+        
         phase++;
+        addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 2);
+        
+    
+        k = lsbReset(k);
     }
     
     k = b->getPieces()[BLACK_KNIGHT];
     while(k){
-    
-        Square s = bitscanForward(k);
+        s = bitscanForward(k);
+        attacks = KNIGHT_ATTACKS[s];
         
         res -= psqt_knight[s];
-    
-        _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(KNIGHT_ATTACKS[s] & mobilitySquaresBlack));
+        _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+        
+        phase++;
+        addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 2);
         
         k = lsbReset(k);
-        phase++;
     }
     _features[INDEX_KNIGHT_VALUE] = (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT]));
     /**********************************************************************************
@@ -245,16 +296,21 @@ bb::Score Evaluator::evaluate(Board *b) {
     k = b->getPieces()[WHITE_BISHOP];
     while(k){
         Square s = bitscanForward(k);
-        
-        
+        attacks = lookUpBishopAttack(s, occupied);
         
         res += psqt_bishop[63 -s ];
         
-        _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(lookUpBishopAttack(s, occupied) & mobilitySquaresWhite));
-        _features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(blackPawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
         
-        k = lsbReset(k);
+        _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
+        _features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(blackPawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
+    
+        
+        
         phase++;
+        addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 2);
+    
+    
+        k = lsbReset(k);
     }
     
     k = b->getPieces()[BLACK_BISHOP];
@@ -262,59 +318,85 @@ bb::Score Evaluator::evaluate(Board *b) {
         Square s = bitscanForward(k);
         res -= psqt_bishop[s];
         
-        _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(lookUpBishopAttack(s, occupied) & mobilitySquaresBlack));
+        attacks = lookUpBishopAttack(s, occupied);
+        
+        _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(whitePawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
     
-        k = lsbReset(k);
+        
         phase++;
+        addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 2);
+    
+        k = lsbReset(k);
     }
     _features[INDEX_BISHOP_VALUE] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
     _features[INDEX_BISHOP_DOUBLED] = (bitCount(b->getPieces()[WHITE_BISHOP])==2) - (bitCount(b->getPieces()[BLACK_BISHOP])==2);
     /**********************************************************************************
      *                                  R O O K S                                     *
      **********************************************************************************/
+    
     _features[INDEX_ROOK_MOBILITY] = 0;
     k = b->getPieces()[WHITE_ROOK];
     while(k){
         Square s = bitscanForward(k);
+        attacks = lookUpRookAttack(s,occupied);
         
         
         res += psqt_rook[63 - s];
     
-        _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(lookUpRookAttack(s, occupied) & mobilitySquaresWhite));
-        
-        k = lsbReset(k);
+        _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
+    
         phase++;
+        addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 3);
+    
+    
+        k = lsbReset(k);
     }
     
     k = b->getPieces()[BLACK_ROOK];
     while(k){
         Square s = bitscanForward(k);
-        
+        attacks = lookUpRookAttack(s,occupied);
         
         res -= psqt_rook[s];
-        _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(lookUpRookAttack(s, occupied) & mobilitySquaresBlack));
-        
-        
-        k = lsbReset(k);
+        _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+    
+    
         phase++;
+        addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 3);
+    
+        k = lsbReset(k);
     }
     _features[INDEX_ROOK_VALUE] = (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]));
+    
     /**********************************************************************************
      *                                  Q U E E N S                                   *
      **********************************************************************************/
     k = b->getPieces()[WHITE_QUEEN];
     while(k){
-        res += psqt_queen[63 - bitscanForward(k)];
-        k = lsbReset(k);
+        Square s = bitscanForward(k);
+        attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
+        
+        res += psqt_queen[63 - s];
+        
+        
         phase+=3;
+        addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 4);
+        
+        k = lsbReset(k);
     }
     
     k = b->getPieces()[BLACK_QUEEN];
     while(k){
-        res -= psqt_queen[bitscanForward(k)];
-        k = lsbReset(k);
+        Square s = bitscanForward(k);
+        attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
+        
+        res -= psqt_queen[s];
+        
         phase+=3;
+        addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 4);
+    
+        k = lsbReset(k);
     }
     _features[INDEX_QUEEN_VALUE] = (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]));
     
@@ -322,9 +404,13 @@ bb::Score Evaluator::evaluate(Board *b) {
      *                                  K I N G S                                     *
      **********************************************************************************/
     k = b->getPieces()[WHITE_KING];
+    
+    
     while(k){
         res += psqt_king[63 - bitscanForward(k)]*phase/18;
         res += psqt_king_endgame[63 - bitscanForward(k)]*(18-phase)/18;
+        
+        
         k = lsbReset(k);
     }
     
@@ -332,11 +418,14 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         res -= psqt_king[bitscanForward(k)]*phase/18;
         res -= psqt_king_endgame[bitscanForward(k)]*(18-phase)/18;
+        
         k = lsbReset(k);
     }
     
+    _features[INDEX_KING_SAFETY] = (_kingSafetyTable[blackkingSafety_valueOfAttacks] - _kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
     
-
+    
+    
     _phase = (double)(18 - phase) / 18;
 
 
@@ -344,15 +433,57 @@ bb::Score Evaluator::evaluate(Board *b) {
         res += _features[i] * (_phase * _pieceValuesEarly[i] + (1-_phase) * _pieceValuesLate[i]);
     }
     
-//    res += (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP])) * 325;
-//    res += (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT])) * 310;
-//    res += (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]))   * 500;
-//    res += (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]))  * 920;
-//    res += (bitCount(b->getPieces()[WHITE_PAWN])   - bitCount(b->getPieces()[BLACK_PAWN]))   * 100;
-    
     return res;
+}
+
+void printEvaluation(Board *board){
+    
+    using namespace std;
+    
+    Evaluator ev{};
+    ev.evaluate(board);
+    double phase = ev.getPhase();
     
 
+    
+    
+    stringstream ss{};
+    
+    
+    //String format = "%-30s | %-20s | %-20s %n";
+    
+    ss << std::setw(30) << "features" << " | "<< std::setw(20) << "count" << " | "<< std::setw(20) << "weight" << "\n";
+    
+    
+    
+    ss << "-------------------------------+----------------------+------------------------\n";
+    
+    string names[]{
+    "INDEX_PAWN_VALUE",
+    "INDEX_PAWN_STRUCTURE",
+    "INDEX_PAWN_PASSED",
+    "INDEX_PAWN_ISOLATED",
+    "INDEX_KNIGHT_VALUE",
+    "INDEX_KNIGHT_MOBILITY",
+    "INDEX_BISHOP_VALUE",
+    "INDEX_BISHOP_MOBILITY",
+    "INDEX_BISHOP_DOUBLED",
+    "INDEX_BISHOP_PAWN_SAME_SQUARE",
+    "INDEX_ROOK_VALUE",
+    "INDEX_ROOK_MOBILITY",
+    "INDEX_QUEEN_VALUE",
+    "INDEX_KING_SAFETY"};
+    
+    for(int i = 0; i < unusedVariable; i++){
+    
+        ss << std::setw(30) << names[i] << " | "
+                << std::setw(20) << ev.getFeatures()[i] << " | "
+                << std::setw(20) << ev.getEarlyGameParams()[i] * phase + ev.getLateGameParams()[i] * (1-phase) << "\n";
+    }
+    ss << "-------------------------------+----------------------+------------------------\n";
+    
+    
+    std::cout << ss.str() << std::endl;
 }
 
 double *Evaluator::getFeatures() {

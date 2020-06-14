@@ -166,6 +166,8 @@ void uci_processCommand(std::string str) {
         }
     }else if(split.at(0) == "print"){
         std::cout << *board << std::endl;
+    }else if(split.at(0) == "eval"){
+        printEvaluation(board);
     }
 }
 

@@ -44,6 +44,7 @@ class Evaluator{
         int paramCount();
 };
 
+void printEvaluation(Board* b);
 
 
 
