@@ -147,6 +147,8 @@ class Board {
         
         void getNonQuietMoves(MoveList *moves);
         
+        Move getPreviousMove();
+        
         Score staticExchangeEvaluation(Move m);
         
         U64 attacksTo(U64 occupied, Square sq);

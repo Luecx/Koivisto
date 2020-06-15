@@ -1021,6 +1021,12 @@ void Board::getNonQuietMoves(MoveList *moves){
     }
 }
 
+
+Move Board::getPreviousMove(){
+    if(boardStatusHistory.empty()) return 0;
+    return boardStatusHistory.back().move;
+}
+
 /**
  * returns a bitboard of all the attacked squares by the given color.
  * this does not check for en passant captures.
