@@ -351,7 +351,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      */
     if (depth >= 6 && pv && !hashMove)
     {
-        pvSearch(b, alpha, beta, depth - 2, ply, false ,  sd);
+            pvSearch(b, alpha, beta, depth - 2, ply, false ,  sd);
         en = table->get(zobrist);
         if(en != nullptr){
             hashMove = en->move;

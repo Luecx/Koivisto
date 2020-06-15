@@ -102,16 +102,20 @@ int INDEX_BISHOP_PAWN_SAME_SQUARE = unusedVariable++;
 
 int INDEX_ROOK_VALUE = unusedVariable++;
 int INDEX_ROOK_MOBILITY = unusedVariable++;
+int INDEX_ROOK_OPEN_FILE = unusedVariable++;
+int INDEX_ROOK_HALF_OPEN_FILE = unusedVariable++;
+int INDEX_ROOK_KING_LINE = unusedVariable++;
 
 int INDEX_QUEEN_VALUE = unusedVariable++;
+int INDEX_QUEEN_MOBILITY = unusedVariable++;
 
 int INDEX_KING_SAFETY = unusedVariable++;       //multiplied with the king safety zone attack values
 
 //TODO tweak values
 double _kingSafetyTable[100] {
-        0,  0,   1,   2,   3,   5,   7,   9,  12,  15,
-        18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
-        68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
+        0  ,   0,   1,   2,   3,   5,   7,   9,  12,  15,
+        18 ,  22,  26,  30,  35,  39,  44,  50,  56,  62,
+        68 ,  75,  82,  85,  89,  97, 105, 113, 122, 131,
         140, 150, 169, 180, 191, 202, 213, 225, 237, 248,
         260, 272, 283, 295, 307, 319, 330, 342, 354, 366,
         377, 389, 401, 412, 424, 436, 448, 459, 471, 483,
@@ -122,16 +126,20 @@ double _kingSafetyTable[100] {
 };
 
 double* _pieceValuesEarly = new double[unusedVariable]{
-        105.173,       2.19368,       47.4996,      -13.6994,
-        329.475,        25.025,       316.434,       29.7741,
-        60.2109,       1.98854,       588.863,        28.618,
-        1173.93,  100
+        111.482,       2.67637,       52.2152,      -14.6646,
+        376.039,         19.46,       347.913,       30.0308,
+        67.1784,       2.02832,       659.959,       19.9578,
+        3.5184,      -3.71133,       2.18155,       1171.61,
+        37.6607,       92.1651,
+    
+    
 };
 double* _pieceValuesLate = new double[unusedVariable]{
-        76.6624,       4.90901,      -10.9936,       -18.541,
-        314.725,      -2.49379,       298.893,       16.9938,
-        27.6085,      -3.61678,       413.794,       11.4357,
-        1067.36, 100
+        74.942,       5.57671,       -12.606,      -17.6697,
+        309.111,       3.38806,       308.949,       16.6985,
+        26.9729,      -4.00795,        422.15,       4.46956,
+        43.4509,       15.2866,        26.869,       1047.73,
+        0.847212,       238.455,
 };
 double* _features          = new double[unusedVariable];
 
@@ -213,7 +221,7 @@ bb::Score Evaluator::evaluate(Board *b) {
     k = b->getPieces()[BLACK_PAWN];
     while(k){
         Square s = bitscanForward(k);
-    
+        
         //isolated pawns
         if((FILES_NEIGHBOUR[fileIndex(s)] & blackPawns) == 0){
             _features[INDEX_PAWN_ISOLATED] -= 1;
@@ -270,7 +278,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         phase++;
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 2);
         
-    
+        
         k = lsbReset(k);
     }
     
@@ -303,13 +311,13 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(blackPawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
-    
+        
         
         
         phase++;
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 2);
-    
-    
+        
+        
         k = lsbReset(k);
     }
     
@@ -322,11 +330,11 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(whitePawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
-    
+        
         
         phase++;
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 2);
-    
+        
         k = lsbReset(k);
     }
     _features[INDEX_BISHOP_VALUE] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
@@ -336,6 +344,10 @@ bb::Score Evaluator::evaluate(Board *b) {
      **********************************************************************************/
     
     _features[INDEX_ROOK_MOBILITY] = 0;
+    _features[INDEX_ROOK_OPEN_FILE] = 0;
+    _features[INDEX_ROOK_HALF_OPEN_FILE] = 0;
+    _features[INDEX_ROOK_KING_LINE]  = 0;
+    
     k = b->getPieces()[WHITE_ROOK];
     while(k){
         Square s = bitscanForward(k);
@@ -343,13 +355,27 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         
         res += psqt_rook[63 - s];
-    
+        
         _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
-    
+        
+        if(lookUpRookAttack(s, ZERO) & b->getPieces()[BLACK_KING]){
+            //rook on same file or rank as king
+            _features[INDEX_ROOK_KING_LINE] ++;
+        }
+        if((whitePawns & FILES[fileIndex(s)]) == 0){
+            if((blackPawns & FILES[fileIndex(s)]) == 0){
+                //open
+                _features[INDEX_ROOK_OPEN_FILE] ++;
+            }else{
+                //half open
+                _features[INDEX_ROOK_HALF_OPEN_FILE] ++;
+            }
+        }
+        
         phase++;
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 3);
-    
-    
+        
+        
         k = lsbReset(k);
     }
     
@@ -360,11 +386,26 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         res -= psqt_rook[s];
         _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
-    
-    
+        
+        if(lookUpRookAttack(s, ZERO) & b->getPieces()[WHITE_KING]){
+            //rook on same file or rank as king
+            _features[INDEX_ROOK_KING_LINE] --;
+        }
+        
+        if((whitePawns & FILES[fileIndex(s)]) == 0){
+            if((blackPawns & FILES[fileIndex(s)]) == 0){
+                //open
+                _features[INDEX_ROOK_OPEN_FILE] --;
+            }else{
+                //half open
+                _features[INDEX_ROOK_HALF_OPEN_FILE] --;
+            }
+        }
+        
+        
         phase++;
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 3);
-    
+        
         k = lsbReset(k);
     }
     _features[INDEX_ROOK_VALUE] = (bitCount(b->getPieces()[WHITE_ROOK])   - bitCount(b->getPieces()[BLACK_ROOK]));
@@ -372,13 +413,15 @@ bb::Score Evaluator::evaluate(Board *b) {
     /**********************************************************************************
      *                                  Q U E E N S                                   *
      **********************************************************************************/
+    _features[INDEX_QUEEN_MOBILITY] = 0;
+    
     k = b->getPieces()[WHITE_QUEEN];
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
         
         res += psqt_queen[63 - s];
-        
+        _features[INDEX_QUEEN_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
         
         phase+=3;
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 4);
@@ -392,10 +435,11 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
         
         res -= psqt_queen[s];
+        _features[INDEX_QUEEN_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresWhite));
         
         phase+=3;
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 4);
-    
+        
         k = lsbReset(k);
     }
     _features[INDEX_QUEEN_VALUE] = (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]));
@@ -427,8 +471,8 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     
     _phase = (double)(18 - phase) / 18;
-
-
+    
+    
     for(int i = 0; i < unusedVariable; i++){
         res += _features[i] * (_phase * _pieceValuesEarly[i] + (1-_phase) * _pieceValuesLate[i]);
     }
@@ -444,7 +488,7 @@ void printEvaluation(Board *board){
     ev.evaluate(board);
     double phase = ev.getPhase();
     
-
+    
     
     
     stringstream ss{};
@@ -459,26 +503,26 @@ void printEvaluation(Board *board){
     ss << "-------------------------------+----------------------+------------------------\n";
     
     string names[]{
-    "INDEX_PAWN_VALUE",
-    "INDEX_PAWN_STRUCTURE",
-    "INDEX_PAWN_PASSED",
-    "INDEX_PAWN_ISOLATED",
-    "INDEX_KNIGHT_VALUE",
-    "INDEX_KNIGHT_MOBILITY",
-    "INDEX_BISHOP_VALUE",
-    "INDEX_BISHOP_MOBILITY",
-    "INDEX_BISHOP_DOUBLED",
-    "INDEX_BISHOP_PAWN_SAME_SQUARE",
-    "INDEX_ROOK_VALUE",
-    "INDEX_ROOK_MOBILITY",
-    "INDEX_QUEEN_VALUE",
-    "INDEX_KING_SAFETY"};
+            "INDEX_PAWN_VALUE",
+            "INDEX_PAWN_STRUCTURE",
+            "INDEX_PAWN_PASSED",
+            "INDEX_PAWN_ISOLATED",
+            "INDEX_KNIGHT_VALUE",
+            "INDEX_KNIGHT_MOBILITY",
+            "INDEX_BISHOP_VALUE",
+            "INDEX_BISHOP_MOBILITY",
+            "INDEX_BISHOP_DOUBLED",
+            "INDEX_BISHOP_PAWN_SAME_SQUARE",
+            "INDEX_ROOK_VALUE",
+            "INDEX_ROOK_MOBILITY",
+            "INDEX_QUEEN_VALUE",
+            "INDEX_KING_SAFETY"};
     
     for(int i = 0; i < unusedVariable; i++){
-    
+        
         ss << std::setw(30) << names[i] << " | "
-                << std::setw(20) << ev.getFeatures()[i] << " | "
-                << std::setw(20) << ev.getEarlyGameParams()[i] * phase + ev.getLateGameParams()[i] * (1-phase) << "\n";
+           << std::setw(20) << ev.getFeatures()[i] << " | "
+           << std::setw(20) << ev.getEarlyGameParams()[i] * phase + ev.getLateGameParams()[i] * (1-phase) << "\n";
     }
     ss << "-------------------------------+----------------------+------------------------\n";
     
@@ -491,7 +535,7 @@ double *Evaluator::getFeatures() {
 }
 
 double Evaluator::getPhase() {
-        return _phase;
+    return _phase;
 }
 
 double *Evaluator::getEarlyGameParams() {
