@@ -126,6 +126,14 @@ double _kingSafetyTable[100] {
 };
 
 double* _pieceValuesEarly = new double[unusedVariable]{
+        74.942,       5.57671,       -12.606,      -17.6697,
+        309.111,       3.38806,       308.949,       16.6985,
+        26.9729,      -4.00795,        422.15,       4.46956,
+        43.4509,       15.2866,        26.869,       1047.73,
+        0.847212,       238.455,
+};
+
+double* _pieceValuesLate = new double[unusedVariable]{
         111.482,       2.67637,       52.2152,      -14.6646,
         376.039,         19.46,       347.913,       30.0308,
         67.1784,       2.02832,       659.959,       19.9578,
@@ -134,13 +142,7 @@ double* _pieceValuesEarly = new double[unusedVariable]{
     
     
 };
-double* _pieceValuesLate = new double[unusedVariable]{
-        74.942,       5.57671,       -12.606,      -17.6697,
-        309.111,       3.38806,       308.949,       16.6985,
-        26.9729,      -4.00795,        422.15,       4.46956,
-        43.4509,       15.2866,        26.869,       1047.73,
-        0.847212,       238.455,
-};
+
 double* _features          = new double[unusedVariable];
 
 double  _phase;
@@ -421,6 +423,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
         
         res += psqt_queen[63 - s];
+        
         _features[INDEX_QUEEN_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
         
         phase+=3;
@@ -435,7 +438,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
         
         res -= psqt_queen[s];
-        _features[INDEX_QUEEN_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresWhite));
+        _features[INDEX_QUEEN_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         
         phase+=3;
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 4);
@@ -474,7 +477,7 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     
     for(int i = 0; i < unusedVariable; i++){
-        res += _features[i] * (_phase * _pieceValuesEarly[i] + (1-_phase) * _pieceValuesLate[i]);
+        res += _features[i] * (_phase * _pieceValuesLate[i] + (1-_phase) * _pieceValuesEarly[i]);
     }
     
     return res;
@@ -490,17 +493,22 @@ void printEvaluation(Board *board){
     
     
     
-    
     stringstream ss{};
     
     
     //String format = "%-30s | %-20s | %-20s %n";
     
-    ss << std::setw(30) << "features" << " | "<< std::setw(20) << "count" << " | "<< std::setw(20) << "weight" << "\n";
+    ss << std::setw(30) << std::left << "feature" << " | "
+       << std::setw(20) << std::right << "difference" << " | "
+       << std::setw(20) << "early weight" << " | "
+       << std::setw(20) << "late weight" << " | "
+       << std::setw(20) << "tapered weight" << " | "
+       << std::setw(20) << "sum" << "\n";
     
     
-    
-    ss << "-------------------------------+----------------------+------------------------\n";
+    ss << "-------------------------------+----------------------+"
+          "----------------------+----------------------+"
+          "----------------------+----------------------+\n";
     
     string names[]{
             "INDEX_PAWN_VALUE",
@@ -515,17 +523,25 @@ void printEvaluation(Board *board){
             "INDEX_BISHOP_PAWN_SAME_SQUARE",
             "INDEX_ROOK_VALUE",
             "INDEX_ROOK_MOBILITY",
+            "INDEX_ROOK_OPEN_FILE",
+            "INDEX_ROOK_HALF_OPEN_FILE",
+            "INDEX_ROOK_KING_LINE",
             "INDEX_QUEEN_VALUE",
+            "INDEX_QUEEN_MOBILITY",
             "INDEX_KING_SAFETY"};
     
     for(int i = 0; i < unusedVariable; i++){
         
-        ss << std::setw(30) << names[i] << " | "
-           << std::setw(20) << ev.getFeatures()[i] << " | "
-           << std::setw(20) << ev.getEarlyGameParams()[i] * phase + ev.getLateGameParams()[i] * (1-phase) << "\n";
+        ss << std::setw(30) << std::left << names[i] << " | "
+           << std::setw(20) << std::right << ev.getFeatures()[i] << " | "
+           << std::setw(20) << ev.getEarlyGameParams()[i] << " | "
+           << std::setw(20) << ev.getLateGameParams()[i] << " | "
+           << std::setw(20) << ev.getEarlyGameParams()[i] * phase + ev.getLateGameParams()[i] * (1-phase)<< " | "
+           << std::setw(20) << (ev.getEarlyGameParams()[i] * phase + ev.getLateGameParams()[i] * (1-phase)) * ev.getFeatures()[i] << "\n";
     }
-    ss << "-------------------------------+----------------------+------------------------\n";
-    
+    ss << "-------------------------------+----------------------+"
+          "----------------------+----------------------+"
+          "----------------------+----------------------+\n";
     
     std::cout << ss.str() << std::endl;
 }

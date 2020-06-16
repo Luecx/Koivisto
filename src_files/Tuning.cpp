@@ -161,8 +161,8 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
         for(int p = 0; p < paramCount; p++){
        
             
-            earlyGrads[p] += features[p] * phase * sigPrime * lossPrime;
-            lateGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
+            earlyGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
+            lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
         }
         
         score += (expected - sig) * (expected - sig);

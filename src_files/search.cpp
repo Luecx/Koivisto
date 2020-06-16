@@ -324,9 +324,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         
     }
     
-    MoveList *mv = moves[ply];
-    b->getPseudoLegalMoves(mv);
-    
     
     /**************************************************************************************
      *                  N U L L - M O V E   P R U N I N G                                 *
@@ -373,6 +370,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     }
     
     
+    
+    MoveList *mv = moves[ply];
+    b->getPseudoLegalMoves(mv);
     
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesPVSearch(mv, hashMove, sd);
