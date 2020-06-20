@@ -33,12 +33,14 @@ int main() {
 //    using namespace tuning;
 //
 //
-//    loadPositionFile("..\\resources\\lichess-new-labeled.epd", 2500000);
+//    loadPositionFile("..\\resources\\quiet-labeled.epd", 2e6);
+
+
+//    generateHeatMap(PAWN, true, false);
+
+//    auto K = tuning::computeK(evaluator,2.86681, 200, 1e-7);
 //
-//
-//    auto K = tuning::computeK(evaluator,3.41208, 100, 1e-7);
-//
-//    for(int i = 0; i < 500; i++){
+//    for(int i = 0; i < 5000; i++){
 //
 //        std::cout << "--------------------------------------------------- ["<<i << "] ----------------------------------------------" << std::endl;
 //
@@ -54,10 +56,10 @@ int main() {
 //
 //        std::cout << tuning::optimise(evaluator, K, 5e4) << std::endl;
 //    }
-//
-//
-//
-//
+
+
+
+
 //    delete evaluator;
 //    bb_cleanUp();
 

@@ -2,6 +2,7 @@
 // Created by finne on 6/10/2020.
 //
 
+#include <iomanip>
 #include "Tuning.h"
 
 using namespace std;
@@ -126,6 +127,214 @@ void tuning::loadPositionFile(std::string path, int count) {
     
 }
 
+
+void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
+
+    auto addToTable = [](double* table, double* count, U64 bitboard, double factor, Color color){
+        while(bitboard){
+            Square s = bitscanForward(bitboard);
+
+            int index = color == WHITE ? s:(squareIndex(7-rankIndex(s), fileIndex(s)));
+
+            table[index] += factor;
+            count[index] ++;
+            bitboard = lsbReset(bitboard);
+        }
+    };
+
+    auto printTable = [](double* table){
+        std::cout << " +--------+--------+--------+--------+--------+--------+--------+--------+\n";
+
+        for (Rank r = 7; r >= 0; r--) {
+
+            std::cout << " |        |        |        |        |        |        |        |        |\n";
+            for (File f = 0; f <= 7; ++f) {
+                Square sq = bb::squareIndex(r, f);
+
+                std::cout << std::fixed << std::setprecision(1);
+                std::cout << " | " << std::setw(6) << table[bb::squareIndex(r, f)];
+            }
+
+            std::cout << " |\n |        |        |        |        |        |        |        |        |\n";
+            std::cout << " +--------+--------+--------+--------+--------+--------+--------+--------+\n";
+        }
+    };
+
+    auto trimTable = [](double* table, double* count){
+        double max = 0;
+        double min = 0;
+
+        for(int i = 0; i< 64; i++){
+            table[i] /= count[i];
+        }
+
+        for(int i = 0; i< 64; i++){
+            if(table[i] > max) max = table[i];
+            if(table[i] < min) min = table[i];
+
+        }
+        for(int i = 0; i< 64; i++){
+//            table[i] -= min;
+            table[i] /= ((max-min)/100);
+        }
+    };
+
+    if(earlyAndLate && asymmetric){
+        double* earlyWhite = new double[64]{0};
+        double* lateWhite = new double[64]{0};
+        double* earlyBlack = new double[64]{0};
+        double* lateBlack = new double[64]{0};
+
+        double* earlyWhiteCount = new double[64]{0};
+        double* lateWhiteCount = new double[64]{0};
+        double* earlyBlackCount = new double[64]{0};
+        double* lateBlackCount = new double[64]{0};
+
+        for(int i = 0; i < dataCount; i++){
+
+            //dont look at equal positions
+            if(results[i] == 0.5) continue;
+
+            Board* b = boards[i];
+
+            //calculate the phase
+            double _phase =
+                    (18 - bitCount(
+                            b->getPieces()[WHITE_BISHOP] |
+                            b->getPieces()[BLACK_BISHOP] |
+                            b->getPieces()[WHITE_KNIGHT] |
+                            b->getPieces()[BLACK_KNIGHT] |
+                            b->getPieces()[WHITE_ROOK] |
+                            b->getPieces()[BLACK_ROOK]) -
+                     3*bitCount(
+                             b->getPieces()[WHITE_QUEEN] |
+                             b->getPieces()[BLACK_QUEEN])) / 18.0;
+
+
+            Color winner = results[i] > 0.5 ? WHITE:BLACK;
+            int whiteFactor = winner == WHITE ? 1:-1;
+//            double earlyChange = _phase < 0.3 ? 1:0;
+//            double lateChange = _phase > 0.8 ? 1:0;
+
+            double earlyChange = 1-_phase;
+            double lateChange = _phase;
+
+//            std::cout << *b << std::endl;
+//            std::cout << _phase << std::endl;
+
+            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange,WHITE);
+            addToTable( lateWhite,  lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange ,WHITE);
+            addToTable(earlyBlack, earlyBlackCount, b->getPieces()[(piece % 6)+6], -whiteFactor * earlyChange,WHITE);
+            addToTable( lateBlack,  lateBlackCount, b->getPieces()[(piece % 6)+6], -whiteFactor * lateChange ,WHITE);
+        }
+
+        for(int i = 0; i < 64; i++){
+            std::cout << int(earlyWhiteCount[i]) << ",";
+        }
+        std::cout << std::endl;
+        for(int i = 0; i < 64; i++){
+            std::cout << int(lateWhiteCount[i]) << ",";
+        }
+        std::cout << std::endl;
+        for(int i = 0; i < 64; i++){
+            std::cout << int(earlyBlack[i]) << ",";
+        }
+        std::cout << std::endl;
+        for(int i = 0; i < 64; i++){
+            std::cout << int(lateBlack[i]) << ",";
+        }
+        std::cout << std::endl;
+
+        trimTable(earlyWhite, earlyWhiteCount);
+        trimTable(lateWhite,  lateWhiteCount);
+        trimTable(earlyBlack, earlyBlackCount);
+        trimTable(lateBlack,  lateBlackCount);
+
+        printTable(earlyWhite);
+        printTable(lateWhite);
+        printTable(earlyBlack);
+        printTable(lateBlack);
+
+        delete earlyWhite;
+        delete lateWhite;
+        delete earlyBlack;
+        delete lateBlack;
+
+        delete earlyWhiteCount;
+        delete lateWhiteCount;
+        delete earlyBlackCount;
+        delete lateBlackCount;
+    }
+
+    if(earlyAndLate && !asymmetric){
+        double* earlyWhite = new double[64]{0};
+        double* lateWhite = new double[64]{0};
+
+        double* earlyWhiteCount = new double[64]{0};
+        double* lateWhiteCount = new double[64]{0};
+
+        for(int i = 0; i < dataCount; i++){
+
+            //dont look at equal positions
+            if(results[i] == 0.5) continue;
+
+            Board* b = boards[i];
+
+            //calculate the phase
+            double _phase =
+                    (18 - bitCount(
+                            b->getPieces()[WHITE_BISHOP] |
+                            b->getPieces()[BLACK_BISHOP] |
+                            b->getPieces()[WHITE_KNIGHT] |
+                            b->getPieces()[BLACK_KNIGHT] |
+                            b->getPieces()[WHITE_ROOK] |
+                            b->getPieces()[BLACK_ROOK]) -
+                     3*bitCount(
+                             b->getPieces()[WHITE_QUEEN] |
+                             b->getPieces()[BLACK_QUEEN])) / 18.0;
+
+
+            Color winner = results[i] > 0.5 ? WHITE:BLACK;
+            int whiteFactor = winner == WHITE ? 1:-1;
+//            double earlyChange = _phase < 0.3 ? 1:0;
+//            double lateChange = _phase > 0.8 ? 1:0;
+
+            double earlyChange = 1-_phase;
+            double lateChange = _phase;
+
+//            std::cout << *b << std::endl;
+//            std::cout << _phase << std::endl;
+
+            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange,WHITE);
+            addToTable( lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange ,WHITE);
+            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[(piece % 6)+6], -whiteFactor * earlyChange,BLACK);
+            addToTable( lateWhite, lateWhiteCount, b->getPieces()[(piece % 6)+6], -whiteFactor * lateChange ,BLACK);
+        }
+
+        trimTable(earlyWhite, earlyWhiteCount);
+        trimTable(lateWhite, lateWhiteCount);
+
+        for(int i = 0; i < 64; i++){
+            std::cout << int(earlyWhite[i]) << ",";
+        }
+        std::cout << std::endl;
+        for(int i = 0; i < 64; i++){
+            std::cout << int(lateWhite[i]) << ",";
+        }
+        std::cout << std::endl;
+
+
+        printTable(earlyWhite);
+        printTable(lateWhite);
+
+        delete earlyWhite;
+        delete lateWhite;
+
+        delete earlyWhiteCount;
+        delete lateWhiteCount;
+    }
+}
+
 void tuning::clearLoadedData(){
     if(boards != nullptr){
         
@@ -208,9 +417,13 @@ double tuning::computeK(Evaluator *evaluator, double initK, double rate, double 
     
     
     while(abs(dEdK) > deviation){
-        dEdK = (computeError(evaluator, K + dK) - computeError(evaluator, K - dK)) / (2 * dK);
+
+        double Epdk = computeError(evaluator, K + dK);
+        double Emdk = computeError(evaluator, K + dK);
+
+        dEdK = (Epdk - Emdk) / (2 * dK);
         
-        std::cout << "K:" << K << " Error: " << computeError(evaluator, K)  << " dev: " << abs(dEdK) << std::endl;
+        std::cout << "K:" << K << " Error: " << (Epdk  + Emdk)/2  << " dev: " << abs(dEdK) << std::endl;
         
         //System.out.format("K: %-2.6f  Error: %-2.6f  dE/dK: %-1.2E\n", K,errorMultithreaded(evaluator, K, pool),dEdK);
         K -= dEdK * rate;

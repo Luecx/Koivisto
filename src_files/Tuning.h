@@ -48,6 +48,17 @@ double computeError(Evaluator *evaluator, double K);
  */
 double computeK(Evaluator *evaluator, double initK, double rate, double deviation);
 
+
+/**
+ * generates a heat map for the given piece.
+ * generates 2 seperate tables for early and late if requested. it will also split into 2 tables
+ * for both sides if requested
+ * @param piece
+ * @param earlyAndLate
+ * @param asymmetric
+ */
+void generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric);
+
 }
 
 #endif //KOIVISTO_TUNING_H

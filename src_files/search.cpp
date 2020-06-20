@@ -375,7 +375,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     b->getPseudoLegalMoves(mv);
     
     MoveOrderer moveOrderer{};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd);
+    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b);
     
     //count the legal moves
     int legalMoves = 0;

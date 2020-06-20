@@ -15,7 +15,7 @@ MoveOrderer::~MoveOrderer() {
 
 }
 
-void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, SearchData *sd) {
+void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, SearchData *sd, Board* board) {
     
     this->moves = moves;
     this->counter = 0;
@@ -28,11 +28,20 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
             moves->scoreMove(i, 255);
         }else if(isCapture(m)){
             //add mvv lva score here
+//            Score SEE = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            moves->scoreMove(i, 240 + mvvLVA);
+            if(mvvLVA >= 0){
+                if(mvvLVA == 0){
+                    moves->scoreMove(i, 230 + mvvLVA);
+                }else{
+                    moves->scoreMove(i, 240 + mvvLVA);
+                }
+            }else{
+                moves->scoreMove(i, 8 + mvvLVA);
+            }
         }else if(isPromotion(m)){
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            moves->scoreMove(i, 220 + mvvLVA);
+            moves->scoreMove(i, 230 + mvvLVA);
         }else{
             moves->scoreMove(i, 8 + sd->history[getSquareFrom(m)][getSquareTo(m)]/3);
         }
