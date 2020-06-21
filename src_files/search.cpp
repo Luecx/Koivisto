@@ -371,6 +371,24 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
     
     
+    /**************************************************************************************
+     *                              R A Z O R I N G                                       *
+     **************************************************************************************/
+    if (
+            depth <= 3 &&
+            !pv &&
+            abs(beta) < MIN_MATE_SCORE &&
+            !b->isInCheck(b->getActivePlayer())){
+        Score staticEval = evaluator.evaluate(b);
+        if (staticEval + (200 + (depth-1) * 50) <= alpha) {
+            Score score = qSearch(b, alpha, beta, ply+1);
+            if (score <= alpha && --depth <= 0)
+                return score;
+        }
+    }
+    
+    
+    
     MoveList *mv = moves[ply];
     b->getPseudoLegalMoves(mv);
     
