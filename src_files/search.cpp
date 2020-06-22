@@ -19,7 +19,6 @@ bool _forceStop = false;
 /*
  * Lmr table
  */
-
 int lmrReductions[256][256];
 Evaluator evaluator{};
 
@@ -27,7 +26,7 @@ Evaluator evaluator{};
 void initLmr()
 {
     int d, m;
-
+    
     for (d = 0; d < 256; d ++)
         for (m = 0; m < 256; m ++)
             lmrReductions[d][m] = 1.0 + log(d) * log(m) * 0.5;
@@ -40,6 +39,7 @@ void initLmr()
  * =================================================================================
  */
 
+#define posMargin(x) (200 + (x-1) * 50)
 
 /**
  * stops the search
@@ -176,19 +176,19 @@ void printInfoString(Board *b, Depth d, Score score){
     
     std::cout << "info"
                  " depth " << (int)d <<
-                 " seldepth " << (int)_selDepth <<
-                 " score cp " << score;
+              " seldepth " << (int)_selDepth <<
+              " score cp " << score;
     
     if(abs(score) > MIN_MATE_SCORE){
         std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2 * (score > 0 ? 1:-1);
     }
     
     std::cout <<
-                 
-                 " nodes " << _nodes <<
-                 " nps " << nps <<
-                 " time " << elapsedTime() <<
-                 " hashfull " << (int)(table->usage() * 1000);
+    
+              " nodes " << _nodes <<
+              " nps " << nps <<
+              " time " << elapsedTime() <<
+              " hashfull " << (int)(table->usage() * 1000);
     
     MoveList* em = new MoveList();
     em->clear();
@@ -214,7 +214,7 @@ void printInfoString(Board *b, Depth d, Score score){
 
 
 
- 
+
 
 /**
  * returns the best move for the given board.
@@ -232,20 +232,20 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
     _selDepth = 0;
     table->clear();
     setStartTime();
-
-    SearchData sd;
-
-
-    for(Depth d = 1; d <= maxDepth; d++){
     
+    SearchData sd;
+    
+    
+    for(Depth d = 1; d <= maxDepth; d++){
+        
         //start measure for time this iteration takes
 //        Score score =
 //        //printInfoString(b, d, score);
         pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd);
-       
+        
         if(!isTimeLeft()) break;
     }
-
+    
     Move best = table->get(b->zobrist())->move;
     return best;
 }
@@ -272,11 +272,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     if(b->isDraw() && ply>0){
         return 0;
     }
-
+    
     if (ply > _selDepth){
         _selDepth = ply;
     }
-
+    
     //depth > MAX_PLY means that it overflowed because depth is unsigned.
     if( depth == 0 || depth > MAX_PLY) {
         //Don't drop into qsearch if in check
@@ -287,10 +287,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
     }
     
-   
+    
+    
     
     U64 zobrist                 = b->zobrist();
     bool pv                     = (beta-alpha) != 1;
+    bool inCheck                = b->isInCheck(b->getActivePlayer());
+    Score staticEval            = evaluator.evaluate(b);
     Score originalAlpha         = alpha;
     Score highestScore          = -MAX_MATE_SCORE;
     Score score                 = -MAX_MATE_SCORE;
@@ -313,12 +316,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 if(en->score  >= beta){
                     return beta;
                 }
-
+                
             } else if (en->type == ALL_NODE) {
                 if (en->score  <= alpha) {
                     return alpha;
                 }
-
+                
             }
         }
         
@@ -330,7 +333,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      **************************************************************************************/
     if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
         b->move_null();
-
+        
         score = -pvSearch(b, -beta,1-beta,depth-3*ONE_PLY, ply + ONE_PLY,false,  sd);
         b->undoMove_null();
         if ( score >= beta ) {
@@ -348,7 +351,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      */
     if (depth >= 6 && pv && !hashMove)
     {
-            pvSearch(b, alpha, beta, depth - 2, ply, false ,  sd);
+        pvSearch(b, alpha, beta, depth - 2, ply, false ,  sd);
         en = table->get(zobrist);
         if(en != nullptr){
             hashMove = en->move;
@@ -378,9 +381,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             depth <= 3 &&
             !pv &&
             abs(beta) < MIN_MATE_SCORE &&
-            !b->isInCheck(b->getActivePlayer())){
-        Score staticEval = evaluator.evaluate(b);
-        if (staticEval + (200 + (depth-1) * 50) <= alpha) {
+            !inCheck){
+        if (staticEval + posMargin(depth) <= alpha) {
             Score score = qSearch(b, alpha, beta, ply+1);
             if (score <= alpha && --depth <= 0)
                 return score;
@@ -405,21 +407,48 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         if(!b->isLegal(m)) continue;
         
         bool givesCheck = b->givesCheck(m);
+        bool isPromotion = move::isPromotion(m);
+        
+        Score staticExchangeEval = 0;
+        if(isCapture(m)){
+            staticExchangeEval = b->staticExchangeEvaluation(m);
+        }
+        
         
         int extension = 0;
-
+        
         if (b->givesCheck(m) && b->staticExchangeEvaluation(m)>=0){
             extension = 1;
         }
-    
-    
+        
+        
+        /**************************************************************************************
+         *                      F U T I L I T Y   P R U N I N G                               *
+         **************************************************************************************/
+        if(!pv &&
+           1 < depth &&
+           depth <= 3 &&
+           legalMoves != 0 &&
+           !givesCheck &&
+           abs(beta)  < MIN_MATE_SCORE &&
+           abs(alpha) < MIN_MATE_SCORE &&
+           !isPromotion &&
+           !inCheck){
+            
+            if(staticEval <= (alpha-staticExchangeEval-posMargin(depth))){
+                continue;
+            }
+        }
+        
+        
+        
         b->move(m);
         
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
-
-        Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || isCapture(m)) ? 0:lmrReductions[depth][legalMoves];
-
+        
+        Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || staticExchangeEval > 0 || isPromotion) ? 0:lmrReductions[depth][legalMoves];
+        
         if (legalMoves == 0 && pv) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false ,  sd);
         } else {
@@ -430,13 +459,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
             
         }
-
+        
         
         
         b->undoMove();
-    
         
-    
+        
+        
         if( score >= beta ){
             table->put(zobrist, beta, m, CUT_NODE, depth);
             if(getType(m) == QUIET){
@@ -444,7 +473,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             }
             return beta;
         }
-    
+        
         if( score > highestScore){
             highestScore = score;
             bestMove = m;
@@ -465,9 +494,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             }
         }
         
-    
-    
-    
+        
+        
+        
         legalMoves ++;
     }
     
@@ -501,10 +530,20 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
  * @return
  */
 Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
-    Score stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
+    
+    
     
     //shall we count qSearch nodes?
     _nodes ++;
+    
+    if(b->isDraw()) return 0;
+    
+//    if(evaluator.probablyDrawByMaterial(b)){
+//        return 0;
+//    }
+    
+    
+    Score stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
     
     if( stand_pat >= beta )
         return beta;
@@ -521,17 +560,18 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
      */
     MoveList *mv = moves[ply];
     b->getNonQuietMoves(mv);
-
+    
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesQSearch(mv);
-
-
+    
+    
     for(int i = 0; i < mv->getSize(); i++){
         
         Move m = moveOrderer.next();
         
         if(!b->isLegal(m)) continue;
         
+        if(b->staticExchangeEvaluation(m) < 0) continue;
         
         b->move(m);
         
@@ -540,9 +580,9 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         
         
         b->undoMove();
-    
-    
-    
+        
+        
+        
         if( score >= beta )
             return beta;
         if( score > alpha )
@@ -551,7 +591,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         
     }
     return alpha;
-    
+
 //    return 0;
 }
 
