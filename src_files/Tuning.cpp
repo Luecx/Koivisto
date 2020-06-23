@@ -419,7 +419,7 @@ double tuning::computeK(Evaluator *evaluator, double initK, double rate, double 
     while(abs(dEdK) > deviation){
 
         double Epdk = computeError(evaluator, K + dK);
-        double Emdk = computeError(evaluator, K + dK);
+        double Emdk = computeError(evaluator, K - dK);
 
         dEdK = (Epdk - Emdk) / (2 * dK);
         
