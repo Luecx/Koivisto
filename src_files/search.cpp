@@ -241,7 +241,7 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
         //start measure for time this iteration takes
 //        Score score =
 //        //printInfoString(b, d, score);
-        pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd);
+        pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd, 0);
         
         if(!isTimeLeft()) break;
     }
@@ -260,118 +260,114 @@ Move bestMove(Board *b, Depth maxDepth, int maxTime) {
  * @param expectedCut
  * @return
  */
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut,SearchData *sd) {
-    
-    
+Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut,SearchData *sd, Move skipMove) {
+
+
     _nodes++;
-    
-    if(!isTimeLeft()){
+
+    if (!isTimeLeft()) {
         return beta;
     }
-    
-    if(b->isDraw() && ply>0){
+
+    if (b->isDraw() && ply > 0) {
         return 0;
     }
-    
-    if (ply > _selDepth){
+
+    if (ply > _selDepth) {
         _selDepth = ply;
     }
-    
+
     //depth > MAX_PLY means that it overflowed because depth is unsigned.
-    if( depth == 0 || depth > MAX_PLY) {
+    if (depth == 0 || depth > MAX_PLY) {
         //Don't drop into qsearch if in check
-        if (b->isInCheck(b->getActivePlayer())){
-            depth ++;
-        }else{
+        if (b->isInCheck(b->getActivePlayer())) {
+            depth++;
+        } else {
             return qSearch(b, alpha, beta, ply);
         }
     }
-    
-    
-    
-    
-    U64 zobrist                 = b->zobrist();
-    bool pv                     = (beta-alpha) != 1;
-    bool inCheck                = b->isInCheck(b->getActivePlayer());
-    Score staticEval            = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
-    Score originalAlpha         = alpha;
-    Score highestScore          = -MAX_MATE_SCORE;
-    Score score                 = -MAX_MATE_SCORE;
-    Move bestMove               = 0;
-    Move hashMove               = 0;
-    
-    
+
+
+    U64 zobrist = b->zobrist();
+    bool pv = (beta - alpha) != 1;
+    bool inCheck = b->isInCheck(b->getActivePlayer());
+    Score staticEval = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score originalAlpha = alpha;
+    Score highestScore = -MAX_MATE_SCORE;
+    Score score = -MAX_MATE_SCORE;
+    Move bestMove = 0;
+    Move hashMove = 0;
+
+
     /**************************************************************************************
      *                  T R A N S P O S I T I O N - T A B L E   P R O B E                 *
      **************************************************************************************/
-    Entry* en = table->get(zobrist);
-    if(en != nullptr){
+    Entry *en = table->get(zobrist);
+    if (en != nullptr && !skipMove) {
         hashMove = en->move;
-        
-        if(en->depth >= depth){
-            if (en->type == PV_NODE && en->score >= alpha){
+
+        if (en->depth >= depth) {
+            if (en->type == PV_NODE && en->score >= alpha) {
                 return en->score;
-            }
-            else if (en->type == CUT_NODE) {
-                if(en->score  >= beta){
+            } else if (en->type == CUT_NODE) {
+                if (en->score >= beta) {
                     return beta;
                 }
-                
+
             } else if (en->type == ALL_NODE) {
-                if (en->score  <= alpha) {
+                if (en->score <= alpha) {
                     return alpha;
                 }
-                
+
             }
         }
-        
+
     }
 
-    if (!inCheck && abs(beta)<MIN_MATE_SCORE && !pv) {
+    if (!inCheck && abs(beta) < MIN_MATE_SCORE && !pv) {
         /**************************************************************************************
      *                              R A Z O R I N G                                       *
      **************************************************************************************/
-            if (depth <= 3 && staticEval + 200 < beta) {
-                score = qSearch(b, alpha, beta, ply);
-                if (score < beta) return score;
-            }
+        if (depth <= 3 && staticEval + 200 < beta) {
+            score = qSearch(b, alpha, beta, ply);
+            if (score < beta) return score;
+        }
         /**************************************************************************************
      *                      F U T I L I T Y   P R U N I N G                               *
      **************************************************************************************/
-        if (depth <= 6 && staticEval >= beta + depth*80)
+        if (depth <= 6 && staticEval >= beta + depth * 80)
             return staticEval;
 
         /**************************************************************************************
          *                  N U L L - M O V E   P R U N I N G                                 *
          **************************************************************************************/
-        if (depth>=2 && staticEval >= beta) {
+        if (depth >= 2 && staticEval >= beta) {
             b->move_null();
 
-            score = -pvSearch(b, -beta,1-beta,depth-(depth/4+3)*ONE_PLY, ply + ONE_PLY,false,  sd);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, false, sd, 0);
             b->undoMove_null();
-            if ( score >= beta ) {
+            if (score >= beta) {
                 return beta;
             }
         }
     }
-    
-    
+
+
     /**************************************************************************************
      *        I N T E R N A L   I T E R A T I V E   D E E P E N I N G                     *
      **************************************************************************************/
-    
+
     /*
      * internal iterative deepening
      */
-    if (depth >= 6 && pv && !hashMove)
-    {
-        pvSearch(b, alpha, beta, depth - 2, ply, false ,  sd);
+    if (depth >= 6 && pv && !hashMove && !skipMove) {
+        pvSearch(b, alpha, beta, depth - 2, ply, false, sd, 0);
         en = table->get(zobrist);
-        if(en != nullptr){
+        if (en != nullptr) {
             hashMove = en->move;
         }
     }
-    
+
     /**************************************************************************************
      *              M A T E - D I S T A N C E   P R U N I N G                             *
      **************************************************************************************/
@@ -385,119 +381,127 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         alpha = matingValue;
         if (beta <= matingValue) return matingValue;
     }
-    
-    
-    
 
-    
-    
-    
+
     MoveList *mv = moves[ply];
     b->getPseudoLegalMoves(mv);
-    
+
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesPVSearch(mv, hashMove, sd, b);
-    
+
     //count the legal moves
     int legalMoves = 0;
-    
-    while(moveOrderer.hasNext()){
-        
+
+    while (moveOrderer.hasNext()) {
+
         Move m = moveOrderer.next();
-        
-        if(!b->isLegal(m)) continue;
-        
+
+        if (!b->isLegal(m)) continue;
+
+        if (sameMove(m, skipMove))continue;
+
         bool givesCheck = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-        
+
         Score staticExchangeEval = 0;
-        if(isCapture(m)){
+        if (isCapture(m)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
-        
-        
+
+
         int extension = 0;
-        
-        if (b->givesCheck(m) && b->staticExchangeEvaluation(m)>=0){
+
+        if (b->givesCheck(m) && b->staticExchangeEvaluation(m) >= 0) {
             extension = 1;
         }
-        
-        
-        
+
+        // singular extensions
+        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) &&  ply>0 && en!=nullptr && abs(en->score)<MIN_MATE_SCORE && en->type == CUT_NODE&& en->depth >= depth - 3)
+        {
+            Score betaCut = en->score - depth*2;
+            score = pvSearch(b, betaCut-1, betaCut, depth>>1, ply, false, sd, m);
+            if (score < betaCut)
+                extension++;
+            b->getPseudoLegalMoves(mv);
+            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b);
+            m = moveOrderer.next();
+        }
+
         b->move(m);
-        
+
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
 
         Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || staticExchangeEval > 0 || isPromotion) ? 0:lmrReductions[depth][legalMoves];
 
         if (legalMoves == 0 && pv) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false ,  sd);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd, 0);
         } else {
-            score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY - lmr + extension, ply+ONE_PLY,false,  sd);
-            if (lmr && score > alpha )
-                score = -pvSearch(b, -alpha-1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false,  sd); // re-search
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, false, sd, 0);
+            if (lmr && score > alpha)
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd,
+                                  0); // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd); // re-search
-            
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd,
+                                  0); // re-search
+
         }
-        
-        
-        
+
+
         b->undoMove();
-        
-        
-        
-        if( score >= beta ){
-            table->put(zobrist, beta, m, CUT_NODE, depth);
-            if(getType(m) == QUIET){
-                sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+
+
+        if (score >= beta) {
+            if (!skipMove) {
+                table->put(zobrist, beta, m, CUT_NODE, depth);
+                if (getType(m) == QUIET) {
+                    sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+                }
             }
             return beta;
         }
-        
-        if( score > highestScore){
+
+        if (score > highestScore) {
             highestScore = score;
             bestMove = m;
         }
-        if( score > alpha ) {
-            
-            if(ply == 0 && isTimeLeft()) {
+        if (score > alpha) {
+
+            if (!skipMove && ply == 0 && isTimeLeft()) {
                 //we need to put the transposition in here so that printInfoString displays the correct pv
-                table->put(zobrist, alpha, bestMove,PV_NODE,depth);
+                table->put(zobrist, alpha, bestMove, PV_NODE, depth);
                 printInfoString(b, depth, score);
             }
-            
+
             alpha = score;
             bestMove = m;
-        }else{
-            if(getType(m) == QUIET){
+        } else {
+            if (!skipMove && getType(m) == QUIET) {
                 sd->subtractHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
             }
         }
-        
-        
-        
-        
-        legalMoves ++;
+
+
+        legalMoves++;
     }
-    
+
     //if there are no legal moves, its either stalemate or checkmate.
-    if(legalMoves == 0){
-        if(!b->isInCheck(b->getActivePlayer())){
+    if (legalMoves == 0) {
+        if (!b->isInCheck(b->getActivePlayer())) {
             return 0;
-        }else{
-            return  -MAX_MATE_SCORE + ply;
+        } else {
+            return -MAX_MATE_SCORE + ply;
         }
     }
-    
-    
-    if(alpha > originalAlpha){
-        table->put(zobrist, alpha, bestMove,PV_NODE,depth);
-    }else{
-        table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+
+    if (!skipMove) {
+        if (alpha > originalAlpha) {
+            table->put(zobrist, alpha, bestMove, PV_NODE, depth);
+        } else {
+            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+        }
     }
-    
+
     
     return alpha;
 }
