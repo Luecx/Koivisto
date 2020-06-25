@@ -293,7 +293,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     U64 zobrist                 = b->zobrist();
     bool pv                     = (beta-alpha) != 1;
     bool inCheck                = b->isInCheck(b->getActivePlayer());
-    Score staticEval            = evaluator.evaluate(b);
+    Score staticEval            = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
     Score originalAlpha         = alpha;
     Score highestScore          = -MAX_MATE_SCORE;
     Score score                 = -MAX_MATE_SCORE;
@@ -326,18 +326,32 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
         
     }
-    
-    
-    /**************************************************************************************
-     *                  N U L L - M O V E   P R U N I N G                                 *
+
+    if (!inCheck && abs(beta)<MIN_MATE_SCORE && !pv) {
+        /**************************************************************************************
+     *                              R A Z O R I N G                                       *
      **************************************************************************************/
-    if (!pv && !b->isInCheck(b->getActivePlayer()) ) {
-        b->move_null();
-        
-        score = -pvSearch(b, -beta,1-beta,depth-3*ONE_PLY, ply + ONE_PLY,false,  sd);
-        b->undoMove_null();
-        if ( score >= beta ) {
-            return beta;
+            if (depth <= 3 && staticEval + 200 < beta) {
+                score = qSearch(b, alpha, beta, ply);
+                if (score < beta) return score;
+            }
+        /**************************************************************************************
+     *                      F U T I L I T Y   P R U N I N G                               *
+     **************************************************************************************/
+        if (depth <= 6 && staticEval >= beta + depth*80)
+            return staticEval;
+
+        /**************************************************************************************
+         *                  N U L L - M O V E   P R U N I N G                                 *
+         **************************************************************************************/
+        if (depth>=2 && staticEval >= beta) {
+            b->move_null();
+
+            score = -pvSearch(b, -beta,1-beta,depth-(depth/4+3)*ONE_PLY, ply + ONE_PLY,false,  sd);
+            b->undoMove_null();
+            if ( score >= beta ) {
+                return beta;
+            }
         }
     }
     
@@ -374,20 +388,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     
     
     
-    /**************************************************************************************
-     *                              R A Z O R I N G                                       *
-     **************************************************************************************/
-    if (
-            depth <= 3 &&
-            !pv &&
-            abs(beta) < MIN_MATE_SCORE &&
-            !inCheck){
-        if (staticEval + posMargin(depth) <= alpha) {
-            Score score = qSearch(b, alpha, beta, ply+1);
-            if (score <= alpha && --depth <= 0)
-                return score;
-        }
-    }
+
     
     
     
@@ -422,33 +423,14 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
         
         
-        /**************************************************************************************
-         *                      F U T I L I T Y   P R U N I N G                               *
-         **************************************************************************************/
-        if(!pv &&
-           1 < depth &&
-           depth <= 3 &&
-           legalMoves != 0 &&
-           !givesCheck &&
-           abs(beta)  < MIN_MATE_SCORE &&
-           abs(alpha) < MIN_MATE_SCORE &&
-           !isPromotion &&
-           !inCheck){
-            
-            if(staticEval <= (alpha-staticExchangeEval-posMargin(depth))){
-                continue;
-            }
-        }
-        
-        
         
         b->move(m);
         
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
-        
+
         Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || staticExchangeEval > 0 || isPromotion) ? 0:lmrReductions[depth][legalMoves];
-        
+
         if (legalMoves == 0 && pv) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false ,  sd);
         } else {
