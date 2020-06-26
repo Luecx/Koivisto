@@ -33,7 +33,7 @@ int main() {
     using namespace tuning;
 
 
-    loadPositionFile("..\\resources\\quiet-labeled.epd", 2e6);
+    loadPositionFile("..\\resources\\lichess-new-labeled.epd", 5e6);
 
 
 //    generateHeatMap(PAWN, true, false);

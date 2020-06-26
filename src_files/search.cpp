@@ -402,6 +402,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
         bool givesCheck = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
+//        bool isQueenPromotion = move::promotionPiece(m) % 6 == QUEEN && isPromotion;
 
         Score staticExchangeEval = 0;
         if (isCapture(m)) {
@@ -416,7 +417,16 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
 
         // singular extensions
-        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) &&  ply>0 && en!=nullptr && abs(en->score)<MIN_MATE_SCORE && en->type == CUT_NODE && en->depth >= depth - 3)
+        if (!extension &&
+            depth >= 8 &&
+            !skipMove &&
+            legalMoves == 0 &&
+            sameMove(m, hashMove) &&
+            ply>0 &&
+            en!=nullptr &&
+            abs(en->score)<MIN_MATE_SCORE &&
+            en->type == CUT_NODE&&
+            en->depth >= depth - 3)
         {
             Score betaCut = en->score - depth*2;
             score = pvSearch(b, betaCut-1, betaCut, depth>>1, ply, false, sd, m);
@@ -559,6 +569,8 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         if(!b->isLegal(m)) continue;
         
         if(b->staticExchangeEvaluation(m) < 0) continue;
+        
+        
         
         b->move(m);
         

@@ -117,6 +117,8 @@ int INDEX_PAWN_PSQT = unusedVariable++;
 int INDEX_PAWN_STRUCTURE = unusedVariable++;
 int INDEX_PAWN_PASSED = unusedVariable++;
 int INDEX_PAWN_ISOLATED = unusedVariable++;
+int INDEX_PAWN_DOUBLED = unusedVariable++;
+int INDEX_PAWN_DOUBLED_AND_ISOLATED = unusedVariable++;
 
 int INDEX_KNIGHT_VALUE = unusedVariable++;
 int INDEX_KNIGHT_PSQT = unusedVariable++;
@@ -148,19 +150,14 @@ int INDEX_KING_PAWN_SHIELD = unusedVariable++;
 
 
 double* _pieceValuesEarly = new double[unusedVariable]{
-        110.856,       46.0998,       3.62138,      -9.54173,      -22.2169,       412.742,       49.8878,       33.2564,
-        28.1652,       441.622,       37.1641,       25.7474,       35.1151,      -3.78407,       16.0097,       548.772,
-        132.04,       19.4194,       68.0734,       15.9765,        14.029,       1141.42,       16.2553,       1.21568,
-        335.447,       244.303,      -70.0982,       9.39849,
-    
+        98.6423,       16.5249,       2.99681,      -14.4001,      -12.5356,      0.171409,      -23.6882,       376.415,       61.2558,       29.3162,       41.5542,       424.944,       34.5504,       23.6178,       27.7169,      -4.37584,       11.9598,       558.332,       141.602,       12.1858,       47.2119,        18.385,       23.3907,       1165.71,      -0.03737,       7.46494,       366.888,       239.123,       -64.153,       13.2171,
     
 };
 
 double* _pieceValuesLate = new double[unusedVariable]{
-        94.1501,        218.05,       2.92876,       49.3701,      -11.2427,       358.319,       113.505,       6.77607,
-        28.2239,       312.002,       5.27439,       29.1687,       61.7827,       5.57627,       5.76576,        624.41,
-        116.47,       25.5095,      -6.34257,       4.75502,       10.2226,        1182.2,       103.534,       57.2959,
-        -15.5059,       43.4588,       52.6326,       2.19361,
+        118.648,        186.64,       3.24607,       42.0323,      -10.9291,      -9.90538,      -24.8109,       358.821,       107.184,       23.4736,       33.4458,        312.52,       3.10072,       40.8573,       62.9856,       6.44621,         10.15,       639.243,        117.64,       28.3109,       3.98184,      -1.75178,       4.39457,       1181.54,       112.675,       62.2153,      -23.3872,       50.5677,       51.2386,      -2.42515,
+    
+    
     
 };
 
@@ -273,14 +270,23 @@ bb::Score Evaluator::evaluate(Board *b) {
     k = whitePawns;
     _features[INDEX_PAWN_PASSED] = 0;
     _features[INDEX_PAWN_ISOLATED] = 0;
+    _features[INDEX_PAWN_DOUBLED] = 0;
+    _features[INDEX_PAWN_DOUBLED_AND_ISOLATED] = 0;
     _features[INDEX_PAWN_PSQT] = 0;
     while(k){
         Square s = bitscanForward(k);
         
-        //isolated pawns
-        if((FILES_NEIGHBOUR[fileIndex(s)] & whitePawns) == 0){
+        bool isolated = (FILES_NEIGHBOUR[fileIndex(s)] & whitePawns) == 0;
+        bool doubled = (FILES[fileIndex(s)] & (whitePawns & ~(ONE << s))) != 0;
+        
+        if(isolated && doubled){
+            _features[INDEX_PAWN_DOUBLED_AND_ISOLATED] += 1;
+        }else if(isolated){
             _features[INDEX_PAWN_ISOLATED] += 1;
+        }else if(doubled){
+            _features[INDEX_PAWN_DOUBLED] += 1;
         }
+        
         
         //passed pawn
         if((whitePassedPawnMask[s] & blackPawns) == 0){
@@ -296,11 +302,21 @@ bb::Score Evaluator::evaluate(Board *b) {
     k = b->getPieces()[BLACK_PAWN];
     while(k){
         Square s = bitscanForward(k);
-        
-        //isolated pawns
-        if((FILES_NEIGHBOUR[fileIndex(s)] & blackPawns) == 0){
+    
+    
+    
+        bool isolated = (FILES_NEIGHBOUR[fileIndex(s)] & blackPawns) == 0;
+        bool doubled = (FILES[fileIndex(s)] & (blackPawns & ~(ONE << s))) != 0;
+    
+        if(isolated && doubled){
+            _features[INDEX_PAWN_DOUBLED_AND_ISOLATED] -= 1;
+        }else if(isolated){
             _features[INDEX_PAWN_ISOLATED] -= 1;
+        }else if(doubled){
+            _features[INDEX_PAWN_DOUBLED] -= 1;
         }
+        
+        
         //passed pawn
         if((blackPassedPawnMask[s] & whitePawns) == 0){
             _features[INDEX_PAWN_PASSED] -= 1;
@@ -627,7 +643,7 @@ void printEvaluation(Board *board){
     
     //String format = "%-30s | %-20s | %-20s %n";
     
-    ss << std::setw(30) << std::left << "feature" << " | "
+    ss << std::setw(40) << std::left << "feature" << " | "
        << std::setw(20) << std::right << "difference" << " | "
        << std::setw(20) << "early weight" << " | "
        << std::setw(20) << "late weight" << " | "
@@ -635,7 +651,7 @@ void printEvaluation(Board *board){
        << std::setw(20) << "sum" << "\n";
     
     
-    ss << "-------------------------------+----------------------+"
+    ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
     
@@ -645,46 +661,48 @@ void printEvaluation(Board *board){
             "INDEX_PAWN_STRUCTURE",
             "INDEX_PAWN_PASSED",
             "INDEX_PAWN_ISOLATED",
-            
+            "INDEX_PAWN_DOUBLED",
+            "INDEX_PAWN_DOUBLED_AND_ISOLATED",
+        
             "INDEX_KNIGHT_VALUE",
             "INDEX_KNIGHT_PSQT",
             "INDEX_KNIGHT_MOBILITY",
             "INDEX_KNIGHT_OUTPOST",
-            
+        
             "INDEX_BISHOP_VALUE",
             "INDEX_BISHOP_PSQT",
             "INDEX_BISHOP_MOBILITY",
             "INDEX_BISHOP_DOUBLED",
             "INDEX_BISHOP_PAWN_SAME_SQUARE",
             "INDEX_BISHOP_FIANCHETTO",
-            
+        
             "INDEX_ROOK_VALUE",
             "INDEX_ROOK_PSQT",
             "INDEX_ROOK_MOBILITY",
             "INDEX_ROOK_OPEN_FILE",
             "INDEX_ROOK_HALF_OPEN_FILE",
             "INDEX_ROOK_KING_LINE",
-            
+        
             "INDEX_QUEEN_VALUE",
             "INDEX_QUEEN_PSQT",
             "INDEX_QUEEN_MOBILITY",
-            
+        
             "INDEX_KING_SAFETY",
             "INDEX_KING_PSQT",
             "INDEX_KING_CLOSE_OPPONENT",
-            "INDEX_KING_PAWN_SHIELD",
+            "INDEX_KING_PAWN_SHIELD"
     };
     
     for(int i = 0; i < unusedVariable; i++){
         
-        ss << std::setw(30) << std::left << names[i] << " | "
+        ss << std::setw(40) << std::left << names[i] << " | "
            << std::setw(20) << std::right << ev.getFeatures()[i] << " | "
            << std::setw(20) << ev.getEarlyGameParams()[i] << " | "
            << std::setw(20) << ev.getLateGameParams()[i] << " | "
            << std::setw(20) << ev.getEarlyGameParams()[i] * (1-phase) + ev.getLateGameParams()[i] * phase<< " | "
            << std::setw(20) << (ev.getEarlyGameParams()[i] * (1-phase) + ev.getLateGameParams()[i] * phase) * ev.getFeatures()[i] << "\n";
     }
-    ss << "-------------------------------+----------------------+"
+    ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
     
