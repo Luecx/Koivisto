@@ -387,7 +387,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     b->getPseudoLegalMoves(mv);
 
     MoveOrderer moveOrderer{};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b);
+    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
 
     //count the legal moves
     int legalMoves = 0;
@@ -416,14 +416,14 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
 
         // singular extensions
-        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) &&  ply>0 && en!=nullptr && abs(en->score)<MIN_MATE_SCORE && en->type == CUT_NODE&& en->depth >= depth - 3)
+        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) &&  ply>0 && en!=nullptr && abs(en->score)<MIN_MATE_SCORE && en->type == CUT_NODE && en->depth >= depth - 3)
         {
             Score betaCut = en->score - depth*2;
             score = pvSearch(b, betaCut-1, betaCut, depth>>1, ply, false, sd, m);
             if (score < betaCut)
                 extension++;
             b->getPseudoLegalMoves(mv);
-            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b);
+            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
             m = moveOrderer.next();
         }
 
@@ -454,6 +454,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         if (score >= beta) {
             if (!skipMove) {
                 table->put(zobrist, beta, m, CUT_NODE, depth);
+                sd->setKiller(m, ply, b->getActivePlayer());
                 if (getType(m) == QUIET) {
                     sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
                 }

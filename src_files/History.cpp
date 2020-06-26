@@ -22,3 +22,16 @@ void SearchData::subtractHistoryScore(Square from, Square to, Depth depth) {
     history[from][to] -= (depth*depth+5*depth) * history[from][to]/512;
     return;
 };
+
+/*
+ * Set killer
+ */
+void SearchData::setKiller(Move move, Depth ply, Color color) {
+    killer[color][ply] = move;
+}
+/*
+ * Is killer?
+ */
+bool SearchData::isKiller(Move move, Depth ply, Color color) {
+    return sameMove(move, killer[color][ply]);
+}
