@@ -17,6 +17,8 @@ struct SearchData{
     int history[64][64] = {0};
 
     Move killer [2][MAX_PLY] = {0};
+
+    Score eval[2][MAX_PLY] = {0};
     
     void addHistoryScore(Square from, Square to, Depth depth);
     void subtractHistoryScore(Square from, Square to, Depth depth);
@@ -24,6 +26,8 @@ struct SearchData{
     void setKiller(Move move, Depth ply, Color color);
     bool isKiller(Move move, Depth ply, Color color);
 
+    void setHistoricEval(Score eval, Color color, Depth ply);
+    bool isImproving(Score eval, Color color, Depth ply);
 };
 
 

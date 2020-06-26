@@ -31,6 +31,10 @@ void initLmr()
         for (m = 0; m < 256; m ++)
             lmrReductions[d][m] = 1.0 + log(d) * log(m) * 0.5;
 }
+int lmp[2][11] = {
+        { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 },
+        { 0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84 }
+};
 
 /**
  * =================================================================================
@@ -292,6 +296,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     bool pv = (beta - alpha) != 1;
     bool inCheck = b->isInCheck(b->getActivePlayer());
     Score staticEval = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     Score originalAlpha = alpha;
     Score highestScore = -MAX_MATE_SCORE;
     Score score = -MAX_MATE_SCORE;
@@ -391,6 +396,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
     //count the legal moves
     int legalMoves = 0;
+    int quiets = 0;
 
     while (moveOrderer.hasNext()) {
 
@@ -403,6 +409,19 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         bool givesCheck = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
 //        bool isQueenPromotion = move::promotionPiece(m) % 6 == QUEEN && isPromotion;
+
+        if (!pv && ply>0 && legalMoves >= 1)
+        {
+            if (!isCapture(m) && !isPromotion && !givesCheck)
+            {
+                quiets++;
+                // LMP
+                if (depth <= 10 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth])
+                {
+                    continue;
+                }
+            }
+        }
 
         Score staticExchangeEval = 0;
         if (isCapture(m)) {

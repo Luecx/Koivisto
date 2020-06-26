@@ -35,3 +35,21 @@ void SearchData::setKiller(Move move, Depth ply, Color color) {
 bool SearchData::isKiller(Move move, Depth ply, Color color) {
     return sameMove(move, killer[color][ply]);
 }
+
+/*
+ * Set historic eval
+ */
+void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
+    eval[color][ply] = ev;
+}
+/*
+ * Is improving
+ */
+bool SearchData::isImproving(Score ev, Color color, Depth ply) {
+    if (ply>2){
+        return (ev>eval[color][ply-2]);
+    }else
+    {
+        return false;
+    }
+}
