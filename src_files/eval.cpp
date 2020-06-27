@@ -633,7 +633,7 @@ void printEvaluation(Board *board){
     using namespace std;
     
     Evaluator ev{};
-    ev.evaluate(board);
+    Score s = ev.evaluate(board);
     double phase = ev.getPhase();
     
     
@@ -650,6 +650,16 @@ void printEvaluation(Board *board){
        << std::setw(20) << "tapered weight" << " | "
        << std::setw(20) << "sum" << "\n";
     
+    
+    ss << "-----------------------------------------+----------------------+"
+          "----------------------+----------------------+"
+          "----------------------+----------------------+\n";
+    ss << std::setw(40) << std::left << "PHASE" << " | "
+       << std::setw(20) << std::right << "" << " | "
+       << std::setw(20) << "0" << " | "
+       << std::setw(20) << "1" << " | "
+       << std::setw(20) << phase<< " | "
+       << std::setw(20) << phase << " | \n";
     
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
@@ -700,8 +710,20 @@ void printEvaluation(Board *board){
            << std::setw(20) << ev.getEarlyGameParams()[i] << " | "
            << std::setw(20) << ev.getLateGameParams()[i] << " | "
            << std::setw(20) << ev.getEarlyGameParams()[i] * (1-phase) + ev.getLateGameParams()[i] * phase<< " | "
-           << std::setw(20) << (ev.getEarlyGameParams()[i] * (1-phase) + ev.getLateGameParams()[i] * phase) * ev.getFeatures()[i] << "\n";
+           << std::setw(20) << (ev.getEarlyGameParams()[i] * (1-phase) + ev.getLateGameParams()[i] * phase) * ev.getFeatures()[i] << " | \n";
     }
+    ss << "-----------------------------------------+----------------------+"
+          "----------------------+----------------------+"
+          "----------------------+----------------------+\n";
+    
+    
+    ss << std::setw(40) << std::left << "TOTAL" << " | "
+       << std::setw(20) << std::right << "" << " | "
+       << std::setw(20) << "" << " | "
+       << std::setw(20) << "" << " | "
+       << std::setw(20) << ""<< " | "
+       << std::setw(20) << s << " | \n";
+    
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
