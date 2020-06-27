@@ -402,6 +402,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
         Move m = moveOrderer.next();
 
+       //if (ply == 0)std::cout << "MOVE:"<< toString(m) << "HSCORE" << (int)sd->getHistoryMoveScore(m, b->getActivePlayer());
+
         if (!b->isLegal(m)) continue;
 
         if (sameMove(m, skipMove))continue;
@@ -484,8 +486,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             if (!skipMove) {
                 table->put(zobrist, beta, m, CUT_NODE, depth);
                 sd->setKiller(m, ply, b->getActivePlayer());
-                if (getType(m) == QUIET) {
-                    sd->addHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
+                if (!isCapture(m)){
+                    sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
                 }
             }
             return beta;
@@ -505,10 +507,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
             alpha = score;
             bestMove = m;
-        } else {
-            if (!skipMove && getType(m) == QUIET) {
-                sd->subtractHistoryScore(getSquareFrom(m), getSquareTo(m), depth);
-            }
         }
 
 

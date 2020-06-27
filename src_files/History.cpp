@@ -4,24 +4,31 @@
 
 #include "History.h"
 
+#define MAX_HISTORY_SCORE 4096;
 
 /*
  * Increment the history score of a move. Used when a cutoff occurs.
  */
-void SearchData::addHistoryScore(Square from, Square to, Depth depth) {
+void SearchData::addHistoryScore(Move m, Depth depth, MoveList *mv, bool side) {
     if (depth>20)return;
-    history[from][to] -= (depth*depth+5*depth) * history[from][to]/512;
-    history[from][to] += (depth*depth+5*depth);
+    Move m2;
+    for (int i = 0; i<mv->getSize(); i++){
+        m2 = mv->getMove(i);
+        if (sameMove(m, m2)){
+            history[side][getSquareFrom(m)][getSquareTo(m)] += (depth*depth+5*depth) - (depth*depth+5*depth) * history[side][getSquareFrom(m)][getSquareTo(m)]/MAX_HISTORY_SCORE;
+        }else if (!(m2 >> 24)){
+            history[side][getSquareFrom(m2)][getSquareTo(m2)] += -(depth*depth+5*depth) - (depth*depth+5*depth) * history[side][getSquareFrom(m2)][getSquareTo(m2)]/MAX_HISTORY_SCORE;
+        }
+    }
     return;
 };
-/*
- * Decrement the history score of a move. used when a cutoff doesnt occur.
- */
-void SearchData::subtractHistoryScore(Square from, Square to, Depth depth) {
-    if (depth>20)return;
-    history[from][to] -= (depth*depth+5*depth) * history[from][to]/512;
-    return;
-};
+
+MoveScore SearchData::getHistoryMoveScore(Move m, bool side) {
+    int score = history[side][getSquareFrom(m)][getSquareTo(m)]+MAX_HISTORY_SCORE;
+    score = score/40;
+    MoveScore ms = score;
+    return ms;
+}
 
 /*
  * Set killer

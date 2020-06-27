@@ -14,14 +14,15 @@ using namespace move;
 struct SearchData{
 
     //history table (from-to)
-    int history[64][64] = {0};
+    int history[2][64][64] = {0};
 
     Move killer [2][MAX_PLY] = {0};
 
     Score eval[2][MAX_PLY] = {0};
     
-    void addHistoryScore(Square from, Square to, Depth depth);
-    void subtractHistoryScore(Square from, Square to, Depth depth);
+    void addHistoryScore(Move m, Depth depth, MoveList *mv, bool side);
+
+    MoveScore getHistoryMoveScore(Move m, bool side);
 
     void setKiller(Move move, Depth ply, Color color);
     bool isKiller(Move move, Depth ply, Color color);

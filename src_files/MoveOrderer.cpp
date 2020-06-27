@@ -45,7 +45,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
         }else if (sd->isKiller(m, ply, board->getActivePlayer())){
             moves->scoreMove(i, 220);
         }else{
-            moves->scoreMove(i, 8 + sd->history[getSquareFrom(m)][getSquareTo(m)]/3);
+            moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
         }
         
     }
