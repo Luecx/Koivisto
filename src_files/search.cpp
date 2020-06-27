@@ -558,11 +558,15 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
     
     
     Score stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
+   
     
     if( stand_pat >= beta )
         return beta;
     if( alpha < stand_pat )
         alpha = stand_pat;
+    
+    
+   
     
     /**
      * extract all:
@@ -577,6 +581,8 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
     
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesQSearch(mv);
+    
+    
     
     
     for(int i = 0; i < mv->getSize(); i++){
