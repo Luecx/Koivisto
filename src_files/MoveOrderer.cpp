@@ -46,9 +46,12 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
             moves->scoreMove(i, 220);
         }else{
             moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
+            
+            
         }
         
     }
+    
     
 }
 
@@ -73,7 +76,8 @@ move::Move MoveOrderer::next() {
     int bestIndex = 0;
     //Move best = moves->getMove(0);
     for(int i = 1; i < moves->getSize(); i++){
-        if(moves->getMove(i) > moves->getMove(bestIndex)){
+    
+        if(moves->getScore(i) > moves->getScore(bestIndex)){
             bestIndex = i;
         }
     }

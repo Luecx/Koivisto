@@ -192,6 +192,7 @@ std::string move::toString(Move move) {
  */
 MoveList::~MoveList() {
     delete moves;
+    delete scores;
 }
 
 /**
@@ -201,6 +202,7 @@ MoveList::~MoveList() {
  */
 MoveList::MoveList() {
     moves = new Move[256];
+    scores = new MoveScore[256];
 }
 
 /**
@@ -210,6 +212,10 @@ void MoveList::swap(int i1, int i2){
     Move m1 = moves[i1];
     moves[i1] = moves[i2];
     moves[i2] = m1;
+    
+    MoveScore s1 = scores[i1];
+    scores[i1] = scores[i2];
+    scores[i2] = s1;
 }
 
 /**
@@ -249,6 +255,14 @@ int MoveList::getSize() const {
  */
 void MoveList::scoreMove(int index, MoveScore score) {
     setScore(moves[index], score);
+    scores[index] = score;
+}
+
+/**
+ *
+ */
+MoveScore MoveList::getScore(int index){
+    return scores[index];
 }
 
 /**
