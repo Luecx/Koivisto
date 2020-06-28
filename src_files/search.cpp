@@ -130,8 +130,6 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
         
         //extract the move from the table
         Move mov = table->get(zob)->move;
-        //reset score information to check if the move is contained in pseudo legal moves
-        setScore(mov,0);
         
         //get a movelist which can be used to store all pseudo legal moves
         MoveList* mvStorage = new MoveList();
@@ -141,7 +139,10 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
         bool moveContained = false;
         //check if the move is actually valid for the position
         for(int i = 0; i < mvStorage->getSize(); i++){
-            if(mvStorage->getMove(i) == mov){
+            
+            Move stor = mvStorage->getMove(i);
+            
+            if(sameMove(stor,mov)){
                 moveContained = true;
             }
         }

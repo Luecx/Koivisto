@@ -29,13 +29,13 @@ namespace move{
  * |        |    +-----------------------
  * |        |                            captured piece
  * |        +----------------------------
- * |                                     score information
+ * |                                     score information (not used)
  * +-------------------------------------
  */
 
 typedef uint32_t            Move;
 typedef uint8_t             Type;
-typedef uint8_t             MoveScore;
+typedef uint32_t            MoveScore;
 
 constexpr Move MASK_4                         = 15;
 constexpr Move MASK_6                         = 63;
@@ -147,6 +147,7 @@ class MoveList{
     
     private:
         move::Move* moves;
+        move::MoveScore* scores;
         int size;
     
     public:
@@ -163,7 +164,9 @@ class MoveList{
         void add(move::Move move);
         
         void scoreMove(int index, MoveScore score);
-  
+
+        MoveScore getScore(int index);
+        
         void printMoveBits();
         
         int getSize() const;
