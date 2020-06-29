@@ -16,7 +16,7 @@ void SearchData::addHistoryScore(Move m, Depth depth, MoveList *mv, bool side) {
         m2 = mv->getMove(i);
         if (sameMove(m, m2)){
             history[side][getSquareFrom(m)][getSquareTo(m)] += (depth*depth+5*depth) - (depth*depth+5*depth) * history[side][getSquareFrom(m)][getSquareTo(m)]/MAX_HISTORY_SCORE;
-        }else if (!(m2 >> 24)){
+        }else if (mv->getScore(i)==0){
             history[side][getSquareFrom(m2)][getSquareTo(m2)] += -(depth*depth+5*depth) - (depth*depth+5*depth) * history[side][getSquareFrom(m2)][getSquareTo(m2)]/MAX_HISTORY_SCORE;
         }
     }

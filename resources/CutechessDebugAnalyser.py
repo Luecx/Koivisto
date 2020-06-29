@@ -1,5 +1,6 @@
 import sys
 import matplotlib.pyplot as plt
+import numpy as np
 
 class TurnData:
     def __init__(self, _time, _depth, _seldepth, _score, _nodes, _nps):
@@ -9,6 +10,24 @@ class TurnData:
         self.score = _score
         self.nodes = _nodes
         self.nps = _nps
+
+
+def estimate_coef(x, y):
+    # number of observations/points
+    n = np.size(x)
+
+    # mean of x and y vector
+    m_x, m_y = np.mean(x), np.mean(y)
+
+    # calculating cross-deviation and deviation about x
+    SS_xy = np.sum(y*x) - n*m_y*m_x
+    SS_xx = np.sum(x*x) - n*m_x*m_x
+
+    # calculating regression coefficients
+    b_1 = SS_xy / SS_xx
+    b_0 = m_y - b_1*m_x
+
+    return(b_0, b_1)
 
 
 def read_file(file):
@@ -67,8 +86,8 @@ def plotData(dat, type):
     d1 = extract(dat, p1, type)
     d2 = extract(dat, p2, type)
 
-    x1 = range(0, len(d1), 1)
-    x2 = range(0, len(d2), 1)
+    x1 = np.arange(0, len(d1), 1)
+    x2 = np.arange(0, len(d2), 1)
 
     plt.ylabel(type)
     plt.xlabel('Move')
@@ -77,8 +96,18 @@ def plotData(dat, type):
     # plt.ylim(top=30)    #ymax is your value
     # plt.ylim(bottom=0)  #ymin is your value
 
-    plt.plot(x1, d1, label=p1)
-    plt.plot(x2, d2, label=p2)
+    b1 = estimate_coef(x1,d1)
+    b2 = estimate_coef(x2,d2)
+    y1_pred = b1[0] + b1[1]*x1
+    y2_pred = b2[0] + b2[1]*x2
+
+    plt.plot(x1, y1_pred, color = "r", linestyle= "--")
+    plt.plot(x2, y2_pred, color = "g", linestyle= "--")
+
+
+
+    plt.plot(x1, d1, label=p1, color = "r")
+    plt.plot(x2, d2, label=p2, color = "g")
 
     plt.legend()
 
