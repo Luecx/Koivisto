@@ -254,7 +254,7 @@ int MoveList::getSize() const {
  * assigns the score to the move at the given index
  */
 void MoveList::scoreMove(int index, MoveScore score) {
-    setScore(moves[index], score);
+//    setScore(moves[index], score);
     scores[index] = score;
 }
 
