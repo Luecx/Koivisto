@@ -25,25 +25,25 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
         
         
         if(m == hashMove){
-            moves->scoreMove(i, 255);
+            moves->scoreMove(i, MAX_MATE_SCORE);
         }else if(isCapture(m)){
             //add mvv lva score here
             Score SEE = board->staticExchangeEvaluation(m);
-            MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
+            MoveScore mvvLVA = 10*(getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
             if(SEE >= 0){
                 if(mvvLVA == 0){
-                    moves->scoreMove(i, 230 + mvvLVA);
+                    moves->scoreMove(i, 500 + mvvLVA);
                 }else{
-                    moves->scoreMove(i, 240 + mvvLVA);
+                    moves->scoreMove(i, 1000 + mvvLVA);
                 }
             }else{
-                moves->scoreMove(i, 8 + mvvLVA);
+                moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
             }
         }else if(isPromotion(m)){
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            moves->scoreMove(i, 230 + mvvLVA);
+            moves->scoreMove(i, 400 + mvvLVA);
         }else if (sd->isKiller(m, ply, board->getActivePlayer())){
-            moves->scoreMove(i, 220);
+            moves->scoreMove(i, 300);
         }else{
             moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
             
@@ -62,7 +62,7 @@ void MoveOrderer::setMovesQSearch(move::MoveList *moves) {
     for(int i = 0; i < moves->getSize(); i++){
         move::Move m = moves->getMove(i);
 
-        MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
+        MoveScore mvvLVA = 10*(getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
         moves->scoreMove(i, 240 + mvvLVA);
     }
 }

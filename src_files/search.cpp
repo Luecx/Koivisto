@@ -403,8 +403,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
         Move m = moveOrderer.next();
 
-       //if (ply == 0)std::cout << "MOVE:"<< toString(m) << "HSCORE" << (int)sd->getHistoryMoveScore(m, b->getActivePlayer());
-
         if (!b->isLegal(m)) continue;
 
         if (sameMove(m, skipMove))continue;
