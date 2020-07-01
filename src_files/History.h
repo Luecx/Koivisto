@@ -15,7 +15,10 @@ struct SearchData{
 
     //history table (from-to)
     int history[2][64][64] = {0};
-
+    
+    //counter move history table (prev_piece, prev_to, side, move_piece, move_to)
+    int cmh[6][64][2][6][64] = {0};
+    
     Move killer [2][MAX_PLY] = {0};
 
     Score eval[2][MAX_PLY] = {0};
@@ -29,6 +32,9 @@ struct SearchData{
 
     void setHistoricEval(Score eval, Color color, Depth ply);
     bool isImproving(Score eval, Color color, Depth ply);
+    
+    void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList *mv);
+    MoveScore getCounterMoveHistoryScore(Move previous, Move m);
 };
 
 

@@ -128,6 +128,37 @@ void tuning::loadPositionFile(std::string path, int count) {
 }
 
 
+void tuning::findWorstPositions(Evaluator *evaluator, double K, int count){
+    double max = 2;
+    
+    
+    for(int i = 0; i < count; i++){
+        int indexOfHighest = 0;
+        double highestScore = 0;
+        
+    
+        for(int n = 0; n < dataCount; n++){
+            Score       q_i             = evaluator->evaluate(boards[n]);
+            double      expected        = results[n];
+            double      sig             = sigmoid(q_i, K);
+            
+            double difference = abs(expected - sig);
+            
+            if(difference > highestScore && difference < max){
+                highestScore = difference;
+                indexOfHighest = n;
+            }
+        }
+        
+        max = highestScore;
+        
+        std::cout << boards[indexOfHighest]->fen()
+        << " " << evaluator->evaluate(boards[indexOfHighest])
+        << " " << results[indexOfHighest] << std::endl;
+    }
+}
+
+
 void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
 
     auto addToTable = [](double* table, double* count, U64 bitboard, double factor, Color color){

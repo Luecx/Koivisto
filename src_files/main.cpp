@@ -33,8 +33,10 @@ int main() {
     using namespace tuning;
 
 
-    loadPositionFile("..\\resources\\lichess-new-labeled.epd", 5e6);
-
+    loadPositionFile("..\\resources\\quiet-labeled.epd", 5e6);
+    
+    
+//    findWorstPositions(evaluator, 3, 1000);
 
 //    generateHeatMap(PAWN, true, false);
 

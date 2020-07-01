@@ -487,6 +487,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 sd->setKiller(m, ply, b->getActivePlayer());
                 if (!isCapture(m)){
                     sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
+                    sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv);
                 }
             }
             return beta;

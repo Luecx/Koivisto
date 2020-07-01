@@ -25,27 +25,34 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
         
         
         if(m == hashMove){
-            moves->scoreMove(i, MAX_MATE_SCORE);
+            moves->scoreMove(i, 1e6);
         }else if(isCapture(m)){
             //add mvv lva score here
             Score SEE = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = 10*(getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
             if(SEE >= 0){
                 if(mvvLVA == 0){
-                    moves->scoreMove(i, 500 + mvvLVA);
+                    moves->scoreMove(i, 50000 + mvvLVA);
                 }else{
-                    moves->scoreMove(i, 1000 + mvvLVA);
+                    moves->scoreMove(i, 100000 + mvvLVA);
                 }
             }else{
                 moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
             }
         }else if(isPromotion(m)){
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            moves->scoreMove(i, 400 + mvvLVA);
+            moves->scoreMove(i, 40000 + mvvLVA);
         }else if (sd->isKiller(m, ply, board->getActivePlayer())){
-            moves->scoreMove(i, 300);
+            moves->scoreMove(i, 30000);
         }else{
-            moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
+            
+            MoveScore ms = 8;
+            ms += sd->getHistoryMoveScore(m, board->getActivePlayer());
+            ms += sd->getCounterMoveHistoryScore(board->getPreviousMove(), m);
+            
+//            std::cout << ms << std::endl;
+            
+            moves->scoreMove(i, ms);
             
             
         }
