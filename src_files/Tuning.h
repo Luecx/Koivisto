@@ -39,6 +39,15 @@ double optimise(Evaluator *evaluator, double K, double learningRate);
 double computeError(Evaluator *evaluator, double K);
 
 /**
+ * finds the count positions which have the largest difference to the calculated outcome of the evaluator.
+ * @param evaluator
+ * @param K
+ * @param count
+ */
+void findWorstPositions(Evaluator *evaluator, double K, int count);
+
+
+/**
  * computes the K value
  * @param evaluator
  * @param initK
