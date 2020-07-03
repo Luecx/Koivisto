@@ -166,7 +166,15 @@ void uci_processCommand(std::string str) {
         uci_isReady();
     }else if(split.at(0) == "debug"){
         uci_debug(uci_getValue(split, "debug") == "on");
-    }else if(split.at(0) == "position"){
+    }
+    else if (split.at(0) == "setvalue") {
+        if (str.find("FUTILITY_MARGIN") != string::npos) {
+            FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
+        }
+        if (str.find("RAZOR_MARGIN") != string::npos) {
+            RAZOR_MARGIN = stoi(uci_getValue(split, "RAZOR_MARGIN"));
+        }
+    }else if (split.at(0) == "position") {
     
         auto fenPos = str.find("fen");
         auto movePos = str.find("moves");
