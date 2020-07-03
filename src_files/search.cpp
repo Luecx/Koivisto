@@ -23,6 +23,9 @@ int lmrReductions[256][256];
 Evaluator evaluator{};
 
 
+int RAZOR_MARGIN = 198;
+int FUTILITY_MARGIN = 92;
+
 void initLmr()
 {
     int d, m;
@@ -334,14 +337,14 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         /**************************************************************************************
      *                              R A Z O R I N G                                       *
      **************************************************************************************/
-        if (depth <= 3 && staticEval + 200 < beta) {
+        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = qSearch(b, alpha, beta, ply);
             if (score < beta) return score;
         }
         /**************************************************************************************
      *                      F U T I L I T Y   P R U N I N G                               *
      **************************************************************************************/
-        if (depth <= 6 && staticEval >= beta + depth * 80)
+        if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN)
             return staticEval;
 
         /**************************************************************************************

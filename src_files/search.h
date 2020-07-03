@@ -21,6 +21,8 @@
 #include "MoveOrderer.h"
 #include "History.h"
 
+extern int RAZOR_MARGIN;
+extern int FUTILITY_MARGIN;
 
 
 void initLmr();
