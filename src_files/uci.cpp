@@ -174,6 +174,12 @@ void uci_processCommand(std::string str) {
         if (str.find("RAZOR_MARGIN") != string::npos) {
             RAZOR_MARGIN = stoi(uci_getValue(split, "RAZOR_MARGIN"));
         }
+        if (str.find("SE_MARGIN_STATIC") != string::npos) {
+            SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
+        }
+        if (str.find("LMR_DIV") != string::npos) {
+            LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
+        }
     }else if (split.at(0) == "position") {
     
         auto fenPos = str.find("fen");
