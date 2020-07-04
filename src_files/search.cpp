@@ -25,6 +25,8 @@ Evaluator evaluator{};
 
 int RAZOR_MARGIN = 198;
 int FUTILITY_MARGIN = 92;
+int SE_MARGIN_STATIC = 22;
+int LMR_DIV = 192;
 
 void initLmr()
 {
@@ -32,7 +34,7 @@ void initLmr()
     
     for (d = 0; d < 256; d ++)
         for (m = 0; m < 256; m ++)
-            lmrReductions[d][m] = log(d) * log(m) * 0.5;
+            lmrReductions[d][m] = log(d) * log(m) * 100 / LMR_DIV;
 }
 int lmp[2][11] = {
         { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 },
@@ -333,7 +335,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
     }
 
-    if (!inCheck && abs(beta) < MIN_MATE_SCORE && !pv) {
+    if (!inCheck && !pv) {
         /**************************************************************************************
      *                              R A Z O R I N G                                       *
      **************************************************************************************/
@@ -369,7 +371,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     /*
      * internal iterative deepening
      */
-    if (depth >= 6 && pv && !hashMove && !skipMove) {
+    if (depth >= 6 && pv && !hashMove && !skipMove ) {
         pvSearch(b, alpha, beta, depth - 2, ply, false, sd, 0);
         en = table->get(zobrist);
         if (en != nullptr) {
@@ -451,7 +453,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             en->type == CUT_NODE&&
             en->depth >= depth - 3)
         {
-            Score betaCut = en->score - depth*2;
+            Score betaCut = en->score - SE_MARGIN_STATIC -depth*2;
             score = pvSearch(b, betaCut-1, betaCut, depth>>1, ply, false, sd, m);
             if (score < betaCut)
                 extension++;
