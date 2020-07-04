@@ -317,7 +317,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     if (en != nullptr && !skipMove) {
         hashMove = en->move;
 
-        if (en->depth >= depth) {
+        if (!pv && en->depth >= depth) {
             if (en->type == PV_NODE && en->score >= alpha) {
                 return en->score;
             } else if (en->type == CUT_NODE) {
