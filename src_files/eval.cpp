@@ -31,7 +31,18 @@ double * psqt_pawn = new double[64]{
      0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
 };
 
-double psqt_knight[] = {
+
+double* psqt_knight = new double[64]{
+        -50,-40,-30,-30,-30,-30,-40,-50,
+        -40,-20,  0,  0,  0,  0,-20,-40,
+        -30,  0, 10, 15, 15, 10,  0,-30,
+        -30,  5, 15, 20, 20, 15,  5,-30,
+        -30,  0, 15, 20, 20, 15,  0,-30,
+        -30,  5, 10, 15, 15, 10,  5,-30,
+        -40,-20,  0,  5,  5,  0,-20,-40,
+        -50,-40,-30,-30,-30,-30,-40,-50,
+};
+double* psqt_knight_endgame = new double[64]{
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
         -30,  0, 10, 15, 15, 10,  0,-30,
@@ -42,53 +53,73 @@ double psqt_knight[] = {
         -50,-40,-30,-30,-30,-30,-40,-50,
 };
 
-
-
 double * psqt_bishop = new double[64]{
         -231.445,  -113.944,  -238.573,  -146.317,   -93.138,  -172.036,   -35.634,   -69.548,
         -336.083,  -133.202,  -210.561,  -208.590,   -22.389,   100.960,   -45.850,  -400.840,
         -219.501,   -98.473,    36.832,   -42.520,   -42.634,    70.228,    47.584,  -148.553,
         -163.391,   -59.191,  -112.249,    82.143,     4.871,    25.918,   -82.413,   -88.737,
-        -85.815,   -88.367,   -12.882,   -21.046,    61.966,   -86.123,   -63.157,   -61.738,
+         -85.815,   -88.367,   -12.882,   -21.046,    61.966,   -86.123,   -63.157,   -61.738,
         -108.750,    31.933,   -19.343,    10.250,   -56.049,    51.839,   -25.637,   -96.362,
-        22.542,   -25.105,    41.936,   -53.528,     7.838,    -6.833,    12.715,   -37.420,
+          22.542,   -25.105,    41.936,   -53.528,     7.838,    -6.833,    12.715,   -37.420,
         -177.770,    15.745,   -96.949,  -113.831,  -111.571,   -44.741,  -147.119,  -202.108
 };
 
 double * psqt_bishop_endgame = new double[64]{
         -63.803,   -26.753,   -45.054,   -30.422,   -23.665,   -28.748,    -8.041,   -49.229,
-        -5.346,   -19.950,     3.591,   -45.005,     0.341,    -1.064,   -19.871,   -19.884,
-        6.314,     9.385,   -27.568,   -19.494,   -14.257,     8.968,    -0.978,    14.444,
-        -2.681,    27.947,    48.461,     0.643,    14.817,     9.852,    -2.028,    -8.850,
+         -5.346,   -19.950,     3.591,   -45.005,     0.341,    -1.064,   -19.871,   -19.884,
+          6.314,     9.385,   -27.568,   -19.494,   -14.257,     8.968,    -0.978,    14.444,
+         -2.681,    27.947,    48.461,     0.643,    14.817,     9.852,    -2.028,    -8.850,
         -11.990,     8.421,    40.236,    82.356,   -33.350,    28.875,   -16.337,    10.150,
-        7.806,    -1.855,    91.171,    52.317,   135.674,    18.454,    31.272,    21.261,
+          7.806,    -1.855,    91.171,    52.317,   135.674,    18.454,    31.272,    21.261,
         -18.252,   -12.854,   -17.464,    31.653,    50.292,    13.326,    13.911,   -25.495,
-        7.250,    30.103,    28.035,    44.119,    47.047,     8.251,    44.781,    12.708,
+          7.250,    30.103,    28.035,    44.119,    47.047,     8.251,    44.781,    12.708,
 };
 
 
 
 
 double * psqt_rook = new double[64]{
-        0,  0,  0,  0,  0,  0,  0,  0,
-        5, 10, 10, 10, 10, 10, 10,  5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        0,  0,  0,  5,  5,  0,  0,  0
+         -2.2,       4.3,     -12.4,       8.8,       9.4,      -1.7,      -3.2,      -2.9,
+        -16.6,      -6.2,      17.0,      16.4,      24.6,      22.0,      -8.5,      -2.9,
+         -9.2,       5.9,      -1.9,       4.8,      -4.0,       9.7,      18.9,       5.4,
+        -30.8,     -10.0,      -0.4,       5.8,       5.4,       8.5,     -11.7,      -0.0,
+        -28.6,     -16.2,      -9.5,      -9.5,       4.6,     -12.9,       0.9,       2.8,
+        -42.0,     -11.1,      -5.4,     -16.8,      -3.9,      -3.4,      -8.6,     -17.2,
+        -38.6,      -6.7,     -18.2,      -3.9,       8.7,       4.9,     -18.7,     -55.8,
+        -10.6,      -7.4,       7.6,      11.1,      13.1,       7.3,     -28.2,      10.8,
 };
 
-double psqt_queen[] = {
-        -20,-10,-10, -5, -5,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5,  5,  5,  5,  0,-10,
-        -5,  0,  5,  5,  5,  5,  0, -5,
-        0,  0,  5,  5,  5,  5,  0, -5,
-        -10,  5,  5,  5,  5,  5,  0,-10,
-        -10,  0,  5,  0,  0,  0,  0,-10,
-        -20,-10,-10, -5, -5,-10,-10,-20
+double * psqt_rook_endgame = new double[64]{
+        23.7,      16.4,      20.9,      17.7,      22.5,      22.1,      22.4,      15.2,
+        26.2,      26.0,      21.5,      22.4,      11.2,      21.9,      26.3,      17.7,
+        13.4,      14.8,      13.0,      15.8,       8.6,      10.4,       5.4,      -1.8,
+        13.6,       8.1,      23.4,       4.7,      12.5,      12.7,       4.4,       3.8,
+        10.9,      15.7,      16.1,      10.6,       2.1,       4.9,       4.7,     -10.3,
+         9.1,       9.2,       1.4,       6.6,      -0.8,      -2.2,       2.9,      -9.4,
+         6.9,       6.0,       9.3,       7.5,      -3.4,      -1.6,      -1.8,       4.4,
+         3.1,      10.8,       7.3,       2.8,      -0.2,      -0.6,       3.3,     -22.6,
+};
+
+double * psqt_queen = new double[64]{
+        -32.7,     -14.0,      -8.9,      -8.9,       6.5,      -4.4,      -4.6,       2.7,
+        -47.2,     -70.6,     -21.9,      -1.4,     -20.8,      11.5,      -2.9,      16.0,
+        -22.3,     -18.5,      -5.1,     -18.7,      10.2,      16.6,      10.4,      15.0,
+        -28.6,     -25.7,     -22.8,     -35.2,      -5.5,       0.7,      -1.0,      -6.5,
+          5.0,     -30.2,       6.1,     -16.4,       6.2,       4.2,       8.5,      -1.2,
+        -13.7,      23.4,       8.8,      11.7,       4.6,      13.4,      17.3,       9.6,
+        -17.8,       2.3,      36.7,      32.0,      44.2,      24.7,      -6.9,       0.4,
+          2.4,       5.8,      13.0,      33.2,       1.6,     -16.0,     -16.7,     -30.9,
+};
+
+double * psqt_queen_endgame = new double[64]{
+        -32.2,      -5.2,      -6.1,     -10.3,       0.6,      -4.9,      -5.7,      -5.1,
+        -26.9,      -2.4,      -1.7,       7.5,       3.8,       6.3,       2.8,      -3.6,
+        -20.6,     -14.2,     -12.3,      15.0,      14.5,       6.9,       4.8,      -1.0,
+         -1.3,       3.4,       0.7,      13.5,      18.1,      10.0,      19.0,      12.0,
+        -11.6,       8.2,       0.6,      30.0,      10.5,      10.1,      20.4,       5.4,
+         -8.1,     -25.3,       0.4,      -1.5,       5.1,       9.8,       8.9,      -4.3,
+        -12.5,     -16.2,     -32.8,     -23.0,     -22.4,     -12.5,     -14.2,     -14.5,
+        -19.7,     -23.8,     -22.9,     -31.5,      -3.7,     -17.6,     -15.4,     -28.5,
 };
 
 double psqt_king[] = {
@@ -158,12 +189,12 @@ double * tunablePST_EG_grad = new double[64]{};
 #endif
 
 double* _pieceValuesEarly = new double[unusedVariable]{
-        98.6423,       16.5249,       2.99681,      -14.4001,      -12.5356,      0.171409,      -23.6882,       376.415,       61.2558,       29.3162,       41.5542,       424.944,       34.5504,       23.6178,       27.7169,      -4.37584,       11.9598,       558.332,       141.602,       12.1858,       47.2119,        18.385,       23.3907,       1165.71,      -0.03737,       7.46494,       366.888,       239.123,       -64.153,       13.2171,
+        98.6423,       100,       2.99681,      -14.4001,      -12.5356,      0.171409,      -23.6882,       376.415,       61.2558,       29.3162,       41.5542,       424.944,       34.5504,       23.6178,       27.7169,      -4.37584,       11.9598,       558.332,       100,       12.1858,       47.2119,        18.385,       23.3907,       1165.71,      100,       7.46494,       366.888,       239.123,       -64.153,       13.2171,
     
 };
 
 double* _pieceValuesLate = new double[unusedVariable]{
-        118.648,        186.64,       3.24607,       42.0323,      -10.9291,      -9.90538,      -24.8109,       358.821,       107.184,       23.4736,       33.4458,        312.52,       3.10072,       40.8573,       62.9856,       6.44621,         10.15,       639.243,        117.64,       28.3109,       3.98184,      -1.75178,       4.39457,       1181.54,       112.675,       62.2153,      -23.3872,       50.5677,       51.2386,      -2.42515,
+        118.648,        100 ,       3.24607,       42.0323,      -10.9291,      -9.90538,      -24.8109,       358.821,       107.184,       23.4736,       33.4458,        312.52,       3.10072,       40.8573,       62.9856,       6.44621,         10.15,       639.243,        100,       28.3109,       3.98184,      -1.75178,       4.39457,       1181.54,       100,       62.2153,      -23.3872,       50.5677,       51.2386,      -2.42515,
     
     
     
@@ -311,12 +342,9 @@ bb::Score Evaluator::evaluate(Board *b) {
             _features[INDEX_PAWN_PASSED] += 1;
         }
 
-       
-#ifdef TUNE_PST
-        tunablePST_MG_grad[squareIndex(rankIndex(s), (wKSide ? fileIndex(s) : 7 - fileIndex(s)))] += _pieceValuesEarly[INDEX_PAWN_PSQT] * (1 - _phase) / 100;
-        tunablePST_EG_grad[s] += _pieceValuesLate[INDEX_BISHOP_PSQT] * _phase / 100;
-#endif
 
+
+        
         _features[INDEX_PAWN_PSQT]  += psqt_pawn            [squareIndex(rankIndex(s), (wKSide ? fileIndex(s) : 7 - fileIndex(s)))] * (1-_phase)    / 100.0;
         _features[INDEX_PAWN_PSQT]  += psqt_pawn_endgame    [s] * (  _phase)    / 100.0;
         
@@ -326,12 +354,12 @@ bb::Score Evaluator::evaluate(Board *b) {
     k = b->getPieces()[BLACK_PAWN];
     while(k){
         Square s = bitscanForward(k);
-    
-    
-    
+        
+        
+        
         bool isolated = (FILES_NEIGHBOUR[fileIndex(s)] & blackPawns) == 0;
         bool doubled = (FILES[fileIndex(s)] & (blackPawns & ~(ONE << s))) != 0;
-    
+        
         if(isolated && doubled){
             _features[INDEX_PAWN_DOUBLED_AND_ISOLATED] -= 1;
         }else if(isolated){
@@ -345,12 +373,9 @@ bb::Score Evaluator::evaluate(Board *b) {
         if((blackPassedPawnMask[s] & whitePawns) == 0){
             _features[INDEX_PAWN_PASSED] -= 1;
         }
-        
-#ifdef TUNE_PST
-        tunablePST_MG_grad[squareIndex(7 - rankIndex(s), (bKSide ? fileIndex(s) : 7 - fileIndex(s)))] -= _pieceValuesEarly[INDEX_PAWN_PSQT] * (1 - _phase) / 100;
-        tunablePST_EG_grad[squareIndex(7 - rankIndex(s), fileIndex(s))] -= _pieceValuesLate[INDEX_PAWN_PSQT] * _phase / 100;
-#endif
 
+
+        
         _features[INDEX_PAWN_PSQT] -= psqt_pawn         [squareIndex(7-rankIndex(s), (bKSide ? fileIndex(s) : 7 - fileIndex(s)))] * (1-_phase) / 100.0;
         _features[INDEX_PAWN_PSQT] -= psqt_pawn_endgame [squareIndex(7-rankIndex(s), fileIndex(s))] * _phase     / 100.0;
         
@@ -396,10 +421,17 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         s = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[s];
+
+
+#ifdef TUNE_PST
+        tunablePST_MG_grad[pst_index_white(s)] += _pieceValuesEarly[INDEX_KNIGHT_PSQT] * (1-_phase) / 100;
+        tunablePST_EG_grad[pst_index_white(s)] += _pieceValuesLate [INDEX_KNIGHT_PSQT] * _phase     / 100;
+#endif
+        _features[INDEX_KNIGHT_PSQT]  += psqt_knight            [pst_index_white(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_KNIGHT_PSQT]  += psqt_knight_endgame    [pst_index_white(s)] * (  _phase)    / 100.0;
         
         
         
-        _features[INDEX_KNIGHT_PSQT] += psqt_knight[63 - s]/ 100.0;
         _features[INDEX_KNIGHT_MOBILITY] += sqrt(bitCount(KNIGHT_ATTACKS[s] & mobilitySquaresWhite));
         
         
@@ -418,8 +450,19 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         s = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[s];
+
+
         
-        _features[INDEX_KNIGHT_PSQT]  -= psqt_knight[s]/ 100.0;
+#ifdef TUNE_PST
+        tunablePST_MG_grad[pst_index_white(s)] -= _pieceValuesEarly[INDEX_KNIGHT_PSQT] * (1-_phase) / 100;
+        tunablePST_EG_grad[pst_index_white(s)] -= _pieceValuesLate [INDEX_KNIGHT_PSQT] * _phase     / 100;
+#endif
+        _features[INDEX_KNIGHT_PSQT]  -= psqt_knight            [pst_index_black(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_KNIGHT_PSQT]  -= psqt_knight_endgame    [pst_index_black(s)] * (  _phase)    / 100.0;
+        
+        
+        
+        
         _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         
         _features[INDEX_KNIGHT_OUTPOST] -= isOutpost(s, BLACK, whitePawns, blackPawnCover);
@@ -443,6 +486,9 @@ bb::Score Evaluator::evaluate(Board *b) {
         Square s = bitscanForward(k);
         attacks = lookUpBishopAttack(s, occupied);
 
+
+  
+        
         _features[INDEX_BISHOP_PSQT]  += psqt_bishop            [pst_index_white(s)] * (1-_phase)    / 100.0;
         _features[INDEX_BISHOP_PSQT]  += psqt_bishop_endgame    [pst_index_white(s)] * (  _phase)    / 100.0;
         
@@ -473,6 +519,8 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpBishopAttack(s, occupied);
+
+        
         
         _features[INDEX_BISHOP_PSQT] -= psqt_bishop         [pst_index_black(s)] * (1-_phase) / 100.0;
         _features[INDEX_BISHOP_PSQT] -= psqt_bishop_endgame [pst_index_black(s)] * _phase     / 100.0;
@@ -513,9 +561,13 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpRookAttack(s,occupied);
+
+
+        _features[INDEX_ROOK_PSQT]  += psqt_rook            [pst_index_white(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_ROOK_PSQT]  += psqt_rook_endgame    [pst_index_white(s)] * (  _phase)    / 100.0;
         
         
-        _features[INDEX_ROOK_PSQT] += psqt_rook[63 - s] / 100.0;
+        
         _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
         
         if(lookUpRookAttack(s, ZERO) & b->getPieces()[BLACK_KING]){
@@ -544,7 +596,10 @@ bb::Score Evaluator::evaluate(Board *b) {
         Square s = bitscanForward(k);
         attacks = lookUpRookAttack(s,occupied);
         
-        _features[INDEX_ROOK_PSQT] -= psqt_rook[s] / 100.0;
+
+        _features[INDEX_ROOK_PSQT]  -= psqt_rook            [pst_index_black(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_ROOK_PSQT]  -= psqt_rook_endgame    [pst_index_black(s)] * (  _phase)    / 100.0;
+        
         _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         
         if(lookUpRookAttack(s, ZERO) & b->getPieces()[WHITE_KING]){
@@ -580,9 +635,13 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
+
+        _features[INDEX_QUEEN_PSQT]  += psqt_queen            [pst_index_white(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_QUEEN_PSQT]  += psqt_queen_endgame    [pst_index_white(s)] * (  _phase)    / 100.0;
+    
         
-        _features[INDEX_QUEEN_PSQT] += psqt_queen[63 - s] / 100.0;
         _features[INDEX_QUEEN_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
+
         
         phase+=3;
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 4);
@@ -594,9 +653,16 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpRookAttack(s, occupied) | lookUpBishopAttack(s, occupied);
+
+
+        _features[INDEX_QUEEN_PSQT]  -= psqt_queen            [pst_index_black(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_QUEEN_PSQT]  -= psqt_queen_endgame    [pst_index_black(s)] * (  _phase)    / 100.0;
         
-        _features[INDEX_QUEEN_PSQT] -= psqt_queen[s] / 100.0;
+        
+        
+        
         _features[INDEX_QUEEN_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+
         
         phase+=3;
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 4);
@@ -780,11 +846,11 @@ int Evaluator::paramCount(){
 
 #ifdef TUNE_PST
 double *Evaluator::getTunablePST_MG() {
-    return psqt_pawn;
+    return psqt_knight;
 }
 
 double *Evaluator::getTunablePST_EG() {
-    return psqt_pawn_endgame;
+    return psqt_knight_endgame;
 }
 
 double *Evaluator::getTunablePST_MG_grad() {
