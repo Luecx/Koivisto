@@ -62,7 +62,7 @@ void main_tune_pst(){
         
         std::cout << "--------------------------------------------------- ["<<i << "] ----------------------------------------------" << std::endl;
         
-        std::cout << std::setprecision(8) << tuning::optimise(evaluator, K, 1e7) << std::endl;
+        std::cout << std::setprecision(8) << tuning::optimise(evaluator, K, 1e5) << std::endl;
         
         for(int k = 0; k < 64; k++){
             std::cout << std::setprecision(3) << fixed << std::setw(10) << evaluator->getTunablePST_MG()[k]<< ",";
@@ -95,7 +95,7 @@ int main() {
      **********************************************************************************/
 
     //main_tune_features();
-    main_tune_pst();
+    //main_tune_pst();
     
     return 0;
     
