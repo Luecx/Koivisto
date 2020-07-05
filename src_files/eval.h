@@ -42,6 +42,14 @@ class Evaluator{
          * returns the amount of tunable parameters
          */
         int paramCount();
+        
+        #ifdef TUNE_PST
+        double* getTunablePST_MG();
+        double* getTunablePST_EG();
+        double* getTunablePST_MG_grad();
+        double* getTunablePST_EG_grad();
+        #endif
+    
 };
 
 void printEvaluation(Board* b);

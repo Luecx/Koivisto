@@ -6,7 +6,10 @@
 #include "eval.h"
 
 
-Score psqt_pawn_endgame[] = {
+#define pst_index_white(s) squareIndex(7-rankIndex(s), fileIndex(s))
+#define pst_index_black(s) s
+
+double psqt_pawn_endgame[] = {
         0,  0,  0,  0,  0,  0,  0,  0,
         3,  3,  2, -1,  2,  5,  4,  4,
         2,  4,  4,  3,  5,  4,  5,  3,
@@ -17,7 +20,7 @@ Score psqt_pawn_endgame[] = {
         0,  0,  0,  0,  0,  0,  0,  0
 };
 
-Score psqt_pawn[] = {
+double psqt_pawn[] = {
         0,  0,  0,  0,  0,  0,  0,  0,
         7, 11, -3,-26,  8,  8,  8, 14,
         -7,-13,  0, -9,  0,-20,  6,-10,
@@ -28,7 +31,7 @@ Score psqt_pawn[] = {
         0,  0,  0,  0,  0,  0,  0,  0
 };
 
-Score psqt_knight[] = {
+double psqt_knight[] = {
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
         -30,  0, 10, 15, 15, 10,  0,-30,
@@ -41,32 +44,32 @@ Score psqt_knight[] = {
 
 
 
-Score psqt_bishop[] = {
-        -37,-4,-36,-42,-31,-23,-17,-34,
-        -2,4,-3,2,0,11,2,50,
-        -11,-5,12,6,10,9,5,-11,
-        -17,11,17,19,35,11,24,-10,
-        17,10,22,44,20,37,-2,16,
-        5,19,29,46,42,43,30,5,
-        -12,24,52,30,42,34,21,5,
-        51,17,20,48,24,7,16,57
+double * psqt_bishop = new double[64]{
+        -231.445,  -113.944,  -238.573,  -146.317,   -93.138,  -172.036,   -35.634,   -69.548,
+        -336.083,  -133.202,  -210.561,  -208.590,   -22.389,   100.960,   -45.850,  -400.840,
+        -219.501,   -98.473,    36.832,   -42.520,   -42.634,    70.228,    47.584,  -148.553,
+        -163.391,   -59.191,  -112.249,    82.143,     4.871,    25.918,   -82.413,   -88.737,
+        -85.815,   -88.367,   -12.882,   -21.046,    61.966,   -86.123,   -63.157,   -61.738,
+        -108.750,    31.933,   -19.343,    10.250,   -56.049,    51.839,   -25.637,   -96.362,
+        22.542,   -25.105,    41.936,   -53.528,     7.838,    -6.833,    12.715,   -37.420,
+        -177.770,    15.745,   -96.949,  -113.831,  -111.571,   -44.741,  -147.119,  -202.108
 };
 
-Score psqt_bishop_endgame[] = {
-        -44,-1,-23,-20,-17,-15,-3,-31,
-        -4,4,-2,0,0,7,1,12,
-        -2,0,1,13,14,1,1,-2,
-        0,19,15,13,18,14,21,0,
-        22,10,30,27,13,40,6,28,
-        17,23,32,44,50,50,34,19,
-        -1,17,29,35,35,31,27,3,
-        40,45,36,55,43,30,50,31
+double * psqt_bishop_endgame = new double[64]{
+        -63.803,   -26.753,   -45.054,   -30.422,   -23.665,   -28.748,    -8.041,   -49.229,
+        -5.346,   -19.950,     3.591,   -45.005,     0.341,    -1.064,   -19.871,   -19.884,
+        6.314,     9.385,   -27.568,   -19.494,   -14.257,     8.968,    -0.978,    14.444,
+        -2.681,    27.947,    48.461,     0.643,    14.817,     9.852,    -2.028,    -8.850,
+        -11.990,     8.421,    40.236,    82.356,   -33.350,    28.875,   -16.337,    10.150,
+        7.806,    -1.855,    91.171,    52.317,   135.674,    18.454,    31.272,    21.261,
+        -18.252,   -12.854,   -17.464,    31.653,    50.292,    13.326,    13.911,   -25.495,
+        7.250,    30.103,    28.035,    44.119,    47.047,     8.251,    44.781,    12.708,
 };
 
 
 
 
-Score psqt_rook[] = {
+double * psqt_rook = new double[64]{
         0,  0,  0,  0,  0,  0,  0,  0,
         5, 10, 10, 10, 10, 10, 10,  5,
         -5,  0,  0,  0,  0,  0,  0, -5,
@@ -77,7 +80,7 @@ Score psqt_rook[] = {
         0,  0,  0,  5,  5,  0,  0,  0
 };
 
-Score psqt_queen[] = {
+double psqt_queen[] = {
         -20,-10,-10, -5, -5,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5,  5,  5,  5,  0,-10,
@@ -88,7 +91,7 @@ Score psqt_queen[] = {
         -20,-10,-10, -5, -5,-10,-10,-20
 };
 
-Score psqt_king[] = {
+double psqt_king[] = {
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
@@ -98,7 +101,7 @@ Score psqt_king[] = {
         20, 20,  0,  0,  0,  0, 20, 20,
         20, 30, 10,  0,  0, 10, 30, 20
 };
-Score psqt_king_endgame[] = {
+double psqt_king_endgame[] = {
         -50,-40,-30,-20,-20,-30,-40,-50,
         -30,-20,-10,  0,  0,-10,-20,-30,
         -30,-10, 20, 30, 30, 20,-10,-30,
@@ -148,6 +151,11 @@ int INDEX_KING_PSQT = unusedVariable++;
 int INDEX_KING_CLOSE_OPPONENT = unusedVariable++;
 int INDEX_KING_PAWN_SHIELD = unusedVariable++;
 
+
+#ifdef TUNE_PST
+double * tunablePST_MG_grad = new double[64]{};
+double * tunablePST_EG_grad = new double[64]{};
+#endif
 
 double* _pieceValuesEarly = new double[unusedVariable]{
         98.6423,       16.5249,       2.99681,      -14.4001,      -12.5356,      0.171409,      -23.6882,       376.415,       61.2558,       29.3162,       41.5542,       424.944,       34.5504,       23.6178,       27.7169,      -4.37584,       11.9598,       558.332,       141.602,       12.1858,       47.2119,        18.385,       23.3907,       1165.71,      -0.03737,       7.46494,       366.888,       239.123,       -64.153,       13.2171,
@@ -227,6 +235,13 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     U64 k;
     int phase = 0;
+
+    #ifdef TUNE_PST
+    for(int i = 0; i < 64; i++){
+        tunablePST_MG_grad[i] = 0;
+        tunablePST_EG_grad[i] = 0;
+    }
+    #endif
     
     U64 whiteTeam = b->getTeamOccupied()[WHITE];
     U64 blackTeam = b->getTeamOccupied()[BLACK];
@@ -413,11 +428,15 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpBishopAttack(s, occupied);
+
+
+        #ifdef TUNE_PST
+        tunablePST_MG_grad[pst_index_white(s)] += _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
+        tunablePST_EG_grad[pst_index_white(s)] += _pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
+        #endif
         
-        
-        
-        _features[INDEX_BISHOP_PSQT]  += psqt_bishop            [s] * (1-_phase)    / 100.0;
-        _features[INDEX_BISHOP_PSQT]  += psqt_bishop_endgame    [s] * (  _phase)    / 100.0;
+        _features[INDEX_BISHOP_PSQT]  += psqt_bishop            [pst_index_white(s)] * (1-_phase)    / 100.0;
+        _features[INDEX_BISHOP_PSQT]  += psqt_bishop_endgame    [pst_index_white(s)] * (  _phase)    / 100.0;
         
         _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(blackPawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
@@ -446,9 +465,14 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpBishopAttack(s, occupied);
+
+        #ifdef TUNE_PST
+        tunablePST_MG_grad[pst_index_black(s)] -= _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
+        tunablePST_EG_grad[pst_index_black(s)] -= _pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
+        #endif
         
-        _features[INDEX_BISHOP_PSQT] -= psqt_bishop         [squareIndex(7-rankIndex(s), fileIndex(s))] * (1-_phase) / 100.0;
-        _features[INDEX_BISHOP_PSQT] -= psqt_bishop_endgame [squareIndex(7-rankIndex(s), fileIndex(s))] * _phase     / 100.0;
+        _features[INDEX_BISHOP_PSQT] -= psqt_bishop         [pst_index_black(s)] * (1-_phase) / 100.0;
+        _features[INDEX_BISHOP_PSQT] -= psqt_bishop_endgame [pst_index_black(s)] * _phase     / 100.0;
         
         _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(whitePawns & ((ONE << s) & WHITE_SQUARES ? WHITE_SQUARES:BLACK_SQUARES));
@@ -751,3 +775,20 @@ int Evaluator::paramCount(){
     return unusedVariable;
 }
 
+#ifdef TUNE_PST
+double *Evaluator::getTunablePST_MG() {
+    return psqt_bishop;
+}
+
+double *Evaluator::getTunablePST_EG() {
+    return psqt_bishop_endgame;
+}
+
+double *Evaluator::getTunablePST_MG_grad() {
+    return tunablePST_MG_grad;
+}
+
+double *Evaluator::getTunablePST_EG_grad() {
+    return tunablePST_EG_grad;
+}
+#endif

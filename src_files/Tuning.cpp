@@ -4,6 +4,7 @@
 
 #include <iomanip>
 #include "Tuning.h"
+#include "Bitboard.h"
 
 using namespace std;
 
@@ -382,8 +383,11 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
     int paramCount = evaluator->paramCount();
     
     
-    auto* earlyGrads = new double[paramCount]{};
-    auto* lateGrads = new double[paramCount]{};
+    auto* earlyGrads = new double[paramCount]{0};
+    auto* lateGrads = new double[paramCount]{0};
+    
+    auto* mg_pst_grads = new double[64]{};
+    auto* eg_pst_grads = new double[64]{};
     
     double score = 0;
     
@@ -399,28 +403,79 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
         double      phase           = evaluator->getPhase();
         
         for(int p = 0; p < paramCount; p++){
-       
-            
             earlyGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
             lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
         }
+
+        #ifdef TUNE_PST
+        for(int i = 0; i < 64; i++){
+            mg_pst_grads[i] += evaluator->getTunablePST_MG_grad()[i] * (1-phase) * sigPrime * lossPrime;
+            eg_pst_grads[i] += evaluator->getTunablePST_EG_grad()[i] *     phase * sigPrime * lossPrime;
+        }
+        #endif
         
         score += (expected - sig) * (expected - sig);
     }
     
-    for(int p = 0; p < paramCount; p++){
+//    for(int p = 0; p < paramCount; p++){
+//        evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / dataCount;
+//        evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / dataCount;
+//    }
+
+    #ifdef TUNE_PST
+    for(int i = 0; i < 64; i++){
+        evaluator->getTunablePST_MG()[i] -= mg_pst_grads[i] * learningRate / dataCount;
+        evaluator->getTunablePST_EG()[i] -= eg_pst_grads[i] * learningRate / dataCount;
+    }
+    #endif
+    
+    
+    return score / dataCount;
+    
+}
+
+#ifdef TUNE_PST
+double tuning::optimisePST(Evaluator *evaluator, double K, double learningRate) {
+    int paramCount = evaluator->paramCount();
+    
+    
+    
+    auto* mg_pst_grads = new double[64]{};
+    auto* eg_pst_grads = new double[64]{};
+    
+    double score = 0;
+    
+    for(int i = 0; i < dataCount; i++){
+        Score       q_i             = evaluator->evaluate(boards[i]);
+        double      expected        = results[i];
         
-//        std::cout << "adjusting early " << p << " by " << (earlyGrads[p] * learningRate / dataCount)<< std::endl;
-//        std::cout << "adjusting late  " << p << " by " << (lateGrads[p] * learningRate / dataCount) << std::endl;
+        double      sig             = sigmoid(q_i, K);
+        double      sigPrime        = sigmoidPrime(q_i, K);
+        double      lossPrime       = - 2 * (expected - sig);
         
-        evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / dataCount;
-        evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / dataCount;
+        double*     features        = evaluator->getFeatures();
+        double      phase           = evaluator->getPhase();
+       
+
+        for(int i = 0; i < 64; i++){
+            mg_pst_grads[i] += evaluator->getTunablePST_MG_grad()[i] * (1-phase) * sigPrime * lossPrime;
+            eg_pst_grads[i] += evaluator->getTunablePST_EG_grad()[i] *     phase * sigPrime * lossPrime;
+        }
+        
+        score += (expected - sig) * (expected - sig);
+    }
+
+
+    for(int i = 0; i < 64; i++){
+        evaluator->getTunablePST_MG()[i] -= mg_pst_grads[i] * learningRate / dataCount;
+        evaluator->getTunablePST_EG()[i] -= eg_pst_grads[i] * learningRate / dataCount;
     }
     
     
     return score / dataCount;
     
 }
+#endif
 
 double tuning::computeError(Evaluator *evaluator, double K) {
     double score = 0;
