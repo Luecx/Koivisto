@@ -407,27 +407,15 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
             lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
         }
 
-        #ifdef TUNE_PST
-        for(int i = 0; i < 64; i++){
-            mg_pst_grads[i] += evaluator->getTunablePST_MG_grad()[i] * (1-phase) * sigPrime * lossPrime;
-            eg_pst_grads[i] += evaluator->getTunablePST_EG_grad()[i] *     phase * sigPrime * lossPrime;
-        }
-        #endif
         
         score += (expected - sig) * (expected - sig);
     }
     
-//    for(int p = 0; p < paramCount; p++){
-//        evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / dataCount;
-//        evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / dataCount;
-//    }
-
-    #ifdef TUNE_PST
-    for(int i = 0; i < 64; i++){
-        evaluator->getTunablePST_MG()[i] -= mg_pst_grads[i] * learningRate / dataCount;
-        evaluator->getTunablePST_EG()[i] -= eg_pst_grads[i] * learningRate / dataCount;
+    for(int p = 0; p < paramCount; p++){
+        evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / dataCount;
+        evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / dataCount;
     }
-    #endif
+
     
     
     return score / dataCount;
