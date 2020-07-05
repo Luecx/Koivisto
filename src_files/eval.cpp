@@ -9,26 +9,26 @@
 #define pst_index_white(s) squareIndex(7-rankIndex(s), fileIndex(s))
 #define pst_index_black(s) s
 
-double psqt_pawn_endgame[] = {
-        0,  0,  0,  0,  0,  0,  0,  0,
-        3,  3,  2, -1,  2,  5,  4,  4,
-        2,  4,  4,  3,  5,  4,  5,  3,
-        5, 10,  2,  3,  3,  4,  6, -1,
-        19, 20, 15,  7,  7, 26, 25, 19,
-        61, 68, 52, 44, 55, 65, 79, 65,
-        98, 73, 80, 67, 75, 80, 80, 90,
-        0,  0,  0,  0,  0,  0,  0,  0
+double * psqt_pawn_endgame = new double[64]{
+     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
+     8.468,    -5.743,     9.089,     4.721,     9.111,     0.484,   -14.387,    -7.112,
+    -3.367,     0.189,    -6.827,     0.655,    -1.621,    -2.004,    -5.150,    -7.745,
+     8.127,     6.428,    -3.006,   -17.729,   -12.550,    -3.491,     0.343,     3.798,
+    23.973,    20.263,    14.301,     2.387,     2.797,     8.021,    17.699,    15.459,
+    84.682,    90.018,    80.790,    63.723,    61.787,    61.816,    77.160,    77.968,
+   149.876,   129.031,   118.179,   102.717,   100.661,   104.561,   117.594,   131.497,
+     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
 };
 
-double psqt_pawn[] = {
-        0,  0,  0,  0,  0,  0,  0,  0,
-        7, 11, -3,-26,  8,  8,  8, 14,
-        -7,-13,  0, -9,  0,-20,  6,-10,
-        -13,  0, -5,  7, -2,-21,-16,-36,
-        7, 13, 14, 18, 16, 19,  4,  0,
-        22, 39, 59, 52, 45, 45, 31, 22,
-        46, 53, 56, 57, 63, 41, 45, 29,
-        0,  0,  0,  0,  0,  0,  0,  0
+double * psqt_pawn = new double[64]{
+          0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
+    -4.819,    51.504,    32.302,   -19.137,   -26.091,   -52.893,     6.069,   -12.853,
+     5.231,    18.449,    -8.151,     1.120,   -10.764,     7.481,   -19.175,    -3.865,
+   -18.220,   -18.375,    -6.706,    28.162,    47.944,     4.643,   -12.987,   -13.113,
+    -2.504,    -2.743,     2.084,    20.448,    27.055,     2.174,     4.219,     0.870,
+     1.288,     1.900,     3.693,     4.249,     3.415,     3.028,     0.642,     2.725,
+     0.605,     1.247,     1.414,     1.158,     1.453,     1.024,     2.779,     1.624,
+     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
 };
 
 double psqt_knight[] = {
@@ -281,7 +281,10 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 whitePawns = b->getPieces()[WHITE_PAWN];
     U64 blackPawns = b->getPieces()[BLACK_PAWN];
     
-    
+    bool wKSide = (fileIndex(bitscanForward(b->getPieces()[WHITE_KING])) > 3 ? 0 : 1);
+    bool bKSide = (fileIndex(bitscanForward(b->getPieces()[BLACK_KING])) > 3 ? 0 : 1);
+
+
     k = whitePawns;
     _features[INDEX_PAWN_PASSED] = 0;
     _features[INDEX_PAWN_ISOLATED] = 0;
@@ -307,8 +310,14 @@ bb::Score Evaluator::evaluate(Board *b) {
         if((whitePassedPawnMask[s] & blackPawns) == 0){
             _features[INDEX_PAWN_PASSED] += 1;
         }
-        
-        _features[INDEX_PAWN_PSQT]  += psqt_pawn            [s] * (1-_phase)    / 100.0;
+
+       
+#ifdef TUNE_PST
+        tunablePST_MG_grad[squareIndex(rankIndex(s), (wKSide ? fileIndex(s) : 7 - fileIndex(s)))] += _pieceValuesEarly[INDEX_PAWN_PSQT] * (1 - _phase) / 100;
+        tunablePST_EG_grad[s] += _pieceValuesLate[INDEX_BISHOP_PSQT] * _phase / 100;
+#endif
+
+        _features[INDEX_PAWN_PSQT]  += psqt_pawn            [squareIndex(rankIndex(s), (wKSide ? fileIndex(s) : 7 - fileIndex(s)))] * (1-_phase)    / 100.0;
         _features[INDEX_PAWN_PSQT]  += psqt_pawn_endgame    [s] * (  _phase)    / 100.0;
         
         k = lsbReset(k);
@@ -337,7 +346,12 @@ bb::Score Evaluator::evaluate(Board *b) {
             _features[INDEX_PAWN_PASSED] -= 1;
         }
         
-        _features[INDEX_PAWN_PSQT] -= psqt_pawn         [squareIndex(7-rankIndex(s), fileIndex(s))] * (1-_phase) / 100.0;
+#ifdef TUNE_PST
+        tunablePST_MG_grad[squareIndex(7 - rankIndex(s), (bKSide ? fileIndex(s) : 7 - fileIndex(s)))] -= _pieceValuesEarly[INDEX_PAWN_PSQT] * (1 - _phase) / 100;
+        tunablePST_EG_grad[squareIndex(7 - rankIndex(s), fileIndex(s))] -= _pieceValuesLate[INDEX_PAWN_PSQT] * _phase / 100;
+#endif
+
+        _features[INDEX_PAWN_PSQT] -= psqt_pawn         [squareIndex(7-rankIndex(s), (bKSide ? fileIndex(s) : 7 - fileIndex(s)))] * (1-_phase) / 100.0;
         _features[INDEX_PAWN_PSQT] -= psqt_pawn_endgame [squareIndex(7-rankIndex(s), fileIndex(s))] * _phase     / 100.0;
         
         
@@ -429,12 +443,6 @@ bb::Score Evaluator::evaluate(Board *b) {
         Square s = bitscanForward(k);
         attacks = lookUpBishopAttack(s, occupied);
 
-
-        #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_white(s)] += _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
-        tunablePST_EG_grad[pst_index_white(s)] += _pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
-        #endif
-        
         _features[INDEX_BISHOP_PSQT]  += psqt_bishop            [pst_index_white(s)] * (1-_phase)    / 100.0;
         _features[INDEX_BISHOP_PSQT]  += psqt_bishop_endgame    [pst_index_white(s)] * (  _phase)    / 100.0;
         
@@ -465,11 +473,6 @@ bb::Score Evaluator::evaluate(Board *b) {
     while(k){
         Square s = bitscanForward(k);
         attacks = lookUpBishopAttack(s, occupied);
-
-        #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_black(s)] -= _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
-        tunablePST_EG_grad[pst_index_black(s)] -= _pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
-        #endif
         
         _features[INDEX_BISHOP_PSQT] -= psqt_bishop         [pst_index_black(s)] * (1-_phase) / 100.0;
         _features[INDEX_BISHOP_PSQT] -= psqt_bishop_endgame [pst_index_black(s)] * _phase     / 100.0;
@@ -777,11 +780,11 @@ int Evaluator::paramCount(){
 
 #ifdef TUNE_PST
 double *Evaluator::getTunablePST_MG() {
-    return psqt_bishop;
+    return psqt_pawn;
 }
 
 double *Evaluator::getTunablePST_EG() {
-    return psqt_bishop_endgame;
+    return psqt_pawn_endgame;
 }
 
 double *Evaluator::getTunablePST_MG_grad() {

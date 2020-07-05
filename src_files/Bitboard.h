@@ -8,7 +8,7 @@
 #define CHESSCOMPUTER_BITMAP_H
 
 
-#define TUNE_PST
+//#define TUNE_PST
 
 #include <iostream>
 #include <cmath>
