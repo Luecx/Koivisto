@@ -65,12 +65,12 @@ void main_tune_pst(){
         std::cout << std::setprecision(8) << tuning::optimise(evaluator, K, 1e5) << std::endl;
         
         for(int k = 0; k < 64; k++){
-            std::cout << std::setprecision(3) << fixed << std::setw(10) << evaluator->getTunablePST_MG()[k]<< ",";
+            std::cout << std::setprecision(1) << fixed << std::setw(10) << evaluator->getTunablePST_MG()[k]<< ",";
             if(k % 8 == 7) std::cout << "\n";
         }
         std::cout << std::endl;
         for(int k = 0; k < 64; k++){
-            std::cout << std::setprecision(3) << fixed << std::setw(10) << evaluator->getTunablePST_EG()[k]<< ",";
+            std::cout << std::setprecision(1) << fixed << std::setw(10) << evaluator->getTunablePST_EG()[k]<< ",";
             if(k % 8 == 7) std::cout << "\n";
         }
         std::cout << std::endl;
@@ -87,7 +87,7 @@ int main() {
 
 
 
-      uci_loop();
+//      uci_loop();
     
 
     /**********************************************************************************
