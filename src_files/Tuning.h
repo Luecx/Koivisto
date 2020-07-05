@@ -11,6 +11,7 @@
 #include <fstream>
 #include "Util.h"
 #include <unistd.h>
+#include "Bitboard.h"
 
 
 namespace tuning {
@@ -32,6 +33,13 @@ void clearLoadedData();
  * @param evaluator
  */
 double optimise(Evaluator *evaluator, double K, double learningRate);
+
+/**
+ * uses the loaded data to optimise the evaluator
+ * @param evaluator
+ */
+double optimisePST(Evaluator *evaluator, double K, double learningRate);
+
 
 /**
  * computes the error of the evaluator on the given set

@@ -7,6 +7,9 @@
 #ifndef CHESSCOMPUTER_BITMAP_H
 #define CHESSCOMPUTER_BITMAP_H
 
+
+#define TUNE_PST
+
 #include <iostream>
 #include <cmath>
 #include <tgmath.h>
@@ -15,6 +18,8 @@
 #include <cassert>
 #include <stdint.h>
 #include <string>
+
+
 
 
 namespace bb {
