@@ -316,7 +316,16 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     Entry *en = table->get(zobrist);
     if (en != nullptr && !skipMove) {
         hashMove = en->move;
-
+    
+        //adjusting eval
+        if (
+                en->type == PV_NODE ||
+                en->type == CUT_NODE && staticEval < en->score ||
+                en->type == ALL_NODE && staticEval > en->score) {
+            
+            staticEval = en->score;
+        }
+        
         if (!pv && en->depth >= depth) {
             if (en->type == PV_NODE && en->score >= alpha) {
                 return en->score;
@@ -324,12 +333,10 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 if (en->score >= beta) {
                     return beta;
                 }
-
             } else if (en->type == ALL_NODE) {
                 if (en->score <= alpha) {
                     return alpha;
                 }
-
             }
         }
 
@@ -337,15 +344,15 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
     if (!inCheck && !pv) {
         /**************************************************************************************
-     *                              R A Z O R I N G                                       *
-     **************************************************************************************/
+         *                              R A Z O R I N G                                       *
+         **************************************************************************************/
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = qSearch(b, alpha, beta, ply);
             if (score < beta) return score;
         }
         /**************************************************************************************
-     *                      F U T I L I T Y   P R U N I N G                               *
-     **************************************************************************************/
+         *                      F U T I L I T Y   P R U N I N G                               *
+         **************************************************************************************/
         if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN)
             return staticEval;
 
