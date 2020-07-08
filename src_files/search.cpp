@@ -23,10 +23,10 @@ int lmrReductions[256][256];
 Evaluator evaluator{};
 
 
-int RAZOR_MARGIN = 198;
-int FUTILITY_MARGIN = 92;
-int SE_MARGIN_STATIC = 22;
-int LMR_DIV = 192;
+int     RAZOR_MARGIN        = 198;
+int     FUTILITY_MARGIN     = 92;
+int     SE_MARGIN_STATIC    = 22;
+int     LMR_DIV             = 192;
 
 void initLmr()
 {
@@ -298,16 +298,17 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     }
 
 
-    U64 zobrist = b->zobrist();
-    bool pv = (beta - alpha) != 1;
-    bool inCheck = b->isInCheck(b->getActivePlayer());
-    Score staticEval = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    U64 zobrist                         = b->zobrist();
+    bool pv                             = (beta - alpha) != 1;
+    bool inCheck                        = b->isInCheck(b->getActivePlayer());
+    Score staticEval                    = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score originalAlpha                 = alpha;
+    Score highestScore                  = -MAX_MATE_SCORE;
+    Score score                         = -MAX_MATE_SCORE;
+    Move bestMove                       = 0;
+    Move hashMove                       = 0;
+    
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    Score originalAlpha = alpha;
-    Score highestScore = -MAX_MATE_SCORE;
-    Score score = -MAX_MATE_SCORE;
-    Move bestMove = 0;
-    Move hashMove = 0;
 
 
     /**************************************************************************************

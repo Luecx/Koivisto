@@ -26,6 +26,7 @@ void uci_loop();
 void uci_processCommand(std::string str);
 
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo);
+void uci_go_perft(int depth);
 void uci_go_depth(int depth);
 void uci_go_nodes(int nodes);
 void uci_go_time(int movetime);
