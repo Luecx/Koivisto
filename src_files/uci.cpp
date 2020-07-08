@@ -156,6 +156,8 @@ void uci_processCommand(std::string str) {
             uci_go_infinite();
         }else if(str.find("mate") != string::npos){
             uci_go_mate(stoi(uci_getValue(split, "mate")));
+        }else if(str.find("perft") != string::npos){
+            uci_go_perft(stoi(uci_getValue(split, "perft")));
         }
     }else if(split.at(0) == "stop"){
         uci_stop();
@@ -200,6 +202,18 @@ void uci_processCommand(std::string str) {
     }else if(split.at(0) == "eval"){
         printEvaluation(board);
     }
+}
+
+void uci_go_perft(int depth){
+    perft_init(false);
+    
+    startMeasure();
+    auto nodes = perft(board, depth);
+    auto time = stopMeasure();
+    
+    std::cout << "nodes: " << nodes << " nps: " << nodes/time*1000;
+    
+    perft_cleanUp();
 }
 
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {

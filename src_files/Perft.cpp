@@ -59,7 +59,7 @@ void perft_res(){
 }
 
 
-U64 perft(Board &b, int depth, bool print, bool d1, bool hash, int ply){
+U64 perft(Board *b, int depth, bool print, bool d1, bool hash, int ply){
     
     U64 zob;
     if(hash){
@@ -68,7 +68,7 @@ U64 perft(Board &b, int depth, bool print, bool d1, bool hash, int ply){
             tt->clear();
         }
         
-        zob = b.zobrist();
+        zob = b->zobrist();
         Entry* en = tt->get(zob);
         if (en != nullptr && en->depth == depth && en->zobrist == zob) [[unlikely]] {
             return tt->get(zob)->move;
@@ -81,7 +81,7 @@ U64 perft(Board &b, int depth, bool print, bool d1, bool hash, int ply){
     if (depth == 0) return 1;
     
     
-    b.getPseudoLegalMoves(buffer[depth]);
+    b->getPseudoLegalMoves(buffer[depth]);
 //    generations ++;
     
     for (i = 0; i < buffer[depth]->getSize(); i++) {
@@ -91,14 +91,14 @@ U64 perft(Board &b, int depth, bool print, bool d1, bool hash, int ply){
         
         
         
-         if (!b.isLegal(m)) { continue; }
+         if (!b->isLegal(m)) { continue; }
     
         if(d1 && depth == 1){
             nodes += 1;
         }else{
     
             
-            b.move(m);
+            b->move(m);
 //            moves ++;
     
             U64 np = perft(b, depth - 1, false, d1, hash,ply+1);
@@ -110,7 +110,7 @@ U64 perft(Board &b, int depth, bool print, bool d1, bool hash, int ply){
             }
     
             nodes += np;
-            b.undoMove();
+            b->undoMove();
             
         }
     }
