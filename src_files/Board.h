@@ -88,6 +88,13 @@ struct BoardStatus{
             return !(rhs == *this);
         }
         
+        friend std::ostream &operator<<(std::ostream &os, const BoardStatus &status) {
+            os << "zobrist: " << status.zobrist << " metaInformation: " << status.metaInformation
+               << " fiftyMoveCounter: " << status.fiftyMoveCounter << " repetitionCounter: " << status.repetitionCounter
+               << " move: " << status.move;
+            return os;
+        }
+        
         inline BoardStatus copy() {
             BoardStatus b{zobrist, enPassantTarget, metaInformation, fiftyMoveCounter, repetitionCounter, moveCounter, move};
             return b;

@@ -312,7 +312,7 @@ void Board::move(Move m) {
         newBoardStatus.fiftyMoveCounter = 0;
     }
     
-    
+    newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
     if (pFrom % 6 == PAWN)  {
         
         //reset fifty move counter if pawn has moved
@@ -322,27 +322,52 @@ void Board::move(Move m) {
         if (mType == DOUBLED_PAWN_PUSH) {
             newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
         }
-            //promotions are handled differently because the new piece at the target square is not the piece that initially moved.
+        
+        //promotions are handled differently because the new piece at the target square is not the piece that initially moved.
         else if (isPromotion(m)) {
-            boardStatusHistory.emplace_back(newBoardStatus);
+    
+            //we handle this case seperately so we return after this finished.
+            boardStatusHistory.emplace_back(std::move(newBoardStatus));
+            this->changeActivePlayer();
+            
             
             //setting pieces
             this->unsetPiece(sqFrom);
             
+            //do the "basic" move
             if (isCapture(m)) {
-                
                 this->replacePiece(sqTo, promotionPiece(m));
             } else {
                 this->setPiece(sqTo, promotionPiece(m));
             }
             
-            this->changeActivePlayer();
             return;
         } else if (mType == EN_PASSANT) {
+    
+    
+            boardStatusHistory.emplace_back(std::move(newBoardStatus));
+            this->changeActivePlayer();
+            
             //make sure to capture the pawn
             unsetPiece(sqTo - 8 * factor);
+    
+            //move to pawn
+            this->unsetPiece(sqFrom);
+            this->setPiece(sqTo, pFrom);
+            
+            return;
         }
     } else if (pFrom % 6 == KING) {
+    
+        //revoke castling rights if king moves
+        newBoardStatus.metaInformation &= ~(ONE << (color * 2));
+        newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+    
+    
+        //we handle this case seperately so we return after this finished.
+        boardStatusHistory.emplace_back(std::move(newBoardStatus));
+        this->changeActivePlayer();
+        
         if (isCastle(m)) {
             //move the rook as well. castling rights are handled below
             Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
@@ -350,26 +375,46 @@ void Board::move(Move m) {
             unsetPiece(rookSquare);
             setPiece(rookTarget, ROOK + 6 * color);
         }
+    
+    
+        this->unsetPiece(sqFrom);
+        if (isCapture(m)) {
+            this->replacePiece(sqTo, pFrom);
+        } else {
+            this->setPiece(sqTo, pFrom);
+        }
         
-        //revoke castling rights if king moves
-        newBoardStatus.metaInformation &= ~(ONE << (color * 2));
-        newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+        //we need to compute the repetition count
+        this->computeNewRepetition();
+        
+        return;
+        
     }
         
-        //revoke castling rights if rook moves. It is also done if the rook is not on the initial square.
+    //revoke castling rights if rook moves and it is on the initial square
     else if (pFrom % 6 == ROOK) {
         File f = fileIndex(sqFrom);
-        if (f == 0) {
-            newBoardStatus.metaInformation &= ~(ONE << (color * 2));
-        } else {
-            newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+        if(color == WHITE){
+            if(sqFrom == A1){
+                newBoardStatus.metaInformation &= ~(ONE << (color * 2));
+            }else if(sqFrom == H1){
+                newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+            }
+        }else{
+            if(sqFrom == A8){
+                newBoardStatus.metaInformation &= ~(ONE << (color * 2));
+            }else if(sqFrom == H8){
+                newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+            }
         }
+//        if (f == 0) {
+//            newBoardStatus.metaInformation &= ~(ONE << (color * 2));
+//        } else {
+//            newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+//        }
     }
     
-    
-    newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
     boardStatusHistory.emplace_back(std::move(newBoardStatus));
-    
     
     
     //doing the initial move
@@ -380,6 +425,9 @@ void Board::move(Move m) {
     } else {
         this->setPiece(sqTo, pFrom);
     }
+    
+    
+    
     this->changeActivePlayer();
     this->computeNewRepetition();
 }
@@ -389,6 +437,8 @@ void Board::undoMove() {
     Move m = getBoardStatus()->move;
     
     changeActivePlayer();
+    
+    
     
     Square sqFrom = getSquareFrom(m);
     Square sqTo = getSquareTo(m);
@@ -409,6 +459,7 @@ void Board::undoMove() {
         setPiece(rookSquare, ROOK + 6 * color);
         unsetPiece(rookTarget);
     }
+    
     
     if (mType != EN_PASSANT && isCap) {
         replacePiece(sqTo, captured);

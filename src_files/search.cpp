@@ -4,12 +4,14 @@
 
 #include "search.h"
 #include "History.h"
+#include "TimeManager.h"
 
 
 MoveList **moves;
 TranspositionTable *table;
 
 
+TimeManager* _timeManager;
 int _nodes;
 int _maxTime;
 int _selDepth;
@@ -24,8 +26,8 @@ Evaluator evaluator{};
 
 
 int     RAZOR_MARGIN        = 198;
-int     FUTILITY_MARGIN     = 92;
-int     SE_MARGIN_STATIC    = 22;
+int     FUTILITY_MARGIN     =  92;
+int     SE_MARGIN_STATIC    =  22;
 int     LMR_DIV             = 192;
 
 void initLmr()
@@ -48,39 +50,27 @@ int lmp[2][11] = {
  * =================================================================================
  */
 
-#define posMargin(x) (200 + (x-1) * 50)
+
 
 /**
  * stops the search
  */
 void search_stop() {
-    _forceStop = true;
+    _timeManager->stopSearch();
 }
 
-/**
- * sets the start time
- */
-void setStartTime(){
-    _startTime = std::chrono::system_clock::now();
-}
 
-/**
- * returns the amount of elapsed time since _startTime
- * @return
- */
-int elapsedTime(){
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end-_startTime;
-    return round(diff.count() * 1000);
-}
+
+
 
 /**
  * checks if there is time left and the search should continue.
  * @return
  */
 bool isTimeLeft(){
-    return elapsedTime()+1 < _maxTime && !_forceStop;
+    return _timeManager->isTimeLeft();
 }
+
 
 /**
  * used to change the hash size
@@ -163,6 +153,8 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
         
         mvList->add(mov);
         b->move(table->get(zob)->move);
+        
+        
         extractPV(b, mvList, depth -1);
         b->undoMove();
     }
@@ -182,7 +174,7 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
 void printInfoString(Board *b, Depth d, Score score){
     
     
-    int nps = (int) (_nodes) / (int) (elapsedTime()+1) * 1000;
+    int nps = (int) (_nodes) / (int) (_timeManager->elapsedTime()+1) * 1000;
     
     std::cout << "info"
                  " depth " << (int)d <<
@@ -193,11 +185,12 @@ void printInfoString(Board *b, Depth d, Score score){
         std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2 * (score > 0 ? 1:-1);
     }
     
+    
     std::cout <<
     
               " nodes " << _nodes <<
               " nps " << nps <<
-              " time " << elapsedTime() <<
+              " time " << _timeManager->elapsedTime() <<
               " hashfull " << (int)(table->usage() * 1000);
     
     MoveList* em = new MoveList();
@@ -208,10 +201,14 @@ void printInfoString(Board *b, Depth d, Score score){
         std::cout << " " << toString(em->getMove(i)) ;
     }
     
+    
+    std::cout << std::endl;
+
+    
     delete em;
     
     
-    std::cout << std::endl;
+    
 }
 
 
@@ -228,29 +225,24 @@ void printInfoString(Board *b, Depth d, Score score){
 
 /**
  * returns the best move for the given board.
- * the search will stop if either the max depth of max time is reached
+ * the search will stop if either the max depth is reached.
  * @param b
  * @return
  */
-Move bestMove(Board *b, Depth maxDepth, int maxTime) {
+Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     
-    if(maxDepth > MAX_PLY) maxDepth = MAX_PLY;
     
-    _maxTime = maxTime;
+    _timeManager = timeManager;
     _forceStop = false;
     _nodes = 0;
     _selDepth = 0;
     table->clear();
-    setStartTime();
     
     SearchData sd;
     
+    if(maxDepth > MAX_PLY) maxDepth = MAX_PLY;
     
     for(Depth d = 1; d <= maxDepth; d++){
-        
-        //start measure for time this iteration takes
-//        Score score =
-//        //printInfoString(b, d, score);
         pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd, 0);
         
         if(!isTimeLeft()) break;
@@ -309,8 +301,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     Move hashMove                       = 0;
     
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-
-
+    
+    
     /**************************************************************************************
      *                  T R A N S P O S I T I O N - T A B L E   P R O B E                 *
      **************************************************************************************/
@@ -411,9 +403,10 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     //count the legal moves
     int legalMoves = 0;
     int quiets = 0;
+    
 
     while (moveOrderer.hasNext()) {
-
+        
         Move m = moveOrderer.next();
 
         if (!b->isLegal(m)) continue;
@@ -514,8 +507,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
             if (!skipMove && ply == 0 && isTimeLeft()) {
                 //we need to put the transposition in here so that printInfoString displays the correct pv
-                table->put(zobrist, alpha, bestMove, PV_NODE, depth);
+                table->put(zobrist, score, bestMove, PV_NODE, depth);
                 printInfoString(b, depth, score);
+                _timeManager->updatePV(m, score, depth);
             }
 
             alpha = score;
