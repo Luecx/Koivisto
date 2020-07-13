@@ -97,12 +97,11 @@ U64 perft(Board *b, int depth, bool print, bool d1, bool hash, int ply){
             nodes += 1;
         }else{
     
-            
+    
             b->move(m);
-//            moves ++;
+            
     
             U64 np = perft(b, depth - 1, false, d1, hash,ply+1);
-            //if(np == 0) np = 1;
     
             if (print) {
                 std::cout << move::toString(m) << " " << np
@@ -111,7 +110,8 @@ U64 perft(Board *b, int depth, bool print, bool d1, bool hash, int ply){
     
             nodes += np;
             b->undoMove();
-            
+    
+    
         }
     }
     

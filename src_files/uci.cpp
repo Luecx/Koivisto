@@ -21,6 +21,7 @@
 #define YEAR ((__DATE__[7]-'0') * 1000 + (__DATE__[8]-'0') * 100 + (__DATE__[9]-'0') * 10 + (__DATE__[10]-'0') * 1)
 
 
+TimeManager* timeManager;
 Board *board;
 std::thread *searchThread = nullptr;
 
@@ -82,11 +83,13 @@ void uci_endThread(){
     if(searchThread != nullptr){
         delete searchThread;
         searchThread = nullptr;
+        delete timeManager;
+        timeManager = nullptr;
     }
 }
 
-void uci_searchAndPrint(Depth maxDepth, int maxTime){
-    Move m = bestMove(board, maxDepth, maxTime);
+void uci_searchAndPrint(Depth maxDepth, TimeManager* timeManager){
+    Move m = bestMove(board, maxDepth, timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
     uci_endThread();
 }
@@ -211,7 +214,7 @@ void uci_go_perft(int depth){
     auto nodes = perft(board, depth);
     auto time = stopMeasure();
     
-    std::cout << "nodes: " << nodes << " nps: " << nodes/time*1000;
+    std::cout << "nodes: " << nodes << " nps: " << nodes/(time+1)*1000;
     
     perft_cleanUp();
 }
@@ -223,9 +226,12 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
     }
     
     int timeToUse = board->getActivePlayer() == WHITE ? (wtime/40 + winc)-10 : (btime/40 + binc)-10;
-    std::cout << timeToUse << std::endl;
+//    std::cout << timeToUse << std::endl;
     
-    searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeToUse);
+    
+    timeManager = new TimeManager(wtime,btime,winc,binc,movesToGo, board);
+    
+    searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeManager);
     searchThread->detach();
     
 }
@@ -236,7 +242,9 @@ void uci_go_depth(int depth) {
         return;
     }
     
-    searchThread = new std::thread(uci_searchAndPrint,  depth, ONE << 30);
+    timeManager = new TimeManager();
+    
+    searchThread = new std::thread(uci_searchAndPrint,  depth,timeManager);
     searchThread->detach();
 }
 
@@ -249,7 +257,10 @@ void uci_go_time(int movetime) {
         return;
     }
     
-    searchThread = new std::thread(uci_searchAndPrint,  MAX_PLY, movetime);
+    
+    timeManager = new TimeManager(movetime);
+    
+    searchThread = new std::thread(uci_searchAndPrint,  MAX_PLY, timeManager);
     searchThread->detach();
 }
 

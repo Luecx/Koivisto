@@ -20,6 +20,7 @@
 #include "eval.h"
 #include "MoveOrderer.h"
 #include "History.h"
+#include "TimeManager.h"
 
 extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
@@ -33,7 +34,7 @@ void search_setHashSize(int hashSize);
 void search_init(int hashSize);     //used to create arrays, movelists etc
 void search_cleanUp();              //used to clean up the memory
 
-Move bestMove(Board *b, Depth maxDepth, int maxTime);
+Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager);
 Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, SearchData *sd, Move skipMove);
 Score  qSearch(Board *b, Score alpha, Score beta, Depth ply);
 
