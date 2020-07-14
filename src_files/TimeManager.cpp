@@ -96,7 +96,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     startTime = std::chrono::system_clock::now();
     
     
-    std::cout << "timeToUse=" << timeToUse << "  upperBound=" << upperTimeBound << std::endl;
+//    std::cout << "timeToUse=" << timeToUse << "  upperBound=" << upperTimeBound << std::endl;
     
 }
 
