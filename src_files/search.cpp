@@ -188,7 +188,7 @@ void printInfoString(Board *b, Depth d, Score score){
               " seldepth " << (int)_selDepth;
     
     if(abs(score) > MIN_MATE_SCORE){
-        std::cout << " mate " << (MAX_MATE_SCORE-abs(score)+1)/2 * (score > 0 ? 1:-1);
+        std::cout << " score mate " << (MAX_MATE_SCORE-abs(score)+1)/2 * (score > 0 ? 1:-1);
     }else{
         std::cout << " score cp " << score;
     }
