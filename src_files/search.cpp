@@ -60,6 +60,13 @@ void search_stop() {
 }
 
 
+/**
+ * checks if given side has only pawns left
+ * @return
+ */
+bool hasOnlyPawns(Board* board, Color color) {
+    return board->getTeamOccupied()[color] == ((board->getPieces()[PAWN + color * 6] | board->getPieces()[KING + color * 6]));
+}
 
 
 
@@ -352,7 +359,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         /**************************************************************************************
          *                  N U L L - M O V E   P R U N I N G                                 *
          **************************************************************************************/
-        if (depth >= 2 && staticEval >= beta) {
+        if (depth >= 2 && staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
 
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, false, sd, 0);
