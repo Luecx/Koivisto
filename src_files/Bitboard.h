@@ -292,6 +292,8 @@ constexpr U64 CASTLING_MASKS[] = {CASTLING_WHITE_QUEENSIDE_MASK,
 constexpr U64 seed = 12398123;
 
 
+
+
 constexpr U64 whitePassedPawnMask[]{
         0x0303030303030300L, 0x0707070707070700L, 0x0e0e0e0e0e0e0e00L, 0x1c1c1c1c1c1c1c00L,
         0x3838383838383800L, 0x7070707070707000L, 0xe0e0e0e0e0e0e000L, 0xc0c0c0c0c0c0c000L,
@@ -621,6 +623,112 @@ inline U64 shiftNorthWest(U64 b) {
     b = (b << 7) & NOT_FILE_H;
     return b;
 }
+
+
+/**
+ * fill the bitboard to the north
+ * @param b
+ * @return
+ */
+inline U64 fillNorth(U64 b){
+    b |= (b <<  8);
+    b |= (b << 16);
+    b |= (b << 32);
+    return b;
+}
+
+/**
+ * fill the bitboard to the south
+ * @param b
+ * @return
+ */
+inline U64 fillSouth(U64 b) {
+    b |= (b >>  8);
+    b |= (b >> 16);
+    b |= (b >> 32);
+    return b;
+}
+
+/**
+ * fills all the files where a bit is set
+ * @param b
+ * @return
+ */
+inline U64 fillFile(U64 b){
+    return fillSouth(b) | fillNorth(b);
+}
+
+
+/**
+ *
+ * white attack        white attack     attack filefill with least one
+ * frontspan           rearspan         square attacked by white
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . . w . . . .     . . 1 w 1 . . .     . . 1 w 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ */
+inline U64 wAttackFrontSpans(U64 b){
+    return fillNorth(shiftNorthEast(b) | shiftNorthWest(b));
+}
+
+/**
+ *
+ * white attack        white attack     attack filefill with least one
+ * frontspan           rearspan         square attacked by white
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . . w . . . .     . . 1 w 1 . . .     . . 1 w 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ */
+inline U64 wAttackRearSpans(U64 b){
+    return fillSouth(shiftEast(b) | shiftWest(b));
+}
+
+
+/**
+ *
+ * black attack        black attack     attack filefill with least one
+ * frontspan           rearspan         square attacked by black
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . b . . . .     . . 1 b 1 . . .     . . 1 b 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ */
+inline U64 bAttackFrontSpans(U64 b){
+    return fillSouth(shiftSouthEast(b) | shiftSouthWest(b));
+}
+
+/**
+ *
+ * black attack        black attack     attack filefill with least one
+ * frontspan           rearspan         square attacked by black
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+ * . . . b . . . .     . . 1 b 1 . . .     . . 1 b 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
+ */
+inline U64 bAttackRearSpans(U64 b){
+    return fillNorth(shiftEast(b) | shiftWest(b));
+}
+
+
 
 /**
  * isolates the lsb in the given number and returns the result.

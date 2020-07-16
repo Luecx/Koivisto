@@ -78,11 +78,17 @@ Move genMove(
 
 
 
-void printMoveBits(Move move, bool bitInfo = true);
 
 inline bool sameMove(Move &m1, Move &m2){
     //toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
     return ((m1 ^ m2) & MASK_24) == 0;
+}
+inline void setScore(Move &move, const int moveScore){
+    move = (move & ~(MASK_8 << SHIFT_SCORE_INFO));  //clearing
+    move |= (moveScore << SHIFT_SCORE_INFO);
+}
+inline int getScore(Move &move){
+    return (move >> SHIFT_SCORE_INFO);
 }
 
 inline bb::Square getSquareFrom(const Move &move){
@@ -101,8 +107,6 @@ inline bb::Piece getCapturedPiece(const Move &move){
     return ((move >> SHIFT_CAPTURED_PIECE) & MASK_4);
 }
 
-
-
 inline void setSquareFrom(Move &move, const bb::Square from){
     //move = (move & ~(MASK_6 << SHIFT_FROM));  //clearing
     move |= (from << SHIFT_FROM);
@@ -111,7 +115,6 @@ inline void setSquareTo(Move &move, const bb::Square to){
     //move = (move & ~(MASK_6 << SHIFT_TO));  //clearing
     move |= (to << SHIFT_TO);
 }
-
 inline void setType(Move &move, const Type type){
     //move = (move & ~(MASK_6 << SHIFT_TYPE));  //clearing
     move |= (type << SHIFT_TYPE);
@@ -124,10 +127,6 @@ inline void setCapturedPiece(Move &move, const bb::Piece capturedPiece){
     //move = (move & ~(MASK_6 << SHIFT_CAPTURED_PIECE));  //clearing
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
-inline void setScore(Move &move, const MoveScore moveScore){
-    move = (move & ~(MASK_8 << SHIFT_SCORE_INFO));  //clearing
-    move |= (moveScore << SHIFT_SCORE_INFO);
-}
 
 bool isDoubledPawnPush(Move move);
 bool isCapture(Move move);
@@ -137,9 +136,8 @@ bool isPromotion(Move move);
 bb::Piece promotionPiece(Move move);
 
 
-
 std::string toString(const Move move);
-
+void printMoveBits(Move move, bool bitInfo = true);
 
 
 

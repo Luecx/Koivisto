@@ -19,6 +19,7 @@ using namespace std;
 using namespace move;
 
 typedef uint8_t NodeType;
+typedef uint8_t NodeAge;
 
 constexpr NodeType PV_NODE = 0;
 constexpr NodeType CUT_NODE = 1;
@@ -44,8 +45,17 @@ struct Entry{
         this->depth = depth;
     }
     
+    NodeAge getAge(){
+        return getScore(move);
+    }
+    
+    void setAge(NodeAge age){
+        setScore(move, age);
+    }
+    
+    
     U64         zobrist;        //64 bit
-    Move        move;           //32 bit
+    Move        move;           //32 bit  (using the 8 msb for age)
     Depth       depth;          //8 bit
     NodeType    type;           //8 bit
     Score       score;          //16 bit -> 128 bit = 16 byte
@@ -55,6 +65,7 @@ struct Entry{
 class TranspositionTable {
     
     private:
+        NodeAge currentAge;
         Entry* entries;
         U64 used;
         U64 size;
@@ -68,14 +79,17 @@ class TranspositionTable {
         TranspositionTable& operator=(const TranspositionTable &other) = delete;
         ~TranspositionTable();
         
-        Entry* get(U64 zobrist);
-        bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
         
-        void clear();
-        U64 getSize();
-        void setSize(U64 mb);
-        double usage();
-        int entryCount();
+        
+        Entry*  get(U64 zobrist);
+        bool    put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
+        
+        void    incrementAge();
+        void    setSize(U64 mb);
+        void    clear();
+        double  usage();
+        int     entryCount();
+        U64     getSize();
         
         friend ostream &operator<<(ostream &os, const TranspositionTable &map);
         

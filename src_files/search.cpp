@@ -244,7 +244,8 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     _forceStop = false;
     _nodes = 0;
     _selDepth = 0;
-    table->clear();
+    table->incrementAge();
+//    table->clear();
     
     SearchData sd;
     
@@ -298,6 +299,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     }
 
 
+    
     U64 zobrist                         = b->zobrist();
     bool pv                             = (beta - alpha) != 1;
     bool inCheck                        = b->isInCheck(b->getActivePlayer());
@@ -418,7 +420,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Move m = moveOrderer.next();
 
         if (!b->isLegal(m)) continue;
-
+        
         if (sameMove(m, skipMove))continue;
 
         bool givesCheck = b->givesCheck(m);
@@ -449,7 +451,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         if (b->givesCheck(m) && b->staticExchangeEvaluation(m) >= 0) {
             extension = 1;
         }
-
+    
         // singular extensions
         if (!extension &&
             depth >= 8 &&
@@ -468,9 +470,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 extension++;
             b->getPseudoLegalMoves(mv);
             moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
+            
+            
             m = moveOrderer.next();
         }
-
+    
+        
         b->move(m);
 
         //verify that givesCheck is correct

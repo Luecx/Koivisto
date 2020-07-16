@@ -23,8 +23,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
     for(int i = 0; i < moves->getSize(); i++){
         move::Move m = moves->getMove(i);
         
-        
-        if(m == hashMove){
+        if(sameMove(m,hashMove)){
             moves->scoreMove(i, 1e6);
         }else if(isCapture(m)){
             //add mvv lva score here
