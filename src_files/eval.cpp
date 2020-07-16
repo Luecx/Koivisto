@@ -21,7 +21,7 @@ double * psqt_pawn_endgame = new double[64]{
 };
 
 double * psqt_pawn = new double[64]{
-          0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
+    0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
     -4.819,    51.504,    32.302,   -19.137,   -26.091,   -52.893,     6.069,   -12.853,
      5.231,    18.449,    -8.151,     1.120,   -10.764,     7.481,   -19.175,    -3.865,
    -18.220,   -18.375,    -6.706,    28.162,    47.944,     4.643,   -12.987,   -13.113,
@@ -153,6 +153,8 @@ int INDEX_PAWN_PASSED = unusedVariable++;
 int INDEX_PAWN_ISOLATED = unusedVariable++;
 int INDEX_PAWN_DOUBLED = unusedVariable++;
 int INDEX_PAWN_DOUBLED_AND_ISOLATED = unusedVariable++;
+int INDEX_PAWN_BACKWARD = unusedVariable++;
+int INDEX_PAWN_OPEN = unusedVariable++;
 
 int INDEX_KNIGHT_VALUE = unusedVariable++;
 int INDEX_KNIGHT_PSQT = unusedVariable++;
@@ -189,15 +191,12 @@ double * tunablePST_EG_grad = new double[64]{};
 #endif
 
 double* _pieceValuesEarly = new double[unusedVariable]{
-        111.32149,     37.937502,     1.7428664,    -7.9711247,    -19.515088,     4.3605993,    -24.586402,     393.34163,     50.139908,     37.146578,      36.44351,     454.86454,     34.557274,     25.213567,      43.26576,     -6.610586,     28.548169,     552.23743,      104.1309,     21.131393,     63.831925,     14.055121,     24.542736,     1171.3101,     110.29483,     5.2366929,     370.35353,     245.67562,    -68.004816,     10.501184,
+        111.32149,     37.937502,     1.7428664,    -7.9711247,    -19.515088,     4.3605993,    -24.586402,   0,0,  393.34163,     50.139908,     37.146578,      36.44351,     454.86454,     34.557274,     25.213567,      43.26576,     -6.610586,     28.548169,     552.23743,      104.1309,     21.131393,     63.831925,     14.055121,     24.542736,     1171.3101,     110.29483,     5.2366929,     370.35353,     245.67562,    -68.004816,     10.501184,
     
 };
 
 double* _pieceValuesLate = new double[unusedVariable]{
-        109.02791,     180.94795,      3.247947,     45.974671,    -9.7344505,    -5.0971805,    -21.261521,      353.9369,     105.61641,     16.331965,     25.277237,     316.27509,     14.266988,     29.835118,     61.514463,     6.1223843,     14.153116,     631.37322,     101.10357,     25.290902,    -6.1828663,     4.9810433,     5.8459158,      1179.054,     100.57779,     59.030516,    -42.507438,     50.590253,     51.255898,   -0.12968825,
-    
-    
-    
+        109.02791,     180.94795,      3.247947,     45.974671,    -9.7344505,    -5.0971805,    -21.261521,   0,0,   353.9369,     105.61641,     16.331965,     25.277237,     316.27509,     14.266988,     29.835118,     61.514463,     6.1223843,     14.153116,     631.37322,     101.10357,     25.290902,    -6.1828663,     4.9810433,     5.8459158,      1179.054,     100.57779,     59.030516,    -42.507438,     50.590253,     51.255898,   -0.12968825,
 };
 
 //TODO tweak values
@@ -386,9 +385,13 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     
     U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
-    U64 whitePawnWestCover = shiftNorthEast(whitePawns) & whitePawns;
-    U64 blackPawnEastCover = shiftNorthEast(blackPawns) & blackPawns;
-    U64 blackPawnWestCover = shiftNorthEast(blackPawns) & blackPawns;
+    U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
+    U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
+    U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
+    
+    U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
+    U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+    
     
     _features[INDEX_PAWN_VALUE] =
             + bitCount(b->getPieces()[WHITE_PAWN])
@@ -398,11 +401,15 @@ bb::Score Evaluator::evaluate(Board *b) {
             + bitCount(whitePawnWestCover)
             - bitCount(blackPawnEastCover)
             - bitCount(blackPawnWestCover);
-    
-    
-    U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
-    U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
-    
+//    _features[INDEX_PAWN_OPEN] =
+//            + bitCount(whitePawns & ~fillSouth(blackPawns))
+//            - bitCount(blackPawns & ~fillNorth(whitePawns));
+//    _features[INDEX_PAWN_BACKWARD] =
+//            + bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
+//            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns);
+
+
+   
     /*
      * only these squares are counted for mobility
      */
@@ -766,6 +773,8 @@ void printEvaluation(Board *board){
             "INDEX_PAWN_ISOLATED",
             "INDEX_PAWN_DOUBLED",
             "INDEX_PAWN_DOUBLED_AND_ISOLATED",
+            "INDEX_PAWN_BACKWARD",
+            "INDEX_PAWN_OPEN",
         
             "INDEX_KNIGHT_VALUE",
             "INDEX_KNIGHT_PSQT",
@@ -793,7 +802,7 @@ void printEvaluation(Board *board){
             "INDEX_KING_SAFETY",
             "INDEX_KING_PSQT",
             "INDEX_KING_CLOSE_OPPONENT",
-            "INDEX_KING_PAWN_SHIELD"
+            "INDEX_KING_PAWN_SHIELD",
     };
     
     for(int i = 0; i < unusedVariable; i++){
