@@ -433,11 +433,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             {
                 quiets++;
                 // LMP
-                if (depth <= 10 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth])
-                {
-                    continue;
-                }
+                if (depth <= 10 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]) continue;
             }
+
+            //SEE Pruning
+            if (depth <= 5 && b->staticExchangeEvaluation(m) <= -100 * depth) continue;
+
         }
 
         Score staticExchangeEval = 0;
