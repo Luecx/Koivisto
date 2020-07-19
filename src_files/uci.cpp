@@ -141,13 +141,15 @@ void uci_processCommand(std::string str) {
             string wincr = uci_getValue(split, "winc");
             string bincr = uci_getValue(split, "binc");
             string mvtog = uci_getValue(split, "movestogo");
+            string depth = uci_getValue(split, "depth");
             
             uci_go_match(
                     (wtime.empty()) ? 60000000:stoi(wtime),
                     (btime.empty()) ? 60000000:stoi(btime),
                     (wincr.empty()) ? 0:stoi(wincr),
                     (bincr.empty()) ? 0:stoi(bincr),
-                    (mvtog.empty()) ? 40:stoi(mvtog));
+                    (mvtog.empty()) ? 40:stoi(mvtog),
+                    (depth.empty()) ? MAX_PLY:stoi(depth));
         
         }else if(str.find("depth") != string::npos){
             uci_go_depth(stoi(uci_getValue(split, "depth")));
@@ -221,7 +223,7 @@ void uci_go_perft(int depth, bool hash){
     perft_cleanUp();
 }
 
-void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
+void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth) {
     
     if(searchThread != nullptr){
         return;
@@ -233,7 +235,7 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo) {
     
     timeManager = new TimeManager(wtime,btime,winc,binc,movesToGo, board);
     
-    searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeManager);
+    searchThread = new std::thread(uci_searchAndPrint, depth, timeManager);
     searchThread->detach();
     
 }
