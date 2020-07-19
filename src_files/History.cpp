@@ -55,7 +55,7 @@ void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, 
 }
 
 MoveScore SearchData::getCounterMoveHistoryScore(Move previous, Move m){
-    
+
     Piece prevPiece = getMovingPiece(previous) % 6;
     Square prevTo = getSquareTo(previous);
     Color color = getMovingPiece(m) / 6;
