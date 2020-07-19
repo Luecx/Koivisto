@@ -36,7 +36,10 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
                     moves->scoreMove(i, 100000 + mvvLVA);
                 }
             }else{
-                moves->scoreMove(i, 8 + sd->getHistoryMoveScore(m, board->getActivePlayer()));
+                MoveScore ms = 8;
+                ms += sd->getHistoryMoveScore(m, board->getActivePlayer());
+                if (ply > 1) ms += sd->getCounterMoveHistoryScore(board->getPreviousMove(), m);
+                moves->scoreMove(i, ms);
             }
         }else if(isPromotion(m)){
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
@@ -47,10 +50,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
             
             MoveScore ms = 8;
             ms += sd->getHistoryMoveScore(m, board->getActivePlayer());
-            ms += sd->getCounterMoveHistoryScore(board->getPreviousMove(), m);
-            
-//            std::cout << ms << std::endl;
-            
+            if (ply>1) ms += sd->getCounterMoveHistoryScore(board->getPreviousMove(), m);
             moves->scoreMove(i, ms);
             
             

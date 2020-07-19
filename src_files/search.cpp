@@ -28,7 +28,7 @@ Evaluator evaluator{};
 int     RAZOR_MARGIN        = 198;
 int     FUTILITY_MARGIN     =  92;
 int     SE_MARGIN_STATIC    =  22;
-int     LMR_DIV             = 192;
+int     LMR_DIV             = 215;
 
 void initLmr()
 {
@@ -36,7 +36,7 @@ void initLmr()
     
     for (d = 0; d < 256; d ++)
         for (m = 0; m < 256; m ++)
-            lmrReductions[d][m] = log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = (0.5+log(d) * log(m)) * 100 / LMR_DIV;
 }
 int lmp[2][11] = {
         { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 },
@@ -449,7 +449,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
         int extension = 0;
 
-        if (b->givesCheck(m) && b->staticExchangeEvaluation(m) >= 0) {
+        if (b->givesCheck(m) && staticExchangeEval > 0) {
             extension = 1;
         }
     
@@ -482,9 +482,14 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
 
-        Depth lmr = (pv || legalMoves == 0 || givesCheck || depth < 2 || staticExchangeEval > 0 || isPromotion) ? 0:lmrReductions[depth][legalMoves];
+        Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0:lmrReductions[depth][legalMoves];
 
-        if (legalMoves == 0 && pv) {
+        if (lmr) {
+            if (lmr > depth - 2) lmr = depth - 2;
+            if (lmr < 0) lmr = 0;
+        }
+
+        if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, false, sd, 0);
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, false, sd, 0);
