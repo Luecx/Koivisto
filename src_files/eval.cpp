@@ -184,20 +184,21 @@ int INDEX_KING_PSQT = unusedVariable++;
 int INDEX_KING_CLOSE_OPPONENT = unusedVariable++;
 int INDEX_KING_PAWN_SHIELD = unusedVariable++;
 
-
+int INDEX_KNIGHT_DISTANCE_ENEMY_KING = unusedVariable++;
+int INDEX_QUEEN_DISTANCE_ENEMY_KING = unusedVariable++;
 #ifdef TUNE_PST
 double * tunablePST_MG_grad = new double[64]{};
 double * tunablePST_EG_grad = new double[64]{};
 #endif
 
-double* _pieceValuesEarly = new double[unusedVariable]{
-        111.32149,     37.937502,     1.7428664,    -7.9711247,    -19.515088,     4.3605993,    -24.586402,   0,0,  393.34163,     50.139908,     37.146578,      36.44351,     454.86454,     34.557274,     25.213567,      43.26576,     -6.610586,     28.548169,     552.23743,      104.1309,     21.131393,     63.831925,     14.055121,     24.542736,     1171.3101,     110.29483,     5.2366929,     370.35353,     245.67562,    -68.004816,     10.501184,
-    
+double* _pieceValuesEarly = new double[unusedVariable] {
+    110.29815, 38.032177, 4.5743661, -8.1223127, -18.978241, 4.2081239, -24.496306, 0, 0, 394.4832, 49.958463, 37.948578, 36.38353, 454.67003, 34.800896, 24.693398, 42.891315, -7.3143877, 28.488841, 552.11609, 104.16722, 20.240637, 63.808371, 14.072473, 24.563834, 1171.5187, 110.62317, 4.8891732, 370.37169, 245.79457, -68.004368, 10.602049, -1.9093909, -1.7537262,
 };
 
-double* _pieceValuesLate = new double[unusedVariable]{
-        109.02791,     180.94795,      3.247947,     45.974671,    -9.7344505,    -5.0971805,    -21.261521,   0,0,   353.9369,     105.61641,     16.331965,     25.277237,     316.27509,     14.266988,     29.835118,     61.514463,     6.1223843,     14.153116,     631.37322,     101.10357,     25.290902,    -6.1828663,     4.9810433,     5.8459158,      1179.054,     100.57779,     59.030516,    -42.507438,     50.590253,     51.255898,   -0.12968825,
+double* _pieceValuesLate = new double[unusedVariable] {
+    107.57213, 180.89652, 6.73061, 45.507971, -8.7322149, -5.1712467, -20.808083, 0, 0, 354.261, 105.53572, 16.89686, 25.218666, 316.09955, 14.328704, 29.427586, 61.26376, 6.1874888, 14.211581, 631.01546, 101.08626, 24.483025, -6.41184, 4.9621493, 5.822332, 1179.1011, 100.54593, 59.177081, -42.949219, 50.550189, 51.391579, -0.20101097, -0.72829777, -2.9918494,
 };
+
 
 //TODO tweak values
 double _kingSafetyTable[100] {
@@ -277,8 +278,11 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 blackTeam = b->getTeamOccupied()[BLACK];
     U64 occupied = *b->getOccupied();
     
-    U64 whiteKingZone = KING_ATTACKS[bitscanForward(b->getPieces()[WHITE_KING])];
-    U64 blackKingZone = KING_ATTACKS[bitscanForward(b->getPieces()[BLACK_KING])];
+    Square whiteKingSquare = bitscanForward(b->getPieces()[WHITE_KING]);
+    Square blackKingSquare = bitscanForward(b->getPieces()[BLACK_KING]);
+
+    U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
+    U64 blackKingZone = KING_ATTACKS[blackKingSquare];
     
     Square s;
     U64 attacks;
@@ -423,6 +427,8 @@ bb::Score Evaluator::evaluate(Board *b) {
     _features[INDEX_KNIGHT_MOBILITY] = 0;
     _features[INDEX_KNIGHT_PSQT] = 0;
     _features[INDEX_KNIGHT_OUTPOST] = 0;
+    _features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] = 0;
+
     
     k = b->getPieces()[WHITE_KNIGHT];
     while(k){
@@ -444,6 +450,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         _features[INDEX_KNIGHT_OUTPOST] += isOutpost(s, WHITE, blackPawns, whitePawnCover);
         
+        _features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(s, blackKingSquare);
         
         
         phase++;
@@ -474,6 +481,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         _features[INDEX_KNIGHT_OUTPOST] -= isOutpost(s, BLACK, whitePawns, blackPawnCover);
         
+        _features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(s, whiteKingSquare);
+
         phase++;
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks, 2);
         
@@ -637,6 +646,7 @@ bb::Score Evaluator::evaluate(Board *b) {
      **********************************************************************************/
     _features[INDEX_QUEEN_MOBILITY] = 0;
     _features[INDEX_QUEEN_PSQT] = 0;
+    _features[INDEX_QUEEN_DISTANCE_ENEMY_KING] = 0;
     
     k = b->getPieces()[WHITE_QUEEN];
     while(k){
@@ -649,6 +659,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         _features[INDEX_QUEEN_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
 
+        _features[INDEX_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(s, blackKingSquare);
         
         phase+=3;
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks, 4);
@@ -669,6 +680,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         
         _features[INDEX_QUEEN_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+
+        _features[INDEX_QUEEN_DISTANCE_ENEMY_KING] -= manhattanDistance(s, whiteKingSquare);
 
         
         phase+=3;
