@@ -76,6 +76,11 @@ double computeK(Evaluator *evaluator, double initK, double rate, double deviatio
  */
 void generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric);
 
+/**
+ * computes the average time for evaluation
+ */
+void evalSpeed();
+
 }
 
 #endif //KOIVISTO_TUNING_H

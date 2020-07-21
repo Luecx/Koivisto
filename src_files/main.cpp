@@ -30,7 +30,7 @@ void main_tune_features(){
         
         std::cout << "--------------------------------------------------- ["<<i << "] ----------------------------------------------" << std::endl;
         
-        std::cout << std::setprecision(8) << tuning::optimise(evaluator, K, 1e4) << std::endl;
+        std::cout << std::setprecision(8) << tuning::optimise(evaluator, K, 1e5) << std::endl;
         
         for(int k = 0; k < evaluator->paramCount(); k++){
             std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k]<< ",";
@@ -89,12 +89,18 @@ int main() {
 
      uci_loop();
     
-
+    
     /**********************************************************************************
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    //main_tune_features();
+
+//    bb_init();
+//    tuning::loadPositionFile("..\\resources\\quiet-labeled.epd", 1000000);
+//    tuning::evalSpeed();
+//    bb_cleanUp();
+    
+    main_tune_features();
     //main_tune_pst();
     
     return 0;

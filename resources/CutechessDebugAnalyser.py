@@ -1,6 +1,8 @@
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.linear_model import LinearRegression
+
 
 class TurnData:
     def __init__(self, _time, _depth, _seldepth, _score, _nodes, _nps):
@@ -86,20 +88,21 @@ def plotData(dat, type):
     d1 = extract(dat, p1, type)
     d2 = extract(dat, p2, type)
 
-    x1 = np.arange(0, len(d1), 1)
-    x2 = np.arange(0, len(d2), 1)
+    x1 = np.arange(0, len(d1), 1).reshape((-1,1))
+    x2 = np.arange(0, len(d2), 1).reshape((-1,1))
 
     plt.ylabel(type)
     plt.xlabel('Move')
 
 
-    # plt.ylim(top=30)    #ymax is your value
-    # plt.ylim(bottom=0)  #ymin is your value
+    model1 = LinearRegression()
+    model2 = LinearRegression()
 
-    b1 = estimate_coef(x1,d1)
-    b2 = estimate_coef(x2,d2)
-    y1_pred = b1[0] + b1[1]*x1
-    y2_pred = b2[0] + b2[1]*x2
+    model1.fit(x1,d1);
+    model2.fit(x2,d2);
+
+    y1_pred = model1.intercept_ + model1.coef_*x1
+    y2_pred = model2.intercept_ + model2.coef_*x1
 
     plt.plot(x1, y1_pred, color = "r", linestyle= "--")
     plt.plot(x2, y2_pred, color = "g", linestyle= "--")
@@ -117,4 +120,4 @@ if __name__ == "__main__":
 
 
     dat = read_file(sys.argv[1])
-    plotData(dat,"depth")
+    plotData(dat,"nps")

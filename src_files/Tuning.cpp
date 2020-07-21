@@ -398,9 +398,9 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
         double      sig             = sigmoid(q_i, K);
         double      sigPrime        = sigmoidPrime(q_i, K);
         double      lossPrime       = - 2 * (expected - sig);
-        
-        double*     features        = evaluator->getFeatures();
-        double      phase           = evaluator->getPhase();
+    
+        float*     features        = evaluator->getFeatures();
+        float      phase           = evaluator->getPhase();
         
         for(int p = 0; p < paramCount; p++){
             earlyGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
@@ -505,6 +505,20 @@ double tuning::computeK(Evaluator *evaluator, double initK, double rate, double 
     
     
     return K;
+}
+
+void tuning::evalSpeed() {
+    
+    Evaluator evaluator{};
+    
+    startMeasure();
+    
+    for(int i = 0; i < dataCount; i++){
+        Score       q_i             = evaluator.evaluate(boards[i]);
+    }
+    
+    int ms = stopMeasure();
+    std::cout << ms << "ms for " <<dataCount << " positions = " << (dataCount/ms) / 1e3 << "Mnps" << std::endl;
 }
 
 
