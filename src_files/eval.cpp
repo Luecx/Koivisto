@@ -3,13 +3,14 @@
 //
 
 #include <iomanip>
+#include <immintrin.h>
 #include "eval.h"
 
 
 #define pst_index_white(s) squareIndex(7-rankIndex(s), fileIndex(s))
 #define pst_index_black(s) s
 
-double * psqt_pawn_endgame = new double[64]{
+float * psqt_pawn_endgame = new float[64]{
      0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
      8.468,    -5.743,     9.089,     4.721,     9.111,     0.484,   -14.387,    -7.112,
     -3.367,     0.189,    -6.827,     0.655,    -1.621,    -2.004,    -5.150,    -7.745,
@@ -20,7 +21,7 @@ double * psqt_pawn_endgame = new double[64]{
      0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
 };
 
-double * psqt_pawn = new double[64]{
+float * psqt_pawn = new float[64]{
     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,     0.000,
     -4.819,    51.504,    32.302,   -19.137,   -26.091,   -52.893,     6.069,   -12.853,
      5.231,    18.449,    -8.151,     1.120,   -10.764,     7.481,   -19.175,    -3.865,
@@ -32,7 +33,7 @@ double * psqt_pawn = new double[64]{
 };
 
 
-double* psqt_knight = new double[64]{
+float* psqt_knight = new float[64]{
         -55.5,     -23.3,     -33.9,     -32.2,     -24.3,     -30.1,     -57.5,     -52.3,
         -42.9,     -27.5,      -5.6,      19.7,      10.9,     -11.0,     -17.7,     -40.7,
         -69.5,      -5.5,     -53.2,       9.9,      29.1,     -13.8,       5.9,     -35.2,
@@ -42,7 +43,7 @@ double* psqt_knight = new double[64]{
         -45.0,     -24.7,      -0.8,      46.7,      14.1,       2.3,     -18.7,     -33.2,
         -55.5,     -16.3,     -34.1,     -32.2,     -24.4,     -32.5,      -1.2,     -51.4,
 };
-double* psqt_knight_endgame = new double[64]{
+float* psqt_knight_endgame = new float[64]{
         -50.8,     -47.1,     -26.5,     -21.3,     -21.4,     -21.9,     -46.4,     -55.7,
         -34.3,     -19.7,     -17.2,     -21.3,      -9.6,      -6.7,     -17.6,     -39.7,
         -30.8,       5.5,      12.6,       0.6,       6.1,     -14.6,     -22.8,     -29.7,
@@ -53,7 +54,7 @@ double* psqt_knight_endgame = new double[64]{
         -55.6,     -35.3,     -27.7,     -24.5,     -22.2,     -34.7,     -37.3,     -54.5,
 };
 
-double * psqt_bishop = new double[64]{
+float * psqt_bishop = new float[64]{
         -231.445,  -113.944,  -238.573,  -146.317,   -93.138,  -172.036,   -35.634,   -69.548,
         -336.083,  -133.202,  -210.561,  -208.590,   -22.389,   100.960,   -45.850,  -400.840,
         -219.501,   -98.473,    36.832,   -42.520,   -42.634,    70.228,    47.584,  -148.553,
@@ -64,7 +65,7 @@ double * psqt_bishop = new double[64]{
         -177.770,    15.745,   -96.949,  -113.831,  -111.571,   -44.741,  -147.119,  -202.108
 };
 
-double * psqt_bishop_endgame = new double[64]{
+float * psqt_bishop_endgame = new float[64]{
         -63.803,   -26.753,   -45.054,   -30.422,   -23.665,   -28.748,    -8.041,   -49.229,
          -5.346,   -19.950,     3.591,   -45.005,     0.341,    -1.064,   -19.871,   -19.884,
           6.314,     9.385,   -27.568,   -19.494,   -14.257,     8.968,    -0.978,    14.444,
@@ -78,7 +79,7 @@ double * psqt_bishop_endgame = new double[64]{
 
 
 
-double * psqt_rook = new double[64]{
+float * psqt_rook = new float[64]{
          -2.2,       4.3,     -12.4,       8.8,       9.4,      -1.7,      -3.2,      -2.9,
         -16.6,      -6.2,      17.0,      16.4,      24.6,      22.0,      -8.5,      -2.9,
          -9.2,       5.9,      -1.9,       4.8,      -4.0,       9.7,      18.9,       5.4,
@@ -89,7 +90,7 @@ double * psqt_rook = new double[64]{
         -10.6,      -7.4,       7.6,      11.1,      13.1,       7.3,     -28.2,      10.8,
 };
 
-double * psqt_rook_endgame = new double[64]{
+float * psqt_rook_endgame = new float[64]{
         23.7,      16.4,      20.9,      17.7,      22.5,      22.1,      22.4,      15.2,
         26.2,      26.0,      21.5,      22.4,      11.2,      21.9,      26.3,      17.7,
         13.4,      14.8,      13.0,      15.8,       8.6,      10.4,       5.4,      -1.8,
@@ -100,7 +101,7 @@ double * psqt_rook_endgame = new double[64]{
          3.1,      10.8,       7.3,       2.8,      -0.2,      -0.6,       3.3,     -22.6,
 };
 
-double * psqt_queen = new double[64]{
+float * psqt_queen = new float[64]{
         -32.7,     -14.0,      -8.9,      -8.9,       6.5,      -4.4,      -4.6,       2.7,
         -47.2,     -70.6,     -21.9,      -1.4,     -20.8,      11.5,      -2.9,      16.0,
         -22.3,     -18.5,      -5.1,     -18.7,      10.2,      16.6,      10.4,      15.0,
@@ -111,7 +112,7 @@ double * psqt_queen = new double[64]{
           2.4,       5.8,      13.0,      33.2,       1.6,     -16.0,     -16.7,     -30.9,
 };
 
-double * psqt_queen_endgame = new double[64]{
+float * psqt_queen_endgame = new float[64]{
         -32.2,      -5.2,      -6.1,     -10.3,       0.6,      -4.9,      -5.7,      -5.1,
         -26.9,      -2.4,      -1.7,       7.5,       3.8,       6.3,       2.8,      -3.6,
         -20.6,     -14.2,     -12.3,      15.0,      14.5,       6.9,       4.8,      -1.0,
@@ -122,7 +123,7 @@ double * psqt_queen_endgame = new double[64]{
         -19.7,     -23.8,     -22.9,     -31.5,      -3.7,     -17.6,     -15.4,     -28.5,
 };
 
-double psqt_king[] = {
+float psqt_king[] = {
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
@@ -132,7 +133,7 @@ double psqt_king[] = {
         20, 20,  0,  0,  0,  0, 20, 20,
         20, 30, 10,  0,  0, 10, 30, 20
 };
-double psqt_king_endgame[] = {
+float psqt_king_endgame[] = {
         -50,-40,-30,-20,-20,-30,-40,-50,
         -30,-20,-10,  0,  0,-10,-20,-30,
         -30,-10, 20, 30, 30, 20,-10,-30,
@@ -186,22 +187,29 @@ int INDEX_KING_PAWN_SHIELD = unusedVariable++;
 
 int INDEX_KNIGHT_DISTANCE_ENEMY_KING = unusedVariable++;
 int INDEX_QUEEN_DISTANCE_ENEMY_KING = unusedVariable++;
+
+/*
+ * it is very important that unusuedVariable is a multiple of 4!!!
+ */
+int SPACER1 = unusedVariable+= unusedVariable % 4 == 0 ? 0:(4-unusedVariable % 4);
+
+
 #ifdef TUNE_PST
-double * tunablePST_MG_grad = new double[64]{};
-double * tunablePST_EG_grad = new double[64]{};
+float * tunablePST_MG_grad = new float[64]{};
+float * tunablePST_EG_grad = new float[64]{};
 #endif
 
-double* _pieceValuesEarly = new double[unusedVariable] {
-    110.29815, 38.032177, 4.5743661, -8.1223127, -18.978241, 4.2081239, -24.496306, 0, 0, 394.4832, 49.958463, 37.948578, 36.38353, 454.67003, 34.800896, 24.693398, 42.891315, -7.3143877, 28.488841, 552.11609, 104.16722, 20.240637, 63.808371, 14.072473, 24.563834, 1171.5187, 110.62317, 4.8891732, 370.37169, 245.79457, -68.004368, 10.602049, -1.9093909, -1.7537262,
+float* _pieceValuesEarly = new float[unusedVariable] {
+        103.22379,     37.233891,     4.7121916,    -6.1375127,    -19.105721,     5.3076596,    -22.917217,             0,             0,     425.97165,     45.278843,     31.634968,     32.146008,     459.26181,     34.096981,      24.47187,     40.965309,    -7.6022301,     25.156542,     553.44226,     104.87902,     18.581442,      65.48317,      15.35302,     25.945944,     1187.3552,     116.13513,     4.2680445,     369.62683,     250.60553,    -67.175392,       10.3318,    -4.8055992,   -0.95995343,             0,             0,
 };
 
-double* _pieceValuesLate = new double[unusedVariable] {
-    107.57213, 180.89652, 6.73061, 45.507971, -8.7322149, -5.1712467, -20.808083, 0, 0, 354.261, 105.53572, 16.89686, 25.218666, 316.09955, 14.328704, 29.427586, 61.26376, 6.1874888, 14.211581, 631.01546, 101.08626, 24.483025, -6.41184, 4.9621493, 5.822332, 1179.1011, 100.54593, 59.177081, -42.949219, 50.550189, 51.391579, -0.20101097, -0.72829777, -2.9918494,
+float* _pieceValuesLate = new float[unusedVariable] {
+        102.35178,     178.32506,     10.863027,     45.623947,    -6.6069474,    -4.7320266,    -17.804146,             0,             0,     352.29785,     101.45675,     14.834332,     24.076729,     311.23444,     14.430919,     28.275148,     56.964058,     6.3020597,      17.20739,     620.22784,     101.62868,     25.477598,    -7.2281404,     3.9407961,     4.4075699,     1184.8578,     92.083282,     61.619213,    -68.039291,     49.464191,     51.982635,    0.81217605,    -1.7652173,    -10.871104,             0,             0,
 };
 
 
 //TODO tweak values
-double _kingSafetyTable[100] {
+float _kingSafetyTable[100] {
         0  ,   0,   1,   2,   3,   5,   7,   9,  12,  15,
         18 ,  22,  26,  30,  35,  39,  44,  50,  56,  62,
         68 ,  75,  82,  85,  89,  97, 105, 113, 122, 131,
@@ -216,9 +224,9 @@ double _kingSafetyTable[100] {
 
 
 
-double* _features          = new double[unusedVariable];
+float* _features          = new float[unusedVariable];
 
-double  _phase;
+float  _phase;
 
 /**
  * adds the factor to value of attacks if the piece attacks the kingzone
@@ -253,6 +261,7 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover){
     return false;
     
 }
+
 
 
 /**
@@ -290,7 +299,7 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     
     _phase =
-            (18 - bitCount(
+            (18.0f - bitCount(
                     b->getPieces()[WHITE_BISHOP] |
                     b->getPieces()[BLACK_BISHOP] |
                     b->getPieces()[WHITE_KNIGHT] |
@@ -299,7 +308,7 @@ bb::Score Evaluator::evaluate(Board *b) {
                     b->getPieces()[BLACK_ROOK]) -
              3*bitCount(
                      b->getPieces()[WHITE_QUEEN] |
-                     b->getPieces()[BLACK_QUEEN])) / 18.0;
+                     b->getPieces()[BLACK_QUEEN])) / 18.0f;
     
     
     int whitekingSafety_attackingPiecesCount = 0;
@@ -727,17 +736,29 @@ bb::Score Evaluator::evaluate(Board *b) {
     
     _features[INDEX_KING_SAFETY] = (_kingSafetyTable[blackkingSafety_valueOfAttacks] - _kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
     
+ 
+    __m128 scalar1 = _mm_set1_ps(1-_phase);
+    __m128 scalar2 = _mm_set1_ps(_phase);
+    __m128 result{};
+
     
+    for(int i = 0; i < unusedVariable; i+=4){
+        __m128* feat = (__m128*)(_features+(i));
+        __m128* w1 = (__m128*)(_pieceValuesEarly+(i));
+        __m128* w2 = (__m128*)(_pieceValuesLate+(i));
     
-    
-    
-    
-    
-    
-    for(int i = 0; i < unusedVariable; i++){
-        res += _features[i] * (_phase * _pieceValuesLate[i] + (1-_phase) * _pieceValuesEarly[i]);
+        __m128 m1 = _mm_mul_ps(*w1,scalar1);
+        __m128 m2 = _mm_mul_ps(*w2,scalar2);
+        __m128 m3 = _mm_add_ps(m1,m2);
+        __m128 localResult = _mm_mul_ps(*feat, m3);
+        result = _mm_add_ps(result, localResult);
     }
     
+    const __m128 t = _mm_add_ps(result, _mm_movehl_ps(result, result));
+    const __m128 sum = _mm_add_ss(t, _mm_shuffle_ps(t, t, 1));
+  
+    
+    res = sum[0];
     return res;
 }
 
@@ -747,7 +768,7 @@ void printEvaluation(Board *board){
     
     Evaluator ev{};
     Score s = ev.evaluate(board);
-    double phase = ev.getPhase();
+    float phase = ev.getPhase();
     
     
     
@@ -816,6 +837,15 @@ void printEvaluation(Board *board){
             "INDEX_KING_PSQT",
             "INDEX_KING_CLOSE_OPPONENT",
             "INDEX_KING_PAWN_SHIELD",
+        
+            "INDEX_KNIGHT_DISTANCE_ENEMY_KING",
+            "INDEX_QUEEN_DISTANCE_ENEMY_KING",
+            
+            //ignore this and place new values before here
+            "-",
+            "-",
+            "-",
+            "-",
     };
     
     for(int i = 0; i < unusedVariable; i++){
@@ -846,19 +876,19 @@ void printEvaluation(Board *board){
     std::cout << ss.str() << std::endl;
 }
 
-double *Evaluator::getFeatures() {
+float *Evaluator::getFeatures() {
     return _features;
 }
 
-double Evaluator::getPhase() {
+float Evaluator::getPhase() {
     return _phase;
 }
 
-double *Evaluator::getEarlyGameParams() {
+float *Evaluator::getEarlyGameParams() {
     return _pieceValuesEarly;
 }
 
-double *Evaluator::getLateGameParams() {
+float *Evaluator::getLateGameParams() {
     return _pieceValuesLate;
 }
 
@@ -867,19 +897,19 @@ int Evaluator::paramCount(){
 }
 
 #ifdef TUNE_PST
-double *Evaluator::getTunablePST_MG() {
+float *Evaluator::getTunablePST_MG() {
     return psqt_knight;
 }
 
-double *Evaluator::getTunablePST_EG() {
+float *Evaluator::getTunablePST_EG() {
     return psqt_knight_endgame;
 }
 
-double *Evaluator::getTunablePST_MG_grad() {
+float *Evaluator::getTunablePST_MG_grad() {
     return tunablePST_MG_grad;
 }
 
-double *Evaluator::getTunablePST_EG_grad() {
+float *Evaluator::getTunablePST_EG_grad() {
     return tunablePST_EG_grad;
 }
 #endif

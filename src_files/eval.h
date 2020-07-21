@@ -19,24 +19,24 @@ class Evaluator{
          * returns the phase of the last calculation
          * @return
          */
-        double getPhase();
+        float getPhase();
         
         /**
          * returns a list of features of the last calculation
          * @return
          */
-        double *getFeatures();
+        float *getFeatures();
         
         /**
          * returns a list of early game parameters
          * @return
          */
-        double *getEarlyGameParams();
+        float *getEarlyGameParams();
         
         /**
          * returns a list of late game parameters
          */
-        double *getLateGameParams();
+        float *getLateGameParams();
     
         /**
          * returns the amount of tunable parameters
