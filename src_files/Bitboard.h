@@ -728,6 +728,62 @@ inline U64 bAttackRearSpans(U64 b){
     return fillNorth(shiftEast(b) | shiftWest(b));
 }
 
+/**
+ * front span for white pawns
+ * @param wpawns
+ * @return
+ */
+inline U64 wFrontSpans(U64 wpawns) {return shiftNorth(fillNorth(wpawns));}
+
+/**
+ * front span for black pawns
+ * @param bpawns
+ * @return
+ */
+inline U64 bRearSpans (U64 bpawns) {return shiftNorth (fillNorth(bpawns));}
+
+/**
+ * rear span for white pawns
+ * @param wpawns
+ * @return
+ */
+inline U64 wRearSpans (U64 wpawns) {return shiftSouth (fillSouth(wpawns));}
+
+/**
+ * rear span for black pawns
+ * @param bpawns
+ * @return
+ */
+inline U64 bFrontSpans(U64 bpawns) {return shiftSouth(fillSouth(bpawns));}
+
+
+
+/**
+ * computes all white passed pawns
+ * @param wpawns
+ * @param bpawns
+ * @return
+ */
+inline U64 wPassedPawns(U64 wpawns, U64 bpawns) {
+    U64 allFrontSpans = bFrontSpans(bpawns);
+    allFrontSpans |= shiftEast(allFrontSpans)
+                     |  shiftWest(allFrontSpans);
+    return wpawns & ~allFrontSpans;
+}
+
+/**
+ * computes all black passed pawns
+ * @param bpawns
+ * @param wpawns
+ * @return
+ */
+inline U64 bPassedPawns(U64 bpawns, U64 wpawns) {
+    U64 allFrontSpans = wFrontSpans(wpawns);
+    allFrontSpans |= shiftEast(allFrontSpans)
+                     |  shiftWest(allFrontSpans);
+    return bpawns & ~allFrontSpans;
+}
+
 
 
 /**
