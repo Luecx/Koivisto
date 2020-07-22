@@ -820,6 +820,7 @@ void bb_cleanUp();
 
 U64 randU64();
 
+double randDouble(double min=0, double max=1);
 
 /**
  * returns the zobrist hash key for a given piece on a given square.
