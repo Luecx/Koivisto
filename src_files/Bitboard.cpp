@@ -62,6 +62,13 @@ U64 bb::randU64(){
     return res;
 }
 
+double bb::randDouble(double min, double max) {
+    double f = (double)rand() / RAND_MAX;
+    return min + f * (max - min);
+}
+
+
+
 U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ){
     U64 res {0};
     
@@ -204,6 +211,8 @@ void bb::printBitmap(U64 bb) {
     }
     std::cout << "\n";
 }
+
+
 
 
 
