@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\resources",
-    "\\src_files"
+    "\\src_files",
+    "\\src_files\\nn"
   ],
-  "SelectedNode": "\\src_files\\search.h",
+  "SelectedNode": "\\src_files\\nn\\DenseNetwork.cpp",
   "PreviewInSolutionExplorer": false
 }

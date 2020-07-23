@@ -236,7 +236,12 @@ void printInfoString(Board *b, Depth d, Score score){
  * the search will stop if either the max depth is reached.
  * @param b
  * @return
+
  */
+
+
+bool _EngineSide;
+
 Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     
     
@@ -427,6 +432,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         bool isPromotion = move::isPromotion(m);
 //        bool isQueenPromotion = move::promotionPiece(m) % 6 == QUEEN && isPromotion;
 
+
+
+        if (ply == 0) {
+            _EngineSide = b->getActivePlayer();
+            if (legalMoves == 0)    _EngineSide = !b->getActivePlayer();
+        }
+
         if (!pv && ply>0 && legalMoves >= 1)
         {
             if (!isCapture(m) && !isPromotion && !givesCheck)
@@ -485,6 +497,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0:lmrReductions[depth][legalMoves];
 
         if (lmr) {
+            if (_EngineSide == b->getActivePlayer()) lmr+=1;
             if (lmr > depth - 2) lmr = depth - 2;
             if (lmr < 0) lmr = 0;
         }
