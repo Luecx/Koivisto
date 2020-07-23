@@ -8,6 +8,7 @@
 
 #include <string>
 #include "../Bitboard.h"
+#include "data/CompactInput.h"
 #include <immintrin.h>
 #include <memory.h>
 
@@ -17,8 +18,11 @@ class DenseInput {
         int inputSize;
         int outputSize;
         
-
+        //this one is used for training only
+        CompactTrainEntry* lastInput;
         float* input;
+        
+        
         float* sums;
         float* output;
         
@@ -50,21 +54,24 @@ class DenseInput {
             }
     
             for(int i = 0; i < outputSize; i++){
-                output[i] = sums[i]+bias[i] < 0 ? 0:(sums[i]+bias[i]);
+                output[i] = sums[i]+bias[i] < 0 ? (sums[i]+bias[i])*0.1f:(sums[i]+bias[i]);
             }
          
         }
         
         void backprop(float eta){
-            for(int i = 0; i <inputSize; i++){
-                
-                float sum = 0;
-                for(int n = 0; n < outputSize; n++){
-                    
-                    //updating weights
-                    weights[n + outputSize * i] -= errorSignal[n] * input[i] * eta;
-                }
-            }
+//            for(int idx = 0; idx < lastInput->input->size(); idx++){
+//                int i = lastInput->input->at(idx).index;
+//
+//                float sum = 0;
+//                for(int n = 0; n < outputSize; n++){
+//
+//                    //updating weights
+//                    weights[n + outputSize * i] -= errorSignal[n] * input[i] * eta;
+//                }
+//
+//            }
+            
             
             //updating bias
             for(int n = 0; n <  outputSize; n++){
@@ -88,6 +95,10 @@ class DenseInput {
         float *getBias() const;
         
         float *getErrorSignal() const;
+        
+        CompactTrainEntry *getLastInput() const;
+        
+        void setLastInput(CompactTrainEntry *lastInput);
 };
 
 

@@ -4,21 +4,40 @@
 
 #include <vector>
 #include "CompactInput.h"
-#include "../../Util.h"
+#include <fstream>
 #include "../../Bitboard.h"
+#include "../../Util.h"
 
 
 using namespace bb;
 
 
 
-std::vector<CompactInputEntry>* fromFen(std::string fen) {
+CompactTrainEntry* trainDataFromFen(std::string fenAndEval) {
     
     std::vector<CompactInputEntry> *entries = new std::vector<CompactInputEntry>{};
     
+    
+    
+    std::vector<std::string> splitFenAndEval{};
+    splitString(fenAndEval, splitFenAndEval, ';');
+    
+    
+    float evalScore = 0;
+    std::string eval{splitFenAndEval[1]};
+    eval = trim(eval);
+    
+    
+    if(eval.at(0) == '#'){
+        return nullptr;
+    }else{
+        evalScore = stof(eval);
+    }
+
+
 //<editor-fold desc="splitting/trimming string">
     std::vector<std::string> split{};
-    std::string str{fen};
+    std::string str{splitFenAndEval[0]};
     str = trim(str);
     findAndReplaceAll(str, "  ", " ");
     splitString(str, split, ' ');
@@ -69,9 +88,49 @@ std::vector<CompactInputEntry>* fromFen(std::string fen) {
         }
     }
     //</editor-fold>
-    
-    return entries;
+    CompactTrainEntry* c = new CompactTrainEntry(entries, evalScore);
+    return c;
 }
 
 CompactTrainEntry::CompactTrainEntry(std::vector<CompactInputEntry> *input, float output) : input(input),
                                                                                             output(output) {}
+
+
+
+std::vector<CompactTrainEntry*>* trainDataFromFile(std::string file, int maxcount,std::vector<CompactTrainEntry*>* v) {
+    
+    
+    
+    std::vector<CompactTrainEntry*>* vec;
+    if(v != nullptr){
+        vec = v;
+    }else{
+        vec = new std::vector<CompactTrainEntry*>{};
+    }
+    
+
+    std::ifstream infile(file);
+    
+    std::string line;
+    int posCount = 0;
+    while (std::getline(infile, line)) {
+    
+        if(posCount % 10000 == 0){
+            std::cout << "\r" << loadingBar(posCount, maxcount, "Loading data") << std::flush;
+        }
+        
+        
+        CompactTrainEntry* en = trainDataFromFen(line);
+        if(en != nullptr)
+            vec->push_back(trainDataFromFen(line));
+    
+        posCount++;
+        if(posCount >= maxcount){
+            break;
+        }
+    }
+    
+    return vec;
+}
+
+

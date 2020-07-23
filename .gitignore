@@ -7,3 +7,11 @@ cmake-build-release/
 
 resources/lichess-new-labeled.epd
 
+
+resources/make_fens_from_lichess_pgn/output/
+
+resources/make_fens_from_lichess_pgn/workcache/
+
+*.pgn
+
+resources/networks/

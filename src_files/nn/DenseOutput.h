@@ -32,13 +32,16 @@ class DenseOutput {
         void initWeights();
         
         void compute(){
-    
+            
+            
             __m128 acc = _mm_setzero_ps();
             for (int col = 0; col < inputSize; col += 4) {
                 __m128 vec = _mm_load_ps(&input[col]);
                 __m128 mat = _mm_load_ps(&weights[col]);
                 acc = _mm_add_ps(acc, _mm_mul_ps(mat, vec));
             }
+            
+            
             acc = _mm_hadd_ps(acc, acc);
             acc = _mm_hadd_ps(acc, acc);
             
@@ -53,14 +56,10 @@ class DenseOutput {
             
             for(int i = 0; i <inputSize; i++){
                 
-                //dont parse it back if that specific neuron has no output
-                if(input[i] <= 0){
-                    prevError[i] = 0;
-                    continue;
-                }
                 
                 
-                prevError[i] = errorSignal * weights[i];
+                
+                prevError[i] = errorSignal * weights[i] * (input[i] <= 0 ? 0.1:1);
                 
                 //updating weights
                 weights[i] -= eta * input[i] * errorSignal;
