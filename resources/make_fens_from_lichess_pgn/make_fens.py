@@ -2,9 +2,9 @@ import multiprocessing
 import os
 import chess
 
-N_THREADS = 32
+N_THREADS = 16
 BUF_SIZE = 32 * 1024 * 1024
-FNAME = "2020-05.pgn"
+FNAME = "2016-07.pgn"
 
 def work(thread_n):
     progress_fname = "workcache/{}_progress.txt".format(thread_n)

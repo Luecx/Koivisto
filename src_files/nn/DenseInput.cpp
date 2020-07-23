@@ -89,4 +89,12 @@ float *DenseInput::getErrorSignal() const {
     return errorSignal;
 }
 
+CompactTrainEntry *DenseInput::getLastInput() const {
+    return lastInput;
+}
+
+void DenseInput::setLastInput(CompactTrainEntry *lastInput) {
+    DenseInput::lastInput = lastInput;
+}
+
 

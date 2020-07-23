@@ -31,7 +31,8 @@ class DenseLayer {
         void initWeights();
         
         void compute(){
-    
+            
+            
             for (int row = 0; row < outputSize; row += 4) {
                 
                 __m128 biasV = _mm_load_ps(&bias[row]);
@@ -56,20 +57,17 @@ class DenseLayer {
                 acc0 = _mm_hadd_ps(acc0, acc2);
                 acc0 = _mm_add_ps(acc0, biasV);
                 _mm_store_ps(&output[row], acc0);
-                output[row] = output[row] < 0 ? 0:output[row];
-                output[row+1] = output[row+1] < 0 ? 0:output[row+1];
-                output[row+2] = output[row+2] < 0 ? 0:output[row+2];
-                output[row+3] = output[row+3] < 0 ? 0:output[row+3];
+                output[row]   = output[row]   < 0 ? output[row]  *0.1f:output[row];
+                output[row+1] = output[row+1] < 0 ? output[row+1]*0.1f:output[row+1];
+                output[row+2] = output[row+2] < 0 ? output[row+2]*0.1f:output[row+2];
+                output[row+3] = output[row+3] < 0 ? output[row+3]*0.1f:output[row+3];
             }
             
         }
         
         void backprop(float* prevError, float eta){
             for(int i = 0; i <inputSize; i++){
-                if(input[i] <= 0){
-                    prevError[i] = 0;
-                    continue;
-                }
+                
                 float sum = 0;
                 for(int n = 0; n < outputSize; n++){
                     //summing up the error
@@ -78,7 +76,7 @@ class DenseLayer {
                     //updating weights
                     weights[i + inputSize * n] -= errorSignal[n] * input[i] * eta;;
                 }
-                prevError[i] = sum;
+                prevError[i] = sum * (input[i] <= 0 ? 0.1:1);
             }
             
             //updating bias
