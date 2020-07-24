@@ -335,7 +335,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
         
         if (!pv && en->depth >= depth) {
-            if (en->type == PV_NODE && en->score >= alpha) {
+            if (en->type == PV_NODE) {
                 return en->score;
             } else if (en->type == CUT_NODE) {
                 if (en->score >= beta) {
@@ -497,6 +497,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0:lmrReductions[depth][legalMoves];
 
         if (lmr) {
+            int history = sd->getHistoryMoveScore(m, !b->getActivePlayer())-512;
+            lmr -= history / 256;
             if (sideToReduce == b->getActivePlayer()) lmr+=1;
             if (lmr > depth - 2) lmr = depth - 2;
             if (lmr < 0) lmr = 0;
