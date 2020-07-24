@@ -4,7 +4,7 @@
 
 #include "History.h"
 
-#define MAX_HISTORY_SCORE 4096;
+#define MAX_HISTORY_SCORE 512;
 
 /*
  * Increment the history score of a move. Used when a cutoff occurs.
