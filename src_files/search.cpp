@@ -236,7 +236,12 @@ void printInfoString(Board *b, Depth d, Score score){
  * the search will stop if either the max depth is reached.
  * @param b
  * @return
+
  */
+
+
+bool sideToReduce;
+
 Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     
     
@@ -330,7 +335,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         }
         
         if (!pv && en->depth >= depth) {
-            if (en->type == PV_NODE && en->score >= alpha) {
+            if (en->type == PV_NODE) {
                 return en->score;
             } else if (en->type == CUT_NODE) {
                 if (en->score >= beta) {
@@ -427,6 +432,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         bool isPromotion = move::isPromotion(m);
 //        bool isQueenPromotion = move::promotionPiece(m) % 6 == QUEEN && isPromotion;
 
+
+
+        if (ply == 0) {
+            sideToReduce = b->getActivePlayer();
+            if (legalMoves == 0)    sideToReduce = !b->getActivePlayer();
+        }
+
         if (!pv && ply>0 && legalMoves >= 1)
         {
             if (!isCapture(m) && !isPromotion && !givesCheck)
@@ -485,6 +497,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
         Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0:lmrReductions[depth][legalMoves];
 
         if (lmr) {
+            int history = sd->getHistoryMoveScore(m, !b->getActivePlayer())-512;
+            lmr -= history / 256;
+            if (sideToReduce == b->getActivePlayer()) lmr+=1;
             if (lmr > depth - 2) lmr = depth - 2;
             if (lmr < 0) lmr = 0;
         }
