@@ -15,3 +15,11 @@ resources/make_fens_from_lichess_pgn/workcache/
 *.pgn
 
 resources/networks/
+
+resources/networkTrainingKeras/models/
+
+resources/other/35Msparse.txt
+
+resources/other/
+
+resources/networkTrainingKeras/
