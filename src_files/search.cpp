@@ -19,7 +19,6 @@ int _selDepth;
 auto _startTime = std::chrono::system_clock::now();
 bool _forceStop = false;
 bool _useTB = false;
-bool _tbAtRoot = false;  //indicates if the wdl table has been used at the root.
 
 /*
  * Lmr table
@@ -407,7 +406,6 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     _nodes = 0;
     _selDepth = 0;
     _tbHits = 0;
-    _tbAtRoot = false;
     table->incrementAge();
 //    table->clear();
     
@@ -517,29 +515,29 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
      *                            T A B L E B A S E - P R O B E                           *
      **************************************************************************************/
     //search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
-//    if(_useTB && ((!_tbAtRoot && ply > 0) || (_tbAtRoot && depth < 3))){
-//        Score res = getWDL(b);
-//
-//
-//        //MAX_MATE_SCORE is used for no result
-//        if(res != MAX_MATE_SCORE){
-//
-//            _tbHits ++;
-//            //indicates a winning or losing position
-//            if(abs(res) > 2){
-//                //take the winning positions closest to the root
-//                if(res > 0){
-//                    return res - ply;
-//                }
-//                //take the losing position furthest away
-//                else{
-//                    return res + ply;
-//                }
-//            }
-//
-//            return res;
-//        }
-//    }
+    if(_useTB && ply > 0){
+        Score res = getWDL(b);
+
+
+        //MAX_MATE_SCORE is used for no result
+        if(res != MAX_MATE_SCORE){
+
+            _tbHits ++;
+            //indicates a winning or losing position
+            if(abs(res) > 2){
+                //take the winning positions closest to the root
+                if(res > 0){
+                    return res - ply;
+                }
+                //take the losing position furthest away
+                else{
+                    return res + ply;
+                }
+            }
+
+            return res;
+        }
+    }
     
 
     if (!inCheck && !pv) {
