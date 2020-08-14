@@ -190,6 +190,8 @@ class Board {
         
         U64 *getPieces() const;
         
+        U64 getPieces(Color color, Piece piece);
+        
         U64 *getTeamOccupied() const;
         
         

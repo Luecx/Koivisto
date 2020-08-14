@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include "uci.h"
+#include "syzygy/tbprobe.h"
 
 
 #define MONTH (\
@@ -28,7 +29,8 @@ std::thread *searchThread = nullptr;
 
 
 void uci_loop(){
-
+    
+    //tb_init("../resources/syzygy/3-4-5");
     bb_init();
     search_init(128);
 //    perft_init(false);
@@ -61,6 +63,7 @@ void uci_uci() {
     std::cout << "id name Koivisto 64 "<< YEAR << MONTH << DAY << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 128 min 1 max " << maxTTSize() <<std::endl;
+    std::cout << "option name SyzygyPath type string default" << std::endl;
     
     
     std::cout << "uciok" << std::endl;
@@ -113,16 +116,8 @@ void uci_processCommand(std::string str) {
         myfile.close();
     }
     
-    
 
-//    std::cout << str << std::endl;
     
-//    std::cout << "...";
-//
-//    for(string s:split){
-//        std::cout << s << std::endl;
-//    }
-//    std::cout << "...";
     
     if (split.at(0) == "uci"){
         uci_uci();
@@ -170,8 +165,7 @@ void uci_processCommand(std::string str) {
         uci_isReady();
     }else if(split.at(0) == "debug"){
         uci_debug(uci_getValue(split, "debug") == "on");
-    }
-    else if (split.at(0) == "setvalue") {
+    }else if (split.at(0) == "setvalue") {
         if (str.find("FUTILITY_MARGIN") != string::npos) {
             FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
         }
@@ -283,7 +277,21 @@ void uci_stop() {
 void uci_set_option(std::string name, std::string value) {
     if(name == "Hash") {
         search_setHashSize(stoi(value));
+    }else if(name == "SyzygyPath"){
+        if(value.empty()) return;
+        
+        char path[value.length()];
+        strcpy(path, value.c_str());
+        tb_init(path);
+        
+        std::cout << "using syzygy table with " << TB_LARGEST << " pieces" << std::endl;
+
+        /*
+         * only use TB if loading was successful
+         */
+        search_useTB(TB_LARGEST > 0);
     }
+    
 }
 
 void uci_isReady() {
@@ -394,6 +402,7 @@ void uci_quit() {
     
     bb_cleanUp();
     search_cleanUp();
+    
     
 //    perft_cleanUp();
 }

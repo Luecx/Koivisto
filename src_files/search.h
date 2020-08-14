@@ -29,10 +29,13 @@ extern int LMR_DIV;
 
 
 void initLmr();
+Score getWDL(Board* board);
 void search_stop();
 void search_setHashSize(int hashSize);
+void search_useTB(bool val);
 void search_init(int hashSize);     //used to create arrays, movelists etc
 void search_cleanUp();              //used to clean up the memory
+
 
 Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager);
 Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, SearchData *sd, Move skipMove);

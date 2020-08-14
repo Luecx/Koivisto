@@ -1627,6 +1627,11 @@ U64 *Board::getTeamOccupied() const {
     return teamOccupied;
 }
 
+U64 Board::getPieces(Color color, Piece piece) {
+    return pieces[color * 6 + piece];
+}
+
+
 
 
 
