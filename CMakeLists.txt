@@ -40,7 +40,12 @@ add_executable(Koivisto src_files/main.cpp
         src_files/nn/DenseNetwork.cpp
         src_files/nn/DenseNetwork.h
         src_files/nn/data/CompactInput.cpp
-        src_files/nn/data/CompactInput.h)
+        src_files/nn/data/CompactInput.h
+        src_files/syzygy/stdendian.h
+        src_files/syzygy/tbprobe.h
+        src_files/syzygy/tbconfig.h
+        src_files/syzygy/tbprobe.c
+        src_files/syzygy/tbchess.c)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info")

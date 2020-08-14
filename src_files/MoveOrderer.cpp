@@ -43,7 +43,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *moves, move::Move hashMove, S
             }
         }else if(isPromotion(m)){
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            moves->scoreMove(i, 40000 + mvvLVA);
+            moves->scoreMove(i, 40000 + mvvLVA + promotionPiece(m));
         }else if (sd->isKiller(m, ply, board->getActivePlayer())){
             moves->scoreMove(i, 30000);
         }else{

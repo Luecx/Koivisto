@@ -5,7 +5,7 @@
 #include "search.h"
 #include "History.h"
 #include "TimeManager.h"
-
+#include "syzygy/tbprobe.h"
 
 MoveList **moves;
 TranspositionTable *table;
@@ -13,10 +13,13 @@ TranspositionTable *table;
 
 TimeManager* _timeManager;
 int _nodes;
+int _tbHits = 0;
 int _maxTime;
 int _selDepth;
 auto _startTime = std::chrono::system_clock::now();
 bool _forceStop = false;
+bool _useTB = false;
+bool _tbAtRoot = false;  //indicates if the wdl table has been used at the root.
 
 /*
  * Lmr table
@@ -50,6 +53,15 @@ int lmp[2][11] = {
  * =================================================================================
  */
 
+
+
+
+/**
+ * enables/disables tb probing during search
+ */
+void search_useTB(bool val) {
+    _useTB = val;
+}
 
 
 /**
@@ -193,6 +205,10 @@ void printInfoString(Board *b, Depth d, Score score){
         std::cout << " score cp " << score;
     }
     
+    if(_tbHits != 0){
+        std::cout << " tbhits " << _tbHits;
+    }
+    
     
     std::cout <<
     
@@ -214,11 +230,148 @@ void printInfoString(Board *b, Depth d, Score score){
 
     
     delete em;
-    
-    
-    
 }
 
+
+Score getWDL(Board* board){
+
+ 
+    if(bitCount(*board->getOccupied()) > TB_LARGEST) return MAX_MATE_SCORE;
+
+    int res = tb_probe_wdl(
+            board->getTeamOccupied()[WHITE],
+            board->getTeamOccupied()[BLACK],
+            board->getPieces()[WHITE_KING] | board->getPieces()[BLACK_KING],
+            board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN],
+            board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK],
+            board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP],
+            board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
+            board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN],
+            board->getCurrent50MoveRuleCount(),
+            board->getCastlingChance(0) |
+            board->getCastlingChance(1) |
+            board->getCastlingChance(2) |
+            board->getCastlingChance(3) ,
+            board->getEnPassantSquare() != 64 ? board->getEnPassantSquare():0,
+            board->getActivePlayer() == WHITE);
+
+
+
+    if(res == TB_RESULT_FAILED) {
+        return MAX_MATE_SCORE;
+    }
+    if(res == TB_LOSS) {
+        return -TB_WIN_SCORE;
+    }
+    if(res == TB_WIN) {
+        return TB_WIN_SCORE;
+    }
+    if(res == TB_BLESSED_LOSS) {
+        return -TB_CURSED_SCORE;
+    }
+    if(res == TB_CURSED_WIN) {
+        return TB_CURSED_SCORE;
+    }
+    if(res == TB_DRAW) {
+        return 0;
+    }
+    return MAX_MATE_SCORE;
+}
+
+Move getDTZMove(Board* board){
+    
+    
+    if(bitCount(*board->getOccupied()) > TB_LARGEST) return 0;
+    
+    unsigned result = tb_probe_root(board->getTeamOccupied()[WHITE],
+                  board->getTeamOccupied()[BLACK],
+                  board->getPieces()[WHITE_KING] | board->getPieces()[BLACK_KING],
+                  board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN],
+                  board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK],
+                  board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP],
+                  board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
+                  board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN],
+                  board->getCurrent50MoveRuleCount(),
+                  board->getCastlingChance(0) |
+                  board->getCastlingChance(1) |
+                  board->getCastlingChance(2) |
+                  board->getCastlingChance(3),
+                  board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0,
+                  board->getActivePlayer() == WHITE, NULL);
+    
+    
+    if(result == TB_RESULT_FAILED || result == TB_RESULT_CHECKMATE || result == TB_RESULT_STALEMATE) return 0;
+    
+    int dtz = TB_GET_DTZ(result);
+    int wdl = TB_GET_WDL(result);
+    
+    Score s = 0;
+    
+    if(wdl == TB_LOSS) {
+        s =  -TB_WIN_SCORE;
+    }
+    if(wdl == TB_WIN) {
+        s = TB_WIN_SCORE;
+    }
+    if(wdl == TB_BLESSED_LOSS) {
+        s = -TB_CURSED_SCORE;
+    }
+    if(wdl == TB_CURSED_WIN) {
+        s = TB_CURSED_SCORE;
+    }
+    if(wdl == TB_DRAW) {
+        s = 0;
+    }
+    
+    Piece promo = 6-TB_GET_PROMOTES(result);
+    
+    Square sqFrom = TB_GET_FROM(result);
+    Square sqTo = TB_GET_TO(result);
+    
+    
+    MoveList* mv = new MoveList();
+    board->getPseudoLegalMoves(mv);
+    
+    
+    for(int i = 0; i < mv->getSize(); i++){
+        Move m = mv->getMove(i);
+        
+        if(getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo){
+            if(promo == 6 && !isPromotion(m) ||
+                    isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo) {
+                
+                std::cout << "info"
+                             " depth " << (int) dtz <<
+                          " seldepth " << (int)_selDepth;
+    
+                
+                std::cout << " score cp " << s;
+                
+    
+                if(_tbHits != 0){
+                    std::cout << " tbhits " << 1;
+                }
+    
+    
+                std::cout <<
+    
+                          " nodes " << 1 <<
+                          " nps " << 1 <<
+                          " time " << _timeManager->elapsedTime() <<
+                          " hashfull " << (int)(table->usage() * 1000);
+                std::cout << std::endl;
+    
+                return m;
+            }
+            
+        }
+    }
+    
+    
+   
+    return 0;
+//
+}
 
 /**
  * =================================================================================
@@ -245,13 +398,20 @@ bool sideToReduce;
 Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     
     
+    Move dtzMove = getDTZMove(b);
+    if(dtzMove != 0) return dtzMove;
+//    exit(-1);
+    
     _timeManager = timeManager;
     _forceStop = false;
     _nodes = 0;
     _selDepth = 0;
+    _tbHits = 0;
+    _tbAtRoot = false;
     table->incrementAge();
 //    table->clear();
     
+
     SearchData sd;
     
     if(maxDepth > MAX_PLY) maxDepth = MAX_PLY;
@@ -292,7 +452,10 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     if (ply > _selDepth) {
         _selDepth = ply;
     }
-
+    
+    
+    
+    
     //depth > MAX_PLY means that it overflowed because depth is unsigned.
     if (depth == 0 || depth > MAX_PLY) {
         //Don't drop into qsearch if in check
@@ -347,8 +510,37 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
                 }
             }
         }
-
     }
+    
+    
+    /**************************************************************************************
+     *                            T A B L E B A S E - P R O B E                           *
+     **************************************************************************************/
+    //search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
+//    if(_useTB && ((!_tbAtRoot && ply > 0) || (_tbAtRoot && depth < 3))){
+//        Score res = getWDL(b);
+//
+//
+//        //MAX_MATE_SCORE is used for no result
+//        if(res != MAX_MATE_SCORE){
+//
+//            _tbHits ++;
+//            //indicates a winning or losing position
+//            if(abs(res) > 2){
+//                //take the winning positions closest to the root
+//                if(res > 0){
+//                    return res - ply;
+//                }
+//                //take the losing position furthest away
+//                else{
+//                    return res + ply;
+//                }
+//            }
+//
+//            return res;
+//        }
+//    }
+    
 
     if (!inCheck && !pv) {
         /**************************************************************************************
@@ -412,9 +604,12 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
     MoveList *mv = moves[ply];
     b->getPseudoLegalMoves(mv);
 
+    
+
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-
+    
+    
     //count the legal moves
     int legalMoves = 0;
     int quiets = 0;
