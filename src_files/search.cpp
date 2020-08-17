@@ -814,7 +814,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
     b->getNonQuietMoves(mv);
     
     MoveOrderer moveOrderer{};
-    moveOrderer.setMovesQSearch(mv);
+    moveOrderer.setMovesQSearch(mv, b);
     
     
     
