@@ -23,7 +23,7 @@ class MoveOrderer {
         
         void setMovesPVSearch(move::MoveList* moves, move::Move hashMove, SearchData *sd, Board* board, Depth ply);
         
-        void setMovesQSearch(move::MoveList* moves);
+        void setMovesQSearch(move::MoveList* moves, Board *b);
         
         bool hasNext();
         
