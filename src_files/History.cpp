@@ -16,7 +16,7 @@ void SearchData::addHistoryScore(Move m, Depth depth, MoveList *mv, bool side) {
         m2 = mv->getMove(i);
         if (sameMove(m, m2)){
             history[side][getSquareFrom(m)][getSquareTo(m)] += (depth*depth+5*depth) - (depth*depth+5*depth) * history[side][getSquareFrom(m)][getSquareTo(m)]/MAX_HISTORY_SCORE;
-        }else if (mv->getScore(i)==0 && !isCapture(m)){
+        }else if (mv->getScore(i)==0 && !isCapture(m2)){
             history[side][getSquareFrom(m2)][getSquareTo(m2)] += -(depth*depth+5*depth) - (depth*depth+5*depth) * history[side][getSquareFrom(m2)][getSquareTo(m2)]/MAX_HISTORY_SCORE;
         }
     }
@@ -47,7 +47,7 @@ void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, 
         
         if (sameMove(m, m2)){
             cmh[prevPiece][prevTo][color][movingPiece][squareTo] += (depth*depth+5*depth) - (depth*depth+5*depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]/MAX_HISTORY_SCORE
-        }else if (mv->getScore(i)==0 && !isCapture(m)){
+        }else if (mv->getScore(i)==0 && !isCapture(m2)){
             cmh[prevPiece][prevTo][color][movingPiece][squareTo] += -(depth*depth+5*depth) - (depth*depth+5*depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]/MAX_HISTORY_SCORE;
         }
     }
