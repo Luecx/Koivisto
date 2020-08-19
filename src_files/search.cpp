@@ -694,7 +694,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             lmr -= history / 256;
             if (sideToReduce == b->getActivePlayer()) lmr+=1;
             if (lmr > depth - 2) lmr = depth - 2;
-            if (lmr < 0) lmr = 0;
+            if (lmr > MAX_PLY) lmr = 0;
         }
 
         if (legalMoves == 0) {
@@ -713,10 +713,14 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
 
         b->undoMove();
 
+        if (score > highestScore) {
+            highestScore = score;
+            bestMove = m;
+        }
 
         if (score >= beta) {
             if (!skipMove) {
-                table->put(zobrist, beta, m, CUT_NODE, depth);
+                table->put(zobrist, highestScore, m, CUT_NODE, depth);
                 sd->setKiller(m, ply, b->getActivePlayer());
                 if (!isCapture(m)){
                     sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
@@ -726,10 +730,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool e
             return beta;
         }
 
-        if (score > highestScore) {
-            highestScore = score;
-            bestMove = m;
-        }
         if (score > alpha) {
 
             if (!skipMove && ply == 0 && isTimeLeft()) {
@@ -789,9 +789,28 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
 //    if(evaluator.probablyDrawByMaterial(b)){
 //        return 0;
 //    }
-    
-    
-    Score stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1:-1);
+    U64 zobrist = b->zobrist();
+    Entry* en = table->get(b->zobrist());
+    NodeType ttNodeType = ALL_NODE;
+    if (en != nullptr) {
+        if (en->type == PV_NODE) {
+            return en->score;
+        }
+        else if (en->type == CUT_NODE) {
+            if (en->score >= beta) {
+                return beta;
+            }
+        }
+        else if (en->type == ALL_NODE) {
+            if (en->score <= alpha) {
+                 return alpha;
+            }
+        }
+    }
+    Score stand_pat = -MAX_MATE_SCORE + ply;
+    if (!b->isInCheck(b->getActivePlayer())) {
+        stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
    
     
     if( stand_pat >= beta )
@@ -816,7 +835,8 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesQSearch(mv, b);
     
-    
+    Move bestMove = 0;
+    Score bestScore = -MAX_MATE_SCORE;
     
     
     for(int i = 0; i < mv->getSize(); i++){
@@ -825,7 +845,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         
         if(!b->isLegal(m)) continue;
         
-        if(b->staticExchangeEvaluation(m) < 0) continue;
+        if(!b->isInCheck(b->getActivePlayer()) && b->staticExchangeEvaluation(m) < 0) continue;
         
         
         
@@ -838,14 +858,24 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         b->undoMove();
         
         
-        
-        if( score >= beta )
-            return beta;
-        if( score > alpha )
-            alpha = score;
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = m;
+            if (score >= beta) {
+                ttNodeType = CUT_NODE;
+                table->put(zobrist, bestScore, m, ttNodeType, 0);
+                return beta;
+            }
+            if (score > alpha) {
+                ttNodeType = PV_NODE;
+                alpha = score;
+            }
+        }
         
         
     }
+    if (bestMove)table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
     return alpha;
 
 //    return 0;
