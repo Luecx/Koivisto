@@ -53,6 +53,9 @@ int lmp[2][11] = {
  */
 
 
+void search_clearHash() {
+    table->clear();
+}
 
 
 /**
@@ -880,5 +883,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
 
 //    return 0;
 }
+
+
 
 

@@ -118,7 +118,9 @@ void uci_processCommand(std::string str) {
     
 
     
-    
+    if (split.at(0) == "ucinewgame"){
+        search_clearHash();
+    }
     if (split.at(0) == "uci"){
         uci_uci();
     }else if (split.at(0) == "setoption") {
