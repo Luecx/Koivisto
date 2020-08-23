@@ -1631,6 +1631,32 @@ U64 Board::getPieces(Color color, Piece piece) {
     return pieces[color * 6 + piece];
 }
 
+U64 Board::getPinnedPieces(Color color, U64& pinners) {
+    U64 pinned = 0;
+    
+    Square kingSq = bitscanForward(getPieces(color, KING));
+    
+    Color them = color ^ 1;
+    
+    U64 pinner = lookUpRookXRayAttack(kingSq, *occupied, teamOccupied[color]) & (getPieces(them, ROOK) | getPieces(them, QUEEN));
+    pinners|= pinner;
+    while(pinner){
+        Square s  = bitscanForward(pinner);
+        pinned |= inBetweenSquares[kingSq][s] & teamOccupied[color];
+        pinner = lsbReset(pinner);
+    }
+    
+    pinner = lookUpBishopXRayAttack(kingSq, *occupied, teamOccupied[color]) & (getPieces(them, BISHOP) | getPieces(them, QUEEN));
+    pinners|= pinner;
+    
+    while(pinner){
+        Square s  = bitscanForward(pinner);
+        pinned |= inBetweenSquares[kingSq][s] & teamOccupied[color];
+        pinner = lsbReset(pinner);
+    }
+    return pinned;
+}
+
 
 
 

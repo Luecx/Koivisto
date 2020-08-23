@@ -164,6 +164,8 @@ class Board {
         
         U64 getLeastValuablePiece(U64 attadef, Score bySide, Piece &piece);
         
+        U64 getPinnedPieces(Color color, U64& pinners);
+        
         bool isUnderAttack(Square sq, Color attacker);
         
         bool givesCheck(Move m);
