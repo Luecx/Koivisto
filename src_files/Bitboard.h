@@ -476,6 +476,8 @@ extern U64 **BISHOP_ATTACKS;
 
 extern U64 **all_hashes;
 
+extern U64 **inBetweenSquares;
+
 //extern U64 **ROOK_ATTACKS;
 //extern U64 **BISHOP_ATTACKS;
 
@@ -848,6 +850,18 @@ inline U64 lookUpRookAttack(Square index, U64 occupied) {
 //    return generateRookAttack(index, occupied);
 }
 
+
+/**
+ * looks up the xray rook attack for a rook on the given square
+ * It returns a bitmap with all attackable squares highlighted including those after the first blockers.
+ */
+inline U64 lookUpRookXRayAttack(Square index, U64 occupied, U64 opponent) {
+    U64 attacks = lookUpRookAttack(index, occupied);
+    U64 blockers = opponent & attacks;
+    return attacks ^ lookUpRookAttack(index, occupied ^ blockers);
+}
+
+
 /**
  * looks up the bishop attack using magic bitboards
  * @param index
@@ -857,6 +871,16 @@ inline U64 lookUpRookAttack(Square index, U64 occupied) {
 inline U64 lookUpBishopAttack(Square index, U64 occupied) {
     return BISHOP_ATTACKS[index][(int) ((occupied & bishopMasks[index]) * bishopMagics[index] >> (bishopShifts[index]))];
 //    return generateBishopAttack(index, occupied);
+}
+
+/**
+ * looks up the xray bishop attack for a bishop on the given square
+ * It returns a bitmap with all attackable squares highlighted including those after the first blockers.
+ */
+inline U64 lookUpBishopXRayAttack(Square index, U64 occupied, U64 opponent) {
+    U64 attacks = lookUpBishopAttack(index, occupied);
+    U64 blockers = opponent & attacks;
+    return attacks ^ lookUpBishopAttack(index, occupied ^ blockers);
 }
 
 

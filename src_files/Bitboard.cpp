@@ -10,21 +10,18 @@ U64 **bb::BISHOP_ATTACKS = new U64*[64];
 
 U64 **bb::all_hashes = {};
 
+U64 **bb::inBetweenSquares = new U64*[64];
+
 void bb::bb_init() {
     
-    //std::cout << "generating bitboards...";
     
     std::srand(seed);
     
-    //auto start = std::chrono::system_clock::now();
     
     
     generateZobristKeys();
     generateData();
     
-    //auto end = std::chrono::system_clock::now();
-    //std::chrono::duration<double> diff = end-start;
-    //std::cout << "       done! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
 void bb::bb_cleanUp() {
@@ -33,11 +30,15 @@ void bb::bb_cleanUp() {
         ROOK_ATTACKS[i] = nullptr;
         delete BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
+        delete inBetweenSquares[i];
+        inBetweenSquares[i] = nullptr;
     }
     delete ROOK_ATTACKS;
     ROOK_ATTACKS = nullptr;
     delete BISHOP_ATTACKS;
     BISHOP_ATTACKS = nullptr;
+    delete inBetweenSquares;
+    inBetweenSquares = nullptr;
     
     for(int i = 0; i <12; i++){
         delete all_hashes[i];
@@ -133,6 +134,40 @@ void bb::generateData() {
         }
         
     }
+    
+    for(Square n = A1; n <= H8; n++){
+        inBetweenSquares[n] = new U64[64];
+    
+        for(Square i = A1; i <= H8; i++){
+            if(i == n) continue;
+            
+            U64 m = ZERO;
+            U64 occ = ZERO;
+            setBit(occ, n);
+            setBit(occ, i);
+            
+            Direction r = i - n;
+            
+            if(rankIndex(n) == rankIndex(i)){
+                m = generateSlidingAttacks(n, EAST * r/abs(r), occ);
+            }else if(fileIndex(n) == fileIndex(i)){
+                m = generateSlidingAttacks(n, NORTH * r/abs(r), occ);
+            }else if(diagonalIndex(n) == diagonalIndex(i)){
+                m = generateSlidingAttacks(n, NORTH_EAST * r/abs(r), occ);
+            }else if(antiDiagonalIndex(n) == antiDiagonalIndex(i)){
+                m = generateSlidingAttacks(n, NORTH_WEST * r/abs(r), occ);
+            }
+            
+            m &= ~occ;
+          
+            
+            
+            inBetweenSquares[n][i] = m;
+            
+        }
+    
+    }
+    
 }
 
 /**

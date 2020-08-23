@@ -385,6 +385,7 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
     
     auto* earlyGrads = new double[paramCount]{0};
     auto* lateGrads = new double[paramCount]{0};
+    auto* gradCounters = new int[paramCount]{0};
     
     auto* mg_pst_grads = new double[64]{};
     auto* eg_pst_grads = new double[64]{};
@@ -405,6 +406,11 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
         for(int p = 0; p < paramCount; p++){
             earlyGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
             lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
+            
+            if(features[p] != 0) {
+                gradCounters[p] += 1;
+            }
+            
         }
 
         
@@ -412,8 +418,8 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
     }
     
     for(int p = 0; p < paramCount; p++){
-        evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / dataCount;
-        evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / dataCount;
+        evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / -min(-1,-gradCounters[p]);
+        evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / -min(-1,-gradCounters[p]);
     }
 
     
