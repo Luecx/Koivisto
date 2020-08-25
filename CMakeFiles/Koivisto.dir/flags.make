@@ -9,7 +9,7 @@ C_DEFINES =
 
 C_INCLUDES = 
 
-CXX_FLAGS =  -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14
+CXX_FLAGS =  -march=native -fopt-info -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -O3 -DNDEBUG   -std=gnu++14
 
 CXX_DEFINES = 
 
