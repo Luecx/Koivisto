@@ -1,0 +1,107 @@
+[
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/main.cpp.o -c /home/kim/Documents/Koivisto/src_files/main.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/main.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/Bitboard.cpp.o -c /home/kim/Documents/Koivisto/src_files/Bitboard.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/Bitboard.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/Board.cpp.o -c /home/kim/Documents/Koivisto/src_files/Board.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/Board.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/Move.cpp.o -c /home/kim/Documents/Koivisto/src_files/Move.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/Move.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/TranspositionTable.cpp.o -c /home/kim/Documents/Koivisto/src_files/TranspositionTable.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/TranspositionTable.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/Perft.cpp.o -c /home/kim/Documents/Koivisto/src_files/Perft.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/Perft.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/Util.cpp.o -c /home/kim/Documents/Koivisto/src_files/Util.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/Util.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/search.cpp.o -c /home/kim/Documents/Koivisto/src_files/search.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/search.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/uci.cpp.o -c /home/kim/Documents/Koivisto/src_files/uci.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/uci.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/eval.cpp.o -c /home/kim/Documents/Koivisto/src_files/eval.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/eval.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/MoveOrderer.cpp.o -c /home/kim/Documents/Koivisto/src_files/MoveOrderer.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/MoveOrderer.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/History.cpp.o -c /home/kim/Documents/Koivisto/src_files/History.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/History.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/Tuning.cpp.o -c /home/kim/Documents/Koivisto/src_files/Tuning.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/Tuning.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/TimeManager.cpp.o -c /home/kim/Documents/Koivisto/src_files/TimeManager.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/TimeManager.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/nn/DenseLayer.cpp.o -c /home/kim/Documents/Koivisto/src_files/nn/DenseLayer.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/nn/DenseLayer.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/nn/DenseInput.cpp.o -c /home/kim/Documents/Koivisto/src_files/nn/DenseInput.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/nn/DenseInput.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/nn/DenseOutput.cpp.o -c /home/kim/Documents/Koivisto/src_files/nn/DenseOutput.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/nn/DenseOutput.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/nn/DenseNetwork.cpp.o -c /home/kim/Documents/Koivisto/src_files/nn/DenseNetwork.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/nn/DenseNetwork.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/c++     -march=native -fopt-info -pthread -O3 -DNDEBUG   -std=gnu++14 -o CMakeFiles/Koivisto.dir/src_files/nn/data/CompactInput.cpp.o -c /home/kim/Documents/Koivisto/src_files/nn/data/CompactInput.cpp",
+  "file": "/home/kim/Documents/Koivisto/src_files/nn/data/CompactInput.cpp"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/cc   -O3 -DNDEBUG   -o CMakeFiles/Koivisto.dir/src_files/syzygy/tbprobe.c.o   -c /home/kim/Documents/Koivisto/src_files/syzygy/tbprobe.c",
+  "file": "/home/kim/Documents/Koivisto/src_files/syzygy/tbprobe.c"
+},
+{
+  "directory": "/home/kim/Documents/Koivisto",
+  "command": "/usr/bin/cc   -O3 -DNDEBUG   -o CMakeFiles/Koivisto.dir/src_files/syzygy/tbchess.c.o   -c /home/kim/Documents/Koivisto/src_files/syzygy/tbchess.c",
+  "file": "/home/kim/Documents/Koivisto/src_files/syzygy/tbchess.c"
+}
+]

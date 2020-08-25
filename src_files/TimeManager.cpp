@@ -2,7 +2,6 @@
 // Created by finne on 7/11/2020.
 //
 
-#include <ntdef.h>
 #include "TimeManager.h"
 #include "Board.h"
 

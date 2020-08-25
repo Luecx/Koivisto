@@ -3,9 +3,10 @@
 //
 
 #include <fstream>
+#include <thread>
+#include <iostream>
 #include "uci.h"
 #include "syzygy/tbprobe.h"
-
 
 #define MONTH (\
   __DATE__ [2] == 'n' ? (__DATE__ [1] == 'a' ? "01" : "06") \
@@ -244,7 +245,7 @@ void uci_go_depth(int depth) {
     
     timeManager = new TimeManager();
     
-    searchThread = new std::thread(uci_searchAndPrint,  depth,timeManager);
+    searchThread = new std::thread(uci_searchAndPrint,  depth, timeManager);
     searchThread->detach();
 }
 
