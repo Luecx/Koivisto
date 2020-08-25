@@ -23,6 +23,7 @@ SOFTWARE.
 
 #include <assert.h>
 #include "tbprobe.h"
+#include <stddef.h>
 
 #define TB_PAWN 1
 #define TB_KNIGHT 2

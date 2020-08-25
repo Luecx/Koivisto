@@ -49,5 +49,8 @@ add_executable(Koivisto src_files/main.cpp
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info")
-set(CMAKE_EXE_LINKER_FLAGS " -static")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+if (WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS " -static")
+endif (WIN32)
 target_link_libraries(Koivisto -static-libgcc -static-libstdc++)

@@ -7,7 +7,7 @@
 
 #include <cstdlib>
 #include <fcntl.h>
-#include <io.h>
+#include <stdio.h>
 #include <iostream>
 #include <string>
 #include <thread>
