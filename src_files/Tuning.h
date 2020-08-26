@@ -32,7 +32,13 @@ void clearLoadedData();
  * uses the loaded data to optimise the evaluator
  * @param evaluator
  */
-double optimise(Evaluator *evaluator, double K, double learningRate);
+double optimiseGD(Evaluator *evaluator, double K, double learningRate);
+
+
+/**
+ * uses the loaded data to optimise the evaluator
+ */
+double optimiseAdaGrad(Evaluator *evaluator, double K, double learningRate, int iterations);
 
 /**
  * uses the loaded data to optimise the evaluator
