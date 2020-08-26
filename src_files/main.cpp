@@ -24,13 +24,13 @@ void main_tune_features(){
     using namespace tuning;
     
     loadPositionFile("..\\resources\\quiet-labeled.epd", 1e6);
-    auto K = tuning::computeK(evaluator,2.86681, 200, 1e-5);
+    auto K = tuning::computeK(evaluator,2.86681, 200, 1e-9);
     
     for(int i = 0; i < 5000; i++){
         
         std::cout << "--------------------------------------------------- ["<<i << "] ----------------------------------------------" << std::endl;
         
-        std::cout << std::setprecision(8) << tuning::optimise(evaluator, K, 1e5) << std::endl;
+        std::cout << std::setprecision(8) << tuning::optimiseGD(evaluator, K, 2e4) << std::endl;
         
         for(int k = 0; k < evaluator->paramCount(); k++){
             std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k]<< ",";

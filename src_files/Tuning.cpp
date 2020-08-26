@@ -379,7 +379,7 @@ void tuning::clearLoadedData(){
     }
 }
 
-double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
+double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     int paramCount = evaluator->paramCount();
     
     
@@ -418,6 +418,8 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
     }
     
     for(int p = 0; p < paramCount; p++){
+        
+        
         evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / -min(-1,-gradCounters[p]);
         evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / -min(-1,-gradCounters[p]);
     }
@@ -427,6 +429,96 @@ double tuning::optimise(Evaluator *evaluator, double K, double learningRate) {
     return score / dataCount;
     
 }
+
+double tuning::optimiseAdaGrad(Evaluator *evaluator, double K, double learningRate, int iterations) {
+    int paramCount = evaluator->paramCount();
+    
+    
+    double score = 0;
+    
+    
+    auto* earlyGradsSquaredSum = new double[paramCount]{0};
+    auto* lateGradsSquaredSum = new double[paramCount]{0};
+    
+    auto* earlyGrads = new double[paramCount]{0};
+    auto* lateGrads = new double[paramCount]{0};
+    auto* gradCounters = new int[paramCount]{0};
+    
+    for(int iter = 0; iter < iterations; iter++){
+        
+        
+        score = 0;
+    
+        for(int i = 0; i < dataCount; i++){
+            Score       q_i             = evaluator->evaluate(boards[i]);
+            double      expected        = results[i];
+        
+            double      sig             = sigmoid(q_i, K);
+            double      sigPrime        = sigmoidPrime(q_i, K);
+            double      lossPrime       = - 2 * (expected - sig);
+        
+            float*     features        = evaluator->getFeatures();
+            float      phase           = evaluator->getPhase();
+        
+            for(int p = 0; p < paramCount; p++){
+                earlyGrads[p] += features[p] * (1-phase) * sigPrime * lossPrime;
+                lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
+            
+                if(features[p] != 0) {
+                    gradCounters[p] += 1;
+                }
+            
+            }
+            
+            score += (expected - sig) * (expected - sig);
+        }
+    
+        for(int p = 0; p < paramCount; p++){
+            
+            
+            double earlyAdjust = sqrt(earlyGradsSquaredSum[p]);
+            double lateAdjust = sqrt(lateGradsSquaredSum[p]);
+            
+            if(earlyAdjust == 0) earlyAdjust = 1;
+            if(lateAdjust == 0) lateAdjust = 1;
+            
+            evaluator->getEarlyGameParams() [p] -= earlyGrads[p] * learningRate / earlyAdjust / dataCount;
+            evaluator->getLateGameParams()  [p] -= lateGrads [p] * learningRate / lateAdjust / dataCount;
+    
+    
+            earlyGradsSquaredSum[p] += earlyGrads[p] * earlyGrads[p];
+            lateGradsSquaredSum[p] += lateGrads[p] * lateGrads[p];
+            
+        }
+    
+        std::cout << "--------------------------------------------------- ["<<iter << "] ----------------------------------------------" << std::endl;
+        std::cout << "loss="<< score/dataCount << std::endl;
+        
+        for(int k = 0; k < evaluator->paramCount(); k++){
+            std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k]<< ",";
+        }
+        std::cout << std::endl;
+        for(int k = 0; k < evaluator->paramCount(); k++){
+            std::cout << std::setw(14) <<evaluator->getLateGameParams()[k] << ",";
+        }
+        std::cout << std::endl;
+        
+        
+    }
+    
+    delete earlyGrads;
+    delete lateGrads;
+    
+    delete earlyGradsSquaredSum;
+    delete lateGradsSquaredSum;
+    
+    delete gradCounters;
+    
+    return score / dataCount;
+    
+    
+}
+
 
 #ifdef TUNE_PST
 double tuning::optimisePST(Evaluator *evaluator, double K, double learningRate) {
