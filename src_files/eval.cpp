@@ -188,6 +188,28 @@ int INDEX_KING_PAWN_SHIELD = unusedVariable++;
 int INDEX_KNIGHT_DISTANCE_ENEMY_KING = unusedVariable++;
 int INDEX_QUEEN_DISTANCE_ENEMY_KING = unusedVariable++;
 
+int INDEX_PINNED_PAWN_BY_BISHOP = unusedVariable++;
+int INDEX_PINNED_PAWN_BY_ROOK = unusedVariable++;
+int INDEX_PINNED_PAWN_BY_QUEEN = unusedVariable++;
+int INDEX_PINNED_KNIGHT_BY_BISHOP = unusedVariable++;
+int INDEX_PINNED_KNIGHT_BY_ROOK = unusedVariable++;
+int INDEX_PINNED_KNIGHT_BY_QUEEN = unusedVariable++;
+int INDEX_PINNED_BISHOP_BY_BISHOP = unusedVariable++;
+int INDEX_PINNED_BISHOP_BY_ROOK = unusedVariable++;
+int INDEX_PINNED_BISHOP_BY_QUEEN = unusedVariable++;
+int INDEX_PINNED_ROOK_BY_BISHOP = unusedVariable++;
+int INDEX_PINNED_ROOK_BY_ROOK = unusedVariable++;
+int INDEX_PINNED_ROOK_BY_QUEEN = unusedVariable++;
+int INDEX_PINNED_QUEEN_BY_BISHOP = unusedVariable++;
+int INDEX_PINNED_QUEEN_BY_ROOK = unusedVariable++;
+int INDEX_PINNED_QUEEN_BY_QUEEN = unusedVariable++;
+
+int INDEX_PAWN_HANGING = unusedVariable++;
+int INDEX_KNIGHT_HANGING = unusedVariable++;
+int INDEX_BISHOP_HANGING = unusedVariable++;
+int INDEX_ROOK_HANGING = unusedVariable++;
+int INDEX_QUEEN_HANGING = unusedVariable++;
+
 /*
  * it is very important that unusuedVariable is a multiple of 4!!!
  */
@@ -200,12 +222,14 @@ float * tunablePST_EG_grad = new float[64]{};
 #endif
 
 float* _pieceValuesEarly = new float[unusedVariable] {
-        103.22379,     37.233891,     4.7121916,    -6.1375127,    -19.105721,     5.3076596,    -22.917217,             0,             0,     425.97165,     45.278843,     31.634968,     32.146008,     459.26181,     34.096981,      24.47187,     40.965309,    -7.6022301,     25.156542,     553.44226,     104.87902,     18.581442,      65.48317,      15.35302,     25.945944,     1187.3552,     116.13513,     4.2680445,     369.62683,     250.60553,    -67.175392,       10.3318,    -4.8055992,   -0.95995343,             0,             0,
+        93.200768,     36.740261,     5.1929765,    -5.7481608,     -8.195713,     8.4472523,    -7.2855563,    -13.764072,      13.80669,     459.28799,     44.948963,      29.77445,     25.210211,     478.42227,      32.77354,     24.960512,     43.194798,    -6.5769291,     21.008356,     585.12427,     95.036911,     19.412424,     60.780403,     15.102008,     17.528503,     1343.1541,     117.29665,     6.6294622,     377.41129,     241.48871,    -56.376457,     8.8138313,    -6.1125693,    -3.6362143,     23.339806,    -8.0065174,     5.7295437,    -31.496239,    -39.994419,    -20.803629,    -17.637938,    -63.977325,     18.702053,    -45.233044,      -8.75247,    -17.244184,    -197.28307,    -357.77185,    -26.352976,    -3.6052947,    -15.728465,    -4.1198039,    -5.5845661,    -14.905084,             0,             0,
 };
 
 float* _pieceValuesLate = new float[unusedVariable] {
-        102.35178,     178.32506,     10.863027,     45.623947,    -6.6069474,    -4.7320266,    -17.804146,             0,             0,     352.29785,     101.45675,     14.834332,     24.076729,     311.23444,     14.430919,     28.275148,     56.964058,     6.3020597,      17.20739,     620.22784,     101.62868,     25.477598,    -7.2281404,     3.9407961,     4.4075699,     1184.8578,     92.083282,     61.619213,    -68.039291,     49.464191,     51.982635,    0.81217605,    -1.7652173,    -10.871104,             0,             0,
+        101.7915,     178.29243,     10.811167,     45.724575,    -8.0145779,     -4.875546,    -20.446505,     2.6384106,    -3.2679043,     326.30353,     91.740456,     20.003334,     21.358242,     292.99438,      9.350976,     31.858561,     54.217407,     6.3148818,     29.490778,     596.30878,     100.59217,     30.881622,    -14.183203,     2.9259698,     2.4334888,     1135.9285,     42.705742,     58.869133,    -123.09178,     42.790409,     51.919384,    0.47705036,    -1.2026162,    -14.739939,    -45.135487,     18.960873,     25.333538,     -156.9175,     -50.37793,    -27.847383,    -13.941154,    -66.394402,    -104.40505,    -375.81863,    -20.012157,    -72.985245,      -468.733,    -564.52448,    -26.092594,     2.1972692,    -2.5465658,    -11.916695,    -10.937396,    -4.9093542,             0,             0,
 };
+
+
 
 
 //TODO tweak values
@@ -262,6 +286,65 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover){
     
 }
 
+void computeHangingPieces(Board* b){
+    U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
+    U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
+    
+    
+    for(int i = PAWN; i <= QUEEN; i++){
+        _features[INDEX_PAWN_HANGING + i] =
+                + bitCount(b->getPieces(WHITE, i) & WnotAttacked)
+                - bitCount(b->getPieces(BLACK, i) & BnotAttacked);
+    }
+    
+}
+
+void computePinnedPieces(Board* b){
+    
+    for(int i = 0; i < 15; i++){
+        _features[INDEX_PINNED_PAWN_BY_BISHOP+i] = 0;
+    }
+    
+    Square wkingSq = bitscanForward(b->getPieces(WHITE, KING));
+    U64 pinner = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE]) & (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
+    while(pinner){
+        Square s  = bitscanForward(pinner);
+        Square pinnedPlace = bitscanForward(inBetweenSquares[wkingSq][s] & b->getTeamOccupied()[WHITE]);
+        _features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(s) % 6 - BISHOP)] += 1;
+        pinner = lsbReset(pinner);
+    }
+    
+    pinner = lookUpBishopXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE]) & (b->getPieces(BLACK, BISHOP) | b->getPieces(BLACK, QUEEN));
+    while(pinner){
+        Square s  = bitscanForward(pinner);
+        Square pinnedPlace = bitscanForward(inBetweenSquares[wkingSq][s] & b->getTeamOccupied()[WHITE]);
+        
+        
+        _features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(s) % 6 - BISHOP)] += 1;
+        pinner = lsbReset(pinner);
+    }
+    
+    Square bkingSq = bitscanForward(b->getPieces(BLACK, KING));
+    pinner = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK]) & (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
+    while(pinner){
+        Square s  = bitscanForward(pinner);
+        Square pinnedPlace = bitscanForward(inBetweenSquares[bkingSq][s] & b->getTeamOccupied()[BLACK]);
+        _features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(s) % 6 - BISHOP)] -= 1;
+        pinner = lsbReset(pinner);
+    }
+    pinner = lookUpBishopXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK]) & (b->getPieces(WHITE, BISHOP) | b->getPieces(WHITE, QUEEN));
+    while(pinner){
+        Square s  = bitscanForward(pinner);
+        Square pinnedPlace = bitscanForward(inBetweenSquares[bkingSq][s] & b->getTeamOccupied()[BLACK]);
+        
+        
+        _features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(s) % 6 - BISHOP)] -= 1;
+        pinner = lsbReset(pinner);
+    }
+    
+    
+    
+}
 
 
 /**
@@ -297,18 +380,22 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 attacks;
     
     
-    
     _phase =
-            (18.0f - bitCount(
+            (24.0f
+             - 1 * bitCount(
                     b->getPieces()[WHITE_BISHOP] |
                     b->getPieces()[BLACK_BISHOP] |
                     b->getPieces()[WHITE_KNIGHT] |
-                    b->getPieces()[BLACK_KNIGHT] |
+                    b->getPieces()[BLACK_KNIGHT])
+             - 2 * bitCount(
                     b->getPieces()[WHITE_ROOK] |
-                    b->getPieces()[BLACK_ROOK]) -
-             3*bitCount(
-                     b->getPieces()[WHITE_QUEEN] |
-                     b->getPieces()[BLACK_QUEEN])) / 18.0f;
+                    b->getPieces()[BLACK_ROOK])
+             - 4 * bitCount(
+                    b->getPieces()[WHITE_QUEEN] |
+                    b->getPieces()[BLACK_QUEEN])) / 24.0f;
+    
+    if(_phase > 1) _phase = 1;
+    if(_phase < 0) _phase = 0;
     
     
     int whitekingSafety_attackingPiecesCount = 0;
@@ -414,12 +501,12 @@ bb::Score Evaluator::evaluate(Board *b) {
             + bitCount(whitePawnWestCover)
             - bitCount(blackPawnEastCover)
             - bitCount(blackPawnWestCover);
-//    _features[INDEX_PAWN_OPEN] =
-//            + bitCount(whitePawns & ~fillSouth(blackPawns))
-//            - bitCount(blackPawns & ~fillNorth(whitePawns));
-//    _features[INDEX_PAWN_BACKWARD] =
-//            + bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
-//            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns);
+    _features[INDEX_PAWN_OPEN] =
+            + bitCount(whitePawns & ~fillSouth(blackPawns))
+            - bitCount(blackPawns & ~fillNorth(whitePawns));
+    _features[INDEX_PAWN_BACKWARD] =
+            + bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
+            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns);
 
 
    
@@ -698,7 +785,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         k = lsbReset(k);
     }
-    _features[INDEX_QUEEN_VALUE] = (bitCount(b->getPieces()[WHITE_QUEEN])  - bitCount(b->getPieces()[BLACK_QUEEN]));
+    _features[INDEX_QUEEN_VALUE] = bitCount(b->getPieces()[WHITE_QUEEN]) - bitCount(b->getPieces()[BLACK_QUEEN]);
     
     /**********************************************************************************
      *                                  K I N G S                                     *
@@ -733,6 +820,9 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         k = lsbReset(k);
     }
+    
+    computeHangingPieces(b);
+    computePinnedPieces(b);
     
     _features[INDEX_KING_SAFETY] = (_kingSafetyTable[blackkingSafety_valueOfAttacks] - _kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
     
@@ -840,6 +930,28 @@ void printEvaluation(Board *board){
         
             "INDEX_KNIGHT_DISTANCE_ENEMY_KING",
             "INDEX_QUEEN_DISTANCE_ENEMY_KING",
+        
+            "INDEX_PINNED_PAWN_BY_BISHOP",
+            "INDEX_PINNED_PAWN_BY_ROOK",
+            "INDEX_PINNED_PAWN_BY_QUEEN",
+            "INDEX_PINNED_KNIGHT_BY_BISHOP",
+            "INDEX_PINNED_KNIGHT_BY_ROOK",
+            "INDEX_PINNED_KNIGHT_BY_QUEEN",
+            "INDEX_PINNED_BISHOP_BY_BISHOP",
+            "INDEX_PINNED_BISHOP_BY_ROOK",
+            "INDEX_PINNED_BISHOP_BY_QUEEN",
+            "INDEX_PINNED_ROOK_BY_BISHOP",
+            "INDEX_PINNED_ROOK_BY_ROOK",
+            "INDEX_PINNED_ROOK_BY_QUEEN",
+            "INDEX_PINNED_QUEEN_BY_BISHOP",
+            "INDEX_PINNED_QUEEN_BY_ROOK",
+            "INDEX_PINNED_QUEEN_BY_QUEEN",
+        
+            "INDEX_PAWN_HANGING",
+            "INDEX_KNIGHT_HANGING",
+            "INDEX_BISHOP_HANGING",
+            "INDEX_ROOK_HANGING",
+            "INDEX_QUEEN_HANGING",
             
             //ignore this and place new values before here
             "-",
