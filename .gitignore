@@ -14,6 +14,18 @@ resources/make_fens_from_lichess_pgn/workcache/
 
 *.pgn
 
+resources/
+
+out/
+
+.vs/
+
+weights.txt
+
+test.txt
+
+CMakeFiles/
+
 resources/networks/
 
 resources/networkTrainingKeras/models/
