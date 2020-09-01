@@ -1,37 +1,16 @@
 
 .idea/
 
+resources/
+
 cmake-build-debug/
 
 cmake-build-release/
 
-resources/lichess-new-labeled.epd
-
-
-resources/make_fens_from_lichess_pgn/output/
-
-resources/make_fens_from_lichess_pgn/workcache/
-
-*.pgn
-
-resources/
+CMakeFiles/
 
 out/
 
-.vs/
 
-weights.txt
 
-test.txt
 
-CMakeFiles/
-
-resources/networks/
-
-resources/networkTrainingKeras/models/
-
-resources/other/35Msparse.txt
-
-resources/other/
-
-resources/networkTrainingKeras/
