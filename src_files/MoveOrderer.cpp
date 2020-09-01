@@ -77,17 +77,19 @@ bool MoveOrderer::hasNext() {
 
 move::Move MoveOrderer::next() {
     
-    int bestIndex = 0;
+    int bestIndex = counter;
     //Move best = moves->getMove(0);
-    for(int i = 1; i < moves->getSize(); i++){
-    
+    for(int i = counter+1; i < moves->getSize(); i++){
         if(moves->getScore(i) > moves->getScore(bestIndex)){
             bestIndex = i;
         }
     }
     moves->scoreMove(bestIndex, 0);
-    counter ++;
-    return moves->getMove(bestIndex);
+    moves->swap(bestIndex, counter);
+    return moves->getMove(counter ++);
+    
+    
+    
     
 }
 
