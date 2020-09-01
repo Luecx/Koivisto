@@ -27,7 +27,7 @@ ARMV7FLAGS += -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -Wl,--fix-cortex-a8
 #	$(CC) $(CFLAGS) $(SRC) $(LIBS) $(PEXTFLAGS) -o $(EXE)
 
 release:
-	$(CC) $(CFLAGS) $(SRC) $(LIBS) $(POPCNTFLAGS) -o ..\bin\$(EXE)
+	$(CC) $(CFLAGS) $(SRC) $(LIBS) $(POPCNTFLAGS) -o ../$(EXE)
 
 #tune:
 #	$(CC) $(TFLAGS) $(SRC) $(LIBS) $(POPCNT) -o $(EXE)
