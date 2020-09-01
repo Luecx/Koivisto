@@ -21,7 +21,7 @@
 #include "Util.h"
 
 
-void uci_loop();
+void uci_loop(bool bench);
 
 void uci_processCommand(std::string str);
 
