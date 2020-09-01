@@ -1,3 +1,0 @@
-/home/kim/Documents/Koivisto/CMakeFiles/rebuild_cache.dir
-/home/kim/Documents/Koivisto/CMakeFiles/edit_cache.dir
-/home/kim/Documents/Koivisto/CMakeFiles/Koivisto.dir
