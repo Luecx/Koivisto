@@ -82,12 +82,29 @@ void main_tune_pst(){
 }
 #endif
 
-int main() {
 
 
+int main(int argc, char *argv[]) {
+    
+    if(argc == 1){
+        uci_loop();
+    }else if(argc > 1 && strcmp(argv[1], "bench") == 0){
+        uci_bench();
+    }
+    
 
 
-     uci_loop();
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     /**********************************************************************************
@@ -100,7 +117,7 @@ int main() {
 //    tuning::evalSpeed();
 //    bb_cleanUp();
     
-    main_tune_features();
+//    main_tune_features();
     //main_tune_pst();
     
     return 0;

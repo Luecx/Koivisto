@@ -27,6 +27,17 @@ extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
 
+/**
+ * used to store information about a search
+ */
+struct SearchOverview{
+    int nodes;
+    Score score;
+    int depth;
+    int time;
+    Move move;
+};
+
 
 void initLmr();
 Score getWDL(Board* board);
@@ -36,6 +47,9 @@ void search_clearHash();
 void search_useTB(bool val);
 void search_init(int hashSize);     //used to create arrays, movelists etc
 void search_cleanUp();              //used to clean up the memory
+SearchOverview search_overview();             //used to get information about the latest search
+void search_enable_infoStrings();
+void search_disable_inforStrings();
 
 
 Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager);

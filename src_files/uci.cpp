@@ -409,3 +409,46 @@ void uci_quit() {
     
 //    perft_cleanUp();
 }
+
+void uci_bench() {
+    bb_init();
+    search_init(128);
+    
+    //positions from Ethereal
+    static const char *Benchmarks[] = {
+#include "bench.csv"
+            ""
+    };
+    
+    
+    int nodes = 0;
+    int time = 0;
+    
+    search_disable_inforStrings();
+    for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
+        
+        Board b(Benchmarks[i]);
+        
+        TimeManager manager;
+        bestMove(&b, 13, &manager);
+        SearchOverview overview = search_overview();
+        
+        nodes +=  overview.nodes;
+        time  +=  overview.time;
+        
+        printf("Bench [# %2d] %5d cp  Best:%6s  %12d nodes %8d nps\n", i + 1, overview.score,
+               toString(overview.move).c_str(), (int)overview.nodes, (int)(1000.0f * overview.nodes / (overview.time + 1)));
+        
+        search_clearHash();
+    }
+    search_enable_infoStrings();
+    
+    printf("OVERALL: %53d nodes %8d nps\n", (int)nodes, (int)(1000.0f * nodes / (time + 1)));
+    
+    
+    
+    
+    
+    search_cleanUp();
+    bb_cleanUp();
+}
