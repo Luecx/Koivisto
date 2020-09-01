@@ -3,7 +3,7 @@ SRC     = *.cpp syzygy/*.c nn/*.cpp nn/data/*.cpp
 LIBS    = -lpthread -lm
 EXE     = Koivisto
 
-WFLAGS = -std=c++14
+WFLAGS = -std=c++17
 CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 TFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native -fopenmp -DTUNE
@@ -27,7 +27,7 @@ ARMV7FLAGS += -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -Wl,--fix-cortex-a8
 #	$(CC) $(CFLAGS) $(SRC) $(LIBS) $(PEXTFLAGS) -o $(EXE)
 
 release:
-	$(CC) $(CFLAGS) $(SRC) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
+	$(CC) $(CFLAGS) $(SRC) $(LIBS) $(POPCNTFLAGS) -o ..\bin\$(EXE)
 
 #tune:
 #	$(CC) $(TFLAGS) $(SRC) $(LIBS) $(POPCNT) -o $(EXE)
