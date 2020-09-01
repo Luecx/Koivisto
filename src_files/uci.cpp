@@ -211,7 +211,7 @@ void uci_go_perft(int depth, bool hash){
     perft_init(hash);
     
     startMeasure();
-    auto nodes = perft(board, depth,true,false,hash);
+    auto nodes = perft(board, depth,true,true,hash);
     auto time = stopMeasure();
     
     std::cout << "nodes: " << nodes << " nps: " << nodes/(time+1)*1000;
@@ -410,8 +410,6 @@ void uci_quit() {
 }
 
 void uci_bench() {
-    bb_init();
-    search_init(16);
     
     //positions from Ethereal
     static const char *Benchmarks[] = {
