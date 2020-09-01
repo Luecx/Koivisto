@@ -46,6 +46,8 @@ void uci_uci();
 void uci_position_fen(std::string fen, std::string moves);
 void uci_position_startpos(std::string moves);
 
+void uci_bench();
+
 void uci_quit();
 
 #endif //KOIVISTO_UCI_H

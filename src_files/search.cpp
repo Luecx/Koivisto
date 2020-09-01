@@ -19,6 +19,9 @@ int _selDepth;
 auto _startTime = std::chrono::system_clock::now();
 bool _forceStop = false;
 bool _useTB = false;
+bool _printInfo = true;
+
+SearchOverview overview;
 
 /*
  * Lmr table
@@ -51,6 +54,16 @@ int lmp[2][11] = {
  *                             H E L P E R S
  * =================================================================================
  */
+
+
+
+void search_enable_infoStrings() {
+    _printInfo = true;
+}
+
+void search_disable_inforStrings() {
+    _printInfo = false;
+}
 
 
 void search_clearHash() {
@@ -194,6 +207,8 @@ void extractPV(Board *b, MoveList* mvList, Depth depth){
  */
 void printInfoString(Board *b, Depth d, Score score){
     
+    
+    if(!_printInfo) return;
     
     int nps = (int) (_nodes) / (int) (_timeManager->elapsedTime()+1) * 1000;
     
@@ -375,6 +390,12 @@ Move getDTZMove(Board* board){
 //
 }
 
+
+SearchOverview search_overview() {
+    return overview;
+}
+
+
 /**
  * =================================================================================
  *                                M A I N
@@ -417,13 +438,24 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager) {
     
     if(maxDepth > MAX_PLY) maxDepth = MAX_PLY;
     
-    for(Depth d = 1; d <= maxDepth; d++){
-        pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd, 0);
+    Depth d;
+    Score s;
+    for(d = 1; d <= maxDepth; d++){
+        s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, false,&sd, 0);
         
         if(!isTimeLeft()) break;
     }
     
+    
+    
     Move best = table->get(b->zobrist())->move;
+    
+    overview.nodes = _nodes;
+    overview.depth = d;
+    overview.score = s;
+    overview.time = timeManager->elapsedTime();
+    overview.move = best;
+    
     return best;
 }
 
