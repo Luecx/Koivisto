@@ -29,12 +29,14 @@ std::thread *searchThread = nullptr;
 
 
 
-void uci_loop(){
+void uci_loop(bool bench){
     
-    //tb_init("../resources/syzygy/3-4-5");
     bb_init();
-    search_init(128);
-//    perft_init(false);
+    search_init(16);
+    
+    if(bench){
+        uci_bench();
+    }
     
     
     std::cout << "Koivisto 64 "<< YEAR << MONTH << DAY << " by K. Kahre, F. Eggers" << std::endl;
@@ -45,9 +47,6 @@ void uci_loop(){
     
     std::atexit(uci_quit);
     std::string line;
-    
-//    uci_processCommand("position startpos moves d2d4 g8f6 c2c4 e7e6 g1f3 b7b6 g2g3 c8b7 f1g2 b8c6 b1c3 f8b4 e1g1 d7d5 c4d5 e6d5 a2a3 b4c3 b2c3 h7h6 f1e1 e8g8 f3e5 d8e8 f2f4 c6e7 a3a4 f6e4 g2e4");
-//    uci_processCommand("go depth 8");
     
     while (true) {
         getline(cin, line);
@@ -63,7 +62,7 @@ void uci_loop(){
 void uci_uci() {
     std::cout << "id name Koivisto 64 "<< YEAR << MONTH << DAY << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
-    std::cout << "option name Hash type spin default 128 min 1 max " << maxTTSize() <<std::endl;
+    std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() <<std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
     
     
@@ -412,7 +411,7 @@ void uci_quit() {
 
 void uci_bench() {
     bb_init();
-    search_init(128);
+    search_init(16);
     
     //positions from Ethereal
     static const char *Benchmarks[] = {
@@ -448,7 +447,4 @@ void uci_bench() {
     
     
     
-    
-    search_cleanUp();
-    bb_cleanUp();
 }

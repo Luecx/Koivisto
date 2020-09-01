@@ -87,9 +87,9 @@ void main_tune_pst(){
 int main(int argc, char *argv[]) {
     
     if(argc == 1){
-        uci_loop();
+        uci_loop(false);
     }else if(argc > 1 && strcmp(argv[1], "bench") == 0){
-        uci_bench();
+        uci_loop(true);
     }
     
 
