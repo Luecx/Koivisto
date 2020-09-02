@@ -180,7 +180,6 @@ void bb::generateData() {
  */
 U64 bb::populateMask(U64 mask, U64 index) {
     
-    U64 initMask{mask};
     
     U64 res = 0;
     Square i = 0;

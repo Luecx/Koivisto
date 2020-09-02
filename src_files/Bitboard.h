@@ -20,8 +20,6 @@
 #include <string>
 
 
-
-
 namespace bb {
 
 typedef uint64_t U64;
@@ -46,8 +44,8 @@ constexpr Depth MAX_INTERNAL_PLY = 255;
 
 constexpr Score TB_CURSED_SCORE = (Score) (1);
 constexpr Score TB_WIN_SCORE = (Score) ((1 << 14) - MAX_INTERNAL_PLY);
-constexpr Score MAX_MATE_SCORE = (Score)((1 << 15) - 1);
-constexpr Score MIN_MATE_SCORE = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY);
+constexpr Score MAX_MATE_SCORE = (Score) ((1 << 15) - 1);
+constexpr Score MIN_MATE_SCORE = (Score) (MAX_MATE_SCORE - MAX_INTERNAL_PLY);
 
 
 constexpr Color WHITE = 0;
@@ -161,14 +159,14 @@ constexpr char PIECE_IDENTIFER[]{
         'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'
 };
 
-constexpr Direction NORTH = 8;
-constexpr Direction SOUTH = -8;
-constexpr Direction WEST = -1;
-constexpr Direction EAST = 1;
-constexpr Direction NORTH_WEST = 7;
-constexpr Direction NORTH_EAST = 9;
-constexpr Direction SOUTH_WEST = -9;
-constexpr Direction SOUTH_EAST = -7;
+constexpr Direction NORTH       =  8;
+constexpr Direction SOUTH       = -8;
+constexpr Direction WEST        = -1;
+constexpr Direction EAST        =  1;
+constexpr Direction NORTH_WEST  =  7;
+constexpr Direction NORTH_EAST  =  9;
+constexpr Direction SOUTH_WEST  = -9;
+constexpr Direction SOUTH_EAST  = -7;
 
 constexpr Square index64[64] = {
         0, 1, 48, 2, 57, 49, 28, 3,
@@ -203,26 +201,26 @@ constexpr U64 RANK_6 = RANK_1 << 40;
 constexpr U64 RANK_7 = RANK_1 << 48;
 constexpr U64 RANK_8 = RANK_1 << 56;
 
-constexpr U64 ANTI_DIAGONAL_7 = 0x102040810204080L;
-constexpr U64 ANTI_DIAGONAL_6 = ANTI_DIAGONAL_7 << 8;
-constexpr U64 ANTI_DIAGONAL_5 = ANTI_DIAGONAL_7 << 16;
-constexpr U64 ANTI_DIAGONAL_4 = ANTI_DIAGONAL_7 << 24;
-constexpr U64 ANTI_DIAGONAL_3 = ANTI_DIAGONAL_7 << 32;
-constexpr U64 ANTI_DIAGONAL_2 = ANTI_DIAGONAL_7 << 40;
-constexpr U64 ANTI_DIAGONAL_1 = ANTI_DIAGONAL_7 << 48;
-constexpr U64 ANTI_DIAGONAL_0 = ANTI_DIAGONAL_7 << 56;
+constexpr U64 ANTI_DIAGONAL_7  = 0x102040810204080L;
+constexpr U64 ANTI_DIAGONAL_6  = ANTI_DIAGONAL_7 << 8;
+constexpr U64 ANTI_DIAGONAL_5  = ANTI_DIAGONAL_7 << 16;
+constexpr U64 ANTI_DIAGONAL_4  = ANTI_DIAGONAL_7 << 24;
+constexpr U64 ANTI_DIAGONAL_3  = ANTI_DIAGONAL_7 << 32;
+constexpr U64 ANTI_DIAGONAL_2  = ANTI_DIAGONAL_7 << 40;
+constexpr U64 ANTI_DIAGONAL_1  = ANTI_DIAGONAL_7 << 48;
+constexpr U64 ANTI_DIAGONAL_0  = ANTI_DIAGONAL_7 << 56;
 
-constexpr U64 ANTI_DIAGONAL_8 = ANTI_DIAGONAL_7 >> 8;
-constexpr U64 ANTI_DIAGONAL_9 = ANTI_DIAGONAL_7 >> 16;
+constexpr U64 ANTI_DIAGONAL_8  = ANTI_DIAGONAL_7 >> 8;
+constexpr U64 ANTI_DIAGONAL_9  = ANTI_DIAGONAL_7 >> 16;
 constexpr U64 ANTI_DIAGONAL_10 = ANTI_DIAGONAL_7 >> 24;
 constexpr U64 ANTI_DIAGONAL_11 = ANTI_DIAGONAL_7 >> 32;
 constexpr U64 ANTI_DIAGONAL_12 = ANTI_DIAGONAL_7 >> 40;
 constexpr U64 ANTI_DIAGONAL_13 = ANTI_DIAGONAL_7 >> 48;
 constexpr U64 ANTI_DIAGONAL_14 = ANTI_DIAGONAL_7 >> 56;
 
-constexpr U64 DIAGONAL_7 = 0x8040201008040201L;
-constexpr U64 DIAGONAL_8 = DIAGONAL_7 >> 8;
-constexpr U64 DIAGONAL_9 = DIAGONAL_7 >> 16;
+constexpr U64 DIAGONAL_7  = 0x8040201008040201L;
+constexpr U64 DIAGONAL_8  = DIAGONAL_7 >> 8;
+constexpr U64 DIAGONAL_9  = DIAGONAL_7 >> 16;
 constexpr U64 DIAGONAL_10 = DIAGONAL_7 >> 24;
 constexpr U64 DIAGONAL_11 = DIAGONAL_7 >> 32;
 constexpr U64 DIAGONAL_12 = DIAGONAL_7 >> 40;
@@ -293,8 +291,6 @@ constexpr U64 CASTLING_MASKS[] = {CASTLING_WHITE_QUEENSIDE_MASK,
                                   CASTLING_BLACK_KINGSIDE_MASK};
 
 constexpr U64 seed = 12398123;
-
-
 
 
 constexpr U64 whitePassedPawnMask[]{
@@ -614,6 +610,7 @@ inline U64 shiftNorthEast(U64 b) {
     b = (b << 9) & NOT_FILE_A;
     return b;
 }
+
 inline U64 shiftSouthEast(U64 b) {
     b = (b >> 7) & NOT_FILE_A;
     return b;
@@ -635,8 +632,8 @@ inline U64 shiftNorthWest(U64 b) {
  * @param b
  * @return
  */
-inline U64 fillNorth(U64 b){
-    b |= (b <<  8);
+inline U64 fillNorth(U64 b) {
+    b |= (b << 8);
     b |= (b << 16);
     b |= (b << 32);
     return b;
@@ -648,7 +645,7 @@ inline U64 fillNorth(U64 b){
  * @return
  */
 inline U64 fillSouth(U64 b) {
-    b |= (b >>  8);
+    b |= (b >> 8);
     b |= (b >> 16);
     b |= (b >> 32);
     return b;
@@ -659,7 +656,7 @@ inline U64 fillSouth(U64 b) {
  * @param b
  * @return
  */
-inline U64 fillFile(U64 b){
+inline U64 fillFile(U64 b) {
     return fillSouth(b) | fillNorth(b);
 }
 
@@ -677,7 +674,7 @@ inline U64 fillFile(U64 b){
  * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
  * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
  */
-inline U64 wAttackFrontSpans(U64 b){
+inline U64 wAttackFrontSpans(U64 b) {
     return fillNorth(shiftNorthEast(b) | shiftNorthWest(b));
 }
 
@@ -694,7 +691,7 @@ inline U64 wAttackFrontSpans(U64 b){
  * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
  * . . . . . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
  */
-inline U64 wAttackRearSpans(U64 b){
+inline U64 wAttackRearSpans(U64 b) {
     return fillSouth(shiftEast(b) | shiftWest(b));
 }
 
@@ -712,7 +709,7 @@ inline U64 wAttackRearSpans(U64 b){
  * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
  * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
  */
-inline U64 bAttackFrontSpans(U64 b){
+inline U64 bAttackFrontSpans(U64 b) {
     return fillSouth(shiftSouthEast(b) | shiftSouthWest(b));
 }
 
@@ -729,7 +726,7 @@ inline U64 bAttackFrontSpans(U64 b){
  * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
  * . . 1 . 1 . . .     . . . . . . . .     . . 1 . 1 . . .
  */
-inline U64 bAttackRearSpans(U64 b){
+inline U64 bAttackRearSpans(U64 b) {
     return fillNorth(shiftEast(b) | shiftWest(b));
 }
 
@@ -738,29 +735,28 @@ inline U64 bAttackRearSpans(U64 b){
  * @param wpawns
  * @return
  */
-inline U64 wFrontSpans(U64 wpawns) {return shiftNorth(fillNorth(wpawns));}
+inline U64 wFrontSpans(U64 wpawns) { return shiftNorth(fillNorth(wpawns)); }
 
 /**
  * front span for black pawns
  * @param bpawns
  * @return
  */
-inline U64 bRearSpans (U64 bpawns) {return shiftNorth (fillNorth(bpawns));}
+inline U64 bRearSpans(U64 bpawns) { return shiftNorth(fillNorth(bpawns)); }
 
 /**
  * rear span for white pawns
  * @param wpawns
  * @return
  */
-inline U64 wRearSpans (U64 wpawns) {return shiftSouth (fillSouth(wpawns));}
+inline U64 wRearSpans(U64 wpawns) { return shiftSouth(fillSouth(wpawns)); }
 
 /**
  * rear span for black pawns
  * @param bpawns
  * @return
  */
-inline U64 bFrontSpans(U64 bpawns) {return shiftSouth(fillSouth(bpawns));}
-
+inline U64 bFrontSpans(U64 bpawns) { return shiftSouth(fillSouth(bpawns)); }
 
 
 /**
@@ -772,7 +768,7 @@ inline U64 bFrontSpans(U64 bpawns) {return shiftSouth(fillSouth(bpawns));}
 inline U64 wPassedPawns(U64 wpawns, U64 bpawns) {
     U64 allFrontSpans = bFrontSpans(bpawns);
     allFrontSpans |= shiftEast(allFrontSpans)
-                     |  shiftWest(allFrontSpans);
+                     | shiftWest(allFrontSpans);
     return wpawns & ~allFrontSpans;
 }
 
@@ -785,10 +781,9 @@ inline U64 wPassedPawns(U64 wpawns, U64 bpawns) {
 inline U64 bPassedPawns(U64 bpawns, U64 wpawns) {
     U64 allFrontSpans = wFrontSpans(wpawns);
     allFrontSpans |= shiftEast(allFrontSpans)
-                     |  shiftWest(allFrontSpans);
+                     | shiftWest(allFrontSpans);
     return bpawns & ~allFrontSpans;
 }
-
 
 
 /**
@@ -825,7 +820,7 @@ void bb_cleanUp();
 
 U64 randU64();
 
-double randDouble(double min=0, double max=1);
+double randDouble(double min = 0, double max = 1);
 
 /**
  * returns the zobrist hash key for a given piece on a given square.
@@ -846,7 +841,7 @@ inline U64 getHash(Piece piece, Square sq) {
  */
 inline U64 lookUpRookAttack(Square index, U64 occupied) {
     return ROOK_ATTACKS[index][(int) ((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
-    
+
 //    return generateRookAttack(index, occupied);
 }
 
@@ -869,7 +864,8 @@ inline U64 lookUpRookXRayAttack(Square index, U64 occupied, U64 opponent) {
  * @return
  */
 inline U64 lookUpBishopAttack(Square index, U64 occupied) {
-    return BISHOP_ATTACKS[index][(int) ((occupied & bishopMasks[index]) * bishopMagics[index] >> (bishopShifts[index]))];
+    return BISHOP_ATTACKS[index][(int) ((occupied & bishopMasks[index]) * bishopMagics[index]
+            >> (bishopShifts[index]))];
 //    return generateBishopAttack(index, occupied);
 }
 
@@ -938,12 +934,12 @@ inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) {
  * @return
  */
 inline int chebyshevDistance(Square sq1, Square sq2) {
-
+    
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
     Rank rI2 = rankIndex(sq2);
-
+    
     return chebyshevDistance(fI1, rI1, fI2, rI2);
 }
 
@@ -974,8 +970,6 @@ inline int manhattanDistance(Square sq1, Square sq2) {
     
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
-
-
 
 
 }

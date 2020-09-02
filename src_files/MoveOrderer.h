@@ -11,19 +11,19 @@
 #include "Board.h"
 
 class MoveOrderer {
-
+    
     private:
-        move::MoveList* moves;
-        int counter;
+        move::MoveList *moves;
+        int            counter;
     
     public:
         MoveOrderer();
         
         virtual ~MoveOrderer();
         
-        void setMovesPVSearch(move::MoveList* moves, move::Move hashMove, SearchData *sd, Board* board, Depth ply);
+        void setMovesPVSearch(move::MoveList *p_moves, move::Move hashMove, SearchData *sd, Board *board, Depth ply);
         
-        void setMovesQSearch(move::MoveList* moves, Board *b);
+        void setMovesQSearch(move::MoveList *p_moves, Board *b);
         
         bool hasNext();
         

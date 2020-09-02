@@ -17,13 +17,13 @@
 using namespace bb;
 using namespace move;
 
-    
-    constexpr U64 STATUS_INDEX_WHITE_QUEENSIDE_CASTLING     = 0;
-    constexpr U64 STATUS_INDEX_WHITE_KINGSIDE_CASTLING      = 1;
-    constexpr U64 STATUS_INDEX_BLACK_QUEENSIDE_CASTLING     = 2;
-    constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING      = 3;
-    
-    constexpr U64 ZOBRIST_WHITE_BLACK_SWAP                  = 1;
+
+constexpr U64 STATUS_INDEX_WHITE_QUEENSIDE_CASTLING = 0;
+constexpr U64 STATUS_INDEX_WHITE_KINGSIDE_CASTLING  = 1;
+constexpr U64 STATUS_INDEX_BLACK_QUEENSIDE_CASTLING = 2;
+constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING  = 3;
+
+constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
 
 
 /**
@@ -38,40 +38,40 @@ using namespace move;
  *   - information about the en-passant square
  *
  */
-struct BoardStatus{
+struct BoardStatus {
     public:
         
-        BoardStatus(const BoardStatus& a) :
+        BoardStatus(const BoardStatus &a) :
                 zobrist(a.zobrist),
                 enPassantTarget(a.enPassantTarget),
                 metaInformation(a.metaInformation),
                 fiftyMoveCounter(a.fiftyMoveCounter),
                 repetitionCounter(a.repetitionCounter),
                 moveCounter(a.moveCounter),
-                move(a.move){}
+                move(a.move) {}
         
         BoardStatus(
-                U64 zobrist,
-                U64 enPassantTarget,
-                U64 metaInformation,
-                U64 fiftyMoveCounter,
-                U64 repetitionCounter,
-                U64 moveCounter,
-                Move move) :
-                zobrist(zobrist),
-                enPassantTarget(enPassantTarget),
-                metaInformation(metaInformation),
-                fiftyMoveCounter(fiftyMoveCounter),
-                repetitionCounter(repetitionCounter),
-                moveCounter(moveCounter),
-                move(move) {}
+                U64 p_zobrist,
+                U64 p_enPassantTarget,
+                U64 p_metaInformation,
+                U64 p_fiftyMoveCounter,
+                U64 p_repetitionCounter,
+                U64 p_moveCounter,
+                Move p_move) :
+                zobrist(p_zobrist),
+                enPassantTarget(p_enPassantTarget),
+                metaInformation(p_metaInformation),
+                fiftyMoveCounter(p_fiftyMoveCounter),
+                repetitionCounter(p_repetitionCounter),
+                moveCounter(p_moveCounter),
+                move(p_move) {}
         
-        U64 zobrist;
-        U64 enPassantTarget;
-        U64 metaInformation;
-        U64 fiftyMoveCounter;
-        U64 repetitionCounter;
-        U64 moveCounter;
+        U64  zobrist;
+        U64  enPassantTarget;
+        U64  metaInformation;
+        U64  fiftyMoveCounter;
+        U64  repetitionCounter;
+        U64  moveCounter;
         Move move;
         
         bool operator==(const BoardStatus &rhs) const {
@@ -96,7 +96,8 @@ struct BoardStatus{
         }
         
         inline BoardStatus copy() {
-            BoardStatus b{zobrist, enPassantTarget, metaInformation, fiftyMoveCounter, repetitionCounter, moveCounter, move};
+            BoardStatus b{zobrist, enPassantTarget, metaInformation, fiftyMoveCounter, repetitionCounter, moveCounter,
+                          move};
             return b;
         }
 };
@@ -114,7 +115,7 @@ class Board {
         std::vector<BoardStatus> boardStatusHistory;
         
         void computeNewRepetition();
-        
+    
     public:
         Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         
@@ -164,7 +165,7 @@ class Board {
         
         U64 getLeastValuablePiece(U64 attadef, Score bySide, Piece &piece);
         
-        U64 getPinnedPieces(Color color, U64& pinners);
+        U64 getPinnedPieces(Color color, U64 &pinners);
         
         bool isUnderAttack(Square sq, Color attacker);
         
@@ -186,7 +187,7 @@ class Board {
         
         void setEnPassantSquare(Square square);
         
-        BoardStatus* getBoardStatus();
+        BoardStatus *getBoardStatus();
         
         U64 *getOccupied();
         
@@ -195,8 +196,8 @@ class Board {
         U64 getPieces(Color color, Piece piece);
         
         U64 *getTeamOccupied() const;
-        
-        
+    
+    
 };
 
 
