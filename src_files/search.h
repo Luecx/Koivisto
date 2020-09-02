@@ -53,7 +53,7 @@ void search_disable_inforStrings();
 
 
 Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager);
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, bool expectedCut, SearchData *sd, Move skipMove);
+Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, SearchData *sd, Move skipMove);
 Score  qSearch(Board *b, Score alpha, Score beta, Depth ply);
 
 

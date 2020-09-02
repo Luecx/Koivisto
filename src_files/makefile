@@ -1,9 +1,10 @@
 CC      = g++
-SRC     = *.cpp syzygy/*.c nn/*.cpp nn/data/*.cpp
+#SRC     = *.cpp syzygy/*.c nn/*.cpp nn/data/*.cpp
+SRC     = *.cpp syzygy/*.c
 LIBS    = -lpthread -lm
 EXE     = ../Koivisto
 
-WFLAGS = -std=c++17
+WFLAGS = -std=c++17 -Wall -Wextra -Wshadow
 CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 TFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native -fopenmp -DTUNE
