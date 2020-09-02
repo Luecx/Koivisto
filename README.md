@@ -9,4 +9,14 @@ Koivisto is an AB-engine for chess written in C++. The strength is estimated to 
 
 
 
+### Compiling
+
+```
+cd src_files
+make
+```
+
+A few compiler warnings about unused functions might pop up. Those functions are only from the syzygy code which have been copied from Fathom
+
+
 
