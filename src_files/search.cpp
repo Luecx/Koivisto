@@ -720,8 +720,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
             int history              = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
             lmr -= history / 256;
             if (sideToReduce == b->getActivePlayer()) lmr += 1;
-            if (lmr > depth - 2) lmr = depth - 2;
             if (lmr > MAX_PLY) lmr   = 0;
+            if (lmr > depth - 2) lmr = depth - 2;
         }
         
         if (legalMoves == 0) {
