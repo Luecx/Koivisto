@@ -34,6 +34,13 @@ void clearLoadedData();
  */
 double optimiseGD(Evaluator *evaluator, double K, double learningRate);
 
+/**
+ * does blackbox tuning on the given data. This is usually very inefficient.
+ * @param evaluator
+ * @param K
+ * @return
+ */
+double optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount);
 
 /**
  * uses the loaded data to optimise the evaluator

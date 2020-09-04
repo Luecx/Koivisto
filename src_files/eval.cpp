@@ -991,6 +991,23 @@ int Evaluator::paramCount() {
     return unusedVariable;
 }
 
+float *Evaluator::getPSQT(Piece piece, bool early) {
+    switch (piece) {
+        case PAWN:
+            return early ? psqt_pawn : psqt_pawn_endgame;
+        case KNIGHT:
+            return early ? psqt_knight : psqt_knight_endgame;
+        case BISHOP:
+            return early ? psqt_bishop : psqt_bishop_endgame;
+        case ROOK:
+            return early ? psqt_rook : psqt_rook_endgame;
+        case QUEEN:
+            return early ? psqt_queen : psqt_queen_endgame;
+        case KING:
+            return early ? psqt_king : psqt_king_endgame;
+    }
+}
+
 #ifdef TUNE_PST
 float *Evaluator::getTunablePST_MG() {
     return psqt_bishop;

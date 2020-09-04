@@ -423,6 +423,36 @@ double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     
 }
 
+double  tuning::optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount){
+    
+    
+    
+    for(int p = 0; p < paramCount; p++){
+        
+        
+        std::cout << "\r  param: " << p << std::flush;
+        
+        double er = computeError(evaluator, K);
+        
+        params[p] += 1;
+        double erUpper = computeError(evaluator, K);
+        
+        if(erUpper < er) continue;
+        
+        params[p] -= 2;
+        double erLower = computeError(evaluator, K);
+        
+        if(erLower < er) continue;
+        
+        params[p] += 1;
+        
+    }
+    std::cout << std::endl;
+    
+    return computeError(evaluator, K);
+}
+
+
 double tuning::optimiseAdaGrad(Evaluator *evaluator, double K, double learningRate, int iterations) {
     int paramCount = evaluator->paramCount();
     
@@ -613,6 +643,7 @@ void tuning::evalSpeed() {
     std::cout << ms << "ms for " << dataCount << " positions = " << (dataCount / ms) / 1e3 << "Mnps" << " Score = "
               << q_i << std::endl;
 }
+
 
 
 

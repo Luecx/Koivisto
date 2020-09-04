@@ -37,7 +37,9 @@ class Evaluator{
          * returns a list of late game parameters
          */
         float *getLateGameParams();
-    
+        
+        float *getPSQT(Piece piece, bool early);
+        
         /**
          * returns the amount of tunable parameters
          */
