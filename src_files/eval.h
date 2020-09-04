@@ -44,10 +44,10 @@ class Evaluator{
         int paramCount();
         
         #ifdef TUNE_PST
-        double* getTunablePST_MG();
-        double* getTunablePST_EG();
-        double* getTunablePST_MG_grad();
-        double* getTunablePST_EG_grad();
+        float* getTunablePST_MG();
+        float* getTunablePST_EG();
+        float* getTunablePST_MG_grad();
+        float* getTunablePST_EG_grad();
         #endif
     
 };
