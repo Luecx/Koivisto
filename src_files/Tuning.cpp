@@ -533,7 +533,7 @@ double tuning::optimisePST(Evaluator *evaluator, double K, double learningRate) 
         double      sigPrime        = sigmoidPrime(q_i, K);
         double      lossPrime       = - 2 * (expected - sig);
         
-        double*     features        = evaluator->getFeatures();
+        float*     features        = evaluator->getFeatures();
         double      phase           = evaluator->getPhase();
        
 
