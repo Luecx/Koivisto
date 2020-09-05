@@ -146,76 +146,9 @@ float psqt_king_endgame[] = {
 };
 
 
-int unusedVariable = 0;
-
-int INDEX_PAWN_VALUE                = unusedVariable++;
-int INDEX_PAWN_PSQT                 = unusedVariable++;
-int INDEX_PAWN_STRUCTURE            = unusedVariable++;
-int INDEX_PAWN_PASSED               = unusedVariable++;
-int INDEX_PAWN_ISOLATED             = unusedVariable++;
-int INDEX_PAWN_DOUBLED              = unusedVariable++;
-int INDEX_PAWN_DOUBLED_AND_ISOLATED = unusedVariable++;
-int INDEX_PAWN_BACKWARD             = unusedVariable++;
-int INDEX_PAWN_OPEN                 = unusedVariable++;
-
-int INDEX_KNIGHT_VALUE    = unusedVariable++;
-int INDEX_KNIGHT_PSQT     = unusedVariable++;
-int INDEX_KNIGHT_MOBILITY = unusedVariable++;
-int INDEX_KNIGHT_OUTPOST  = unusedVariable++;
-
-int INDEX_BISHOP_VALUE            = unusedVariable++;
-int INDEX_BISHOP_PSQT             = unusedVariable++;
-int INDEX_BISHOP_MOBILITY         = unusedVariable++;
-int INDEX_BISHOP_DOUBLED          = unusedVariable++;
-int INDEX_BISHOP_PAWN_SAME_SQUARE = unusedVariable++;
-int INDEX_BISHOP_FIANCHETTO       = unusedVariable++;
-
-int INDEX_ROOK_VALUE          = unusedVariable++;
-int INDEX_ROOK_PSQT           = unusedVariable++;
-int INDEX_ROOK_MOBILITY       = unusedVariable++;
-int INDEX_ROOK_OPEN_FILE      = unusedVariable++;
-int INDEX_ROOK_HALF_OPEN_FILE = unusedVariable++;
-int INDEX_ROOK_KING_LINE      = unusedVariable++;
-
-int INDEX_QUEEN_VALUE    = unusedVariable++;
-int INDEX_QUEEN_PSQT     = unusedVariable++;
-int INDEX_QUEEN_MOBILITY = unusedVariable++;
-
-int INDEX_KING_SAFETY         = unusedVariable++;
-int INDEX_KING_PSQT           = unusedVariable++;
-int INDEX_KING_CLOSE_OPPONENT = unusedVariable++;
-int INDEX_KING_PAWN_SHIELD    = unusedVariable++;
-
-int INDEX_KNIGHT_DISTANCE_ENEMY_KING = unusedVariable++;
-int INDEX_QUEEN_DISTANCE_ENEMY_KING  = unusedVariable++;
-
-int INDEX_PINNED_PAWN_BY_BISHOP   = unusedVariable++;
-int INDEX_PINNED_PAWN_BY_ROOK     = unusedVariable++;
-int INDEX_PINNED_PAWN_BY_QUEEN    = unusedVariable++;
-int INDEX_PINNED_KNIGHT_BY_BISHOP = unusedVariable++;
-int INDEX_PINNED_KNIGHT_BY_ROOK   = unusedVariable++;
-int INDEX_PINNED_KNIGHT_BY_QUEEN  = unusedVariable++;
-int INDEX_PINNED_BISHOP_BY_BISHOP = unusedVariable++;
-int INDEX_PINNED_BISHOP_BY_ROOK   = unusedVariable++;
-int INDEX_PINNED_BISHOP_BY_QUEEN  = unusedVariable++;
-int INDEX_PINNED_ROOK_BY_BISHOP   = unusedVariable++;
-int INDEX_PINNED_ROOK_BY_ROOK     = unusedVariable++;
-int INDEX_PINNED_ROOK_BY_QUEEN    = unusedVariable++;
-int INDEX_PINNED_QUEEN_BY_BISHOP  = unusedVariable++;
-int INDEX_PINNED_QUEEN_BY_ROOK    = unusedVariable++;
-int INDEX_PINNED_QUEEN_BY_QUEEN   = unusedVariable++;
-
-int INDEX_PAWN_HANGING   = unusedVariable++;
-int INDEX_KNIGHT_HANGING = unusedVariable++;
-int INDEX_BISHOP_HANGING = unusedVariable++;
-int INDEX_ROOK_HANGING   = unusedVariable++;
-int INDEX_QUEEN_HANGING  = unusedVariable++;
-
 /*
  * it is very important that unusuedVariable is a multiple of 4!!!
  */
-int SPACER1 = unusedVariable += unusedVariable % 4 == 0 ? 0 : (4 - unusedVariable % 4);
-
 
 #ifdef TUNE_PST
 float * tunablePST_MG_grad = new float[64]{};
@@ -244,6 +177,7 @@ float *_phaseValues = new float[6]{
    0,    1,     1,     2,     4,    0,
 };
 
+
 //TODO tweak values
 float _kingSafetyTable[100]{
         0, 0, 1, 2, 3, 5, 7, 9, 12, 15,
@@ -258,8 +192,6 @@ float _kingSafetyTable[100]{
         500, 500, 500, 500, 500, 500, 500, 500, 500, 500
 };
 
-
-float *_features = new float[unusedVariable];
 
 float _phase;
 
@@ -297,7 +229,7 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     
 }
 
-void computeHangingPieces(Board *b) {
+void Evaluator::computeHangingPieces(Board *b) {
     U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
     U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
     
@@ -310,7 +242,8 @@ void computeHangingPieces(Board *b) {
     
 }
 
-void computePinnedPieces(Board *b) {
+
+void Evaluator::computePinnedPieces(Board *b) {
     
     for (int i     = 0; i < 15; i++) {
         _features[INDEX_PINNED_PAWN_BY_BISHOP + i] = 0;

@@ -22,10 +22,14 @@
 #include "History.h"
 #include "TimeManager.h"
 
+extern int _threadCount;
+
 extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
+
+#define MAX_THREADS 128
 
 /**
  * used to store information about a search
@@ -52,9 +56,9 @@ void search_enable_infoStrings();
 void search_disable_inforStrings();
 
 
-Move bestMove(Board *b, Depth maxDepth, TimeManager* timeManager);
+Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId = 1);
 Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, SearchData *sd, Move skipMove);
-Score  qSearch(Board *b, Score alpha, Score beta, Depth ply);
+Score  qSearch(Board *b, Score alpha, Score beta, Depth ply, SearchData *sd);
 
 
 

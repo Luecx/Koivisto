@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <ostream>
+#include <mutex>
 
 #include "Bitboard.h"
 #include "Move.h"
@@ -62,7 +63,7 @@ struct Entry {
 
 
 class TranspositionTable {
-    
+
     private:
         NodeAge currentAge;
         Entry   *entries;
@@ -82,7 +83,7 @@ class TranspositionTable {
         ~TranspositionTable();
         
         
-        Entry *get(U64 zobrist);
+        Entry get(U64 zobrist);
         
         bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
         

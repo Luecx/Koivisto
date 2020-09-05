@@ -69,9 +69,9 @@ U64 perft(Board *b, int depth, bool print, bool d1, bool hash, int ply){
         }
         
         zob = b->zobrist();
-        Entry* en = tt->get(zob);
-        if (en != nullptr && en->depth == depth && en->zobrist == zob) [[unlikely]] {
-            return tt->get(zob)->move;
+        Entry en = tt->get(zob);
+        if (en.depth == depth && en.zobrist == zob){
+            return en.move;
         }
     }
     
