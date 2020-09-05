@@ -40,7 +40,7 @@ double optimiseGD(Evaluator *evaluator, double K, double learningRate);
  * @param K
  * @return
  */
-double optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount);
+double optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount, float lr);
 
 /**
  * uses the loaded data to optimise the evaluator
