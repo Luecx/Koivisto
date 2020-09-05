@@ -20,7 +20,11 @@
 #include <string>
 
 
+
 namespace bb {
+
+
+#define mirrorSquare(s) squareIndex(7-rankIndex(s), fileIndex(s))
 
 typedef uint64_t U64;
 typedef int8_t Square;
