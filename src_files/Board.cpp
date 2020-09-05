@@ -138,6 +138,34 @@ Board::Board(std::string fen) {
     
 }
 
+
+Board::Board(Board *board) {
+    pieces       = new U64[12]{0};
+    teamOccupied = new U64[2]{0};
+    occupied     = new U64();
+    pieceBoard   = new Piece[64];
+    
+    
+    teamOccupied[WHITE] = board->getTeamOccupied()[WHITE];
+    teamOccupied[BLACK] = board->getTeamOccupied()[BLACK];
+    
+    for(int n = 0; n < 12; n++){
+        pieces[n] = board->pieces[n];
+    }
+    
+    *occupied = *board->getOccupied();
+    activePlayer = board->getActivePlayer();
+    
+    for(int i = 0; i < 64; i++){
+        pieceBoard[i] = board->pieceBoard[i];
+    }
+    
+    for(int n = 0; n < board->boardStatusHistory.size(); n++){
+        boardStatusHistory.push_back(board->boardStatusHistory.at(n).copy());
+    }
+}
+
+
 Board::~Board() {
     delete Board::pieces;
     delete Board::pieceBoard;
