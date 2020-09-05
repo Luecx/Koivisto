@@ -119,6 +119,8 @@ class Board {
     public:
         Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         
+        Board(Board* board);
+        
         virtual ~Board();
         
         friend std::ostream &operator<<(std::ostream &os, Board &board);
