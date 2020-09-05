@@ -423,7 +423,7 @@ double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     
 }
 
-double  tuning::optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount){
+double  tuning::optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount, float lr){
     
     
     
@@ -434,17 +434,17 @@ double  tuning::optimiseBlackBox(Evaluator *evaluator, double K, float* params, 
         
         double er = computeError(evaluator, K);
         
-        params[p] += 1;
+        params[p] += lr;
         double erUpper = computeError(evaluator, K);
         
         if(erUpper < er) continue;
         
-        params[p] -= 2;
+        params[p] -= 2*lr;
         double erLower = computeError(evaluator, K);
         
         if(erLower < er) continue;
         
-        params[p] += 1;
+        params[p] += lr;
         
     }
     std::cout << std::endl;

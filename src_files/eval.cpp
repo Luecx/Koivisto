@@ -240,6 +240,9 @@ float *_pieceValuesLate = new float[unusedVariable]{
         -574.42114, -26.89514, 2.1228392, -2.6465628, -11.620555, -11.112517, -5.267952, 0, 0,
 };
 
+float *_phaseValues = new float[6]{
+   0,    1,     1,     2,     4,    0,
+};
 
 //TODO tweak values
 float _kingSafetyTable[100]{
@@ -398,16 +401,20 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64    k;
     
     _phase =
-            (24.0f
-             - 1 * bitCount(
-                    b->getPieces()[WHITE_BISHOP] |
-                    b->getPieces()[BLACK_BISHOP] |
+            (24.0f + _phaseValues[5]
+             - _phaseValues[0] * bitCount(
+                    b->getPieces()[WHITE_PAWN] |
+                    b->getPieces()[BLACK_PAWN])
+             - _phaseValues[1] * bitCount(
                     b->getPieces()[WHITE_KNIGHT] |
                     b->getPieces()[BLACK_KNIGHT])
-             - 2 * bitCount(
+             - _phaseValues[2] * bitCount(
+                    b->getPieces()[WHITE_BISHOP] |
+                    b->getPieces()[BLACK_BISHOP])
+             - _phaseValues[3] * bitCount(
                     b->getPieces()[WHITE_ROOK] |
                     b->getPieces()[BLACK_ROOK])
-             - 4 * bitCount(
+             - _phaseValues[4] * bitCount(
                     b->getPieces()[WHITE_QUEEN] |
                     b->getPieces()[BLACK_QUEEN])) / 24.0f;
     
@@ -1007,7 +1014,9 @@ float *Evaluator::getPSQT(Piece piece, bool early) {
             return early ? psqt_king : psqt_king_endgame;
     }
 }
-
+float *Evaluator::getPhaseValues(){
+    return _phaseValues;
+}
 #ifdef TUNE_PST
 float *Evaluator::getTunablePST_MG() {
     return psqt_bishop;

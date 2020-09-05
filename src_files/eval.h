@@ -44,6 +44,8 @@ class Evaluator{
          * returns the amount of tunable parameters
          */
         int paramCount();
+
+        float* getPhaseValues();
         
         #ifdef TUNE_PST
         float* getTunablePST_MG();
