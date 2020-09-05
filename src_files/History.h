@@ -5,6 +5,7 @@
 #ifndef KOIVISTO_HISTORY_H
 #define KOIVISTO_HISTORY_H
 
+#include "eval.h"
 #include "Move.h"
 #include "Bitboard.h"
 
@@ -12,6 +13,12 @@ using namespace bb;
 using namespace move;
 
 struct SearchData{
+
+    MoveList **moves;
+
+    Evaluator evaluator{};
+
+    int threadId;
 
     //history table (from-to)
     int history[2][64][64] = {0};
@@ -22,6 +29,8 @@ struct SearchData{
     Move killer [2][MAX_PLY] = {0};
 
     Score eval[2][MAX_PLY] = {0};
+
+    bool sideToReduce;
     
     void addHistoryScore(Move m, Depth depth, MoveList *mv, bool side);
 

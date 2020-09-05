@@ -62,7 +62,9 @@ void uci_uci() {
     std::cout << "id name Koivisto 64 " << YEAR << MONTH << DAY << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
+    std::cout << "option name Threads type spin default 1 min 1 max 128" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
+
     
     
     std::cout << "uciok" << std::endl;
@@ -90,7 +92,7 @@ void uci_endThread() {
 }
 
 void uci_searchAndPrint(Depth maxDepth, TimeManager *p_timeManager) {
-    Move m = bestMove(board, maxDepth, p_timeManager);
+    Move m = bestMove(board, maxDepth, p_timeManager, 1);
     std::cout << "bestmove " << toString(m) << std::endl;
     uci_endThread();
 }
@@ -288,6 +290,12 @@ void uci_set_option(std::string name, std::string value) {
          * only use TB if loading was successful
          */
         search_useTB(TB_LARGEST > 0);
+    }else if (name == "Threads"){
+        int count = stoi(value);
+        if (count<1) count = 1;
+        if (count>MAX_THREADS) count = MAX_THREADS;
+
+        _threadCount = count;
     }
     
 }
@@ -428,7 +436,7 @@ void uci_bench() {
         Board b(Benchmarks[i]);
         
         TimeManager manager;
-        bestMove(&b, 13, &manager);
+        bestMove(&b, 13, &manager, 1);
         SearchOverview overview = search_overview();
         
         nodes += overview.nodes;

@@ -6,8 +6,8 @@
 #include "History.h"
 #include "TimeManager.h"
 #include "syzygy/tbprobe.h"
+#include <thread>
 
-MoveList           **moves;
 TranspositionTable *table;
 
 
@@ -16,6 +16,7 @@ int         _nodes;
 int         _tbHits    = 0;
 int         _maxTime;
 int         _selDepth;
+int         _threadCount = 1;
 auto        _startTime = std::chrono::system_clock::now();
 bool        _forceStop = false;
 bool        _useTB     = false;
@@ -27,13 +28,14 @@ SearchOverview overview;
  * Lmr table
  */
 int       lmrReductions[256][256];
-Evaluator evaluator{};
 
 
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 22;
 int LMR_DIV          = 215;
+
+Depth search_depths[MAX_THREADS];
 
 void initLmr() {
     int d, m;
@@ -119,10 +121,6 @@ void search_setHashSize(int hashSize) {
  * called at the start of the program
  */
 void search_init(int hashSize) {
-    moves      = new MoveList *[MAX_INTERNAL_PLY];
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        moves[i] = new MoveList();
-    }
     table = new TranspositionTable(hashSize);
     initLmr();
 }
@@ -131,12 +129,6 @@ void search_init(int hashSize) {
  * called at the exit of the program
  */
 void search_cleanUp() {
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        delete moves[i];
-        moves[i] = nullptr;
-    }
-    delete moves;
-    moves = nullptr;
     delete table;
     table = nullptr;
 }
@@ -155,10 +147,11 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
     
     
     U64 zob = b->zobrist();
-    if (table->get(zob) != nullptr) {
+    Entry en = table->get(zob);
+    if (en.zobrist == zob) {
         
         //extract the move from the table
-        Move mov = table->get(zob)->move;
+        Move mov = en.move;
         
         //get a movelist which can be used to store all pseudo legal moves
         MoveList *mvStorage = new MoveList();
@@ -186,12 +179,14 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
         if (!b->isLegal(mov)) return;
         
         mvList->add(mov);
-        b->move(table->get(zob)->move);
+        b->move(en.move);
         
         
         extractPV(b, mvList, depth - 1);
         b->undoMove();
     }
+
+
 }
 
 /**
@@ -414,46 +409,68 @@ SearchOverview search_overview() {
  */
 
 
-bool sideToReduce;
+Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) {
+    
 
-Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager) {
-    
-    
-    Move dtzMove = getDTZMove(b);
-    if (dtzMove != 0) return dtzMove;
-//    exit(-1);
-    
-    _timeManager = timeManager;
-    _forceStop   = false;
-    _nodes       = 0;
-    _selDepth    = 0;
-    _tbHits      = 0;
-    table->incrementAge();
-//    table->clear();
-    
-    
+    if (threadId == 1){
+        Move dtzMove = getDTZMove(b);
+        if (dtzMove != 0) return dtzMove;
+        //    exit(-1);
+        
+        _timeManager = timeManager;
+        _forceStop   = false;
+        _nodes       = 0;
+        _selDepth    = 0;
+        _tbHits      = 0;
+        table->incrementAge();
+        //    table->clear();
+    }
+
     SearchData sd;
+    sd.threadId = threadId;
+
+    sd.moves = new MoveList *[MAX_INTERNAL_PLY];
+    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
+        sd.moves[i] = new MoveList();
+    }
+
+    if (threadId < _threadCount){
+        std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, threadId+1);
+        searchThread->detach();
+    }
     
+
     if (maxDepth > MAX_PLY) maxDepth = MAX_PLY;
     
     Depth d = 1;
     Score s = 0;
     for (d = 1; d <= maxDepth; d++) {
+        
         s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, &sd, 0);
         
         if (!isTimeLeft()) break;
     }
     
+    if (threadId == 1){
+        Move best = table->get(b->zobrist()).move;
+        
+        overview.nodes = _nodes;
+        overview.depth = d;
+        overview.score = s;
+        overview.time  = timeManager->elapsedTime();
+        overview.move  = best;
+
+        return best;
+    } 
     
-    Move best = table->get(b->zobrist())->move;
-    
-    overview.nodes = _nodes;
-    overview.depth = d;
-    overview.score = s;
-    overview.time  = timeManager->elapsedTime();
-    overview.move  = best;
-    
-    return best;
+    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
+        delete sd.moves[i];
+        sd.moves[i] = nullptr;
+    }
+    delete sd.moves;
+    sd.moves = nullptr;
+
+    return 0;
 }
 
 /**
@@ -491,7 +508,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         if (b->isInCheck(b->getActivePlayer())) {
             depth++;
         } else {
-            return qSearch(b, alpha, beta, ply);
+            return qSearch(b, alpha, beta, ply, sd);
         }
     }
     
@@ -499,7 +516,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
     U64   zobrist       = b->zobrist();
     bool  pv            = (beta - alpha) != 1;
     bool  inCheck       = b->isInCheck(b->getActivePlayer());
-    Score staticEval    = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score staticEval    = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     Score originalAlpha = alpha;
     Score highestScore  = -MAX_MATE_SCORE;
     Score score         = -MAX_MATE_SCORE;
@@ -512,33 +529,33 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
     /**************************************************************************************
      *                  T R A N S P O S I T I O N - T A B L E   P R O B E                 *
      **************************************************************************************/
-    Entry *en = table->get(zobrist);
-    if (en != nullptr && !skipMove) {
-        hashMove = en->move;
+    Entry en = table->get(zobrist);
+
+    if (en.zobrist == zobrist && !skipMove) {
+        hashMove = en.move;
         
         //adjusting eval
-        if ((en->type == PV_NODE) ||
-            (en->type == CUT_NODE && staticEval < en->score) ||
-            (en->type == ALL_NODE && staticEval > en->score)) {
+        if ((en.type == PV_NODE) ||
+            (en.type == CUT_NODE && staticEval < en.score) ||
+            (en.type == ALL_NODE && staticEval > en.score)) {
             
-            staticEval = en->score;
+            staticEval = en.score;
         }
         
-        if (!pv && en->depth >= depth) {
-            if (en->type == PV_NODE) {
-                return en->score;
-            } else if (en->type == CUT_NODE) {
-                if (en->score >= beta) {
+        if (!pv && en.depth >= depth) {
+            if (en.type == PV_NODE) {
+                return en.score;
+            } else if (en.type == CUT_NODE) {
+                if (en.score >= beta) {
                     return beta;
                 }
-            } else if (en->type == ALL_NODE) {
-                if (en->score <= alpha) {
+            } else if (en.type == ALL_NODE) {
+                if (en.score <= alpha) {
                     return alpha;
                 }
             }
         }
     }
-    
     
     /**************************************************************************************
      *                            T A B L E B A S E - P R O B E                           *
@@ -574,7 +591,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
          *                              R A Z O R I N G                                       *
          **************************************************************************************/
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply);
+            score = qSearch(b, alpha, beta, ply, sd);
             if (score < beta) return score;
         }
         /**************************************************************************************
@@ -608,8 +625,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
     if (depth >= 6 && pv && !hashMove && !skipMove) {
         pvSearch(b, alpha, beta, depth - 2, ply, sd, 0);
         en = table->get(zobrist);
-        if (en != nullptr) {
-            hashMove = en->move;
+        if (en.zobrist == zobrist) {
+            hashMove = en.move;
         }
     }
     
@@ -628,7 +645,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
     }
     
     
-    MoveList *mv = moves[ply];
+    MoveList *mv = sd->moves[ply];
     b->getPseudoLegalMoves(mv);
     
     
@@ -641,6 +658,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
     int quiets     = 0;
     
     
+
+    
+
     while (moveOrderer.hasNext()) {
         
         Move m = moveOrderer.next();
@@ -653,11 +673,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         bool isPromotion = move::isPromotion(m);
 //        bool isQueenPromotion = move::promotionPiece(m) % 6 == QUEEN && isPromotion;
         
-        
+
         
         if (ply == 0) {
-            sideToReduce = b->getActivePlayer();
-            if (legalMoves == 0) sideToReduce = !b->getActivePlayer();
+            sd->sideToReduce = b->getActivePlayer();
+            if (legalMoves == 0) sd->sideToReduce = !b->getActivePlayer();
         }
         
         if (!pv && ply > 0 && legalMoves >= 1) {
@@ -692,11 +712,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
             legalMoves == 0 &&
             sameMove(m, hashMove) &&
             ply > 0 &&
-            en != nullptr &&
-            abs(en->score) < MIN_MATE_SCORE &&
-            en->type == CUT_NODE &&
-            en->depth >= depth - 3) {
-            Score betaCut = en->score - SE_MARGIN_STATIC - depth * 2;
+            en.zobrist == zobrist &&
+            abs(en.score) < MIN_MATE_SCORE &&
+            en.type == CUT_NODE &&
+            en.depth >= depth - 3) {
+            Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, sd, m);
             if (score < betaCut)
                 extension++;
@@ -707,9 +727,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
             m = moveOrderer.next();
         }
         
-        
+
+
         b->move(m);
         
+
         //verify that givesCheck is correct
         //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
         
@@ -719,7 +741,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         if (lmr) {
             int history              = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
             lmr -= history / 256;
-            if (sideToReduce == b->getActivePlayer()) lmr += 1;
+            if (sd->sideToReduce == b->getActivePlayer()) lmr += 1;
             if (lmr > MAX_PLY) lmr   = 0;
             if (lmr > depth - 2) lmr = depth - 2;
         }
@@ -757,9 +779,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
             return beta;
         }
         
+
         if (score > alpha) {
-            
-            if (!skipMove && ply == 0 && isTimeLeft()) {
+            if (!skipMove && ply == 0 && isTimeLeft() && sd->threadId == 1) {
                 //we need to put the transposition in here so that printInfoString displays the correct pv
                 table->put(zobrist, score, bestMove, PV_NODE, depth);
                 printInfoString(b, depth, score);
@@ -804,7 +826,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
  * @param ply
  * @return
  */
-Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
+Score qSearch(Board *b, Score alpha, Score beta, Depth ply, SearchData *sd) {
     
     
     
@@ -817,24 +839,24 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
 //        return 0;
 //    }
     U64      zobrist    = b->zobrist();
-    Entry    *en        = table->get(b->zobrist());
+    Entry    en        = table->get(b->zobrist());
     NodeType ttNodeType = ALL_NODE;
-    if (en != nullptr) {
-        if (en->type == PV_NODE) {
-            return en->score;
-        } else if (en->type == CUT_NODE) {
-            if (en->score >= beta) {
+    if (en.zobrist == zobrist) {
+        if (en.type == PV_NODE) {
+            return en.score;
+        } else if (en.type == CUT_NODE) {
+            if (en.score >= beta) {
                 return beta;
             }
-        } else if (en->type == ALL_NODE) {
-            if (en->score <= alpha) {
+        } else if (en.type == ALL_NODE) {
+            if (en.score <= alpha) {
                 return alpha;
             }
         }
     }
     Score stand_pat = -MAX_MATE_SCORE + ply;
     if (!b->isInCheck(b->getActivePlayer())) {
-        stand_pat = evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        stand_pat = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     
     
@@ -854,7 +876,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
      *  moves that give check are not considered non-quiet in
      *  getNonQuietMoves() allthough they are not quiet.
      */
-    MoveList *mv = moves[ply];
+    MoveList *mv = sd->moves[ply];
     b->getNonQuietMoves(mv);
     
     MoveOrderer moveOrderer{};
@@ -875,7 +897,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply) {
         
         b->move(m);
         
-        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY);
+        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, sd);
         
         
         b->undoMove();

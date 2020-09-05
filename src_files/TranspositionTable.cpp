@@ -4,6 +4,7 @@
 
 #include "TranspositionTable.h"
 
+
 /**
  * inits the table to the given size.
  * Calculates the amount of entries that can fit.
@@ -103,17 +104,13 @@ ostream &operator<<(ostream &os, const TranspositionTable &map) {
  * @param zobrist
  * @return
  */
-Entry *TranspositionTable::get(U64 zobrist) {
+Entry TranspositionTable::get(U64 zobrist) {
     
     U64 index = zobrist & mask;
     
-    Entry *enP = &entries[index];
-    
-    if (enP->zobrist == zobrist) {
-        return enP;
-    }
-    
-    return nullptr;
+    Entry enP = entries[index];
+        
+    return enP;
 }
 
 /**
