@@ -529,7 +529,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         m_features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
         m_features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(
-                blackPawns & ((ONE << square) & WHITE_SQUARES ? WHITE_SQUARES : BLACK_SQUARES));
+                blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
         
         
         m_features[INDEX_BISHOP_FIANCHETTO] +=
@@ -566,7 +566,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         
         m_features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
         m_features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(
-                whitePawns & ((ONE << square) & WHITE_SQUARES ? WHITE_SQUARES : BLACK_SQUARES));
+                whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
         
         
         m_features[INDEX_BISHOP_FIANCHETTO] -=
