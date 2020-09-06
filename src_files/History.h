@@ -38,9 +38,9 @@ struct SearchData {
     
     bool isKiller(Move move, Depth ply, Color color);
     
-    void setHistoricEval(Score eval, Color color, Depth ply);
+    void setHistoricEval(Score ev, Color color, Depth ply);
     
-    bool isImproving(Score eval, Color color, Depth ply) const;
+    bool isImproving(Score ev, Color color, Depth ply) const;
     
     void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList *mv);
     

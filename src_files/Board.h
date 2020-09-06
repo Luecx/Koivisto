@@ -104,15 +104,15 @@ struct BoardStatus {
 
 class Board {
     private:
-        U64 *pieces;
-        U64 *teamOccupied;
-        U64 *occupied;
+        U64 *m_pieces;
+        U64 *m_teamOccupied;
+        U64 *m_occupied;
         
-        Piece *pieceBoard;
+        Piece *m_pieceBoard;
         
-        Color activePlayer;
+        Color m_activePlayer;
         
-        std::vector<BoardStatus> boardStatusHistory;
+        std::vector<BoardStatus> m_boardStatusHistory;
         
         void computeNewRepetition();
     
@@ -161,7 +161,7 @@ class Board {
         
         Score staticExchangeEvaluation(Move m);
         
-        U64 attacksTo(U64 occupied, Square sq);
+        U64 attacksTo(U64 occupancy, Square sq);
         
         U64 getAttackedSquares(Color attacker);
         
@@ -187,7 +187,7 @@ class Board {
         
         Square getEnPassantSquare();
         
-        void setEnPassantSquare(Square square);
+        void setEnPassantSquare(Square sq);
         
         BoardStatus *getBoardStatus();
         

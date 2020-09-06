@@ -20,18 +20,18 @@ class TimeManager {
 //        int blackInc;
 //        int movesToGo;
         
-        int timeToUse;
-        int upperTimeBound;
+        int m_timeToUse;
+        int m_upperTimeBound;
         
-        bool ignorePV;
-        bool isSafeToStop;
-        bool forceStop;
+        bool m_ignorePV;
+        bool m_isSafeToStop;
+        bool m_forceStop;
         
         
-        int historyCount;
-        Move* moveHistory;
-        Score* scoreHistory;
-        Depth *depthHistory;
+        int m_historyCount;
+        Move* m_moveHistory;
+        Score* m_scoreHistory;
+        Depth *m_depthHistory;
     
         /**
          * updates isSafeToStop

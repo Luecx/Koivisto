@@ -14,12 +14,12 @@ auto startTime = std::chrono::system_clock::now();
  * for exact timings
  */
 TimeManager::TimeManager(int moveTime) {
-    isSafeToStop = true;
-    ignorePV = true;
-    forceStop = false;
+    m_isSafeToStop = true;
+    m_ignorePV = true;
+    m_forceStop = false;
     
-    timeToUse = moveTime;
-    upperTimeBound = moveTime;
+    m_timeToUse = moveTime;
+    m_upperTimeBound = moveTime;
     startTime = std::chrono::system_clock::now();
 }
 
@@ -27,12 +27,12 @@ TimeManager::TimeManager(int moveTime) {
  * for depth, infinite search etc.
  */
 TimeManager::TimeManager() {
-    isSafeToStop = true;
-    ignorePV = true;
-    forceStop = false;
+    m_isSafeToStop = true;
+    m_ignorePV = true;
+    m_forceStop = false;
     
-    timeToUse = 1 << 30;
-    upperTimeBound = 1 << 30;
+    m_timeToUse = 1 << 30;
+    m_upperTimeBound = 1 << 30;
     
     startTime = std::chrono::system_clock::now();
 }
@@ -47,13 +47,13 @@ TimeManager::TimeManager() {
  * @param board
  */
 TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board){
-    moveHistory = new Move[256];
-    scoreHistory = new Score[256];
-    depthHistory = new Depth[256];
-    historyCount = 0;
-    isSafeToStop = true;
-    ignorePV = false;
-    forceStop = false;
+    m_moveHistory = new Move[256];
+    m_scoreHistory = new Score[256];
+    m_depthHistory = new Depth[256];
+    m_historyCount = 0;
+    m_isSafeToStop = true;
+    m_ignorePV = false;
+    m_forceStop = false;
     
     
     double _phase =
@@ -73,7 +73,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     double division = movesToGo - 30 + 50 * _phase;
     division = 40;
     
-    timeToUse = board->getActivePlayer() == WHITE ?
+    m_timeToUse = board->getActivePlayer() == WHITE ?
             (int(white/division) + whiteInc)-10 :
             (int(black/division) + blackInc)-10;
     
@@ -81,14 +81,14 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     int difference = board->getActivePlayer() == WHITE ? (white-black) : (black-white);
     difference = 0;
     
-    timeToUse += int(difference / division);
-    upperTimeBound = timeToUse * 3;
+    m_timeToUse += int(difference / division);
+    m_upperTimeBound = m_timeToUse * 3;
     
-    if(upperTimeBound > (board->getActivePlayer() == WHITE ? white/10:black/10)){
-        upperTimeBound = (board->getActivePlayer() == WHITE ? white/10:black/10);
+    if(m_upperTimeBound > (board->getActivePlayer() == WHITE ? white/10:black/10)){
+        m_upperTimeBound = (board->getActivePlayer() == WHITE ? white/10:black/10);
     }
     
-    if(timeToUse > upperTimeBound) timeToUse = upperTimeBound / 3;
+    if(m_timeToUse > m_upperTimeBound) m_timeToUse = m_upperTimeBound / 3;
     
     
     
@@ -110,33 +110,33 @@ int TimeManager::elapsedTime(){
 
 TimeManager::~TimeManager() {
     
-    if(ignorePV) return;
+    if(m_ignorePV) return;
     
-    delete moveHistory;
-    delete scoreHistory;
-    delete depthHistory;
+    delete m_moveHistory;
+    delete m_scoreHistory;
+    delete m_depthHistory;
 }
 
 void TimeManager::updatePV(Move move, Score score, Depth depth) {
     
     //dont keep track of pv changes if timing doesnt matter
-    if(ignorePV) return;
+    if(m_ignorePV) return;
     
     //store the move,score,depth in the arrays
-    moveHistory[historyCount] = move;
-    scoreHistory[historyCount] = score;
-    depthHistory[historyCount] = depth;
+    m_moveHistory[m_historyCount] = move;
+    m_scoreHistory[m_historyCount] = score;
+    m_depthHistory[m_historyCount] = depth;
     
     //compute the safety to stop the search
-    if(historyCount > 0)
+    if(m_historyCount > 0)
         computeSafetyToStop();
     
-    historyCount ++;
+    m_historyCount ++;
     
 }
 
 void TimeManager::stopSearch() {
-    forceStop = true;
+    m_forceStop = true;
 }
 
 bool TimeManager::isTimeLeft() {
@@ -149,16 +149,16 @@ bool TimeManager::isTimeLeft() {
 //    std::cout << elapsed << " | " << forceStop << " | " << isSafeToStop << " | " << timeToUse << " | "<< upperTimeBound << " | " <<std::endl;
     
     //stop the search if requested and its safe
-    if(forceStop && isSafeToStop) return false;
+    if(m_forceStop && m_isSafeToStop) return false;
     
     //if we have safe time left, continue searching
-    if(elapsed < timeToUse) return true;
+    if(elapsed < m_timeToUse) return true;
     
     //if we are above the maximum allowed time, stop
-    if(elapsed >= upperTimeBound) return false;
+    if(elapsed >= m_upperTimeBound) return false;
     
     //dont stop the search if its not safe
-    if(!isSafeToStop) return true;
+    if(!m_isSafeToStop) return true;
     
     return false;
     
@@ -166,17 +166,17 @@ bool TimeManager::isTimeLeft() {
 
 void TimeManager::computeSafetyToStop() {
     //check if the pv didnt change but the score dropped heavily
-    if(moveHistory[historyCount] == moveHistory[historyCount-1] && scoreHistory[historyCount] < scoreHistory[historyCount-1]-60){
-        isSafeToStop = false;
+    if(m_moveHistory[m_historyCount] == m_moveHistory[m_historyCount-1] && m_scoreHistory[m_historyCount] < m_scoreHistory[m_historyCount-1]-60){
+        m_isSafeToStop = false;
         return;
     }
     
     //if the pv changed multiple times during this iteration, search deeper.
-    Depth depth = depthHistory[historyCount];
-    int index = historyCount-1;
+    Depth depth = m_depthHistory[m_historyCount];
+    int index = m_historyCount-1;
     int changes = 0;
     while(index >= 0){
-        if(depthHistory[index] != depth) break;
+        if(m_depthHistory[index] != depth) break;
         
         changes ++;
         
@@ -184,9 +184,9 @@ void TimeManager::computeSafetyToStop() {
     }
     
     if(changes >= 1){
-        isSafeToStop = false;
+        m_isSafeToStop = false;
     }else{
-        isSafeToStop = true;
+        m_isSafeToStop = true;
     }
     
 }

@@ -79,9 +79,9 @@ static int SPACER1 = unusedVariable += unusedVariable % 4 == 0 ? 0 : (4 - unused
 class Evaluator{
     public:
         
-        float *_features = new float[unusedVariable];
+        float *m_features = new float[unusedVariable];
 
-        float _phase;
+        float m_phase;
 
         void computePinnedPieces(Board *b);
 
