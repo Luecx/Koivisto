@@ -9,8 +9,9 @@ Koivisto is an AB-engine for chess written in C++ by Kim Kahre and Finn Eggers. 
 ### Acknowledgements
 - [Eugenio Bruno](https://github.com/Eugenio-Bruno)
 - [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page)
-- [Ethereal](https://github.com/AndyGrant/Ethereal)
+- [Andrew Grant](https://github.com/AndyGrant/Ethereal)
 - [Fathom](https://github.com/jdart1/Fathom)
+- [Mk-Chan](https://github.com/Mk-Chan)
 
 ### Compiling
 
