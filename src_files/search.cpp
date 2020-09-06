@@ -179,22 +179,20 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
         Move mov = en.move;
         
         //get a movelist which can be used to store all pseudo legal moves
-        MoveList *mvStorage = new MoveList();
+        MoveList mvStorage;
         //extract pseudo legal moves
-        b->getPseudoLegalMoves(mvStorage);
+        b->getPseudoLegalMoves(&mvStorage);
         
         bool     moveContained = false;
         //check if the move is actually valid for the position
-        for (int i             = 0; i < mvStorage->getSize(); i++) {
+        for (int i             = 0; i < mvStorage.getSize(); i++) {
             
-            Move stor = mvStorage->getMove(i);
+            Move stor = mvStorage.getMove(i);
             
             if (sameMove(stor, mov)) {
                 moveContained = true;
             }
         }
-        
-        delete mvStorage;
         
         
         //return if the move doesnt exist for this board

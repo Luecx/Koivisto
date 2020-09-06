@@ -189,18 +189,12 @@ std::string move::toString(Move move) {
  * destructor for the move-list.
  */
 MoveList::~MoveList() {
-    delete moves;
-    delete scores;
 }
 
 /**
  * constructor for the move-list.
- * Initiated to 256 entries.
- * maximum moves per position is 220 or something like that so 256 should be enough.
  */
 MoveList::MoveList() {
-    moves  = new Move[256];
-    scores = new MoveScore[256];
 }
 
 /**

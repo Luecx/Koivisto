@@ -156,8 +156,9 @@ void printMoveBits(Move move, bool bitInfo = true);
 class MoveList {
     
     private:
-        move::Move      *moves;
-        move::MoveScore *scores;
+        // Maximum moves per position is 220 or something like that so 256 should be enough.
+        move::Move      moves[256];
+        move::MoveScore scores[256];
         int             size;
     
     public:
