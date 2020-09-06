@@ -1,4 +1,4 @@
-# Koivisto UCI 1.0
+# Koivisto UCI
 
 Koivisto is an AB-engine for chess written in C++ by Kim Kåhre and Finn Eggers. The strength is estimated to be around 2860 CCRL on a single core.
 
