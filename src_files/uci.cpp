@@ -68,7 +68,7 @@ void uci_uci() {
     std::cout << "uciok" << std::endl;
 }
 
-std::string uci_getValue(std::vector<std::string> &vec, std::string key) {
+std::string uci_getValue(std::vector<std::string> &vec, const std::string &key) {
     int              index = 0;
     for (std::string s:vec) {
         if (s == key) {
@@ -272,7 +272,7 @@ void uci_stop() {
     search_stop();
 }
 
-void uci_set_option(std::string name, std::string value) {
+void uci_set_option(const std::string &name, const std::string &value) {
     if (name == "Hash") {
         search_setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
@@ -399,7 +399,7 @@ void uci_position_fen(std::string fen, std::string moves) {
     
 }
 
-void uci_position_startpos(std::string moves) {
+void uci_position_startpos(const std::string &moves) {
     uci_position_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves);
 }
 

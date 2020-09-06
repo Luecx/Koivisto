@@ -14,7 +14,7 @@ using namespace bb;
 
 
 
-TrainEntry* generateTrainEntry(std::string fen) {
+TrainEntry* generateTrainEntry(const std::string &fen) {
     
     std::vector<std::string> splitFenAndEval{};
     splitString(fen, splitFenAndEval, ';');

@@ -28,7 +28,7 @@ struct TrainEntry{
  * @param fen
  * @return
  */
-TrainEntry * generateTrainEntry(std::string fen);
+TrainEntry * generateTrainEntry(const std::string &fen);
 
 /**
  * generates a vector of compact train entries from a file

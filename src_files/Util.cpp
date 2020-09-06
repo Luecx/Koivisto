@@ -66,7 +66,7 @@ std::vector<std::string> &splitString(const std::string &txt, std::vector<std::s
 }
 
 
-std::string loadingBar(int count, int max, std::string msg) {
+std::string loadingBar(int count, int max, const std::string &msg) {
     std::stringstream ss{};
     double            p = count / (double) max;
     

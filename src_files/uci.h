@@ -35,7 +35,7 @@ void uci_go_mate(int depth);
 
 void uci_stop();
 
-void uci_set_option(std::string name, std::string value);
+void uci_set_option(const std::string &name, const std::string &value);
 
 void uci_isReady();
 
@@ -44,7 +44,7 @@ void uci_debug(bool mode);
 void uci_uci();
 
 void uci_position_fen(std::string fen, std::string moves);
-void uci_position_startpos(std::string moves);
+void uci_position_startpos(const std::string &moves);
 
 void uci_bench();
 
