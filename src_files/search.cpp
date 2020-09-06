@@ -436,7 +436,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     
     
     
-    //if the main thread call this function, we need to generate the search data for all the threads first
+    //if the main thread calls this function, we need to generate the search data for all the threads first
     if (threadId == 0) {
         
         //if there is a dtz move available, do not start any threads or search at all. just do the dtz move
@@ -479,7 +479,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     //start the basic search on all threads
     Depth d = 1;
     Score s = 0;
-    for (d = 1+threadId; d <= maxDepth; d++) {
+    for (d = 1; d <= maxDepth; d++) {
         
         //call the pvs framework
         s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
