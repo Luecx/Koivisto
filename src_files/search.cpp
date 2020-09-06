@@ -12,15 +12,9 @@ TranspositionTable *table;
 
 
 TimeManager *_timeManager;
-int         _nodes;
-int         _tbHits    = 0;
-int         _maxTime;
-int         _selDepth;
 int         _threadCount = 1;
-auto        _startTime = std::chrono::system_clock::now();
-bool        _forceStop = false;
-bool        _useTB     = false;
-bool        _printInfo = true;
+bool        _useTB       = false;
+bool        _printInfo   = true;
 
 SearchOverview overview;
 
@@ -29,6 +23,7 @@ SearchOverview overview;
  */
 int       lmrReductions[256][256];
 
+SearchData **sds = new SearchData*[MAX_THREADS];
 
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
@@ -58,6 +53,29 @@ int lmp[2][11] = {
  */
 
 
+int totalNodes(){
+    int tn = 0;
+    for (int i = 0; i < _threadCount; i++){
+        tn += sds[i]->_nodes;
+    }
+    return tn;
+} 
+
+int selDepth(){
+    int maxSd = 0;
+    for (int i = 0; i < _threadCount; i++){
+        maxSd = sds[i]->_selDepth>maxSd?sds[i]->_selDepth:maxSd;
+    }
+    return maxSd;
+} 
+
+int tbHits(){
+    int th = 0;
+    for (int i = 0; i < _threadCount; i++){
+        th += sds[i]->_tbHits;
+    }
+    return th;
+} 
 
 void search_enable_infoStrings() {
     _printInfo = true;
@@ -205,11 +223,13 @@ void printInfoString(Board *b, Depth d, Score score) {
     
     if (!_printInfo) return;
     
+    int _nodes = totalNodes();
+
     int nps = (int) (_nodes) / (int) (_timeManager->elapsedTime() + 1) * 1000;
     
     std::cout << "info" <<
               " depth " << (int) d <<
-              " seldepth " << (int) _selDepth;
+              " seldepth " << (int) selDepth();
     
     if (abs(score) > MIN_MATE_SCORE) {
         std::cout << " score mate " << (MAX_MATE_SCORE - abs(score) + 1) / 2 * (score > 0 ? 1 : -1);
@@ -217,8 +237,8 @@ void printInfoString(Board *b, Depth d, Score score) {
         std::cout << " score cp " << score;
     }
     
-    if (_tbHits != 0) {
-        std::cout << " tbhits " << _tbHits;
+    if (tbHits() != 0) {
+        std::cout << " tbhits " << tbHits();
     }
     
     
@@ -231,7 +251,7 @@ void printInfoString(Board *b, Depth d, Score score) {
     
     MoveList *em = new MoveList();
     em->clear();
-    extractPV(b, em, _selDepth);
+    extractPV(b, em, selDepth());
     std::cout << " pv";
     for (int i = 0; i < em->getSize(); i++) {
         std::cout << " " << toString(em->getMove(i));
@@ -353,13 +373,13 @@ Move getDTZMove(Board *board) {
                 
                 std::cout << "info"
                              " depth " << (int) dtz <<
-                          " seldepth " << (int) _selDepth;
+                          " seldepth " << (int) selDepth();
                 
                 
                 std::cout << " score cp " << s;
                 
                 
-                if (_tbHits != 0) {
+                if (tbHits() != 0) {
                     std::cout << " tbhits " << 1;
                 }
                 
@@ -418,10 +438,6 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         //    exit(-1);
         
         _timeManager = timeManager;
-        _forceStop   = false;
-        _nodes       = 0;
-        _selDepth    = 0;
-        _tbHits      = 0;
         table->incrementAge();
         //    table->clear();
     }
@@ -429,16 +445,17 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     SearchData sd;
     sd.threadId = threadId;
 
-    sd.moves = new MoveList *[MAX_INTERNAL_PLY];
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        sd.moves[i] = new MoveList();
-    }
+    sds[threadId-1] = &sd;
 
     if (threadId < _threadCount){
         std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, threadId+1);
         searchThread->detach();
     }
     
+    sd.moves = new MoveList *[MAX_INTERNAL_PLY];
+    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
+        sd.moves[i] = new MoveList();
+    }
 
     if (maxDepth > MAX_PLY) maxDepth = MAX_PLY;
     
@@ -454,7 +471,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     if (threadId == 1){
         Move best = table->get(b->zobrist()).move;
         
-        overview.nodes = _nodes;
+        overview.nodes = totalNodes();
         overview.depth = d;
         overview.score = s;
         overview.time  = timeManager->elapsedTime();
@@ -485,7 +502,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
 Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, SearchData *sd, Move skipMove) {
     
     
-    _nodes++;
+    sd->_nodes++;
     
     if (!isTimeLeft()) {
         return beta;
@@ -495,8 +512,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         return 0;
     }
     
-    if (ply > _selDepth) {
-        _selDepth = ply;
+    if (ply > sd->_selDepth) {
+        sd->_selDepth = ply;
     }
     
     
@@ -568,7 +585,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         //MAX_MATE_SCORE is used for no result
         if (res != MAX_MATE_SCORE) {
             
-            _tbHits++;
+            sd->_tbHits++;
             //indicates a winning or losing position
             if (abs(res) > 2) {
                 //take the winning positions closest to the root
@@ -831,7 +848,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, SearchData *sd) {
     
     
     //shall we count qSearch nodes?
-    _nodes++;
+    sd->_nodes++;
     
     if (b->isDraw()) return 0;
 

@@ -14,6 +14,12 @@ using namespace move;
 
 struct SearchData{
 
+    int         _nodes = 0;
+    
+    int         _tbHits      = 0;
+    
+    int         _selDepth = 0;
+
     MoveList **moves;
 
     Evaluator evaluator{};
