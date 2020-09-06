@@ -11,7 +11,7 @@
 #define pst_index_black(s) s
 
 
-float *psqt_pawn_endgame = new float[64]{
+float psqt_pawn_endgame[64] = {
         0,     0,     0,     0,     0,     0,     0,     0,
         12,    -1,     3,     6,     9,    -3,   -11,    -1,
         2,     2,    -6,    -3,    -4,    -4,    -8,    -5,
@@ -22,7 +22,7 @@ float *psqt_pawn_endgame = new float[64]{
         0,     0,     0,     0,     0,     0,     0,     0,
 };
 
-float *psqt_pawn = new float[64]{
+float psqt_pawn[64] = {
         0,     0,     0,     0,     0,     0,     0,     0,
         -21,    38,    39,    -2,   -13,   -30,    -7,   -20,
         -12,    11,     7,     8,    -7,    -9,   -29,   -23,
@@ -33,8 +33,7 @@ float *psqt_pawn = new float[64]{
         0,     0,     0,     0,     0,     0,     0,     0,
 };
 
-
-float *psqt_knight         = new float[64]{
+float psqt_knight[64] = {
         -243,   -75,   -77,   -67,    -7,  -190,   -72,  -134,
         -196,  -173,   115,   -21,   -30,    29,   -39,  -131,
         -141,    52,   -19,    52,    96,   154,    60,     5,
@@ -44,7 +43,8 @@ float *psqt_knight         = new float[64]{
         -37,   -79,   -28,    40,    39,    37,   -10,   -15,
         -124,     0,   -89,   -28,    27,   -37,     4,   -47,
 };
-float *psqt_knight_endgame = new float[64]{
+
+float psqt_knight_endgame[64] = {
         -63,   -58,    -5,   -36,   -26,   -25,   -85,  -132,
         -1,    23,   -52,     8,    -2,   -33,   -19,   -43,
         -17,   -28,    17,     0,   -19,   -26,   -34,   -54,
@@ -55,7 +55,7 @@ float *psqt_knight_endgame = new float[64]{
         -17,   -42,   -13,    -1,   -32,   -10,   -49,   -70,
 };
 
-float *psqt_bishop = new float[64]{
+float psqt_bishop[64] = {
         -233,  -118,  -254,  -158,   -98,  -175,   -36,   -71,
         -332,  -132,  -210,  -219,   -27,   100,   -51,  -401,
         -214,   -93,    33,   -43,   -43,    71,    50,  -148,
@@ -66,7 +66,7 @@ float *psqt_bishop = new float[64]{
         -180,    10,   -86,  -116,  -107,   -59,  -150,  -198,
 };
 
-float *psqt_bishop_endgame = new float[64]{
+float psqt_bishop_endgame[64] = {
         -62,   -25,   -52,   -28,   -21,   -30,    -7,   -49,
         3,   -15,     6,   -44,     2,     0,   -17,   -21,
         11,    12,   -23,   -18,   -14,    11,     4,    17,
@@ -77,8 +77,7 @@ float *psqt_bishop_endgame = new float[64]{
         2,    27,    27,    44,    43,     7,    41,    11,
 };
 
-
-float *psqt_rook = new float[64]{
+float psqt_rook[64] = {
         -5,     4,   -17,     9,     5,    -3,    -3,    -8,
         -16,    -6,    19,    18,    29,    28,    -9,    -1,
         -13,     7,     1,     6,   -10,    13,    26,     6,
@@ -89,7 +88,7 @@ float *psqt_rook = new float[64]{
         -10,    -5,     4,    12,    12,     9,   -21,     9,
 };
 
-float *psqt_rook_endgame = new float[64]{
+float psqt_rook_endgame[64] = {
         20,    14,    24,    17,    25,    21,    21,    15,
         29,    29,    24,    25,    11,    20,    30,    20,
         15,    16,    15,    21,    16,    13,     9,     2,
@@ -100,7 +99,7 @@ float *psqt_rook_endgame = new float[64]{
         1,     8,     4,     0,    -3,    -2,     6,   -25,
 };
 
-float *psqt_queen = new float[64]{
+float psqt_queen[64] = {
         -5,     4,   -17,     9,     5,    -3,    -3,    -8,
         -16,    -6,    19,    18,    29,    28,    -9,    -1,
         -13,     7,     1,     6,   -10,    13,    26,     6,
@@ -111,7 +110,7 @@ float *psqt_queen = new float[64]{
         -10,    -5,     4,    12,    12,     9,   -21,     9,
 };
 
-float *psqt_queen_endgame = new float[64]{
+float psqt_queen_endgame[64] = {
         20,    14,    24,    17,    25,    21,    21,    15,
         29,    29,    24,    25,    11,    20,    30,    20,
         15,    16,    15,    21,    16,    13,     9,     2,
@@ -123,8 +122,7 @@ float *psqt_queen_endgame = new float[64]{
     
 };
 
-
-float psqt_king[]         = {
+float psqt_king[64] = {
         -46,    -8,    -3,   -42,   -43,   -15,   -12,    -3,
         -3,   -14,    -1,   -22,   -23,     0,    -1,   -10,
         9,     0,    -7,   -39,   -32,    -9,     0,   -17,
@@ -134,7 +132,8 @@ float psqt_king[]         = {
         26,    28,    -9,   -23,   -22,   -12,    21,    18,
         28,    30,     1,     5,     5,     1,    32,    33,
 };
-float psqt_king_endgame[] = {
+
+float psqt_king_endgame[64] = {
         -59,   -13,     7,   -22,   -11,   -16,   -17,   -68,
         -8,    10,    30,    29,    28,    30,    19,    -20,
         -10,    30,    51,    33,    27,    50,    30,   -11,
@@ -173,13 +172,13 @@ float *_pieceValuesLate = new float[unusedVariable]{
         -574.42114, -26.89514, 2.1228392, -2.6465628, -11.620555, -11.112517, -5.267952, 0, 0,
 };
 
-float *_phaseValues = new float[6]{
+float _phaseValues[6] = {
    0,    1,     1,     2,     4,    0,
 };
 
 
 //TODO tweak values
-float _kingSafetyTable[100]{
+float _kingSafetyTable[100] = {
         0, 0, 1, 2, 3, 5, 7, 9, 12, 15,
         18, 22, 26, 30, 35, 39, 44, 50, 56, 62,
         68, 75, 82, 85, 89, 97, 105, 113, 122, 131,
