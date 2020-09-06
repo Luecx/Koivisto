@@ -211,7 +211,7 @@ void uci_go_perft(int depth, bool hash) {
     auto nodes = perft(board, depth, true, true, hash);
     auto time  = stopMeasure();
     
-    std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000;
+    std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000 << std::endl;
     
     perft_cleanUp();
 }
