@@ -225,7 +225,7 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             Board *b = boards[i];
             
             //calculate the phase
-            double _phase =
+            double phase =
                            (18 - bitCount(
                                    b->getPieces()[WHITE_BISHOP] |
                                    b->getPieces()[BLACK_BISHOP] |
@@ -240,14 +240,14 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             
             Color winner      = results[i] > 0.5 ? WHITE : BLACK;
             int   whiteFactor = winner == WHITE ? 1 : -1;
-//            double earlyChange = _phase < 0.3 ? 1:0;
-//            double lateChange = _phase > 0.8 ? 1:0;
+//            double earlyChange = phase < 0.3 ? 1:0;
+//            double lateChange = phase > 0.8 ? 1:0;
             
-            double earlyChange = 1 - _phase;
-            double lateChange  = _phase;
+            double earlyChange = 1 - phase;
+            double lateChange  = phase;
 
 //            std::cout << *b << std::endl;
-//            std::cout << _phase << std::endl;
+//            std::cout << phase << std::endl;
             
             addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
             addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
@@ -308,7 +308,7 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             Board *b = boards[i];
             
             //calculate the phase
-            double _phase =
+            double phase =
                            (18 - bitCount(
                                    b->getPieces()[WHITE_BISHOP] |
                                    b->getPieces()[BLACK_BISHOP] |
@@ -323,14 +323,14 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             
             Color winner      = results[i] > 0.5 ? WHITE : BLACK;
             int   whiteFactor = winner == WHITE ? 1 : -1;
-//            double earlyChange = _phase < 0.3 ? 1:0;
-//            double lateChange = _phase > 0.8 ? 1:0;
+//            double earlyChange = phase < 0.3 ? 1:0;
+//            double lateChange = phase > 0.8 ? 1:0;
             
-            double earlyChange = 1 - _phase;
-            double lateChange  = _phase;
+            double earlyChange = 1 - phase;
+            double lateChange  = phase;
 
 //            std::cout << *b << std::endl;
-//            std::cout << _phase << std::endl;
+//            std::cout << phase << std::endl;
             
             addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
             addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);

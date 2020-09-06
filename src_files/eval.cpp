@@ -192,8 +192,6 @@ float kingSafetyTable[100] = {
 };
 
 
-float _phase;
-
 /**
  * adds the factor to value of attacks if the piece attacks the kingzone
  * @param attacks
@@ -522,8 +520,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_white(square)] += pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
-        tunablePST_EG_grad[pst_index_white(square)] += pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
+        tunablePST_MG_grad[pst_index_white(square)] += pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-m_phase) / 100;
+        tunablePST_EG_grad[pst_index_white(square)] += pieceValuesLate [INDEX_BISHOP_PSQT] * m_phase     / 100;
 #endif
         
         m_features[INDEX_BISHOP_PSQT] += psqt_bishop[pst_index_white(square)] * earlyPSTScalar;
@@ -559,8 +557,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_black(square)] -= pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
-        tunablePST_EG_grad[pst_index_black(square)] -= pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
+        tunablePST_MG_grad[pst_index_black(square)] -= pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-m_phase) / 100;
+        tunablePST_EG_grad[pst_index_black(square)] -= pieceValuesLate [INDEX_BISHOP_PSQT] * m_phase     / 100;
 #endif
         
         m_features[INDEX_BISHOP_PSQT] -= psqt_bishop[pst_index_black(square)] * earlyPSTScalar;

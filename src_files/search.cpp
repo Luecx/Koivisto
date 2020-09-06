@@ -13,8 +13,8 @@ TranspositionTable *table;
 
 TimeManager *_timeManager;
 int         threadCount = 1;
-bool        _useTB       = false;
-bool        _printInfo   = true;
+bool        useTB       = false;
+bool        printInfo   = true;
 
 SearchOverview overview;
 
@@ -75,11 +75,11 @@ int tbHits() {
 }
 
 void search_enable_infoStrings() {
-    _printInfo = true;
+    printInfo = true;
 }
 
 void search_disable_inforStrings() {
-    _printInfo = false;
+    printInfo = false;
 }
 
 
@@ -92,7 +92,7 @@ void search_clearHash() {
  * enables/disables tb probing during search
  */
 void search_useTB(bool val) {
-    _useTB = val;
+    useTB = val;
 }
 
 
@@ -226,7 +226,7 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
 void printInfoString(Board *b, Depth d, Score score) {
     
     
-    if (!_printInfo) return;
+    if (!printInfo) return;
     
     int _nodes = totalNodes();
     
@@ -602,7 +602,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
      *                            T A B L E B A S E - P R O B E                           *
      **************************************************************************************/
     //search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
-    if (_useTB && ply > 0) {
+    if (useTB && ply > 0) {
         Score res = getWDL(b);
         
         
