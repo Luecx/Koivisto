@@ -95,7 +95,7 @@ struct BoardStatus {
             return os;
         }
         
-        inline BoardStatus copy() {
+        inline BoardStatus copy() const {
             BoardStatus b{zobrist, enPassantTarget, metaInformation, fiftyMoveCounter, repetitionCounter, moveCounter,
                           move};
             return b;
@@ -133,7 +133,7 @@ class Board {
         
         bool isDraw();
         
-        Piece getPiece(Square sq);
+        Piece getPiece(Square sq) const;
         
         void setPiece(Square sq, Piece piece);
         
@@ -143,7 +143,7 @@ class Board {
         
         void changeActivePlayer();
         
-        Color getActivePlayer();
+        Color getActivePlayer() const;
         
         void move(Move m);
         

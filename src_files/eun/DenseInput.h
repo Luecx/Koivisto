@@ -38,7 +38,7 @@ struct InputTracker{
             }
         }
         
-        bool contains(int index){
+        bool contains(int index) const {
             for(int i = 0; i < size; i++){
                 if (indices[i] == index){
                     return true;
@@ -51,11 +51,11 @@ struct InputTracker{
             size = 0;
         }
         
-        int count() const{
+        int count() const {
             return size;
         }
 
-        int at(int index){
+        int at(int index) const {
             return indices[index];
         }
 };

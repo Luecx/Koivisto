@@ -910,7 +910,7 @@ float *Evaluator::getFeatures() {
     return _features;
 }
 
-float Evaluator::getPhase() {
+float Evaluator::getPhase() const {
     return _phase;
 }
 

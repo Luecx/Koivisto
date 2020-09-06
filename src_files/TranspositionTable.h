@@ -82,7 +82,7 @@ class TranspositionTable {
         ~TranspositionTable();
         
         
-        Entry get(U64 zobrist);
+        Entry get(U64 zobrist) const;
         
         bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
         
@@ -92,9 +92,9 @@ class TranspositionTable {
         
         void clear();
         
-        double usage();
+        double usage() const;
         
-        int entryCount();
+        int entryCount() const;
         
         U64 getSize();
         

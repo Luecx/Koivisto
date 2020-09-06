@@ -25,7 +25,7 @@ class MoveOrderer {
         
         void setMovesQSearch(move::MoveList *p_moves, Board *b);
         
-        bool hasNext();
+        bool hasNext() const;
         
         move::Move next();
 };

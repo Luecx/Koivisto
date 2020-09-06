@@ -74,7 +74,7 @@ void MoveOrderer::setMovesQSearch(move::MoveList *p_moves, Board *b) {
     }
 }
 
-bool MoveOrderer::hasNext() {
+bool MoveOrderer::hasNext() const {
     return counter < moves->getSize();
 }
 

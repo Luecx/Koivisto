@@ -256,7 +256,7 @@ bool Board::isDraw() {
     return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 2;
 }
 
-Piece Board::getPiece(Square sq) {
+Piece Board::getPiece(Square sq) const {
     return pieceBoard[sq];
 }
 
@@ -1590,7 +1590,7 @@ Board Board::copy() {
     return Board();
 }
 
-Color Board::getActivePlayer() {
+Color Board::getActivePlayer() const {
     return activePlayer;
 }
 

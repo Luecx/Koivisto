@@ -167,7 +167,7 @@ class MoveList {
         
         void swap(int i1, int i2);
         
-        move::Move getMove(int index);
+        move::Move getMove(int index) const;
         
         void clear();
         
@@ -175,7 +175,7 @@ class MoveList {
         
         void scoreMove(int index, MoveScore score);
         
-        MoveScore getScore(int index);
+        MoveScore getScore(int index) const;
         
         void printMoveBits();
         

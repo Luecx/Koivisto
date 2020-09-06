@@ -221,7 +221,7 @@ void MoveList::swap(int i1, int i2) {
  * @param index
  * @return
  */
-move::Move MoveList::getMove(int index) {
+move::Move MoveList::getMove(int index) const {
     return moves[index];
 }
 
@@ -259,7 +259,7 @@ void MoveList::scoreMove(int index, MoveScore score) {
 /**
  *
  */
-MoveScore MoveList::getScore(int index) {
+MoveScore MoveList::getScore(int index) const {
     return scores[index];
 }
 

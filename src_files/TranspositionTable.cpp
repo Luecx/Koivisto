@@ -75,7 +75,7 @@ void TranspositionTable::clear() {
  * returns a floating value for the amount of values used.
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
-double TranspositionTable::usage() {
+double TranspositionTable::usage() const {
     return (double) used / size;
 }
 
@@ -83,7 +83,7 @@ double TranspositionTable::usage() {
  * returns the amount of entries stored in the table
  * @return
  */
-int TranspositionTable::entryCount() {
+int TranspositionTable::entryCount() const {
     return used;
 }
 
@@ -104,7 +104,7 @@ std::ostream &operator<<(std::ostream &os, const TranspositionTable &map) {
  * @param zobrist
  * @return
  */
-Entry TranspositionTable::get(U64 zobrist) {
+Entry TranspositionTable::get(U64 zobrist) const {
     
     U64 index = zobrist & mask;
     

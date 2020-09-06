@@ -93,7 +93,7 @@ class Evaluator{
          * returns the phase of the last calculation
          * @return
          */
-        float getPhase();
+        float getPhase() const;
         
         /**
          * returns a list of features of the last calculation

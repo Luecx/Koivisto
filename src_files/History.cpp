@@ -28,7 +28,7 @@ void SearchData::addHistoryScore(Move m, Depth depth, MoveList *mv, bool side) {
     return;
 };
 
-MoveScore SearchData::getHistoryMoveScore(Move m, bool side) {
+MoveScore SearchData::getHistoryMoveScore(Move m, bool side) const {
     int score = history[side][getSquareFrom(m)][getSquareTo(m)]+MAX_HISTORY_SCORE;
     MoveScore ms = score;
     return ms;
@@ -63,7 +63,7 @@ void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, 
     return;
 }
 
-MoveScore SearchData::getCounterMoveHistoryScore(Move previous, Move m){
+MoveScore SearchData::getCounterMoveHistoryScore(Move previous, Move m) const {
 
     Piece prevPiece = getMovingPiece(previous) % 6;
     Square prevTo = getSquareTo(previous);
@@ -98,7 +98,7 @@ void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
 /*
  * Is improving
  */
-bool SearchData::isImproving(Score ev, Color color, Depth ply) {
+bool SearchData::isImproving(Score ev, Color color, Depth ply) const {
     if (ply>2){
         return (ev>eval[color][ply-2]);
     }else

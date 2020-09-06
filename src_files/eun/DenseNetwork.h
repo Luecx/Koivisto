@@ -224,7 +224,7 @@ class DenseNetwork {
          * @param index
          * @return
          */
-        float getInput(int index);
+        float getInput(int index) const;
         
         /**
          * changes one value in the input.
