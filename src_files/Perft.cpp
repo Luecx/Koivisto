@@ -4,8 +4,6 @@
 
 #include "Perft.h"
 
-using namespace std;
-
 
 MoveList **buffer;
 TranspositionTable *tt;

@@ -6,8 +6,6 @@
 #include "Tuning.h"
 #include "Bitboard.h"
 
-using namespace std;
-
 int dataCount;
 
 Board  **boards;
@@ -39,13 +37,13 @@ void tuning::loadPositionFile(std::string path, int count) {
     boards  = new Board *[count];
     
     
-    fstream newfile;
-    newfile.open(path, ios::in);
+    std::fstream newfile;
+    newfile.open(path, std::ios::in);
     if (newfile.is_open()) {
-        string tp;
+        std::string tp;
         int    lineCount = 0;
         int    posCount  = 0;
-        while (getline(newfile, tp)) {
+        while (std::getline(newfile, tp)) {
             
             
             
@@ -53,13 +51,13 @@ void tuning::loadPositionFile(std::string path, int count) {
             //finding the first "c" to check where the fen ended
             auto firstC = tp.find_first_of('c');
             auto lastC  = tp.find_last_of('c');
-            if (firstC == string::npos || lastC == string::npos) {
+            if (firstC == std::string::npos || lastC == std::string::npos) {
                 continue;
             }
             
             //extracting the fen and result and removing bad characters.
-            string fen = tp.substr(0, firstC);
-            string res = tp.substr(lastC + 2, string::npos);
+            std::string fen = tp.substr(0, firstC);
+            std::string res = tp.substr(lastC + 2, std::string::npos);
             
             fen       = trim(fen);
             res       = findAndReplaceAll(res, "\"", "");
@@ -69,7 +67,7 @@ void tuning::loadPositionFile(std::string path, int count) {
             
             //parsing the result to a usable value:
             //assuming that the result is given as : a-b
-            if (res.find('-') != string::npos) {
+            if (res.find('-') != std::string::npos) {
                 if (res == "1/2-1/2") {
                     results[lineCount] = 0.5;
                 } else if (res == "1-0") {
@@ -100,7 +98,7 @@ void tuning::loadPositionFile(std::string path, int count) {
 //            std::cout << *boards[lineCount] << std::endl;
 //
 //            std::cout << results[lineCount] << std::endl;
-//            cout << tp << "\n";
+//            std::cout << tp << "\n";
             
             lineCount++;
             posCount++;
@@ -414,8 +412,8 @@ double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     for (int p = 0; p < paramCount; p++) {
         
         
-        evaluator->getEarlyGameParams()[p] -= earlyGrads[p] * learningRate / -min(-1, -gradCounters[p]);
-        evaluator->getLateGameParams()[p] -= lateGrads[p] * learningRate / -min(-1, -gradCounters[p]);
+        evaluator->getEarlyGameParams()[p] -= earlyGrads[p] * learningRate / -std::min(-1, -gradCounters[p]);
+        evaluator->getLateGameParams()[p] -= lateGrads[p] * learningRate / -std::min(-1, -gradCounters[p]);
     }
     
     

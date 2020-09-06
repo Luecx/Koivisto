@@ -48,7 +48,7 @@ void uci_loop(bool bench) {
     std::string line;
     
     while (true) {
-        getline(cin, line);
+        std::getline(std::cin, line);
         
         if (line == "quit") {
             exit(0);
@@ -108,8 +108,8 @@ void uci_processCommand(std::string str) {
      * used for input debugging to check what information has been given to the engine.
      */
     if (false) {
-        ofstream myfile;
-        myfile.open("input.debug", fstream::app);
+        std::ofstream myfile;
+        myfile.open("input.debug", std::fstream::app);
         myfile << str << "\n";
         myfile.close();
     }
@@ -122,20 +122,20 @@ void uci_processCommand(std::string str) {
         uci_uci();
     } else if (split.at(0) == "setoption") {
         
-        string name  = uci_getValue(split, "name");
-        string value = uci_getValue(split, "value");
+        std::string name  = uci_getValue(split, "name");
+        std::string value = uci_getValue(split, "value");
         
         //std::cout<< "-" << name << "-  -"<<value<<"-"<<std::endl;
         
         uci_set_option(name, value);
     } else if (split.at(0) == "go") {
-        if (str.find("wtime") != string::npos) {
-            string wtime = uci_getValue(split, "wtime");
-            string btime = uci_getValue(split, "btime");
-            string wincr = uci_getValue(split, "winc");
-            string bincr = uci_getValue(split, "binc");
-            string mvtog = uci_getValue(split, "movestogo");
-            string depth = uci_getValue(split, "depth");
+        if (str.find("wtime") != std::string::npos) {
+            std::string wtime = uci_getValue(split, "wtime");
+            std::string btime = uci_getValue(split, "btime");
+            std::string wincr = uci_getValue(split, "winc");
+            std::string bincr = uci_getValue(split, "binc");
+            std::string mvtog = uci_getValue(split, "movestogo");
+            std::string depth = uci_getValue(split, "depth");
             
             uci_go_match(
                     (wtime.empty()) ? 60000000 : stoi(wtime),
@@ -145,18 +145,18 @@ void uci_processCommand(std::string str) {
                     (mvtog.empty()) ? 40 : stoi(mvtog),
                     (depth.empty()) ? MAX_PLY : stoi(depth));
             
-        } else if (str.find("depth") != string::npos) {
+        } else if (str.find("depth") != std::string::npos) {
             uci_go_depth(stoi(uci_getValue(split, "depth")));
-        } else if (str.find("nodes") != string::npos) {
+        } else if (str.find("nodes") != std::string::npos) {
             uci_go_nodes(stoi(uci_getValue(split, "nodes")));
-        } else if (str.find("movetime") != string::npos) {
+        } else if (str.find("movetime") != std::string::npos) {
             uci_go_time(stoi(uci_getValue(split, "movetime")));
-        } else if (str.find("infinite") != string::npos) {
+        } else if (str.find("infinite") != std::string::npos) {
             uci_go_infinite();
-        } else if (str.find("mate") != string::npos) {
+        } else if (str.find("mate") != std::string::npos) {
             uci_go_mate(stoi(uci_getValue(split, "mate")));
-        } else if (str.find("perft") != string::npos) {
-            uci_go_perft(stoi(uci_getValue(split, "perft")), str.find("hash") != string::npos);
+        } else if (str.find("perft") != std::string::npos) {
+            uci_go_perft(stoi(uci_getValue(split, "perft")), str.find("hash") != std::string::npos);
         }
     } else if (split.at(0) == "stop") {
         uci_stop();
@@ -165,16 +165,16 @@ void uci_processCommand(std::string str) {
     } else if (split.at(0) == "debug") {
         uci_debug(uci_getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
-        if (str.find("FUTILITY_MARGIN") != string::npos) {
+        if (str.find("FUTILITY_MARGIN") != std::string::npos) {
             FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
         }
-        if (str.find("RAZOR_MARGIN") != string::npos) {
+        if (str.find("RAZOR_MARGIN") != std::string::npos) {
             RAZOR_MARGIN = stoi(uci_getValue(split, "RAZOR_MARGIN"));
         }
-        if (str.find("SE_MARGIN_STATIC") != string::npos) {
+        if (str.find("SE_MARGIN_STATIC") != std::string::npos) {
             SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
         }
-        if (str.find("LMR_DIV") != string::npos) {
+        if (str.find("LMR_DIV") != std::string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
         }
     } else if (split.at(0) == "position") {
@@ -182,14 +182,14 @@ void uci_processCommand(std::string str) {
         auto fenPos  = str.find("fen");
         auto movePos = str.find("moves");
         
-        string moves{};
-        if (movePos != string::npos) {
+        std::string moves{};
+        if (movePos != std::string::npos) {
             moves = str.substr(movePos + 5);
             moves = trim(moves);
         }
         
-        if (fenPos != string::npos) {
-            string fen = str.substr(fenPos + 3);
+        if (fenPos != std::string::npos) {
+            std::string fen = str.substr(fenPos + 3);
             fen = trim(fen);
             uci_position_fen(fen, moves);
         } else {
@@ -314,13 +314,13 @@ void uci_position_fen(std::string fen, std::string moves) {
     board = new Board{fen};
     
     if (moves.empty()) return;
-    std::vector<string> mv{};
+    std::vector<std::string> mv{};
     splitString(moves, mv, ' ');
     
-    for (string s:mv) {
+    for (std::string s:mv) {
         
-        string str1 = s.substr(0, 2);
-        string str2 = s.substr(2, 4);
+        std::string str1 = s.substr(0, 2);
+        std::string str2 = s.substr(2, 4);
         Square s1   = squareIndex(str1);
         Square s2   = squareIndex(str2);
         

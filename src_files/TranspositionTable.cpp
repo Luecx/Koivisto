@@ -93,7 +93,7 @@ int TranspositionTable::entryCount() {
  * @param map
  * @return
  */
-ostream &operator<<(ostream &os, const TranspositionTable &map) {
+std::ostream &operator<<(std::ostream &os, const TranspositionTable &map) {
     os << "used: " << map.used << " size: " << map.size;
     return os;
 }

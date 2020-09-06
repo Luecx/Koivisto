@@ -773,14 +773,12 @@ bb::Score Evaluator::evaluate(Board *b) {
 
 void printEvaluation(Board *board) {
     
-    using namespace std;
-    
     Evaluator ev{};
     Score     score = ev.evaluate(board);
     float     phase = ev.getPhase();
     
     
-    stringstream ss{};
+    std::stringstream ss{};
     
     
     //String format = "%-30s | %-20s | %-20s %n";
@@ -807,7 +805,7 @@ void printEvaluation(Board *board) {
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
     
-    string names[]{
+    std::string names[]{
             "INDEX_PAWN_VALUE",
             "INDEX_PAWN_PSQT",
             "INDEX_PAWN_STRUCTURE",

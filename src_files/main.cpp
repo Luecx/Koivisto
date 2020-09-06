@@ -10,7 +10,6 @@
 #include "Verification.h"
 #include "Tuning.h"
 
-using namespace std;
 using namespace bb;
 using namespace move;
 

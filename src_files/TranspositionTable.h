@@ -15,7 +15,6 @@
 #include "Board.h"
 
 using namespace bb;
-using namespace std;
 using namespace move;
 
 typedef uint8_t NodeType;
@@ -31,7 +30,7 @@ struct Entry {
 //    Entry() = default;
 //    ~Entry() = default;
     
-    friend ostream &operator<<(ostream &os, const Entry &entry) {
+    friend std::ostream &operator<<(std::ostream &os, const Entry &entry) {
         os << "zobrist: " << entry.zobrist << " move: " << entry.move << " depth: " << (int) entry.depth << " type: "
            << (int) entry.type << " score: " << entry.score;
         return os;
@@ -99,7 +98,7 @@ class TranspositionTable {
         
         U64 getSize();
         
-        friend ostream &operator<<(ostream &os, const TranspositionTable &map);
+        friend std::ostream &operator<<(std::ostream &os, const TranspositionTable &map);
     
 };
 
