@@ -8,19 +8,8 @@
 #include "uci.h"
 #include "syzygy/tbprobe.h"
 
-#define MONTH (\
-  __DATE__ [2] == 'n' ? (__DATE__ [1] == 'a' ? "01" : "06") \
-: __DATE__ [2] == 'b' ? "02" \
-: __DATE__ [2] == 'r' ? (__DATE__ [0] == 'M' ? "03" : "04") \
-: __DATE__ [2] == 'y' ? "05" \
-: __DATE__ [2] == 'l' ? "07" \
-: __DATE__ [2] == 'g' ? "08" \
-: __DATE__ [2] == 'p' ? "09" \
-: __DATE__ [2] == 't' ? "10" \
-: __DATE__ [2] == 'v' ? "11" \
-: "12")
-#define DAY (std::string(1,(__DATE__[4] == ' ' ?  '0' : (__DATE__[4]))) + (__DATE__[5]))
-#define YEAR ((__DATE__[7]-'0') * 1000 + (__DATE__[8]-'0') * 100 + (__DATE__[9]-'0') * 10 + (__DATE__[10]-'0') * 1)
+#define MAJOR_VERSION 2
+#define MINOR_VERSION 0
 
 
 TimeManager *timeManager;
@@ -38,7 +27,7 @@ void uci_loop(bool bench) {
     }
     
     
-    std::cout << "Koivisto 64 " << YEAR << MONTH << DAY << " by K. Kahre, F. Eggers" << std::endl;
+    std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers" << std::endl;
     
     
     board = new Board();
@@ -59,7 +48,7 @@ void uci_loop(bool bench) {
 }
 
 void uci_uci() {
-    std::cout << "id name Koivisto 64 " << YEAR << MONTH << DAY << std::endl;
+    std::cout << "id name Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
     std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
@@ -420,7 +409,6 @@ void uci_bench() {
     //positions from Ethereal
     static const char *Benchmarks[] = {
 #include "bench.csv"
-            
             ""
     };
     
@@ -434,15 +422,18 @@ void uci_bench() {
         Board b(Benchmarks[i]);
         
         TimeManager manager;
-        bestMove(&b, 13, &manager, 1);
+        bestMove(&b, 13, &manager, 0);
         SearchOverview overview = search_overview();
         
         nodes += overview.nodes;
         time += overview.time;
         
-        printf("Bench [# %2d] %5d cp  Best:%6s  %12d nodes %8d nps\n", i + 1, overview.score,
+        
+        
+        printf("Bench [# %2d] %5d cp  Best:%6s  %12d nodes %8d nps", i + 1, overview.score,
                toString(overview.move).c_str(), (int) overview.nodes,
                (int) (1000.0f * overview.nodes / (overview.time + 1)));
+        std::cout << std::endl;
         
         search_clearHash();
     }

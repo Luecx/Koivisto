@@ -75,13 +75,7 @@ void main_tune_pst_bb(Piece piece){
             std::cout << std::right << std::setw(6) << evaluator->getPSQT(piece, false)[n] << ",";
             if(n % 8 == 7) std::cout << std::endl;
         }
-//        for(int k = 0; k < evaluator->paramCount(); k++){
-//            std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k]<< ",";
-//        }
-//        std::cout << std::endl;
-//        for(int k = 0; k < evaluator->paramCount(); k++){
-//            std::cout << std::setw(14) <<evaluator->getLateGameParams()[k] << ",";
-//        }
+
         std::cout << std::endl;
         
     }
@@ -163,11 +157,14 @@ void main_tune_pst(){
 
 int main(int argc, char *argv[]) {
     
-    if(argc == 1){
-        uci_loop(false);
-    }else if(argc > 1 && strcmp(argv[1], "bench") == 0){
-        uci_loop(true);
-    }
+    uci_loop(true);
+    
+    
+//    if(argc == 1){
+//        uci_loop(false);
+//    }else if(argc > 1 && strcmp(argv[1], "bench") == 0){
+//        uci_loop(true);
+//    }
     
 
 
