@@ -10,6 +10,15 @@ using namespace bb;
 
 Board::Board(std::string fen) {
     
+    for (int i = 0; i < 12; i++) {
+        m_pieces[i] = 0;
+    }
+    
+    m_teamOccupied[WHITE] = 0;
+    m_teamOccupied[BLACK] = 0;
+    
+    m_occupied = 0;
+    
     m_activePlayer = 0;
     
     for (int i = 0; i < 64; i++) {
