@@ -8,13 +8,12 @@
 #include "syzygy/tbprobe.h"
 #include <thread>
 
-TranspositionTable *table;
-
-
-TimeManager *_timeManager;
-int         _threadCount = 1;
-bool        _useTB       = false;
-bool        _printInfo   = true;
+TranspositionTable       *table;
+TimeManager              *_timeManager;
+std::vector<std::thread> runningThreads;
+int                      _threadCount = 1;
+bool                     _useTB       = false;
+bool                     _printInfo   = true;
 
 SearchOverview overview;
 
@@ -426,7 +425,6 @@ SearchOverview search_overview() {
 
 
 
-
 /**
  * returns the best move for the given board.
  * the search will stop if either the max depth is reached.
@@ -434,6 +432,8 @@ SearchOverview search_overview() {
  * @return
  */
 Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) {
+    
+    
     
     
     //if the main thread call this function, we need to generate the search data for all the threads first
@@ -463,10 +463,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         
         //we will call this function for the other threads which will skip this part and jump straight to the part below
         for (int n = 1; n < _threadCount; n++) {
-            
-            std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, n);
-            searchThread->detach();
-            
+            runningThreads.push_back(std::thread(bestMove, new Board(b), maxDepth, timeManager, n));
         }
     }
     
@@ -482,7 +479,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     //start the basic search on all threads
     Depth d = 1;
     Score s = 0;
-    for (d = 1; d <= maxDepth; d++) {
+    for (d = 1+threadId; d <= maxDepth; d++) {
         
         //call the pvs framework
         s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
@@ -493,12 +490,15 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     
     delete sd;
     
-    
     //if the main thread finishes, we will record the data of this thread
     if (threadId == 0) {
         
         //tell all other threads if they are running to stop the search
         timeManager->stopSearch();
+        for(std::thread &th:runningThreads){
+            th.join();
+        }
+        runningThreads.clear();
         
         //retrieve the best move from the search
         Move best = table->get(b->zobrist()).move;

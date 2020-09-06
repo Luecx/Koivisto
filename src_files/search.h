@@ -29,7 +29,7 @@ extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
 
-#define MAX_THREADS 8
+#define MAX_THREADS 32
 
 
 
