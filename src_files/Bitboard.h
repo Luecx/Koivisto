@@ -518,11 +518,11 @@ inline Square squareIndex(std::string &str) {
     return squareIndex(r, f);
 }
 
-inline Diagonal diagonalIndex(Square &square_index) {
+inline Diagonal diagonalIndex(const Square &square_index) {
     return 7 + rankIndex(square_index) - fileIndex(square_index);
 }
 
-inline AntiDiagonal antiDiagonalIndex(Square &square_index) {
+inline AntiDiagonal antiDiagonalIndex(const Square &square_index) {
     return rankIndex(square_index) + fileIndex(square_index);
 }
 
@@ -570,7 +570,7 @@ inline void unsetBit(U64 &number, Square index) {
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
  */
-inline bool getBit(U64 &number, Square index) {
+inline bool getBit(U64 number, Square index) {
     return ((number >> index) & 1ULL) == 1;
 }
 

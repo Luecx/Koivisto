@@ -76,7 +76,7 @@ Move genMove(
         const bb::Piece capturedPiece);
 
 
-inline bool sameMove(Move &m1, Move &m2) {
+inline bool sameMove(const Move &m1, const Move &m2) {
     //toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
     return ((m1 ^ m2) & MASK_24) == 0;
 }
@@ -86,7 +86,7 @@ inline void setScore(Move &move, const int moveScore) {
     move |= (moveScore << SHIFT_SCORE_INFO);
 }
 
-inline int getScore(Move &move) {
+inline int getScore(const Move &move) {
     return (move >> SHIFT_SCORE_INFO);
 }
 
