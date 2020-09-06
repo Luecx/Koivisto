@@ -104,11 +104,11 @@ struct BoardStatus {
 
 class Board {
     private:
-        U64 *m_pieces;
-        U64 *m_teamOccupied;
-        U64 *m_occupied;
+        U64 m_pieces[12];
+        U64 m_teamOccupied[2];
+        U64 m_occupied;
         
-        Piece *m_pieceBoard;
+        Piece m_pieceBoard[64];
         
         Color m_activePlayer;
         
@@ -193,11 +193,11 @@ class Board {
         
         U64 *getOccupied();
         
-        U64 *getPieces() const;
+        const U64 *getPieces() const;
         
         U64 getPieces(Color color, Piece piece);
         
-        U64 *getTeamOccupied() const;
+        const U64 *getTeamOccupied() const;
     
     
 };
