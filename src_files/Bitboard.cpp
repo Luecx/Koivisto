@@ -194,10 +194,6 @@ U64 bb::populateMask(U64 mask, U64 index) {
         mask = lsbReset(mask);
         i++;
     }
-    /**
-     * assert that no other bits can be set other than the masked bits
-     */
-    assert((res & (~initMask)) == 0);
     
     return res;
 }

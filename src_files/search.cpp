@@ -18,19 +18,16 @@ bool        _printInfo   = true;
 
 SearchOverview overview;
 
-/*
- * Lmr table
- */
-int       lmrReductions[256][256];
+int lmrReductions[256][256];
 
-SearchData **sds = new SearchData*[MAX_THREADS];
+//data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
+ThreadData **tds = new ThreadData *[MAX_THREADS];
 
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 22;
 int LMR_DIV          = 215;
 
-Depth search_depths[MAX_THREADS];
 
 void initLmr() {
     int d, m;
@@ -53,29 +50,29 @@ int lmp[2][11] = {
  */
 
 
-int totalNodes(){
-    int tn = 0;
-    for (int i = 0; i < _threadCount; i++){
-        tn += sds[i]->_nodes;
+int totalNodes() {
+    int      tn = 0;
+    for (int i  = 0; i < _threadCount; i++) {
+        tn += tds[i]->nodes;
     }
     return tn;
-} 
+}
 
-int selDepth(){
-    int maxSd = 0;
-    for (int i = 0; i < _threadCount; i++){
-        maxSd = sds[i]->_selDepth>maxSd?sds[i]->_selDepth:maxSd;
+int selDepth() {
+    int      maxSd = 0;
+    for (int i     = 0; i < _threadCount; i++) {
+        maxSd = tds[i]->seldepth > maxSd ? tds[i]->seldepth : maxSd;
     }
     return maxSd;
-} 
+}
 
-int tbHits(){
-    int th = 0;
-    for (int i = 0; i < _threadCount; i++){
-        th += sds[i]->_tbHits;
+int tbHits() {
+    int      th = 0;
+    for (int i  = 0; i < _threadCount; i++) {
+        th += tds[i]->tbhits;
     }
     return th;
-} 
+}
 
 void search_enable_infoStrings() {
     _printInfo = true;
@@ -141,6 +138,11 @@ void search_setHashSize(int hashSize) {
 void search_init(int hashSize) {
     table = new TranspositionTable(hashSize);
     initLmr();
+    
+    for (int i = 0; i < MAX_THREADS; i++) {
+        tds[i] = new ThreadData(i);
+    }
+    
 }
 
 /**
@@ -149,6 +151,11 @@ void search_init(int hashSize) {
 void search_cleanUp() {
     delete table;
     table = nullptr;
+    
+    for (int i = 0; i < MAX_THREADS; i++) {
+        delete tds[i];
+    }
+    
 }
 
 /**
@@ -164,8 +171,8 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
     if (depth <= 0) return;
     
     
-    U64 zob = b->zobrist();
-    Entry en = table->get(zob);
+    U64   zob = b->zobrist();
+    Entry en  = table->get(zob);
     if (en.zobrist == zob) {
         
         //extract the move from the table
@@ -203,8 +210,8 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
         extractPV(b, mvList, depth - 1);
         b->undoMove();
     }
-
-
+    
+    
 }
 
 /**
@@ -224,7 +231,7 @@ void printInfoString(Board *b, Depth d, Score score) {
     if (!_printInfo) return;
     
     int _nodes = totalNodes();
-
+    
     int nps = (int) (_nodes) / (int) (_timeManager->elapsedTime() + 1) * 1000;
     
     std::cout << "info" <<
@@ -425,78 +432,88 @@ SearchOverview search_overview() {
  * the search will stop if either the max depth is reached.
  * @param b
  * @return
-
  */
-
-
 Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) {
     
-
-    if (threadId == 1){
+    
+    //if the main thread call this function, we need to generate the search data for all the threads first
+    if (threadId == 0) {
+        
+        //if there is a dtz move available, do not start any threads or search at all. just do the dtz move
         Move dtzMove = getDTZMove(b);
         if (dtzMove != 0) return dtzMove;
-        //    exit(-1);
         
+        //make sure that the given depth isnt too large
+        if (maxDepth > MAX_PLY) maxDepth = MAX_PLY;
+        
+        //if no dtz move has been found, set the time manager so that the search can be stopped
         _timeManager = timeManager;
+        
+        //we need to reset the hash between searches
         table->incrementAge();
-        //    table->clear();
-
-        for(int i = 0; i < _threadCount; i++){
-            //generating the search data
-            SearchData *sd = new SearchData();
-            sd->moves = new MoveList *[MAX_INTERNAL_PLY];
-            for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-                sd->moves[i] = new MoveList();
-            }
-            sds[i] = sd;
+        
+        //for each thread, we will generate a new search data object
+        for (int i = 0; i < _threadCount; i++) {
+            //reseting the thread data
+            tds[i]->threadID = i;
+            tds[i]->tbhits   = 0;
+            tds[i]->nodes    = 0;
+            tds[i]->seldepth = 0;
+        }
+        
+        //we will call this function for the other threads which will skip this part and jump straight to the part below
+        for (int n = 1; n < _threadCount; n++) {
+            
+            std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, n);
+            searchThread->detach();
+            
         }
     }
-
-
-
-    SearchData *sd = sds[threadId-1];
-    sd->threadId = threadId;
-
-    if (threadId < _threadCount){
-        std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, threadId+1);
-        searchThread->detach();
-    }
     
-    sd->moves = new MoveList *[MAX_INTERNAL_PLY];
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        sd->moves[i] = new MoveList();
-    }
-
-    if (maxDepth > MAX_PLY) maxDepth = MAX_PLY;
     
+    
+    //the thread id starts at 0 for the first thread
+    ThreadData *td = tds[threadId];
+    
+    SearchData *sd = new SearchData();
+    td->searchData = sd;
+    
+    
+    //start the basic search on all threads
     Depth d = 1;
     Score s = 0;
     for (d = 1; d <= maxDepth; d++) {
         
-        s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, sd, 0);
+        //call the pvs framework
+        s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
         
+        //if the search finished due to timeout, we also need to stop here
         if (!isTimeLeft()) break;
     }
     
-    if (threadId == 1){
+    delete sd;
+    
+    
+    //if the main thread finishes, we will record the data of this thread
+    if (threadId == 0) {
+        
+        //tell all other threads if they are running to stop the search
+        timeManager->stopSearch();
+        
+        //retrieve the best move from the search
         Move best = table->get(b->zobrist()).move;
         
+        //collect some information which can be used for benching
         overview.nodes = totalNodes();
         overview.depth = d;
         overview.score = s;
         overview.time  = timeManager->elapsedTime();
         overview.move  = best;
-
+        
+        //return the best move if its the main thread
         return best;
-    } 
-    
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        delete sd->moves[i];
-        sd->moves[i] = nullptr;
     }
-    delete sd->moves;
-    sd->moves = nullptr;
-
+    //return nothing (doesnt matter)
     return 0;
 }
 
@@ -509,10 +526,10 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, SearchData *sd, Move skipMove) {
+Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData *td, Move skipMove) {
     
     
-    sd->_nodes++;
+    td->nodes++;
     
     if (!isTimeLeft()) {
         return beta;
@@ -522,8 +539,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         return 0;
     }
     
-    if (ply > sd->_selDepth) {
-        sd->_selDepth = ply;
+    if (ply > td->seldepth) {
+        td->seldepth = ply;
     }
     
     
@@ -535,29 +552,28 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         if (b->isInCheck(b->getActivePlayer())) {
             depth++;
         } else {
-            return qSearch(b, alpha, beta, ply, sd);
+            return qSearch(b, alpha, beta, ply, td);
         }
     }
     
-    
-    U64   zobrist       = b->zobrist();
-    bool  pv            = (beta - alpha) != 1;
-    bool  inCheck       = b->isInCheck(b->getActivePlayer());
-    Score staticEval    = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    Score originalAlpha = alpha;
-    Score highestScore  = -MAX_MATE_SCORE;
-    Score score         = -MAX_MATE_SCORE;
-    Move  bestMove      = 0;
-    Move  hashMove      = 0;
+    SearchData *sd           = td->searchData;
+    U64        zobrist       = b->zobrist();
+    bool       pv            = (beta - alpha) != 1;
+    bool       inCheck       = b->isInCheck(b->getActivePlayer());
+    Score      staticEval    = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score      originalAlpha = alpha;
+    Score      highestScore  = -MAX_MATE_SCORE;
+    Score      score         = -MAX_MATE_SCORE;
+    Move       bestMove      = 0;
+    Move       hashMove      = 0;
     
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    
     
     /**************************************************************************************
      *                  T R A N S P O S I T I O N - T A B L E   P R O B E                 *
      **************************************************************************************/
     Entry en = table->get(zobrist);
-
+    
     if (en.zobrist == zobrist && !skipMove) {
         hashMove = en.move;
         
@@ -595,7 +611,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         //MAX_MATE_SCORE is used for no result
         if (res != MAX_MATE_SCORE) {
             
-            sd->_tbHits++;
+            td->tbhits++;
             //indicates a winning or losing position
             if (abs(res) > 2) {
                 //take the winning positions closest to the root
@@ -618,7 +634,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
          *                              R A Z O R I N G                                       *
          **************************************************************************************/
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply, sd);
+            score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) return score;
         }
         /**************************************************************************************
@@ -633,7 +649,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         if (depth >= 2 && staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, sd, 0);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, td, 0);
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -650,7 +666,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
      * internal iterative deepening
      */
     if (depth >= 6 && pv && !hashMove && !skipMove) {
-        pvSearch(b, alpha, beta, depth - 2, ply, sd, 0);
+        pvSearch(b, alpha, beta, depth - 2, ply, td, 0);
         en = table->get(zobrist);
         if (en.zobrist == zobrist) {
             hashMove = en.move;
@@ -665,7 +681,8 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         beta = matingValue;
         if (alpha >= matingValue) return matingValue;
     }
-    matingValue       = -MAX_MATE_SCORE + ply;
+    
+    matingValue = -MAX_MATE_SCORE + ply;
     if (matingValue > alpha) {
         alpha = matingValue;
         if (beta <= matingValue) return matingValue;
@@ -685,9 +702,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
     int quiets     = 0;
     
     
-
-    
-
     while (moveOrderer.hasNext()) {
         
         Move m = moveOrderer.next();
@@ -698,12 +712,10 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-//        bool isQueenPromotion = move::promotionPiece(m) % 6 == QUEEN && isPromotion;
         
-
         
         if (ply == 0) {
-            sd->sideToReduce = b->getActivePlayer();
+            sd->sideToReduce                      = b->getActivePlayer();
             if (legalMoves == 0) sd->sideToReduce = !b->getActivePlayer();
         }
         
@@ -733,55 +745,57 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         }
         
         // singular extensions
-        if (!extension &&
-            depth >= 8 &&
-            !skipMove &&
-            legalMoves == 0 &&
-            sameMove(m, hashMove) &&
-            ply > 0 &&
-            en.zobrist == zobrist &&
-            abs(en.score) < MIN_MATE_SCORE &&
-            en.type == CUT_NODE &&
-            en.depth >= depth - 3) {
+        if (!extension
+            && depth >= 8
+            && !skipMove
+            && legalMoves == 0
+            && sameMove(m, hashMove)
+            && ply > 0
+            && en.zobrist == zobrist
+            && abs(en.score) < MIN_MATE_SCORE
+            && en.type == CUT_NODE
+            && en.depth >= depth - 3) {
+            
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, sd, m);
+            score = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut)
                 extension++;
             b->getPseudoLegalMoves(mv);
             moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
             
-            
             m = moveOrderer.next();
         }
         
-
-
+        
         b->move(m);
         
-
-        //verify that givesCheck is correct
-        //assert(givesCheck == b->isInCheck(b->getActivePlayer()));
         
         Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0
-                                                                                   : lmrReductions[depth][legalMoves];
+                : lmrReductions[depth][legalMoves];
         
         if (lmr) {
-            int history              = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
-            lmr -= history / 256;
-            if (sd->sideToReduce == b->getActivePlayer()) lmr += 1;
-            if (lmr > MAX_PLY) lmr   = 0;
-            if (lmr > depth - 2) lmr = depth - 2;
+            int history = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
+            lmr = lmr - history / 256;
+            if (sd->sideToReduce == b->getActivePlayer()) {
+                lmr = lmr + 1;
+            }
+            if (lmr > MAX_PLY) {
+                lmr = 0;
+            }
+            if (lmr > depth - 2) {
+                lmr = depth - 2;
+            }
         }
         
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, sd, 0);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
-            score     = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, sd, 0);
+            score     = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
             if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, sd,
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0); // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, sd,
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0); // re-search
             
         }
@@ -789,15 +803,20 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
         
         b->undoMove();
         
+        //if we got a new best score for this node, update the highest score and keep track of the best move
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
         }
         
+        //beta -cutoff
         if (score >= beta) {
             if (!skipMove) {
+                //put the beta cutoff into the tt
                 table->put(zobrist, highestScore, m, CUT_NODE, depth);
+                //also set this move as a killer move into the history
                 sd->setKiller(m, ply, b->getActivePlayer());
+                //if the move is not a capture, we also update counter move history tables and history scores.
                 if (!isCapture(m)) {
                     sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
                     sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv);
@@ -806,25 +825,31 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
             return beta;
         }
         
-
+        
         if (score > alpha) {
-            if (!skipMove && ply == 0 && isTimeLeft() && sd->threadId == 1) {
+            
+            //we only record pv changes at the root if its the main thread
+            if (!skipMove && ply == 0 && isTimeLeft() && td->threadID == 0) {
                 //we need to put the transposition in here so that printInfoString displays the correct pv
                 table->put(zobrist, score, bestMove, PV_NODE, depth);
+                //print an updated version of the info string including nodes, nps etc.
                 printInfoString(b, depth, score);
+                //the time manager needs to be updated to know if its safe to stop the search
                 _timeManager->updatePV(m, score, depth);
             }
-            
+            //increase alpha
             alpha    = score;
+            //store the best move for this node
             bestMove = m;
         }
         
-        
+        //if this loop finished, we can increment the legal move counter by one which is important for detecting mates
         legalMoves++;
     }
     
     //if there are no legal moves, its either stalemate or checkmate.
     if (legalMoves == 0) {
+        //if we are not in check, it must be stalemate (draw)
         if (!b->isInCheck(b->getActivePlayer())) {
             return 0;
         } else {
@@ -853,21 +878,21 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Search
  * @param ply
  * @return
  */
-Score qSearch(Board *b, Score alpha, Score beta, Depth ply, SearchData *sd) {
+Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
     
+    //increase the nodes for this thread
+    td->nodes++;
     
-    
-    //shall we count qSearch nodes?
-    sd->_nodes++;
-    
+    //if its a draw (3-fold), return 0
     if (b->isDraw()) return 0;
-
-//    if(evaluator.probablyDrawByMaterial(b)){
-//        return 0;
-//    }
-    U64      zobrist    = b->zobrist();
-    Entry    en        = table->get(b->zobrist());
-    NodeType ttNodeType = ALL_NODE;
+    
+    //extract information like search data (history tables), zobrist etc
+    SearchData *sd        = td->searchData;
+    U64        zobrist    = b->zobrist();
+    Entry      en         = table->get(b->zobrist());
+    NodeType   ttNodeType = ALL_NODE;
+    
+    //if there is an entry found, probe the tt for the score
     if (en.zobrist == zobrist) {
         if (en.type == PV_NODE) {
             return en.score;
@@ -881,6 +906,8 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, SearchData *sd) {
             }
         }
     }
+    
+    
     Score stand_pat = -MAX_MATE_SCORE + ply;
     if (!b->isInCheck(b->getActivePlayer())) {
         stand_pat = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
@@ -924,7 +951,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, SearchData *sd) {
         
         b->move(m);
         
-        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, sd);
+        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td);
         
         
         b->undoMove();
