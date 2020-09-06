@@ -440,21 +440,31 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         _timeManager = timeManager;
         table->incrementAge();
         //    table->clear();
+
+        for(int i = 0; i < _threadCount; i++){
+            //generating the search data
+            SearchData *sd = new SearchData();
+            sd->moves = new MoveList *[MAX_INTERNAL_PLY];
+            for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
+                sd->moves[i] = new MoveList();
+            }
+            sds[i] = sd;
+        }
     }
 
-    SearchData sd;
-    sd.threadId = threadId;
 
-    sds[threadId-1] = &sd;
+
+    SearchData *sd = sds[threadId-1];
+    sd->threadId = threadId;
 
     if (threadId < _threadCount){
         std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, threadId+1);
         searchThread->detach();
     }
     
-    sd.moves = new MoveList *[MAX_INTERNAL_PLY];
+    sd->moves = new MoveList *[MAX_INTERNAL_PLY];
     for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        sd.moves[i] = new MoveList();
+        sd->moves[i] = new MoveList();
     }
 
     if (maxDepth > MAX_PLY) maxDepth = MAX_PLY;
@@ -463,7 +473,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     Score s = 0;
     for (d = 1; d <= maxDepth; d++) {
         
-        s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, &sd, 0);
+        s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, sd, 0);
         
         if (!isTimeLeft()) break;
     }
@@ -481,11 +491,11 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
     } 
     
     for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        delete sd.moves[i];
-        sd.moves[i] = nullptr;
+        delete sd->moves[i];
+        sd->moves[i] = nullptr;
     }
-    delete sd.moves;
-    sd.moves = nullptr;
+    delete sd->moves;
+    sd->moves = nullptr;
 
     return 0;
 }
