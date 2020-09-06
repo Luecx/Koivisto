@@ -94,9 +94,6 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     
     startTime = std::chrono::system_clock::now();
     
-    
-//    std::cout << "timeToUse=" << timeToUse << "  upperBound=" << upperTimeBound << std::endl;
-    
 }
 
 
@@ -147,7 +144,6 @@ bool TimeManager::isTimeLeft() {
 //    return true;
     
 
-    
     int elapsed = elapsedTime();
     
 //    std::cout << elapsed << " | " << forceStop << " | " << isSafeToStop << " | " << timeToUse << " | "<< upperTimeBound << " | " <<std::endl;

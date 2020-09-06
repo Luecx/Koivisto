@@ -944,6 +944,7 @@ float *Evaluator::getPSQT(Piece piece, bool early) {
         case KING:
             return early ? psqt_king : psqt_king_endgame;
     }
+    return nullptr;
 }
 float *Evaluator::getPhaseValues(){
     return _phaseValues;

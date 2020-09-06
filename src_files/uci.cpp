@@ -62,10 +62,8 @@ void uci_uci() {
     std::cout << "id name Koivisto 64 " << YEAR << MONTH << DAY << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
-    std::cout << "option name Threads type spin default 1 min 1 max 128" << std::endl;
+    std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
-
-    
     
     std::cout << "uciok" << std::endl;
 }
@@ -92,7 +90,7 @@ void uci_endThread() {
 }
 
 void uci_searchAndPrint(Depth maxDepth, TimeManager *p_timeManager) {
-    Move m = bestMove(board, maxDepth, p_timeManager, 1);
+    Move m = bestMove(board, maxDepth, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
     uci_endThread();
 }

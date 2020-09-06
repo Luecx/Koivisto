@@ -160,7 +160,7 @@ Board::Board(Board *board) {
         pieceBoard[i] = board->pieceBoard[i];
     }
     
-    for(int n = 0; n < board->boardStatusHistory.size(); n++){
+    for(int n = 0; n < (int)board->boardStatusHistory.size(); n++){
         boardStatusHistory.push_back(board->boardStatusHistory.at(n).copy());
     }
 }
@@ -1446,7 +1446,7 @@ bool Board::isLegal(Move m) {
     }
     
     
-    if (isEnPassant(m)) [[unlikely]] {
+    if (isEnPassant(m)){
         
         
         this->move(m);
