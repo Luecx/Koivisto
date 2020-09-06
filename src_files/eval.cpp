@@ -154,7 +154,7 @@ float * tunablePST_MG_grad = new float[64]{};
 float * tunablePST_EG_grad = new float[64]{};
 #endif
 
-float *_pieceValuesEarly = new float[unusedVariable]{
+float *pieceValuesEarly = new float[unusedVariable]{
         92.356491, 38.61282, 5.1149216, -5.7460375, -8.4308376, 8.4697132, -7.2890692, -13.922237, 14.421892, 460.70462,
         46.232033, 29.186869, 25.658445, 477.89893, 33.474796, 24.781307, 41.798512, -6.3010058, 11.997969, 584.98969,
         94.901245, 20.897881, 60.646118, 15.080976, 17.863449, 1344.5829, 118.19398, 7.8332171, 377.67072, 240.60492,
@@ -163,7 +163,7 @@ float *_pieceValuesEarly = new float[unusedVariable]{
         -25.90111, -3.2204432, -16.162563, -5.6897264, -5.4419866, -14.898696, 0, 0,
 };
 
-float *_pieceValuesLate = new float[unusedVariable]{
+float *pieceValuesLate = new float[unusedVariable]{
         102.05948, 178.15341, 10.821315, 45.563454, -7.9744067, -4.9831324, -20.481129, 2.6967096, -3.6025305,
         326.50967, 91.260658, 19.195377, 19.30518, 292.87314, 9.4227409, 31.857086, 54.170273, 6.2003446, 29.931547,
         595.79254, 100.59767, 30.526958, -14.472153, 2.76579, 2.3643596, 1134.3336, 42.109905, 58.535522, -123.70769,
@@ -172,13 +172,13 @@ float *_pieceValuesLate = new float[unusedVariable]{
         -574.42114, -26.89514, 2.1228392, -2.6465628, -11.620555, -11.112517, -5.267952, 0, 0,
 };
 
-float _phaseValues[6] = {
+float phaseValues[6] = {
    0,    1,     1,     2,     4,    0,
 };
 
 
 //TODO tweak values
-float _kingSafetyTable[100] = {
+float kingSafetyTable[100] = {
         0, 0, 1, 2, 3, 5, 7, 9, 12, 15,
         18, 22, 26, 30, 35, 39, 44, 50, 56, 62,
         68, 75, 82, 85, 89, 97, 105, 113, 122, 131,
@@ -333,20 +333,20 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64    k;
     
     m_phase =
-            (24.0f + _phaseValues[5]
-             - _phaseValues[0] * bitCount(
+            (24.0f + phaseValues[5]
+             - phaseValues[0] * bitCount(
                     b->getPieces()[WHITE_PAWN] |
                     b->getPieces()[BLACK_PAWN])
-             - _phaseValues[1] * bitCount(
+             - phaseValues[1] * bitCount(
                     b->getPieces()[WHITE_KNIGHT] |
                     b->getPieces()[BLACK_KNIGHT])
-             - _phaseValues[2] * bitCount(
+             - phaseValues[2] * bitCount(
                     b->getPieces()[WHITE_BISHOP] |
                     b->getPieces()[BLACK_BISHOP])
-             - _phaseValues[3] * bitCount(
+             - phaseValues[3] * bitCount(
                     b->getPieces()[WHITE_ROOK] |
                     b->getPieces()[BLACK_ROOK])
-             - _phaseValues[4] * bitCount(
+             - phaseValues[4] * bitCount(
                     b->getPieces()[WHITE_QUEEN] |
                     b->getPieces()[BLACK_QUEEN])) / 24.0f;
     
@@ -522,8 +522,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_white(square)] += _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
-        tunablePST_EG_grad[pst_index_white(square)] += _pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
+        tunablePST_MG_grad[pst_index_white(square)] += pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
+        tunablePST_EG_grad[pst_index_white(square)] += pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
 #endif
         
         m_features[INDEX_BISHOP_PSQT] += psqt_bishop[pst_index_white(square)] * earlyPSTScalar;
@@ -559,8 +559,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_black(square)] -= _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
-        tunablePST_EG_grad[pst_index_black(square)] -= _pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
+        tunablePST_MG_grad[pst_index_black(square)] -= pieceValuesEarly[INDEX_BISHOP_PSQT] * (1-_phase) / 100;
+        tunablePST_EG_grad[pst_index_black(square)] -= pieceValuesLate [INDEX_BISHOP_PSQT] * _phase     / 100;
 #endif
         
         m_features[INDEX_BISHOP_PSQT] -= psqt_bishop[pst_index_black(square)] * earlyPSTScalar;
@@ -740,7 +740,7 @@ bb::Score Evaluator::evaluate(Board *b) {
     computePinnedPieces(b);
     
     m_features[INDEX_KING_SAFETY] =
-            (_kingSafetyTable[blackkingSafety_valueOfAttacks] - _kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
+            (kingSafetyTable[blackkingSafety_valueOfAttacks] - kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
     
     
     
@@ -754,8 +754,8 @@ bb::Score Evaluator::evaluate(Board *b) {
     for (int i = 0; i < unusedVariable; i += 4) {
         __m128 *feat = (__m128 *) (m_features + (i));
         
-        __m128 *w1 = (__m128 *) (_pieceValuesEarly + (i));
-        __m128 *w2 = (__m128 *) (_pieceValuesLate + (i));
+        __m128 *w1 = (__m128 *) (pieceValuesEarly + (i));
+        __m128 *w2 = (__m128 *) (pieceValuesLate + (i));
         
         earlyRes = _mm_add_ps(earlyRes, _mm_mul_ps(*w1, *feat));
         lateRes  = _mm_add_ps(lateRes, _mm_mul_ps(*w2, *feat));
@@ -915,11 +915,11 @@ float Evaluator::getPhase() const {
 }
 
 float *Evaluator::getEarlyGameParams() {
-    return _pieceValuesEarly;
+    return pieceValuesEarly;
 }
 
 float *Evaluator::getLateGameParams() {
-    return _pieceValuesLate;
+    return pieceValuesLate;
 }
 
 int Evaluator::paramCount() {
@@ -944,7 +944,7 @@ float *Evaluator::getPSQT(Piece piece, bool early) {
     return nullptr;
 }
 float *Evaluator::getPhaseValues(){
-    return _phaseValues;
+    return phaseValues;
 }
 #ifdef TUNE_PST
 float *Evaluator::getTunablePST_MG() {

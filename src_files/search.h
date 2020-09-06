@@ -22,7 +22,7 @@
 #include "History.h"
 #include "TimeManager.h"
 
-extern int _threadCount;
+extern int threadCount;
 
 extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;

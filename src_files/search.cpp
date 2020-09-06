@@ -12,7 +12,7 @@ TranspositionTable *table;
 
 
 TimeManager *_timeManager;
-int         _threadCount = 1;
+int         threadCount = 1;
 bool        _useTB       = false;
 bool        _printInfo   = true;
 
@@ -52,7 +52,7 @@ int lmp[2][11] = {
 
 int totalNodes() {
     int      tn = 0;
-    for (int i  = 0; i < _threadCount; i++) {
+    for (int i  = 0; i < threadCount; i++) {
         tn += tds[i]->nodes;
     }
     return tn;
@@ -60,7 +60,7 @@ int totalNodes() {
 
 int selDepth() {
     int      maxSd = 0;
-    for (int i     = 0; i < _threadCount; i++) {
+    for (int i     = 0; i < threadCount; i++) {
         maxSd = tds[i]->seldepth > maxSd ? tds[i]->seldepth : maxSd;
     }
     return maxSd;
@@ -68,7 +68,7 @@ int selDepth() {
 
 int tbHits() {
     int      th = 0;
-    for (int i  = 0; i < _threadCount; i++) {
+    for (int i  = 0; i < threadCount; i++) {
         th += tds[i]->tbhits;
     }
     return th;
@@ -451,7 +451,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         table->incrementAge();
         
         //for each thread, we will generate a new search data object
-        for (int i = 0; i < _threadCount; i++) {
+        for (int i = 0; i < threadCount; i++) {
             //reseting the thread data
             tds[i]->threadID = i;
             tds[i]->tbhits   = 0;
@@ -460,7 +460,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         }
         
         //we will call this function for the other threads which will skip this part and jump straight to the part below
-        for (int n = 1; n < _threadCount; n++) {
+        for (int n = 1; n < threadCount; n++) {
             
             std::thread *searchThread = new std::thread(bestMove, new Board(b), maxDepth, timeManager, n);
             searchThread->detach();

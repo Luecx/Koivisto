@@ -293,7 +293,7 @@ void uci_set_option(const std::string &name, const std::string &value) {
         if (count<1) count = 1;
         if (count>MAX_THREADS) count = MAX_THREADS;
 
-        _threadCount = count;
+        threadCount = count;
     }
     
 }
