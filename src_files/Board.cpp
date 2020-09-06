@@ -149,7 +149,7 @@ Board::Board(Board *board) {
         m_pieceBoard[i] = board->m_pieceBoard[i];
     }
     
-    for(int n = 0; n < (int)board->m_boardStatusHistory.size(); n++){
+    for(int n = 0; n < static_cast<int>(board->m_boardStatusHistory.size()); n++){
         m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
     }
 }
@@ -1305,7 +1305,7 @@ bool Board::givesCheck(Move m) {
         pFrom = promotionPiece(m);
     }
 
-//    std::cout << (int)pFrom << "---";
+//    std::cout << static_cast<int>(pFrom) << "---";
     
     //direct check
     switch (pFrom % 6) {

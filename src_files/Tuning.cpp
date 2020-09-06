@@ -13,7 +13,7 @@ double *results;
 
 
 double sigmoid(double s, double K) {
-    return (double) 1 / (1 + exp(-K * s / 400));
+    return 1.0 / (1 + exp(-K * s / 400));
 }
 
 double sigmoidPrime(double s, double K) {
@@ -22,11 +22,11 @@ double sigmoidPrime(double s, double K) {
 }
 
 int probabiltyToCentipawnAdvantage(double prob) {
-    return (int) (400 * log10(prob / (1 - prob)));
+    return static_cast<int>(400 * log10(prob / (1 - prob)));
 }
 
 double centipawnAdvantageToProbability(int centipawns) {
-    return (double) 1 / (1 + pow(10, -(double) centipawns / 400));
+    return 1.0 / (1 + pow(10, -static_cast<double>(centipawns) / 400));
 }
 
 

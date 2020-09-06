@@ -64,7 +64,7 @@ U64 bb::randU64(){
 }
 
 double bb::randDouble(double min, double max) {
-    double f = (double)rand() / RAND_MAX;
+    double f = static_cast<double>(rand()) / RAND_MAX;
     return min + f * (max - min);
 }
 
@@ -123,13 +123,13 @@ void bb::generateData() {
         
         for(int i = 0; i < pow(2, 64 - rookShifts[n]); i++){
             U64 rel_occ = populateMask(rookMasks[n], i);
-            int index = (int) ((rel_occ * rookMagics[n]) >> rookShifts[n]);
+            int index = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
             ROOK_ATTACKS[n][index] = generateRookAttack(n, rel_occ);
         }
         
         for(int i = 0; i < pow(2, 64 - bishopShifts[n]); i++){
             U64 rel_occ = populateMask(bishopMasks[n], i);
-            int index = (int) ((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
+            int index = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
             BISHOP_ATTACKS[n][index] = generateBishopAttack(n, rel_occ);
         }
         

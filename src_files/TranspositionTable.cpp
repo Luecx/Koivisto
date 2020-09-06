@@ -76,7 +76,7 @@ void TranspositionTable::clear() {
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
 double TranspositionTable::usage() const {
-    return (double) m_used / m_size;
+    return static_cast<double>(m_used) / m_size;
 }
 
 /**

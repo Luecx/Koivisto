@@ -230,11 +230,11 @@ void printInfoString(Board *b, Depth d, Score score) {
     
     int _nodes = totalNodes();
     
-    int nps = (int) (_nodes) / (int) (_timeManager->elapsedTime() + 1) * 1000;
+    int nps = static_cast<int>(_nodes) / static_cast<int>(_timeManager->elapsedTime() + 1) * 1000;
     
     std::cout << "info" <<
-              " depth " << (int) d <<
-              " seldepth " << (int) selDepth();
+              " depth " << static_cast<int>(d) <<
+              " seldepth " << static_cast<int>(selDepth());
     
     if (abs(score) > MIN_MATE_SCORE) {
         std::cout << " score mate " << (MAX_MATE_SCORE - abs(score) + 1) / 2 * (score > 0 ? 1 : -1);
@@ -252,7 +252,7 @@ void printInfoString(Board *b, Depth d, Score score) {
               " nodes " << _nodes <<
               " nps " << nps <<
               " time " << _timeManager->elapsedTime() <<
-              " hashfull " << (int) (table->usage() * 1000);
+              " hashfull " << static_cast<int>(table->usage() * 1000);
     
     MoveList *em = new MoveList();
     em->clear();
@@ -377,8 +377,8 @@ Move getDTZMove(Board *board) {
                 (isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo)) {
                 
                 std::cout << "info"
-                             " depth " << (int) dtz <<
-                          " seldepth " << (int) selDepth();
+                             " depth " << static_cast<int>(dtz) <<
+                          " seldepth " << static_cast<int>(selDepth());
                 
                 
                 std::cout << " score cp " << s;
@@ -394,7 +394,7 @@ Move getDTZMove(Board *board) {
                           " nodes " << 1 <<
                           " nps " << 1 <<
                           " time " << _timeManager->elapsedTime() <<
-                          " hashfull " << (int) (table->usage() * 1000);
+                          " hashfull " << static_cast<int>(table->usage() * 1000);
                 std::cout << std::endl;
                 
                 return m;

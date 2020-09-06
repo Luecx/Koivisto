@@ -844,7 +844,7 @@ inline U64 getHash(Piece piece, Square sq) {
  * @return
  */
 inline U64 lookUpRookAttack(Square index, U64 occupied) {
-    return ROOK_ATTACKS[index][(int) ((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
+    return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
 
 //    return generateRookAttack(index, occupied);
 }
@@ -868,7 +868,7 @@ inline U64 lookUpRookXRayAttack(Square index, U64 occupied, U64 opponent) {
  * @return
  */
 inline U64 lookUpBishopAttack(Square index, U64 occupied) {
-    return BISHOP_ATTACKS[index][(int) ((occupied & bishopMasks[index]) * bishopMagics[index]
+    return BISHOP_ATTACKS[index][static_cast<int>((occupied & bishopMasks[index]) * bishopMagics[index]
             >> (bishopShifts[index]))];
 //    return generateBishopAttack(index, occupied);
 }

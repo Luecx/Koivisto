@@ -441,14 +441,14 @@ void uci_bench() {
         time += overview.time;
         
         printf("Bench [# %2d] %5d cp  Best:%6s  %12d nodes %8d nps\n", i + 1, overview.score,
-               toString(overview.move).c_str(), (int) overview.nodes,
-               (int) (1000.0f * overview.nodes / (overview.time + 1)));
+               toString(overview.move).c_str(), static_cast<int>(overview.nodes),
+               static_cast<int>(1000.0f * overview.nodes / (overview.time + 1)));
         
         search_clearHash();
     }
     search_enable_infoStrings();
     
-    printf("OVERALL: %53d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
+    printf("OVERALL: %53d nodes %8d nps\n", static_cast<int>(nodes), static_cast<int>(1000.0f * nodes / (time + 1)));
     
     
 }

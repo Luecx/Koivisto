@@ -46,7 +46,7 @@ inline float sigmoidPrime(float x) {
 }
 
 inline float randFloat(float min, float max) {
-    float f = (float)rand() / RAND_MAX;
+    float f = static_cast<float>(rand()) / RAND_MAX;
     return min + f * (max - min);
 }
 
