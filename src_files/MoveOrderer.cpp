@@ -20,7 +20,8 @@ MoveOrderer::setMovesPVSearch(move::MoveList *p_moves, move::Move hashMove, Sear
     
     this->moves   = p_moves;
     this->counter = 0;
-    
+    this->skip = false;
+
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
         
@@ -79,7 +80,10 @@ bool MoveOrderer::hasNext() {
 }
 
 move::Move MoveOrderer::next() {
-    
+    if (skip){
+        moves->scoreMove(counter, 0);
+        return moves->getMove(counter++);
+    }
     int      bestIndex = counter;
     //Move best = moves->getMove(0);
     for (int i         = counter + 1; i < moves->getSize(); i++) {
