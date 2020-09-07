@@ -16,17 +16,17 @@ void TranspositionTable::init(U64 MB) {
     U64 maxEntries = bytes / sizeof(Entry);
     
     //size must be a power of 2!
-    size = 1;
+    m_size = 1;
     
-    while (size <= maxEntries) {
-        size *= 2;
+    while (m_size <= maxEntries) {
+        m_size *= 2;
     }
     
-    size /= 2;
-    mask = size - 1;
+    m_size /= 2;
+    m_mask = m_size - 1;
     
     
-    entries = (Entry *) (calloc(size, sizeof(Entry)));
+    m_entries = (Entry *) (calloc(m_size, sizeof(Entry)));
     clear();
     
 }
@@ -36,7 +36,7 @@ void TranspositionTable::init(U64 MB) {
  * @return
  */
 U64 TranspositionTable::getSize() {
-    return size;
+    return m_size;
 }
 
 /**
@@ -51,7 +51,7 @@ TranspositionTable::TranspositionTable(U64 mb) {
  * destructor which deletes the table.
  */
 TranspositionTable::~TranspositionTable() {
-    delete entries;
+    delete m_entries;
 }
 
 /**
@@ -59,7 +59,7 @@ TranspositionTable::~TranspositionTable() {
  * @param mb
  */
 void TranspositionTable::setSize(U64 mb) {
-    free(entries);
+    free(m_entries);
     init(mb);
 }
 
@@ -67,8 +67,8 @@ void TranspositionTable::setSize(U64 mb) {
  * clears the content
  */
 void TranspositionTable::clear() {
-    used = 0;
-    std::memset(entries, 0, sizeof(Entry) * size);
+    m_used = 0;
+    std::memset(m_entries, 0, sizeof(Entry) * m_size);
 }
 
 /**
@@ -76,7 +76,7 @@ void TranspositionTable::clear() {
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
 double TranspositionTable::usage() {
-    return (double) used / size;
+    return static_cast<double>(m_used) / m_size;
 }
 
 /**
@@ -84,7 +84,7 @@ double TranspositionTable::usage() {
  * @return
  */
 int TranspositionTable::entryCount() {
-    return used;
+    return m_used;
 }
 
 /**
@@ -94,7 +94,7 @@ int TranspositionTable::entryCount() {
  * @return
  */
 ostream &operator<<(ostream &os, const TranspositionTable &map) {
-    os << "used: " << map.used << " size: " << map.size;
+    os << "used: " << map.m_used << " size: " << map.m_size;
     return os;
 }
 
@@ -106,9 +106,9 @@ ostream &operator<<(ostream &os, const TranspositionTable &map) {
  */
 Entry TranspositionTable::get(U64 zobrist) {
     
-    U64 index = zobrist & mask;
+    U64 index = zobrist & m_mask;
     
-    Entry enP = entries[index];
+    Entry enP = m_entries[index];
         
     return enP;
 }
@@ -130,22 +130,22 @@ Entry TranspositionTable::get(U64 zobrist) {
  */
 bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
     
-    U64 index = zobrist & mask;
+    U64 index = zobrist & m_mask;
     
-    Entry *enP = &entries[index];
+    Entry *enP = &m_entries[index];
     
     if (enP->zobrist == 0) {
         enP->set(zobrist, score, move, type, depth);
-        enP->setAge(currentAge);
-        used++;
+        enP->setAge(m_currentAge);
+        m_used++;
         return true;
     } else {
         if (
-                enP->getAge() != currentAge
+                enP->getAge() != m_currentAge
                 || type == PV_NODE
                 || (enP->type != PV_NODE && enP->depth <= depth)) {
             enP->set(zobrist, score, move, type, depth);
-            enP->setAge(currentAge);
+            enP->setAge(m_currentAge);
             return true;
         }
     }
@@ -154,9 +154,9 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
 }
 
 void TranspositionTable::incrementAge() {
-    TranspositionTable::currentAge++;
-    if (TranspositionTable::currentAge == 255) {
-        TranspositionTable::currentAge = 0;
+    TranspositionTable::m_currentAge++;
+    if (TranspositionTable::m_currentAge == 255) {
+        TranspositionTable::m_currentAge = 0;
     }
 }
 

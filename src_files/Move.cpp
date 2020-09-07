@@ -171,7 +171,7 @@ bb::Piece move::promotionPiece(Move move) {
  * @param move
  * @return
  */
-std::string move::toString(Move move) {
+std::string move::toString(const Move move) {
     
     std::string res{};
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
@@ -185,22 +185,11 @@ std::string move::toString(Move move) {
 }
 
 
-/**
- * destructor for the move-list.
- */
 MoveList::~MoveList() {
-    delete moves;
-    delete scores;
 }
 
-/**
- * constructor for the move-list.
- * Initiated to 256 entries.
- * maximum moves per position is 220 or something like that so 256 should be enough.
- */
+
 MoveList::MoveList() {
-    moves  = new Move[256];
-    scores = new MoveScore[256];
 }
 
 /**

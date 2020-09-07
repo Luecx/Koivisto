@@ -94,14 +94,6 @@ void tuning::loadPositionFile(std::string path, int count) {
             
             boards[posCount] = b;
 
-//            std::cout << "-------------------------------------------------------------------------" << std::endl;
-//
-//            std::cout << fen << std::endl;
-//            std::cout << *boards[lineCount] << std::endl;
-//
-//            std::cout << results[lineCount] << std::endl;
-//            cout << tp << "\n";
-            
             lineCount++;
             posCount++;
             
@@ -227,7 +219,7 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             Board *b = boards[i];
             
             //calculate the phase
-            double _phase =
+            double phase =
                            (18 - bitCount(
                                    b->getPieces()[WHITE_BISHOP] |
                                    b->getPieces()[BLACK_BISHOP] |
@@ -242,14 +234,14 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             
             Color winner      = results[i] > 0.5 ? WHITE : BLACK;
             int   whiteFactor = winner == WHITE ? 1 : -1;
-//            double earlyChange = _phase < 0.3 ? 1:0;
-//            double lateChange = _phase > 0.8 ? 1:0;
+//            double earlyChange = phase < 0.3 ? 1:0;
+//            double lateChange = phase > 0.8 ? 1:0;
             
-            double earlyChange = 1 - _phase;
-            double lateChange  = _phase;
+            double earlyChange = 1 - phase;
+            double lateChange  = phase;
 
 //            std::cout << *b << std::endl;
-//            std::cout << _phase << std::endl;
+//            std::cout << phase << std::endl;
             
             addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
             addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
@@ -310,7 +302,7 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             Board *b = boards[i];
             
             //calculate the phase
-            double _phase =
+            double phase =
                            (18 - bitCount(
                                    b->getPieces()[WHITE_BISHOP] |
                                    b->getPieces()[BLACK_BISHOP] |
@@ -325,14 +317,14 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             
             Color winner      = results[i] > 0.5 ? WHITE : BLACK;
             int   whiteFactor = winner == WHITE ? 1 : -1;
-//            double earlyChange = _phase < 0.3 ? 1:0;
-//            double lateChange = _phase > 0.8 ? 1:0;
+//            double earlyChange = phase < 0.3 ? 1:0;
+//            double lateChange = phase > 0.8 ? 1:0;
             
-            double earlyChange = 1 - _phase;
-            double lateChange  = _phase;
+            double earlyChange = 1 - phase;
+            double lateChange  = phase;
 
 //            std::cout << *b << std::endl;
-//            std::cout << _phase << std::endl;
+//            std::cout << phase << std::endl;
             
             addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
             addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
@@ -423,11 +415,10 @@ double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     
 }
 
-double  tuning::optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount, float lr){
+double tuning::optimiseBlackBox(Evaluator *evaluator, double K, float *params, int paramCount, float lr) {
     
     
-    
-    for(int p = 0; p < paramCount; p++){
+    for (int p = 0; p < paramCount; p++) {
         
         
         std::cout << "\r  param: " << p << std::flush;
@@ -437,12 +428,12 @@ double  tuning::optimiseBlackBox(Evaluator *evaluator, double K, float* params, 
         params[p] += lr;
         double erUpper = computeError(evaluator, K);
         
-        if(erUpper < er) continue;
+        if (erUpper < er) continue;
         
-        params[p] -= 2*lr;
+        params[p] -= 2 * lr;
         double erLower = computeError(evaluator, K);
         
-        if(erLower < er) continue;
+        if (erLower < er) continue;
         
         params[p] += lr;
         

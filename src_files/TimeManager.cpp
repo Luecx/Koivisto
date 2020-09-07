@@ -56,7 +56,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop = false;
     
     
-    double _phase =
+    double phase =
             (18 - bitCount(
                         board->getPieces()[WHITE_BISHOP] |
                             board->getPieces()[BLACK_BISHOP] |
@@ -68,9 +68,9 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
                      board->getPieces()[WHITE_QUEEN] |
                       board->getPieces()[BLACK_QUEEN])) / 18.0;
     
-    if(_phase > 1) _phase = 1;
+    if(phase > 1) phase = 1;
     
-    double division = movesToGo - 30 + 50 * _phase;
+    double division = movesToGo - 30 + 50 * phase;
     division = 40;
     
     timeToUse = board->getActivePlayer() == WHITE ?

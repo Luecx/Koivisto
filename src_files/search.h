@@ -22,7 +22,7 @@
 #include "History.h"
 #include "TimeManager.h"
 
-extern int _threadCount;
+extern int threadCount;
 
 extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
@@ -55,7 +55,7 @@ void search_init(int hashSize);     //used to create arrays, movelists etc
 void search_cleanUp();              //used to clean up the memory
 SearchOverview search_overview();             //used to get information about the latest search
 void search_enable_infoStrings();
-void search_disable_inforStrings();
+void search_disable_infoStrings();
 
 
 Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId = 0);

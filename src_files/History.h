@@ -53,7 +53,7 @@ struct SearchData {
  */
 struct ThreadData {
     int threadID = 0;
-    int nodes = 0;
+    U64 nodes = 0;
     int seldepth = 0;
     int tbhits = 0;
     

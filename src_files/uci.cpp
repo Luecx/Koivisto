@@ -200,7 +200,7 @@ void uci_go_perft(int depth, bool hash) {
     auto nodes = perft(board, depth, true, true, hash);
     auto time  = stopMeasure();
     
-    std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000;
+    std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000 << std::endl;
     
     perft_cleanUp();
 }
@@ -261,7 +261,7 @@ void uci_stop() {
     search_stop();
 }
 
-void uci_set_option(std::string name, std::string value) {
+void uci_set_option(std::string &name, std::string &value) {
     if (name == "Hash") {
         search_setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
@@ -271,18 +271,18 @@ void uci_set_option(std::string name, std::string value) {
         strcpy(path, value.c_str());
         tb_init(path);
         
-        std::cout << "using syzygy table with " << TB_LARGEST << " pieces" << std::endl;
+        std::cout << "using syzygy table with " << TB_LARGEST << " m_pieces" << std::endl;
         
         /*
          * only use TB if loading was successful
          */
         search_useTB(TB_LARGEST > 0);
-    }else if (name == "Threads"){
+    } else if (name == "Threads") {
         int count = stoi(value);
-        if (count<1) count = 1;
-        if (count>MAX_THREADS) count = MAX_THREADS;
-
-        _threadCount = count;
+        if (count < 1) count           = 1;
+        if (count > MAX_THREADS) count = MAX_THREADS;
+    
+        threadCount = count;
     }
     
 }
@@ -409,6 +409,7 @@ void uci_bench() {
     //positions from Ethereal
     static const char *Benchmarks[] = {
 #include "bench.csv"
+            
             ""
     };
     
@@ -416,7 +417,7 @@ void uci_bench() {
     int nodes = 0;
     int time  = 0;
     
-    search_disable_inforStrings();
+    search_disable_infoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
         
         Board b(Benchmarks[i]);
@@ -427,7 +428,6 @@ void uci_bench() {
         
         nodes += overview.nodes;
         time += overview.time;
-        
         
         
         printf("Bench [# %2d] %5d cp  Best:%6s  %12d nodes %8d nps", i + 1, overview.score,

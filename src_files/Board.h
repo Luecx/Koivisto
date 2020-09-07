@@ -28,7 +28,7 @@ constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
 
 /**
  * the board contains a list of board status.
- * It contains all the information not represented by the the pieces on the board.
+ * It contains all the information not represented by the the m_pieces on the board.
  * This contains:
  *   - 50 move rule half counter
  *   - three-fold repetition counter
@@ -104,15 +104,15 @@ struct BoardStatus {
 
 class Board {
     private:
-        U64 *pieces;
-        U64 *teamOccupied;
-        U64 *occupied;
+        U64 m_pieces[12];
+        U64 m_teamOccupied[2];
+        U64 m_occupied;
         
-        Piece *pieceBoard;
+        Piece m_pieceBoard[64];
         
-        Color activePlayer;
+        Color m_activePlayer;
         
-        std::vector<BoardStatus> boardStatusHistory;
+        std::vector<BoardStatus> m_boardStatusHistory;
         
         void computeNewRepetition();
     
@@ -193,11 +193,12 @@ class Board {
         
         U64 *getOccupied();
         
-        U64 *getPieces() const;
+        const U64 *getTeamOccupied() const;
+        
+        const U64 *getPieces() const;
         
         U64 getPieces(Color color, Piece piece);
         
-        U64 *getTeamOccupied() const;
     
     
 };

@@ -65,11 +65,11 @@ struct Entry {
 class TranspositionTable {
 
     private:
-        NodeAge currentAge;
-        Entry   *entries;
-        U64     used;
-        U64     size;
-        U64     mask;
+        NodeAge m_currentAge;
+        Entry   *m_entries;
+        U64     m_used;
+        U64     m_size;
+        U64     m_mask;
         
         void init(U64 MB);
     

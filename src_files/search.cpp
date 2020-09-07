@@ -9,11 +9,11 @@
 #include <thread>
 
 TranspositionTable       *table;
-TimeManager              *_timeManager;
+TimeManager              *search_timeManager;
 std::vector<std::thread> runningThreads;
-int                      _threadCount = 1;
-bool                     _useTB       = false;
-bool                     _printInfo   = true;
+int                      threadCount = 1;
+bool                     useTB       = false;
+bool                     printInfo   = true;
 
 SearchOverview overview;
 
@@ -49,9 +49,9 @@ int lmp[2][11] = {
  */
 
 
-int totalNodes() {
-    int      tn = 0;
-    for (int i  = 0; i < _threadCount; i++) {
+U64 totalNodes() {
+    U64      tn = 0;
+    for (int i  = 0; i < threadCount; i++) {
         tn += tds[i]->nodes;
     }
     return tn;
@@ -59,7 +59,7 @@ int totalNodes() {
 
 int selDepth() {
     int      maxSd = 0;
-    for (int i     = 0; i < _threadCount; i++) {
+    for (int i     = 0; i < threadCount; i++) {
         maxSd = tds[i]->seldepth > maxSd ? tds[i]->seldepth : maxSd;
     }
     return maxSd;
@@ -67,18 +67,18 @@ int selDepth() {
 
 int tbHits() {
     int      th = 0;
-    for (int i  = 0; i < _threadCount; i++) {
+    for (int i  = 0; i < threadCount; i++) {
         th += tds[i]->tbhits;
     }
     return th;
 }
 
 void search_enable_infoStrings() {
-    _printInfo = true;
+    printInfo = true;
 }
 
-void search_disable_inforStrings() {
-    _printInfo = false;
+void search_disable_infoStrings() {
+    printInfo = false;
 }
 
 
@@ -91,7 +91,7 @@ void search_clearHash() {
  * enables/disables tb probing during search
  */
 void search_useTB(bool val) {
-    _useTB = val;
+    useTB = val;
 }
 
 
@@ -99,7 +99,7 @@ void search_useTB(bool val) {
  * stops the search
  */
 void search_stop() {
-    _timeManager->stopSearch();
+    search_timeManager->stopSearch();
 }
 
 
@@ -118,7 +118,7 @@ bool hasOnlyPawns(Board *board, Color color) {
  * @return
  */
 bool isTimeLeft() {
-    return _timeManager->isTimeLeft();
+    return search_timeManager->isTimeLeft();
 }
 
 
@@ -178,22 +178,20 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
         Move mov = en.move;
         
         //get a movelist which can be used to store all pseudo legal moves
-        MoveList *mvStorage = new MoveList();
+        MoveList mvStorage;
         //extract pseudo legal moves
-        b->getPseudoLegalMoves(mvStorage);
+        b->getPseudoLegalMoves(&mvStorage);
         
         bool     moveContained = false;
         //check if the move is actually valid for the position
-        for (int i             = 0; i < mvStorage->getSize(); i++) {
+        for (int i             = 0; i < mvStorage.getSize(); i++) {
             
-            Move stor = mvStorage->getMove(i);
+            Move stor = mvStorage.getMove(i);
             
             if (sameMove(stor, mov)) {
                 moveContained = true;
             }
         }
-        
-        delete mvStorage;
         
         
         //return if the move doesnt exist for this board
@@ -227,15 +225,15 @@ void extractPV(Board *b, MoveList *mvList, Depth depth) {
 void printInfoString(Board *b, Depth d, Score score) {
     
     
-    if (!_printInfo) return;
+    if (!printInfo) return;
     
-    int _nodes = totalNodes();
+    U64 nodes = totalNodes();
     
-    int nps = (int) (_nodes) / (int) (_timeManager->elapsedTime() + 1) * 1000;
+    U64 nps = static_cast<U64>(nodes * 1000) / static_cast<U64>(search_timeManager->elapsedTime() + 1);
     
     std::cout << "info" <<
-              " depth " << (int) d <<
-              " seldepth " << (int) selDepth();
+              " depth " << static_cast<int>(d) <<
+              " seldepth " << static_cast<int>(selDepth());
     
     if (abs(score) > MIN_MATE_SCORE) {
         std::cout << " score mate " << (MAX_MATE_SCORE - abs(score) + 1) / 2 * (score > 0 ? 1 : -1);
@@ -249,25 +247,24 @@ void printInfoString(Board *b, Depth d, Score score) {
     
     
     std::cout <<
-    
-              " nodes " << _nodes <<
+
+              " nodes " << nodes <<
               " nps " << nps <<
-              " time " << _timeManager->elapsedTime() <<
-              " hashfull " << (int) (table->usage() * 1000);
+              " time " << search_timeManager->elapsedTime() <<
+              " hashfull " << static_cast<int>(table->usage() * 1000);
     
-    MoveList *em = new MoveList();
-    em->clear();
-    extractPV(b, em, selDepth());
+    MoveList em;
+    em.clear();
+    extractPV(b, &em, selDepth());
     std::cout << " pv";
-    for (int i = 0; i < em->getSize(); i++) {
-        std::cout << " " << toString(em->getMove(i));
+    for (int i = 0; i < em.getSize(); i++) {
+        std::cout << " " << toString(em.getMove(i));
     }
     
     
     std::cout << std::endl;
     
     
-    delete em;
 }
 
 
@@ -378,8 +375,8 @@ Move getDTZMove(Board *board) {
                 (isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo)) {
                 
                 std::cout << "info"
-                             " depth " << (int) dtz <<
-                          " seldepth " << (int) selDepth();
+                             " depth " << static_cast<int>(dtz) <<
+                          " seldepth " << static_cast<int>(selDepth());
                 
                 
                 std::cout << " score cp " << s;
@@ -391,11 +388,11 @@ Move getDTZMove(Board *board) {
                 
                 
                 std::cout <<
-                
+
                           " nodes " << 1 <<
                           " nps " << 1 <<
-                          " time " << _timeManager->elapsedTime() <<
-                          " hashfull " << (int) (table->usage() * 1000);
+                          " time " << search_timeManager->elapsedTime() <<
+                          " hashfull " << static_cast<int>(table->usage() * 1000);
                 std::cout << std::endl;
                 
                 return m;
@@ -447,13 +444,13 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         if (maxDepth > MAX_PLY) maxDepth = MAX_PLY;
         
         //if no dtz move has been found, set the time manager so that the search can be stopped
-        _timeManager = timeManager;
+        search_timeManager = timeManager;
         
         //we need to reset the hash between searches
         table->incrementAge();
         
         //for each thread, we will generate a new search data object
-        for (int i = 0; i < _threadCount; i++) {
+        for (int i = 0; i < threadCount; i++) {
             //reseting the thread data
             tds[i]->threadID = i;
             tds[i]->tbhits   = 0;
@@ -462,7 +459,7 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         }
         
         //we will call this function for the other threads which will skip this part and jump straight to the part below
-        for (int n = 1; n < _threadCount; n++) {
+        for (int n = 1; n < threadCount; n++) {
             runningThreads.push_back(std::thread(bestMove, new Board(b), maxDepth, timeManager, n));
         }
     }
@@ -603,7 +600,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
      *                            T A B L E B A S E - P R O B E                           *
      **************************************************************************************/
     //search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
-    if (_useTB && ply > 0) {
+    if (useTB && ply > 0) {
         Score res = getWDL(b);
         
         
@@ -731,9 +728,15 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             
         }
         
+        Score staticExchangeEval = 0;
+        if (isCapture(m)) {
+            staticExchangeEval = b->staticExchangeEvaluation(m);
+        }
+        
+        
         int extension = 0;
         
-        if (givesCheck && isCapture(m) && b->staticExchangeEvaluation(m) > 0) {
+        if (givesCheck && staticExchangeEval > 0) {
             extension = 1;
         }
         
@@ -828,7 +831,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 //print an updated version of the info string including nodes, nps etc.
                 printInfoString(b, depth, score);
                 //the time manager needs to be updated to know if its safe to stop the search
-                _timeManager->updatePV(m, score, depth);
+                search_timeManager->updatePV(m, score, depth);
             }
             //increase alpha
             alpha    = score;
@@ -939,7 +942,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         
         if (!b->isLegal(m)) continue;
         
-        if (!inCheck && (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6) < 0 && b->staticExchangeEvaluation(m) < 0) continue;
+        if (!inCheck&& b->staticExchangeEvaluation(m) < 0) continue;
         
         
         b->move(m);
