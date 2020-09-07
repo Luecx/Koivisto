@@ -724,7 +724,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
             
             //SEE Pruning
-            if (depth <= 5 && b->staticExchangeEvaluation(m) <= -100 * depth) continue;
+            if (depth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) <= -100 * depth) continue;
             
         }
         
@@ -942,7 +942,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         
         if (!b->isLegal(m)) continue;
         
-        if (!inCheck&& b->staticExchangeEvaluation(m) < 0) continue;
+        if (!inCheck&& (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) &&  b->staticExchangeEvaluation(m) < 0) continue;
         
         
         b->move(m);

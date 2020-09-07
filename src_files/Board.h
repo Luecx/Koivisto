@@ -14,6 +14,8 @@
 #include "vector"
 #include "Util.h"
 
+#define SEE_CACHE_SIZE 2048
+
 using namespace bb;
 using namespace move;
 
@@ -24,6 +26,8 @@ constexpr U64 STATUS_INDEX_BLACK_QUEENSIDE_CASTLING = 2;
 constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING  = 3;
 
 constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
+
+static constexpr Score vals[]{100, 325, 325, 500, 1000, 10000};
 
 
 /**
@@ -38,6 +42,13 @@ constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
  *   - information about the en-passant square
  *
  */
+
+
+struct seeCacheEntry {
+    U64 key;
+    Score score;
+};
+
 struct BoardStatus {
     public:
         
@@ -107,7 +118,9 @@ class Board {
         U64 m_pieces[12];
         U64 m_teamOccupied[2];
         U64 m_occupied;
-        
+
+        struct seeCacheEntry seeCache[SEE_CACHE_SIZE];
+
         Piece m_pieceBoard[64];
         
         Color m_activePlayer;
@@ -117,6 +130,7 @@ class Board {
         void computeNewRepetition();
     
     public:
+
         Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         
         Board(Board* board);

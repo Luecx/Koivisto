@@ -1182,8 +1182,13 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece &piece) {
 }
 
 Score Board::staticExchangeEvaluation(Move m) {
-    
-    static constexpr Score vals[]{100, 325, 325, 500, 1000, 10000};
+
+
+    U64 zob = zobrist();
+
+    if (seeCache[(zob^m)%SEE_CACHE_SIZE].key == (zob^m)){
+        return seeCache[(zob^m)%SEE_CACHE_SIZE].score;
+    }
     
     Square sqFrom         = getSquareFrom(m);
     Square sqTo           = getSquareTo(m);
@@ -1192,7 +1197,7 @@ Score Board::staticExchangeEvaluation(Move m) {
     
     Color attacker    = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
     
-    Score gain[32], d = 0;
+    Score gain[16], d = 0;
     U64   fromSet     = ONE << sqFrom;
     U64   occ         = m_occupied;
     
@@ -1245,7 +1250,8 @@ Score Board::staticExchangeEvaluation(Move m) {
         gain[d - 1] = -(-gain[d - 1] > gain[d] ? -gain[d - 1] : gain[d]);
     }
     
-    
+    seeCache[(zob^m)%SEE_CACHE_SIZE].score = gain[0];
+    seeCache[(zob^m)%SEE_CACHE_SIZE].key = zob^m;
     return gain[0];
 }
 
