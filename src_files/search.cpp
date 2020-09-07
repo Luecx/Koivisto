@@ -731,15 +731,9 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             
         }
         
-        Score staticExchangeEval = 0;
-        if (isCapture(m)) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
-        }
-        
-        
         int extension = 0;
         
-        if (givesCheck && staticExchangeEval > 0) {
+        if (givesCheck && isCapture(m) && b->staticExchangeEvaluation(m) > 0) {
             extension = 1;
         }
         
@@ -945,7 +939,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         
         if (!b->isLegal(m)) continue;
         
-        if (!inCheck&& b->staticExchangeEvaluation(m) < 0) continue;
+        if (!inCheck && (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6) < 0 && b->staticExchangeEvaluation(m) < 0) continue;
         
         
         b->move(m);
