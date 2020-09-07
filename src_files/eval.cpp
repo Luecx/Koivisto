@@ -10,6 +10,9 @@
 #define pst_index_white(s) squareIndex(7-rankIndex(s), fileIndex(s))
 #define pst_index_black(s) s
 
+float sqrts[28] = {
+    0, 1, 1.41421, 1.73205, 2, 2.23607, 2.44949, 2.64575, 2.82843, 3, 3.16228, 3.31662, 3.4641, 3.60555, 3.74166, 3.87298, 4, 4.12311, 4.24264, 4.3589, 4.47214, 4.58258, 4.69042, 4.79583, 4.89898, 5, 5.09902, 5.19615,
+};
 
 float *psqt_pawn_endgame = new float[64]{
         0,     0,     0,     0,     0,     0,     0,     0,
@@ -192,8 +195,6 @@ float _kingSafetyTable[100]{
         500, 500, 500, 500, 500, 500, 500, 500, 500, 500
 };
 
-
-float _phase;
 
 /**
  * adds the factor to value of attacks if the piece attacks the kingzone
@@ -480,7 +481,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_KNIGHT_PSQT] += psqt_knight_endgame[pst_index_white(square)] * latePSTScalar;
         
         
-        _features[INDEX_KNIGHT_MOBILITY] += sqrt(bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite));
+        _features[INDEX_KNIGHT_MOBILITY] += sqrts[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
         _features[INDEX_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
         _features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
         
@@ -502,7 +503,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_KNIGHT_PSQT] -= psqt_knight_endgame[pst_index_black(square)] * latePSTScalar;;
         
         
-        _features[INDEX_KNIGHT_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+        _features[INDEX_KNIGHT_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
         _features[INDEX_KNIGHT_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
         _features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
         
@@ -530,7 +531,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_BISHOP_PSQT] += psqt_bishop[pst_index_white(square)] * earlyPSTScalar;
         _features[INDEX_BISHOP_PSQT] += psqt_bishop_endgame[pst_index_white(square)] * (_phase) / 100.0;
         
-        _features[INDEX_BISHOP_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
+        _features[INDEX_BISHOP_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(
                 blackPawns & ((ONE << square) & WHITE_SQUARES ? WHITE_SQUARES : BLACK_SQUARES));
         
@@ -567,7 +568,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_BISHOP_PSQT] -= psqt_bishop[pst_index_black(square)] * earlyPSTScalar;
         _features[INDEX_BISHOP_PSQT] -= psqt_bishop_endgame[pst_index_black(square)] * latePSTScalar;
         
-        _features[INDEX_BISHOP_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+        _features[INDEX_BISHOP_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
         _features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(
                 whitePawns & ((ONE << square) & WHITE_SQUARES ? WHITE_SQUARES : BLACK_SQUARES));
         
@@ -605,7 +606,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_ROOK_PSQT] += psqt_rook_endgame[pst_index_white(square)] * (_phase) / 100.0;
         
         
-        _features[INDEX_ROOK_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
+        _features[INDEX_ROOK_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
         
         if (lookUpRookAttack(square, ZERO) & b->getPieces()[BLACK_KING]) {
             //rook on same file or rank as king
@@ -637,7 +638,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_ROOK_PSQT] -= psqt_rook[pst_index_black(square)] * earlyPSTScalar;
         _features[INDEX_ROOK_PSQT] -= psqt_rook_endgame[pst_index_black(square)] * (_phase) / 100.0;
         
-        _features[INDEX_ROOK_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+        _features[INDEX_ROOK_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
         
         if (lookUpRookAttack(square, ZERO) & b->getPieces()[WHITE_KING]) {
             //rook on same file or rank as king
@@ -677,7 +678,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_QUEEN_PSQT] += psqt_queen_endgame[pst_index_white(square)] * latePSTScalar;
         
         
-        _features[INDEX_QUEEN_MOBILITY] += sqrt(bitCount(attacks & mobilitySquaresWhite));
+        _features[INDEX_QUEEN_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
         _features[INDEX_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
         
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks,
@@ -696,7 +697,7 @@ bb::Score Evaluator::evaluate(Board *b) {
         _features[INDEX_QUEEN_PSQT] -= psqt_queen_endgame[pst_index_black(square)] * latePSTScalar;
         
         
-        _features[INDEX_QUEEN_MOBILITY] -= sqrt(bitCount(attacks & mobilitySquaresBlack));
+        _features[INDEX_QUEEN_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
         _features[INDEX_QUEEN_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
         
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks,
@@ -944,7 +945,6 @@ float *Evaluator::getPSQT(Piece piece, bool early) {
         case KING:
             return early ? psqt_king : psqt_king_endgame;
     }
-    return nullptr;
 }
 float *Evaluator::getPhaseValues(){
     return _phaseValues;
