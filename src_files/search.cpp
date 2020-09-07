@@ -543,13 +543,13 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         td->seldepth = ply;
     }
     
-    
+    bool       inCheck       = b->isInCheck(b->getActivePlayer());
     
     
     //depth > MAX_PLY means that it overflowed because depth is unsigned.
     if (depth == 0 || depth > MAX_PLY) {
         //Don't drop into qsearch if in check
-        if (b->isInCheck(b->getActivePlayer())) {
+        if (inCheck) {
             depth++;
         } else {
             return qSearch(b, alpha, beta, ply, td);
@@ -559,7 +559,6 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     SearchData *sd           = td->searchData;
     U64        zobrist       = b->zobrist();
     bool       pv            = (beta - alpha) != 1;
-    bool       inCheck       = b->isInCheck(b->getActivePlayer());
     Score      staticEval    = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     Score      originalAlpha = alpha;
     Score      highestScore  = -MAX_MATE_SCORE;
@@ -740,7 +739,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         int extension = 0;
         
-        if (b->givesCheck(m) && staticExchangeEval > 0) {
+        if (givesCheck && staticExchangeEval > 0) {
             extension = 1;
         }
         
@@ -850,7 +849,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     //if there are no legal moves, its either stalemate or checkmate.
     if (legalMoves == 0) {
         //if we are not in check, it must be stalemate (draw)
-        if (!b->isInCheck(b->getActivePlayer())) {
+        if (!inCheck) {
             return 0;
         } else {
             return -MAX_MATE_SCORE + ply;
@@ -907,9 +906,9 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         }
     }
     
-    
+    bool inCheck = b->isInCheck(b->getActivePlayer());
     Score stand_pat = -MAX_MATE_SCORE + ply;
-    if (!b->isInCheck(b->getActivePlayer())) {
+    if (!inCheck) {
         stand_pat = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     
@@ -946,7 +945,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         
         if (!b->isLegal(m)) continue;
         
-        if (!b->isInCheck(b->getActivePlayer()) && b->staticExchangeEvaluation(m) < 0) continue;
+        if (!inCheck&& b->staticExchangeEvaluation(m) < 0) continue;
         
         
         b->move(m);
