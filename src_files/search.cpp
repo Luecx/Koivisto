@@ -710,17 +710,15 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool isPromotion = move::isPromotion(m);
         
         
-        if (ply == 0) {
-            sd->sideToReduce                      = b->getActivePlayer();
-            if (legalMoves == 0) sd->sideToReduce = !b->getActivePlayer();
-        }
         
         if (!pv && ply > 0 && legalMoves >= 1) {
             if (!isCapture(m) && !isPromotion && !givesCheck) {
                 quiets++;
                 // LMP
-                if (depth <= 10 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth])
+                if (depth <= 10 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]){
+                    moveOrderer.skip = true;
                     continue;
+                }
             }
             
             //SEE Pruning
@@ -762,6 +760,11 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             m = moveOrderer.next();
         }
         
+
+        if (ply == 0) {
+            sd->sideToReduce                      = b->getActivePlayer();
+            if (legalMoves == 0) sd->sideToReduce = !b->getActivePlayer();
+        }
         
         b->move(m);
         
