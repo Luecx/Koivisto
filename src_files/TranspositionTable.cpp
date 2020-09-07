@@ -67,7 +67,6 @@ void TranspositionTable::setSize(U64 mb) {
  * clears the content
  */
 void TranspositionTable::clear() {
-    m_used = 0;
     std::memset(m_entries, 0, sizeof(Entry) * m_size);
 }
 
@@ -76,27 +75,20 @@ void TranspositionTable::clear() {
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
 double TranspositionTable::usage() {
-    return static_cast<double>(m_used) / m_size;
+
+    double used = 0;
+    //Thank you Andrew for this idea :)
+    for(int i = 0; i < 1000; i++){
+        if((m_entries[i].zobrist&m_mask) == i){
+            used ++;
+        }
+    }
+    
+    return used / 1000;
 }
 
-/**
- * returns the amount of entries stored in the table
- * @return
- */
-int TranspositionTable::entryCount() {
-    return m_used;
-}
 
-/**
- * some basic output-stream appending.
- * @param os
- * @param map
- * @return
- */
-ostream &operator<<(ostream &os, const TranspositionTable &map) {
-    os << "used: " << map.m_used << " size: " << map.m_size;
-    return os;
-}
+
 
 /**
  * returns the Entry for the given key.
@@ -137,7 +129,6 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
     if (enP->zobrist == 0) {
         enP->set(zobrist, score, move, type, depth);
         enP->setAge(m_currentAge);
-        m_used++;
         return true;
     } else {
         if (
