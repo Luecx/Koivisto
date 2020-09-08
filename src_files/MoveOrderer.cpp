@@ -65,6 +65,8 @@ MoveOrderer::setMovesPVSearch(move::MoveList *p_moves, move::Move hashMove, Sear
 void MoveOrderer::setMovesQSearch(move::MoveList *p_moves, Board *b) {
     this->moves   = p_moves;
     this->counter = 0;
+    this->skip = false;
+
     
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);

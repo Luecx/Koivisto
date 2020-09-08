@@ -26,18 +26,18 @@ void bb::bb_init() {
 
 void bb::bb_cleanUp() {
     for(int i = 0; i < 64; i++){
-        delete ROOK_ATTACKS[i];
+        delete[] ROOK_ATTACKS[i];
         ROOK_ATTACKS[i] = nullptr;
-        delete BISHOP_ATTACKS[i];
+        delete[] BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
-        delete inBetweenSquares[i];
+        delete[] inBetweenSquares[i];
         inBetweenSquares[i] = nullptr;
     }
-    delete ROOK_ATTACKS;
+    delete[] ROOK_ATTACKS;
     ROOK_ATTACKS = nullptr;
-    delete BISHOP_ATTACKS;
+    delete[] BISHOP_ATTACKS;
     BISHOP_ATTACKS = nullptr;
-    delete inBetweenSquares;
+    delete[] inBetweenSquares;
     inBetweenSquares = nullptr;
     
     for(int i = 0; i <12; i++){

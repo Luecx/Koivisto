@@ -28,6 +28,8 @@ void TranspositionTable::init(U64 MB) {
     
     m_entries = (Entry *) (calloc(m_size, sizeof(Entry)));
     clear();
+
+    m_currentAge = 0;
     
 }
 
@@ -78,13 +80,13 @@ double TranspositionTable::usage() {
 
     double used = 0;
     //Thank you Andrew for this idea :)
-    for(int i = 0; i < 1000; i++){
-        if((m_entries[i].zobrist&m_mask) == i){
+    for(U64 i = 0; i < 100; i++){
+        if((m_entries[i].zobrist)){
             used ++;
         }
     }
     
-    return used / 1000;
+    return used / 100;
 }
 
 

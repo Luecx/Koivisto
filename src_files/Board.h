@@ -119,7 +119,7 @@ class Board {
         U64 m_teamOccupied[2];
         U64 m_occupied;
 
-        struct seeCacheEntry seeCache[SEE_CACHE_SIZE];
+        struct seeCacheEntry seeCache[SEE_CACHE_SIZE]{};
 
         Piece m_pieceBoard[64];
         
