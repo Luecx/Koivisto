@@ -1183,12 +1183,12 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece &piece) {
 
 Score Board::staticExchangeEvaluation(Move m) {
 
-
+#ifdef SEE_CACHE_SIZE
     U64 zob = zobrist();
-
-    if (seeCache[(zob^m)%SEE_CACHE_SIZE].key == (zob^m)){
-        return seeCache[(zob^m)%SEE_CACHE_SIZE].score;
+    if (seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key == (zob ^ m)) {
+        return seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score;
     }
+#endif
     
     Square sqFrom         = getSquareFrom(m);
     Square sqTo           = getSquareTo(m);
@@ -1203,23 +1203,22 @@ Score Board::staticExchangeEvaluation(Move m) {
     
     U64 sqBB = ONE << sqTo;
     U64 bishopsQueens, rooksQueens;
-    rooksQueens =
-    bishopsQueens = m_pieces[WHITE_QUEEN] | m_pieces[BLACK_QUEEN];
+    rooksQueens = bishopsQueens = m_pieces[WHITE_QUEEN] | m_pieces[BLACK_QUEEN];
     rooksQueens |= m_pieces[WHITE_ROOK] | m_pieces[BLACK_ROOK];
     bishopsQueens |= m_pieces[WHITE_BISHOP] | m_pieces[BLACK_BISHOP];
     
+    U64 fixed =
+                ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_pieces[BLACK_PAWN]) |
+                ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_pieces[WHITE_PAWN]) |
+                (KNIGHT_ATTACKS[sqTo] &
+                 (m_pieces[WHITE_KNIGHT] | m_pieces[BLACK_KNIGHT])) |
+                (KING_ATTACKS[sqTo] & (m_pieces[WHITE_KING] | m_pieces[BLACK_KING]));
     
-    U64 fixed = ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_pieces[BLACK_PAWN])
-                | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_pieces[WHITE_PAWN])
-                | (KNIGHT_ATTACKS[sqTo] & (m_pieces[WHITE_KNIGHT] | m_pieces[BLACK_KNIGHT]))
-                | (KING_ATTACKS[sqTo] & (m_pieces[WHITE_KING] | m_pieces[BLACK_KING]));
+    // fixed is the attackset of attackers that cannot pin other m_pieces like
+    // pawns, kings, knights
     
-    //fixed is the attackset of attackers that cannot pin other m_pieces like pawns, kings, knights
-    
-    
-    U64 attadef = (fixed
-                   | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens)
-                      | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
+    U64 attadef = (fixed | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens)
+                            | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
     
     
     if (isCapture(m))
@@ -1249,9 +1248,11 @@ Score Board::staticExchangeEvaluation(Move m) {
     while (--d) {
         gain[d - 1] = -(-gain[d - 1] > gain[d] ? -gain[d - 1] : gain[d]);
     }
-    
-    seeCache[(zob^m)%SEE_CACHE_SIZE].score = gain[0];
-    seeCache[(zob^m)%SEE_CACHE_SIZE].key = zob^m;
+
+#ifdef SEE_CACHE_SIZE
+    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score = gain[0];
+    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key   = zob ^ m;
+#endif
     return gain[0];
 }
 

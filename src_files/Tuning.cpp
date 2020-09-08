@@ -634,7 +634,7 @@ void tuning::evalSpeed() {
     }
     
     int ms = stopMeasure();
-    std::cout << ms << "ms for " << dataCount << " positions = " << (dataCount / ms) / 1e3 << "Mnps" << " Checksum = "
+    std::cout << ms << "ms for " << dataCount << " positions = " << (1000 * dataCount / ms) / 1e6 << "Mnps" << " Checksum = "
               << sum << std::endl;
 }
 

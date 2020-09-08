@@ -119,8 +119,9 @@ class Board {
         U64 m_teamOccupied[2];
         U64 m_occupied;
 
+#ifdef SEE_CACHE_SIZE
         struct seeCacheEntry seeCache[SEE_CACHE_SIZE]{};
-
+#endif
         Piece m_pieceBoard[64];
         
         Color m_activePlayer;
