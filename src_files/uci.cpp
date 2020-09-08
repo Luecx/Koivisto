@@ -111,12 +111,12 @@ void uci_processCommand(std::string str) {
         uci_uci();
     } else if (split.at(0) == "setoption") {
         
+        if (split.size()<5)return;
+
         string name  = uci_getValue(split, "name");
         string value = uci_getValue(split, "value");
         
         //std::cout<< "-" << name << "-  -"<<value<<"-"<<std::endl;
-        
-        uci_set_option(name, value);
     } else if (split.at(0) == "go") {
         if (str.find("wtime") != string::npos) {
             string wtime = uci_getValue(split, "wtime");

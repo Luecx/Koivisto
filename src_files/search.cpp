@@ -99,7 +99,7 @@ void search_useTB(bool val) {
  * stops the search
  */
 void search_stop() {
-    search_timeManager->stopSearch();
+    if(search_timeManager)search_timeManager->stopSearch();
 }
 
 
