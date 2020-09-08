@@ -51,7 +51,7 @@ TranspositionTable::TranspositionTable(U64 mb) {
  * destructor which deletes the table.
  */
 TranspositionTable::~TranspositionTable() {
-    delete m_entries;
+    delete[] m_entries;
 }
 
 /**

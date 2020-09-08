@@ -111,7 +111,7 @@ SearchData::~SearchData() {
     for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
         delete moves[i];
     }
-    delete moves;
+    delete[] moves;
 }
 
 SearchData::SearchData() {

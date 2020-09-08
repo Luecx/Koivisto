@@ -41,11 +41,11 @@ void bb::bb_cleanUp() {
     inBetweenSquares = nullptr;
     
     for(int i = 0; i <12; i++){
-        delete all_hashes[i];
+        delete[] all_hashes[i];
         all_hashes[i] = nullptr;
     }
     
-    delete all_hashes;
+    delete[] all_hashes;
     all_hashes = nullptr;
 }
 

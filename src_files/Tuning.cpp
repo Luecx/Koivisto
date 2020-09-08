@@ -32,7 +32,7 @@ double centipawnAdvantageToProbability(int centipawns) {
 }
 
 
-void tuning::loadPositionFile(std::string path, int count) {
+void tuning::loadPositionFile(std::string path, int count, int start) {
     
     clearLoadedData();
     results = new double[count];
@@ -47,7 +47,10 @@ void tuning::loadPositionFile(std::string path, int count) {
         int    posCount  = 0;
         while (getline(newfile, tp)) {
             
-            
+            if(lineCount < start) {
+                lineCount ++;
+                continue;
+            }
             
             
             //finding the first "c" to check where the fen ended
@@ -71,11 +74,11 @@ void tuning::loadPositionFile(std::string path, int count) {
             //assuming that the result is given as : a-b
             if (res.find('-') != string::npos) {
                 if (res == "1/2-1/2") {
-                    results[lineCount] = 0.5;
+                    results[posCount] = 0.5;
                 } else if (res == "1-0") {
-                    results[lineCount] = 1;
+                    results[posCount] = 1;
                 } else if (res == "0-1") {
-                    results[lineCount] = 0;
+                    results[posCount] = 0;
                 } else {
                     continue;
                 }
@@ -84,7 +87,7 @@ void tuning::loadPositionFile(std::string path, int count) {
             else {
                 try {
                     double actualResult = stod(res);
-                    results[lineCount] = actualResult;
+                    results[posCount] = actualResult;
                 }
                 catch (std::invalid_argument &e) {
                     continue;
@@ -110,7 +113,7 @@ void tuning::loadPositionFile(std::string path, int count) {
         
         std::cout << std::endl;
         
-        dataCount = lineCount;
+        dataCount = posCount;
         
         newfile.close();
     }
@@ -276,15 +279,15 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
         printTable(earlyBlack);
         printTable(lateBlack);
         
-        delete earlyWhite;
-        delete lateWhite;
-        delete earlyBlack;
-        delete lateBlack;
+        delete[] earlyWhite;
+        delete[] lateWhite;
+        delete[] earlyBlack;
+        delete[] lateBlack;
         
-        delete earlyWhiteCount;
-        delete lateWhiteCount;
-        delete earlyBlackCount;
-        delete lateBlackCount;
+        delete[] earlyWhiteCount;
+        delete[] lateWhiteCount;
+        delete[] earlyBlackCount;
+        delete[] lateBlackCount;
     }
     
     if (earlyAndLate && !asymmetric) {
@@ -348,11 +351,11 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
         printTable(earlyWhite);
         printTable(lateWhite);
         
-        delete earlyWhite;
-        delete lateWhite;
+        delete[] earlyWhite;
+        delete[] lateWhite;
         
-        delete earlyWhiteCount;
-        delete lateWhiteCount;
+        delete[] earlyWhiteCount;
+        delete[] lateWhiteCount;
     }
 }
 
@@ -363,8 +366,8 @@ void tuning::clearLoadedData() {
             delete boards[i];
         }
         
-        delete boards;
-        delete results;
+        delete[] boards;
+        delete[] results;
     }
 }
 
@@ -521,13 +524,13 @@ double tuning::optimiseAdaGrad(Evaluator *evaluator, double K, double learningRa
         
     }
     
-    delete earlyGrads;
-    delete lateGrads;
+    delete[] earlyGrads;
+    delete[] lateGrads;
     
-    delete earlyGradsSquaredSum;
-    delete lateGradsSquaredSum;
+    delete[] earlyGradsSquaredSum;
+    delete[] lateGradsSquaredSum;
     
-    delete gradCounters;
+    delete[] gradCounters;
     
     return score / dataCount;
     
@@ -625,14 +628,14 @@ void tuning::evalSpeed() {
     Evaluator evaluator{};
     
     startMeasure();
-    Score    q_i;
+    U64 sum = 0;
     for (int i = 0; i < dataCount; i++) {
-        q_i = evaluator.evaluate(boards[i]);
+      sum+= evaluator.evaluate(boards[i]);
     }
     
     int ms = stopMeasure();
-    std::cout << ms << "ms for " << dataCount << " positions = " << (dataCount / ms) / 1e3 << "Mnps" << " Score = "
-              << q_i << std::endl;
+    std::cout << ms << "ms for " << dataCount << " positions = " << (dataCount / ms) / 1e3 << "Mnps" << " Checksum = "
+              << sum << std::endl;
 }
 
 

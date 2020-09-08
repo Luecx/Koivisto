@@ -21,7 +21,7 @@ namespace tuning {
  * @param path
  * @param count
  */
-void loadPositionFile(std::string path, int count);
+void loadPositionFile(std::string path, int count, int start=0);
 
 /**
  * used to clear all the loaded data

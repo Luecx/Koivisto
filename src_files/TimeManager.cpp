@@ -112,9 +112,9 @@ TimeManager::~TimeManager() {
     
     if(ignorePV) return;
     
-    delete moveHistory;
-    delete scoreHistory;
-    delete depthHistory;
+    delete[] moveHistory;
+    delete[] scoreHistory;
+    delete[] depthHistory;
 }
 
 void TimeManager::updatePV(Move move, Score score, Depth depth) {

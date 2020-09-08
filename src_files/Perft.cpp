@@ -46,7 +46,7 @@ void perft_cleanUp(){
         delete buffer[i];
     }
     
-    delete buffer;
+    delete[] buffer;
 }
 
 
