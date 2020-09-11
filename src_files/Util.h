@@ -5,13 +5,13 @@
 #ifndef CHESSCOMPUTER_UTIL_H
 #define CHESSCOMPUTER_UTIL_H
 
+#include <chrono>
+#include <cmath>
+#include <iomanip>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <vector>
-#include <regex>
-#include <cmath>
-#include <chrono>
-#include <iomanip>
 
 constexpr char const *ws_t = " \t\n\r\f\v";
 
@@ -27,7 +27,6 @@ std::string &trim(std::string &s, const char *t = ws_t);
 // prints a loading bar
 std::string loadingBar(int count, int max, std::string msg);
 
-
 /**
  * https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
  * @param data
@@ -37,10 +36,11 @@ std::string loadingBar(int count, int max, std::string msg);
  */
 std::string &findAndReplaceAll(std::string &data, std::string toSearch, std::string replaceStr);
 
-std::vector<std::string> &splitString(const std::string &txt, std::vector<std::string> &strs, char ch);
+std::vector<std::string> &splitString(const std::string &txt,
+                                      std::vector<std::string> &strs,
+                                      char ch);
 
-
-//static void printArray(float* data, int count){
+// static void printArray(float* data, int count){
 //    int blocks = count / 64 + (count % 64 != 0 ? 1:0);
 //    int wboxes = blocks > 4 ? 4:blocks;
 //    int hboxes = 1+ (blocks-1) / 4;
@@ -73,7 +73,7 @@ std::vector<std::string> &splitString(const std::string &txt, std::vector<std::s
 //    }
 //}
 //
-//static void printArrayBinary(float* data, int count){
+// static void printArrayBinary(float* data, int count){
 //    int blocks = count / 64 + (count % 64 != 0 ? 1:0);
 //    int wboxes = blocks > 12 ? 12:blocks;
 //    int hboxes = 1+ (blocks-1) / 12;
@@ -106,10 +106,8 @@ std::vector<std::string> &splitString(const std::string &txt, std::vector<std::s
 //    }
 //}
 
-
-
 void startMeasure();
 
 int stopMeasure();
 
-#endif //CHESSCOMPUTER_UTIL_H
+#endif  // CHESSCOMPUTER_UTIL_H

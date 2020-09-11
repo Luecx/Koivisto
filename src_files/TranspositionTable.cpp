@@ -4,33 +4,29 @@
 
 #include "TranspositionTable.h"
 
-
 /**
  * inits the table to the given size.
  * Calculates the amount of entries that can fit.
  * @param MB
  */
 void TranspositionTable::init(U64 MB) {
-    
-    U64 bytes      = MB * 1024 * 1024;
+    U64 bytes = MB * 1024 * 1024;
     U64 maxEntries = bytes / sizeof(Entry);
-    
-    //size must be a power of 2!
+
+    // size must be a power of 2!
     m_size = 1;
-    
+
     while (m_size <= maxEntries) {
         m_size *= 2;
     }
-    
+
     m_size /= 2;
     m_mask = m_size - 1;
-    
-    
-    m_entries = (Entry *) (calloc(m_size, sizeof(Entry)));
+
+    m_entries = (Entry *)(calloc(m_size, sizeof(Entry)));
     clear();
 
     m_currentAge = 0;
-    
 }
 
 /**
@@ -77,20 +73,16 @@ void TranspositionTable::clear() {
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
 double TranspositionTable::usage() {
-
     double used = 0;
-    //Thank you Andrew for this idea :)
-    for(U64 i = 0; i < 100; i++){
-        if((m_entries[i].zobrist)){
-            used ++;
+    // Thank you Andrew for this idea :)
+    for (U64 i = 0; i < 100; i++) {
+        if ((m_entries[i].zobrist)) {
+            used++;
         }
     }
-    
+
     return used / 100;
 }
-
-
-
 
 /**
  * returns the Entry for the given key.
@@ -99,11 +91,10 @@ double TranspositionTable::usage() {
  * @return
  */
 Entry TranspositionTable::get(U64 zobrist) {
-    
     U64 index = zobrist & m_mask;
-    
+
     Entry enP = m_entries[index];
-        
+
     return enP;
 }
 
@@ -123,26 +114,23 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @return
  */
 bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
-    
     U64 index = zobrist & m_mask;
-    
+
     Entry *enP = &m_entries[index];
-    
+
     if (enP->zobrist == 0) {
         enP->set(zobrist, score, move, type, depth);
         enP->setAge(m_currentAge);
         return true;
     } else {
-        if (
-                enP->getAge() != m_currentAge
-                || type == PV_NODE
-                || (enP->type != PV_NODE && enP->depth <= depth)) {
+        if (enP->getAge() != m_currentAge || type == PV_NODE ||
+            (enP->type != PV_NODE && enP->depth <= depth)) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
             return true;
         }
     }
-    
+
     return false;
 }
 

@@ -15,9 +15,10 @@ using namespace move;
  * @param movingPiece
  * @return
  */
-Move move::genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece) {
-    
-    
+Move move::genMove(const bb::Square from,
+                   const bb::Square to,
+                   const Type type,
+                   const bb::Piece movingPiece) {
     Move m{0};
     setSquareFrom(m, from);
     setSquareTo(m, to);
@@ -35,25 +36,21 @@ Move move::genMove(const bb::Square from, const bb::Square to, const Type type, 
  * @param movingPiece
  * @return
  */
-Move move::genMove(
-        const bb::Square from,
-        const bb::Square to,
-        const Type type,
-        const bb::Piece movingPiece,
-        const bb::Piece capturedPiece) {
-    
+Move move::genMove(const bb::Square from,
+                   const bb::Square to,
+                   const Type type,
+                   const bb::Piece movingPiece,
+                   const bb::Piece capturedPiece) {
     Move m{0};
-    
+
     setSquareFrom(m, from);
     setSquareTo(m, to);
     setType(m, type);
     setMovingPiece(m, movingPiece);
     setCapturedPiece(m, capturedPiece);
-    
-    
+
     return m;
 }
-
 
 /**
  * prints the bits of the move.
@@ -63,30 +60,29 @@ Move move::genMove(
 void move::printMoveBits(Move move, bool bitInfo) {
     std::cout << " ";
     for (int i = 0; i < 8; i++) {
-        std::cout << (bool) ((move >> (31 - i)) & 1UL);
+        std::cout << (bool)((move >> (31 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (23 - i)) & 1UL);
+        std::cout << (bool)((move >> (23 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (19 - i)) & 1UL);
+        std::cout << (bool)((move >> (19 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (15 - i)) & 1UL);
+        std::cout << (bool)((move >> (15 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 6; i++) {
-        std::cout << (bool) ((move >> (11 - i)) & 1UL);
+        std::cout << (bool)((move >> (11 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 6; i++) {
-        std::cout << (bool) ((move >> (5 - i)) & 1UL);
+        std::cout << (bool)((move >> (5 - i)) & 1UL);
     }
-    
-    
+
     if (bitInfo) {
         std::cout << "\n";
         std::cout << "|        |    |    |    |      |      squareFrom\n"
@@ -100,14 +96,12 @@ void move::printMoveBits(Move move, bool bitInfo) {
                      "|        |                            captured piece\n"
                      "|        +------------------------------------------------\n"
                      "|                                     score information\n"
-                     "+---------------------------------------------------------" << std::endl;
+                     "+---------------------------------------------------------"
+                  << std::endl;
     } else {
         std::cout << std::endl;
     }
-    
-    
 }
-
 
 /**
  * checks if the given move is a doubled pawn push
@@ -172,7 +166,6 @@ bb::Piece move::promotionPiece(Move move) {
  * @return
  */
 std::string move::toString(const Move move) {
-    
     std::string res{};
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
     res.append(bb::SQUARE_IDENTIFIER[getSquareTo(move)]);
@@ -180,14 +173,12 @@ std::string move::toString(const Move move) {
         char c = tolower(bb::PIECE_IDENTIFER[promotionPiece(move)]);
         res.push_back(c);
     }
-    
+
     return res;
 }
 
-
 MoveList::~MoveList() {
 }
-
 
 MoveList::MoveList() {
 }
@@ -199,7 +190,7 @@ void MoveList::swap(int i1, int i2) {
     Move m1 = moves[i1];
     moves[i1] = moves[i2];
     moves[i2] = m1;
-    
+
     MoveScore s1 = scores[i1];
     scores[i1] = scores[i2];
     scores[i2] = s1;
@@ -241,7 +232,7 @@ int MoveList::getSize() const {
  * assigns the score to the move at the given index
  */
 void MoveList::scoreMove(int index, MoveScore score) {
-//    setScore(moves[index], score);
+    //    setScore(moves[index], score);
     scores[index] = score;
 }
 
@@ -260,5 +251,3 @@ void MoveList::printMoveBits() {
         ::move::printMoveBits(getMove(i), false);
     }
 }
-
-

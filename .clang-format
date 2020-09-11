@@ -1,0 +1,15 @@
+Language: Cpp
+BasedOnStyle: Google
+IndentWidth: 4
+AlignAfterOpenBracket: Align
+BinPackArguments: false
+BinPackParameters: false
+ExperimentalAutoDetectBinPacking: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+IncludeBlocks: Merge
+ColumnLimit: 100
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterEnum: true

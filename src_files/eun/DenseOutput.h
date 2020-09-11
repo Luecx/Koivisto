@@ -5,72 +5,63 @@
 #ifndef KOIVISTO_DENSEOUTPUT_H
 #define KOIVISTO_DENSEOUTPUT_H
 
-
-#include <string>
 #include <immintrin.h>
-#include "nntools.h"
+#include <string>
 #include "data/Weight.h"
+#include "nntools.h"
 
-namespace nn{
-
+namespace nn {
 
 class DenseOutput {
+    int inputSize;
 
-        
-        int inputSize;
-        
-        float* input;
-        float  output;
-        
-        Weight* bias;
-        Weight* weights;
-    
-        
-        
-        
-    public:
-        DenseOutput(int inputSize);
-        
-        virtual ~DenseOutput();
-        
-        void initWeights();
-        
-        void compute(){
-            __m128 acc = _mm_setzero_ps();
-            for (int col = 0; col < inputSize; col += 4) {
-                __m128 vec = _mm_load_ps(&input[col]);
-                __m128 mat = _mm_load_ps(&weights->value[col]);
-                acc = _mm_add_ps(acc, _mm_mul_ps(mat, vec));
-            }
-    
-    
-            acc = _mm_hadd_ps(acc, acc);
-            acc = _mm_hadd_ps(acc, acc);
-    
-            output = acc[0] + bias->value[0];
-//            output = sigmoid(output);
+    float *input;
+    float output;
+
+    Weight *bias;
+    Weight *weights;
+
+   public:
+    DenseOutput(int inputSize);
+
+    virtual ~DenseOutput();
+
+    void initWeights();
+
+    void compute() {
+        __m128 acc = _mm_setzero_ps();
+        for (int col = 0; col < inputSize; col += 4) {
+            __m128 vec = _mm_load_ps(&input[col]);
+            __m128 mat = _mm_load_ps(&weights->value[col]);
+            acc = _mm_add_ps(acc, _mm_mul_ps(mat, vec));
         }
-        
-        void setInput(float *input);
-        
-        float *getInput() const;
-        
-        float getOutput() const;
-        
-        int getInputSize() const;
-        
-        int getOutputSize() const;
-        
-        Weight *getWeights() const;
-        
-        Weight* getBias() const;
-        
-        void setBias(Weight *bias);
-        
-        void setWeights(Weight *weights);
-    
+
+        acc = _mm_hadd_ps(acc, acc);
+        acc = _mm_hadd_ps(acc, acc);
+
+        output = acc[0] + bias->value[0];
+        //            output = sigmoid(output);
+    }
+
+    void setInput(float *input);
+
+    float *getInput() const;
+
+    float getOutput() const;
+
+    int getInputSize() const;
+
+    int getOutputSize() const;
+
+    Weight *getWeights() const;
+
+    Weight *getBias() const;
+
+    void setBias(Weight *bias);
+
+    void setWeights(Weight *weights);
 };
 
-}
+}  // namespace nn
 
-#endif //KOIVISTO_DENSEOUTPUT_H
+#endif  // KOIVISTO_DENSEOUTPUT_H

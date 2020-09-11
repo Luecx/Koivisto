@@ -5,22 +5,22 @@
 #ifndef KOIVISTO_SEARCH_H
 #define KOIVISTO_SEARCH_H
 
-#include <iostream>
-#include <cmath>
-#include <tgmath.h>
-#include <chrono>
-#include <ctime>
-#include <cassert>
 #include <stdint.h>
+#include <tgmath.h>
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <ctime>
+#include <iostream>
 #include <string>
 #include "Bitboard.h"
 #include "Board.h"
 //#include "Move.h"
+#include "History.h"
+#include "MoveOrderer.h"
+#include "TimeManager.h"
 #include "TranspositionTable.h"
 #include "eval.h"
-#include "MoveOrderer.h"
-#include "History.h"
-#include "TimeManager.h"
 
 extern int threadCount;
 
@@ -31,12 +31,10 @@ extern int LMR_DIV;
 
 #define MAX_THREADS 32
 
-
-
 /**
  * used to store information about a search
  */
-struct SearchOverview{
+struct SearchOverview {
     int nodes;
     Score score;
     int depth;
@@ -44,24 +42,26 @@ struct SearchOverview{
     Move move;
 };
 
-
 void initLmr();
-Score getWDL(Board* board);
+Score getWDL(Board *board);
 void search_stop();
 void search_setHashSize(int hashSize);
 void search_clearHash();
 void search_useTB(bool val);
-void search_init(int hashSize);     //used to create arrays, movelists etc
-void search_cleanUp();              //used to clean up the memory
-SearchOverview search_overview();             //used to get information about the latest search
+void search_init(int hashSize);    // used to create arrays, movelists etc
+void search_cleanUp();             // used to clean up the memory
+SearchOverview search_overview();  // used to get information about the latest search
 void search_enable_infoStrings();
 void search_disable_infoStrings();
 
-
 Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId = 0);
-Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData *sd, Move skipMove);
-Score  qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *sd);
+Score pvSearch(Board *b,
+               Score alpha,
+               Score beta,
+               Depth depth,
+               Depth ply,
+               ThreadData *sd,
+               Move skipMove);
+Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *sd);
 
-
-
-#endif //KOIVISTO_SEARCH_H
+#endif  // KOIVISTO_SEARCH_H

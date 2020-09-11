@@ -5,14 +5,13 @@
 #ifndef KOIVISTO_TUNING_H
 #define KOIVISTO_TUNING_H
 
-#include "eval.h"
-#include <string>
-#include <iostream>
-#include <fstream>
-#include "Util.h"
 #include <unistd.h>
+#include <fstream>
+#include <iostream>
+#include <string>
 #include "Bitboard.h"
-
+#include "Util.h"
+#include "eval.h"
 
 namespace tuning {
 
@@ -21,7 +20,7 @@ namespace tuning {
  * @param path
  * @param count
  */
-void loadPositionFile(std::string path, int count, int start=0);
+void loadPositionFile(std::string path, int count, int start = 0);
 
 /**
  * used to clear all the loaded data
@@ -40,7 +39,7 @@ double optimiseGD(Evaluator *evaluator, double K, double learningRate);
  * @param K
  * @return
  */
-double optimiseBlackBox(Evaluator *evaluator, double K, float* params, int paramCount, float lr);
+double optimiseBlackBox(Evaluator *evaluator, double K, float *params, int paramCount, float lr);
 
 /**
  * uses the loaded data to optimise the evaluator
@@ -53,20 +52,19 @@ double optimiseAdaGrad(Evaluator *evaluator, double K, double learningRate, int 
  */
 double optimisePST(Evaluator *evaluator, double K, double learningRate);
 
-
 /**
  * computes the error of the evaluator on the given set
  */
 double computeError(Evaluator *evaluator, double K);
 
 /**
- * finds the count positions which have the largest difference to the calculated outcome of the evaluator.
+ * finds the count positions which have the largest difference to the calculated outcome of the
+ * evaluator.
  * @param evaluator
  * @param K
  * @param count
  */
 void findWorstPositions(Evaluator *evaluator, double K, int count);
-
 
 /**
  * computes the K value
@@ -77,7 +75,6 @@ void findWorstPositions(Evaluator *evaluator, double K, int count);
  * @return
  */
 double computeK(Evaluator *evaluator, double initK, double rate, double deviation);
-
 
 /**
  * generates a heat map for the given piece.
@@ -94,6 +91,6 @@ void generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric);
  */
 void evalSpeed();
 
-}
+}  // namespace tuning
 
-#endif //KOIVISTO_TUNING_H
+#endif  // KOIVISTO_TUNING_H

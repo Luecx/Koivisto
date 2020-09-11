@@ -5,21 +5,19 @@
 #ifndef KOIVISTO_UCI_H
 #define KOIVISTO_UCI_H
 
-#include <cstdlib>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <thread>
-#include <unistd.h>
-
 #include "Bitboard.h"
-#include "Move.h"
 #include "Board.h"
+#include "Move.h"
 #include "Perft.h"
-#include "search.h"
 #include "Util.h"
-
+#include "search.h"
 
 void uci_loop(bool bench);
 
@@ -50,4 +48,4 @@ void uci_bench();
 
 void uci_quit();
 
-#endif //KOIVISTO_UCI_H
+#endif  // KOIVISTO_UCI_H
