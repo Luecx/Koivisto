@@ -24,7 +24,7 @@ ThreadData **tds = new ThreadData *[MAX_THREADS];
 
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
-int SE_MARGIN_STATIC = 22;
+int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
 
@@ -625,7 +625,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     }
     
     
-    if (!inCheck && !pv) {
+    if (!skipMove && !inCheck && !pv) {
         /**************************************************************************************
          *                              R A Z O R I N G                                       *
          **************************************************************************************/
@@ -745,9 +745,10 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && legalMoves == 0
             && sameMove(m, hashMove)
             && ply > 0
+            && b->getActivePlayer() != sd->sideToReduce
             && en.zobrist == zobrist
             && abs(en.score) < MIN_MATE_SCORE
-            && en.type == CUT_NODE
+            && (en.type == CUT_NODE || en.type == PV_NODE)
             && en.depth >= depth - 3) {
             
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
