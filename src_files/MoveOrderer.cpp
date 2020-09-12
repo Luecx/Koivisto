@@ -14,13 +14,13 @@ MoveOrderer::~MoveOrderer() {
 }
 
 void MoveOrderer::setMovesPVSearch(move::MoveList *p_moves,
-                                   move::Move hashMove,
-                                   SearchData *sd,
-                                   Board *board,
-                                   Depth ply) {
-    this->moves = p_moves;
+                                   move::Move      hashMove,
+                                   SearchData *    sd,
+                                   Board *         board,
+                                   Depth           ply) {
+    this->moves   = p_moves;
     this->counter = 0;
-    this->skip = false;
+    this->skip    = false;
 
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
@@ -29,7 +29,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *p_moves,
             moves->scoreMove(i, 1e6);
         } else if (isCapture(m)) {
             // add mvv lva score here
-            Score SEE = board->staticExchangeEvaluation(m);
+            Score     SEE    = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6) +
                                (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
             if (SEE >= 0) {
@@ -57,9 +57,9 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *p_moves,
 }
 
 void MoveOrderer::setMovesQSearch(move::MoveList *p_moves, Board *b) {
-    this->moves = p_moves;
+    this->moves   = p_moves;
     this->counter = 0;
-    this->skip = false;
+    this->skip    = false;
 
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);

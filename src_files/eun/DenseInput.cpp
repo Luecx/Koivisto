@@ -9,12 +9,12 @@
 
 nn::DenseInput::DenseInput(int inputSize, int outputSize)
     : inputSize(inputSize), outputSize(outputSize) {
-    input = new (std::align_val_t(32)) float[inputSize]{};
+    input  = new (std::align_val_t(32)) float[inputSize]{};
     output = new (std::align_val_t(32)) float[outputSize]{};
-    sums = new (std::align_val_t(32)) float[outputSize]{};
+    sums   = new (std::align_val_t(32)) float[outputSize]{};
 
     weights = new Weight(outputSize * inputSize);
-    bias = new Weight(outputSize);
+    bias    = new Weight(outputSize);
 
     initWeights();
 }
@@ -112,7 +112,7 @@ void nn::DenseInput::clearInput() {
     memset(sums, 0, sizeof(float) * outputSize);
 
     for (int k = 0; k < inputTracker.count(); k++) {
-        int i = inputTracker.at(k);
+        int i    = inputTracker.at(k);
         input[i] = 0;
     }
     inputTracker.clear();

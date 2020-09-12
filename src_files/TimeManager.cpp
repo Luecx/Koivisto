@@ -12,12 +12,12 @@ auto startTime = std::chrono::system_clock::now();
  */
 TimeManager::TimeManager(int moveTime) {
     isSafeToStop = true;
-    ignorePV = true;
-    forceStop = false;
+    ignorePV     = true;
+    forceStop    = false;
 
-    timeToUse = moveTime;
+    timeToUse      = moveTime;
     upperTimeBound = moveTime;
-    startTime = std::chrono::system_clock::now();
+    startTime      = std::chrono::system_clock::now();
 }
 
 /**
@@ -25,10 +25,10 @@ TimeManager::TimeManager(int moveTime) {
  */
 TimeManager::TimeManager() {
     isSafeToStop = true;
-    ignorePV = true;
-    forceStop = false;
+    ignorePV     = true;
+    forceStop    = false;
 
-    timeToUse = 1 << 30;
+    timeToUse      = 1 << 30;
     upperTimeBound = 1 << 30;
 
     startTime = std::chrono::system_clock::now();
@@ -43,19 +43,19 @@ TimeManager::TimeManager() {
  * @param movesToGo
  * @param board
  */
-TimeManager::TimeManager(int white,
-                         int black,
-                         int whiteInc,
-                         int blackInc,
-                         int movesToGo,
+TimeManager::TimeManager(int    white,
+                         int    black,
+                         int    whiteInc,
+                         int    blackInc,
+                         int    movesToGo,
                          Board* board) {
-    moveHistory = new Move[256];
+    moveHistory  = new Move[256];
     scoreHistory = new Score[256];
     depthHistory = new Depth[256];
     historyCount = 0;
     isSafeToStop = true;
-    ignorePV = false;
-    forceStop = false;
+    ignorePV     = false;
+    forceStop    = false;
 
     double phase =
         (18 -
@@ -68,13 +68,13 @@ TimeManager::TimeManager(int white,
     if (phase > 1) phase = 1;
 
     double division = movesToGo - 30 + 50 * phase;
-    division = 40;
+    division        = 40;
 
     timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
                                                   : (int(black / division) + blackInc) - 10;
 
     int difference = board->getActivePlayer() == WHITE ? (white - black) : (black - white);
-    difference = 0;
+    difference     = 0;
 
     timeToUse += int(difference / division);
     upperTimeBound = timeToUse * 3;
@@ -89,7 +89,7 @@ TimeManager::TimeManager(int white,
 }
 
 int TimeManager::elapsedTime() {
-    auto end = std::chrono::system_clock::now();
+    auto                          end  = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end - startTime;
 
     return round(diff.count() * 1000);
@@ -109,7 +109,7 @@ void TimeManager::updatePV(Move move, Score score, Depth depth) {
     if (ignorePV) return;
 
     // store the move,score,depth in the arrays
-    moveHistory[historyCount] = move;
+    moveHistory[historyCount]  = move;
     scoreHistory[historyCount] = score;
     depthHistory[historyCount] = depth;
 
@@ -155,9 +155,9 @@ void TimeManager::computeSafetyToStop() {
     }
 
     // if the pv changed multiple times during this iteration, search deeper.
-    Depth depth = depthHistory[historyCount];
-    int index = historyCount - 1;
-    int changes = 0;
+    Depth depth   = depthHistory[historyCount];
+    int   index   = historyCount - 1;
+    int   changes = 0;
     while (index >= 0) {
         if (depthHistory[index] != depth) break;
 

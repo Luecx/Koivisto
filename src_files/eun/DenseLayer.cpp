@@ -8,11 +8,11 @@
 
 nn::DenseLayer::DenseLayer(int inputSize, int outputSize)
     : inputSize(inputSize), outputSize(outputSize) {
-    input = new (std::align_val_t(32)) float[inputSize];
+    input  = new (std::align_val_t(32)) float[inputSize];
     output = new (std::align_val_t(32)) float[outputSize];
 
     weights = new Weight(outputSize * inputSize);
-    bias = new Weight(outputSize);
+    bias    = new Weight(outputSize);
 
     initWeights();
 }

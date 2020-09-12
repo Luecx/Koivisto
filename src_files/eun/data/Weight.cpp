@@ -33,7 +33,7 @@ void Weight::setSize(int size) {
 }
 
 Weight::Weight(int size) : size(size) {
-    this->value = new (std::align_val_t(32)) float[size]{};
+    this->value    = new (std::align_val_t(32)) float[size]{};
     this->gradient = new (std::align_val_t(32)) float[size]{};
 }
 

@@ -12,7 +12,7 @@
 #define MINOR_VERSION 0
 
 TimeManager *timeManager;
-Board *board;
+Board *      board;
 std::thread *searchThread = nullptr;
 
 void uci_loop(bool bench) {
@@ -102,7 +102,7 @@ void uci_processCommand(std::string str) {
     } else if (split.at(0) == "setoption") {
         if (split.size() < 5) return;
 
-        string name = uci_getValue(split, "name");
+        string name  = uci_getValue(split, "name");
         string value = uci_getValue(split, "value");
 
         uci_set_option(name, value);
@@ -156,7 +156,7 @@ void uci_processCommand(std::string str) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
         }
     } else if (split.at(0) == "position") {
-        auto fenPos = str.find("fen");
+        auto fenPos  = str.find("fen");
         auto movePos = str.find("moves");
 
         string moves{};
@@ -167,7 +167,7 @@ void uci_processCommand(std::string str) {
 
         if (fenPos != string::npos) {
             string fen = str.substr(fenPos + 3);
-            fen = trim(fen);
+            fen        = trim(fen);
             uci_position_fen(fen, moves);
         } else {
             uci_position_startpos(moves);
@@ -184,7 +184,7 @@ void uci_go_perft(int depth, bool hash) {
 
     startMeasure();
     auto nodes = perft(board, depth, true, true, hash);
-    auto time = stopMeasure();
+    auto time  = stopMeasure();
 
     std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000 << std::endl;
 
@@ -289,10 +289,10 @@ void uci_position_fen(std::string fen, std::string moves) {
     for (string s : mv) {
         string str1 = s.substr(0, 2);
         string str2 = s.substr(2, 4);
-        Square s1 = squareIndex(str1);
-        Square s2 = squareIndex(str2);
+        Square s1   = squareIndex(str1);
+        Square s2   = squareIndex(str2);
 
-        Piece moving = board->getPiece(s1);
+        Piece moving   = board->getPiece(s1);
         Piece captured = board->getPiece(s2);
 
         assert(moving >= 0);
@@ -384,7 +384,7 @@ void uci_bench() {
         ""};
 
     int nodes = 0;
-    int time = 0;
+    int time  = 0;
 
     search_disable_infoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {

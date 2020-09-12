@@ -248,7 +248,7 @@ void Evaluator::computePinnedPieces(Board *b) {
 
     Square square;
     Square wkingSq = bitscanForward(b->getPieces(WHITE, KING));
-    U64 pinner = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE]) &
+    U64    pinner  = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE]) &
                  (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
     while (pinner) {
         square = bitscanForward(pinner);
@@ -272,7 +272,7 @@ void Evaluator::computePinnedPieces(Board *b) {
     }
 
     Square bkingSq = bitscanForward(b->getPieces(BLACK, KING));
-    pinner = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK]) &
+    pinner         = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK]) &
              (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
     while (pinner) {
         square = bitscanForward(pinner);
@@ -314,7 +314,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     U64 whiteTeam = b->getTeamOccupied()[WHITE];
     U64 blackTeam = b->getTeamOccupied()[BLACK];
-    U64 occupied = *b->getOccupied();
+    U64 occupied  = *b->getOccupied();
 
     Square whiteKingSquare = bitscanForward(b->getPieces()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieces()[BLACK_KING]);
@@ -323,8 +323,8 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 blackKingZone = KING_ATTACKS[blackKingSquare];
 
     Square square;
-    U64 attacks;
-    U64 k;
+    U64    attacks;
+    U64    k;
 
     phase =
         (24.0f + phaseValues[5] -
@@ -340,17 +340,17 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     // values to scale early/lategame weights
     float earlyWeightScalar = (1 - phase);
-    float lateWeightScalar = (phase);
+    float lateWeightScalar  = (phase);
 
     // the pst are multiples of 100
     float earlyPSTScalar = earlyWeightScalar / 100;
-    float latePSTScalar = lateWeightScalar / 100;
+    float latePSTScalar  = lateWeightScalar / 100;
 
     int whitekingSafety_attackingPiecesCount = 0;
-    int whitekingSafety_valueOfAttacks = 0;
+    int whitekingSafety_valueOfAttacks       = 0;
 
     int blackkingSafety_attackingPiecesCount = 0;
-    int blackkingSafety_valueOfAttacks = 0;
+    int blackkingSafety_valueOfAttacks       = 0;
     /**********************************************************************************
      *                                  P A W N S                                     *
      **********************************************************************************/
@@ -446,7 +446,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[WHITE_KNIGHT];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
 
         features[INDEX_KNIGHT_PSQT] += psqt_knight[pst_index_white(square)] * earlyPSTScalar;
@@ -468,7 +468,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[BLACK_KNIGHT];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
 
         features[INDEX_KNIGHT_PSQT] -= psqt_knight[pst_index_black(square)] * earlyPSTScalar;
@@ -495,7 +495,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[WHITE_BISHOP];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
@@ -531,7 +531,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[BLACK_BISHOP];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
@@ -573,7 +573,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[WHITE_ROOK];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
 
         features[INDEX_ROOK_PSQT] += psqt_rook[pst_index_white(square)] * earlyPSTScalar;
@@ -606,7 +606,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[BLACK_ROOK];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
 
         features[INDEX_ROOK_PSQT] -= psqt_rook[pst_index_black(square)] * earlyPSTScalar;
@@ -646,7 +646,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[WHITE_QUEEN];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied) | lookUpBishopAttack(square, occupied);
 
         features[INDEX_QUEEN_PSQT] += psqt_queen[pst_index_white(square)] * earlyPSTScalar;
@@ -666,7 +666,7 @@ bb::Score Evaluator::evaluate(Board *b) {
 
     k = b->getPieces()[BLACK_QUEEN];
     while (k) {
-        square = bitscanForward(k);
+        square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied) | lookUpBishopAttack(square, occupied);
 
         features[INDEX_QUEEN_PSQT] -= psqt_queen[pst_index_black(square)] * earlyPSTScalar;
@@ -733,12 +733,12 @@ bb::Score Evaluator::evaluate(Board *b) {
         __m128 *w2 = (__m128 *)(_pieceValuesLate + (i));
 
         earlyRes = _mm_add_ps(earlyRes, _mm_mul_ps(*w1, *feat));
-        lateRes = _mm_add_ps(lateRes, _mm_mul_ps(*w2, *feat));
+        lateRes  = _mm_add_ps(lateRes, _mm_mul_ps(*w2, *feat));
     }
 
-    const __m128 tE = _mm_add_ps(earlyRes, _mm_movehl_ps(earlyRes, earlyRes));
+    const __m128 tE   = _mm_add_ps(earlyRes, _mm_movehl_ps(earlyRes, earlyRes));
     const __m128 sumE = _mm_add_ss(tE, _mm_shuffle_ps(tE, tE, 1));
-    const __m128 tL = _mm_add_ps(lateRes, _mm_movehl_ps(lateRes, lateRes));
+    const __m128 tL   = _mm_add_ps(lateRes, _mm_movehl_ps(lateRes, lateRes));
     const __m128 sumL = _mm_add_ss(tL, _mm_shuffle_ps(tL, tL, 1));
 
     res = sumE[0] * (1 - phase) + sumL[0] * (phase);
@@ -749,8 +749,8 @@ void printEvaluation(Board *board) {
     using namespace std;
 
     Evaluator ev{};
-    Score score = ev.evaluate(board);
-    float phase = ev.getPhase();
+    Score     score = ev.evaluate(board);
+    float     phase = ev.getPhase();
 
     stringstream ss{};
 

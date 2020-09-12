@@ -90,14 +90,14 @@ class DenseLayer {
                 __m256 mat5 = _mm256_load_ps(&weights->value[col + inputSize * (row + 5)]);
                 __m256 mat6 = _mm256_load_ps(&weights->value[col + inputSize * (row + 6)]);
                 __m256 mat7 = _mm256_load_ps(&weights->value[col + inputSize * (row + 7)]);
-                acc0 = _mm256_add_ps(acc0, _mm256_mul_ps(mat0, vec));
-                acc1 = _mm256_add_ps(acc1, _mm256_mul_ps(mat1, vec));
-                acc2 = _mm256_add_ps(acc2, _mm256_mul_ps(mat2, vec));
-                acc3 = _mm256_add_ps(acc3, _mm256_mul_ps(mat3, vec));
-                acc4 = _mm256_add_ps(acc4, _mm256_mul_ps(mat4, vec));
-                acc5 = _mm256_add_ps(acc5, _mm256_mul_ps(mat5, vec));
-                acc6 = _mm256_add_ps(acc6, _mm256_mul_ps(mat6, vec));
-                acc7 = _mm256_add_ps(acc7, _mm256_mul_ps(mat7, vec));
+                acc0        = _mm256_add_ps(acc0, _mm256_mul_ps(mat0, vec));
+                acc1        = _mm256_add_ps(acc1, _mm256_mul_ps(mat1, vec));
+                acc2        = _mm256_add_ps(acc2, _mm256_mul_ps(mat2, vec));
+                acc3        = _mm256_add_ps(acc3, _mm256_mul_ps(mat3, vec));
+                acc4        = _mm256_add_ps(acc4, _mm256_mul_ps(mat4, vec));
+                acc5        = _mm256_add_ps(acc5, _mm256_mul_ps(mat5, vec));
+                acc6        = _mm256_add_ps(acc6, _mm256_mul_ps(mat6, vec));
+                acc7        = _mm256_add_ps(acc7, _mm256_mul_ps(mat7, vec));
             }
 
             acc0 = _mm256_hadd_ps(acc0, acc1);
@@ -122,7 +122,7 @@ class DenseLayer {
             acc0 = _mm256_add_ps(biasV, acc0);
             _mm256_store_ps(&output[row], acc0);
 
-            output[row] = nn::activation(output[row]);
+            output[row]     = nn::activation(output[row]);
             output[row + 1] = nn::activation(output[row + 1]);
             output[row + 2] = nn::activation(output[row + 2]);
             output[row + 3] = nn::activation(output[row + 3]);

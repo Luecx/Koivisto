@@ -14,7 +14,7 @@
 
 struct TrainEntry {
     Board* board;
-    float output;
+    float  output;
 
     TrainEntry(Board* board, float output);
 
@@ -34,9 +34,9 @@ TrainEntry* generateTrainEntry(std::string fen);
  * @param file
  * @return
  */
-std::vector<TrainEntry*>* generateTrainData(std::string file,
-                                            int max_count = 1e9,
-                                            std::vector<TrainEntry*>* vec = nullptr);
+std::vector<TrainEntry*>* generateTrainData(std::string               file,
+                                            int                       max_count = 1e9,
+                                            std::vector<TrainEntry*>* vec       = nullptr);
 
 /**
  * takes a position file + eval and prepares them for python

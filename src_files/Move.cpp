@@ -17,8 +17,8 @@ using namespace move;
  */
 Move move::genMove(const bb::Square from,
                    const bb::Square to,
-                   const Type type,
-                   const bb::Piece movingPiece) {
+                   const Type       type,
+                   const bb::Piece  movingPiece) {
     Move m{0};
     setSquareFrom(m, from);
     setSquareTo(m, to);
@@ -38,9 +38,9 @@ Move move::genMove(const bb::Square from,
  */
 Move move::genMove(const bb::Square from,
                    const bb::Square to,
-                   const Type type,
-                   const bb::Piece movingPiece,
-                   const bb::Piece capturedPiece) {
+                   const Type       type,
+                   const bb::Piece  movingPiece,
+                   const bb::Piece  capturedPiece) {
     Move m{0};
 
     setSquareFrom(m, from);
@@ -187,13 +187,13 @@ MoveList::MoveList() {
  * swaps the move object at index i1 and index i2
  */
 void MoveList::swap(int i1, int i2) {
-    Move m1 = moves[i1];
+    Move m1   = moves[i1];
     moves[i1] = moves[i2];
     moves[i2] = m1;
 
     MoveScore s1 = scores[i1];
-    scores[i1] = scores[i2];
-    scores[i2] = s1;
+    scores[i1]   = scores[i2];
+    scores[i2]   = s1;
 }
 
 /**

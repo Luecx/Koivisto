@@ -14,15 +14,15 @@ using namespace move;
 
 struct SearchData {
     MoveList **moves;
-    Evaluator evaluator{};
+    Evaluator  evaluator{};
 
     // history table (from-to)
     int history[2][64][64] = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    int cmh[6][64][2][6][64] = {0};
-    Move killer[2][MAX_PLY] = {0};
-    Score eval[2][MAX_PLY] = {0};
-    bool sideToReduce;
+    int   cmh[6][64][2][6][64] = {0};
+    Move  killer[2][MAX_PLY]   = {0};
+    Score eval[2][MAX_PLY]     = {0};
+    bool  sideToReduce;
 
     SearchData();
 
@@ -50,9 +50,9 @@ struct SearchData {
  */
 struct ThreadData {
     int threadID = 0;
-    U64 nodes = 0;
+    U64 nodes    = 0;
     int seldepth = 0;
-    int tbhits = 0;
+    int tbhits   = 0;
 
     SearchData *searchData;
 

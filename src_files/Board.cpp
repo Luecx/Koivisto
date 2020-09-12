@@ -31,7 +31,7 @@ Board::Board(std::string fen) {
 
     //<editor-fold desc="splitting/trimming string">
     std::vector<std::string> split{};
-    std::string str{fen};
+    std::string              str{fen};
     str = trim(str);
     findAndReplaceAll(str, "  ", " ");
     splitString(str, split, ' ');
@@ -148,7 +148,7 @@ Board::Board(Board *board) {
         m_pieces[n] = board->m_pieces[n];
     }
 
-    m_occupied = *board->getOccupied();
+    m_occupied     = *board->getOccupied();
     m_activePlayer = board->getActivePlayer();
 
     for (int i = 0; i < 64; i++) {
@@ -294,7 +294,7 @@ void Board::changeActivePlayer() {
 
 void Board::move(Move m) {
     BoardStatus *previousStatus = getBoardStatus();
-    BoardStatus newBoardStatus = {
+    BoardStatus  newBoardStatus = {
         previousStatus->zobrist,               // zobrist will be changed later
         0ULL,                                  // reset en passant. might be set later
         previousStatus->metaInformation,       // copy meta. might be changed
@@ -304,11 +304,11 @@ void Board::move(Move m) {
         m};
 
     Square sqFrom = getSquareFrom(m);
-    Square sqTo = getSquareTo(m);
-    Piece pFrom = getMovingPiece(m);
-    Type mType = getType(m);
-    Color color = getActivePlayer();
-    int factor = getActivePlayer() == 0 ? 1 : -1;
+    Square sqTo   = getSquareTo(m);
+    Piece  pFrom  = getMovingPiece(m);
+    Type   mType  = getType(m);
+    Color  color  = getActivePlayer();
+    int    factor = getActivePlayer() == 0 ? 1 : -1;
 
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
@@ -429,14 +429,14 @@ void Board::undoMove() {
 
     changeActivePlayer();
 
-    Square sqFrom = getSquareFrom(m);
-    Square sqTo = getSquareTo(m);
-    Piece pFrom = getMovingPiece(m);
-    Type mType = getType(m);
-    Piece captured = getCapturedPiece(m);
-    bool isCap = isCapture(m);
-    Color color = getActivePlayer();
-    int factor = getActivePlayer() == 0 ? 1 : -1;
+    Square sqFrom   = getSquareFrom(m);
+    Square sqTo     = getSquareTo(m);
+    Piece  pFrom    = getMovingPiece(m);
+    Type   mType    = getType(m);
+    Piece  captured = getCapturedPiece(m);
+    bool   isCap    = isCapture(m);
+    Color  color    = getActivePlayer();
+    int    factor   = getActivePlayer() == 0 ? 1 : -1;
 
     if (mType == EN_PASSANT) {
         setPiece(sqTo - 8 * factor, (1 - color) * 6);
@@ -462,7 +462,7 @@ void Board::undoMove() {
 
 void Board::move_null() {
     BoardStatus *previousStatus = getBoardStatus();
-    BoardStatus newBoardStatus = {
+    BoardStatus  newBoardStatus = {
         previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
         0ULL,
         previousStatus->metaInformation,
@@ -497,20 +497,20 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
 
     Square s;
     Square target;
-    U64 attacks;
+    U64    attacks;
 
     if (getActivePlayer() == WHITE) {
         attackableSquares = ~m_teamOccupied[WHITE];
-        opponents = m_teamOccupied[BLACK];
+        opponents         = m_teamOccupied[BLACK];
 
         knights = m_pieces[WHITE_KNIGHT];
         bishops = m_pieces[WHITE_BISHOP];
-        rooks = m_pieces[WHITE_ROOK];
-        queens = m_pieces[WHITE_QUEEN];
-        kings = m_pieces[WHITE_KING];
+        rooks   = m_pieces[WHITE_ROOK];
+        queens  = m_pieces[WHITE_QUEEN];
+        kings   = m_pieces[WHITE_KING];
 
-        U64 pawnsLeft = shiftNorthWest(m_pieces[WHITE_PAWN] & ~FILE_A);
-        U64 pawnsRight = shiftNorthEast(m_pieces[WHITE_PAWN] & ~FILE_H);
+        U64 pawnsLeft   = shiftNorthWest(m_pieces[WHITE_PAWN] & ~FILE_A);
+        U64 pawnsRight  = shiftNorthEast(m_pieces[WHITE_PAWN] & ~FILE_H);
         U64 pawnsCenter = shiftNorth(m_pieces[WHITE_PAWN]) & ~m_occupied;
 
         attacks = pawnsLeft & opponents & ~RANK_8;
@@ -528,7 +528,7 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
             attacks = lsbReset(attacks);
         }
 
-        U64 h = pawnsCenter & ~RANK_8;
+        U64 h   = pawnsCenter & ~RANK_8;
         attacks = h;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -597,16 +597,16 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
 
     } else {
         attackableSquares = ~m_teamOccupied[BLACK];
-        opponents = m_teamOccupied[WHITE];
+        opponents         = m_teamOccupied[WHITE];
 
         knights = m_pieces[BLACK_KNIGHT];
         bishops = m_pieces[BLACK_BISHOP];
-        rooks = m_pieces[BLACK_ROOK];
-        queens = m_pieces[BLACK_QUEEN];
-        kings = m_pieces[BLACK_KING];
+        rooks   = m_pieces[BLACK_ROOK];
+        queens  = m_pieces[BLACK_QUEEN];
+        kings   = m_pieces[BLACK_KING];
 
-        U64 pawnsLeft = shiftSouthWest(m_pieces[BLACK_PAWN] & ~FILE_A);
-        U64 pawnsRight = shiftSouthEast(m_pieces[BLACK_PAWN] & ~FILE_H);
+        U64 pawnsLeft   = shiftSouthWest(m_pieces[BLACK_PAWN] & ~FILE_A);
+        U64 pawnsRight  = shiftSouthEast(m_pieces[BLACK_PAWN] & ~FILE_H);
         U64 pawnsCenter = shiftSouth(m_pieces[BLACK_PAWN]) & ~m_occupied;
 
         attacks = pawnsLeft & opponents & ~RANK_1;
@@ -623,7 +623,7 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
             attacks = lsbReset(attacks);
         }
 
-        U64 h = pawnsCenter & ~RANK_1;
+        U64 h   = pawnsCenter & ~RANK_1;
         attacks = h;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -690,7 +690,7 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
     }
 
     while (knights) {
-        s = bitscanForward(knights);
+        s       = bitscanForward(knights);
         attacks = KNIGHT_ATTACKS[s] & attackableSquares;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -706,7 +706,7 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
         knights = lsbReset(knights);
     }
     while (bishops) {
-        s = bitscanForward(bishops);
+        s       = bitscanForward(bishops);
         attacks = lookUpBishopAttack(s, m_occupied) & attackableSquares;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -721,7 +721,7 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
     }
 
     while (rooks) {
-        s = bitscanForward(rooks);
+        s       = bitscanForward(rooks);
         attacks = lookUpRookAttack(s, m_occupied) & attackableSquares;
 
         while (attacks) {
@@ -760,7 +760,7 @@ void Board::getPseudoLegalMoves(MoveList *moves) {
     }
 
     while (kings) {
-        s = bitscanForward(kings);
+        s       = bitscanForward(kings);
         attacks = KING_ATTACKS[s] & attackableSquares;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -813,19 +813,19 @@ void Board::getNonQuietMoves(MoveList *moves) {
 
     Square s;
     Square target;
-    U64 attacks;
+    U64    attacks;
 
     if (getActivePlayer() == WHITE) {
         opponents = m_teamOccupied[BLACK];
 
         knights = m_pieces[WHITE_KNIGHT];
         bishops = m_pieces[WHITE_BISHOP];
-        rooks = m_pieces[WHITE_ROOK];
-        queens = m_pieces[WHITE_QUEEN];
-        kings = m_pieces[WHITE_KING];
+        rooks   = m_pieces[WHITE_ROOK];
+        queens  = m_pieces[WHITE_QUEEN];
+        kings   = m_pieces[WHITE_KING];
 
-        U64 pawnsLeft = shiftNorthWest(m_pieces[WHITE_PAWN] & ~FILE_A);
-        U64 pawnsRight = shiftNorthEast(m_pieces[WHITE_PAWN] & ~FILE_H);
+        U64 pawnsLeft   = shiftNorthWest(m_pieces[WHITE_PAWN] & ~FILE_A);
+        U64 pawnsRight  = shiftNorthEast(m_pieces[WHITE_PAWN] & ~FILE_H);
         U64 pawnsCenter = shiftNorth(m_pieces[WHITE_PAWN]) & ~m_occupied;
 
         attacks = pawnsLeft & opponents & ~RANK_8;
@@ -899,12 +899,12 @@ void Board::getNonQuietMoves(MoveList *moves) {
 
         knights = m_pieces[BLACK_KNIGHT];
         bishops = m_pieces[BLACK_BISHOP];
-        rooks = m_pieces[BLACK_ROOK];
-        queens = m_pieces[BLACK_QUEEN];
-        kings = m_pieces[BLACK_KING];
+        rooks   = m_pieces[BLACK_ROOK];
+        queens  = m_pieces[BLACK_QUEEN];
+        kings   = m_pieces[BLACK_KING];
 
-        U64 pawnsLeft = shiftSouthWest(m_pieces[BLACK_PAWN] & ~FILE_A);
-        U64 pawnsRight = shiftSouthEast(m_pieces[BLACK_PAWN] & ~FILE_H);
+        U64 pawnsLeft   = shiftSouthWest(m_pieces[BLACK_PAWN] & ~FILE_A);
+        U64 pawnsRight  = shiftSouthEast(m_pieces[BLACK_PAWN] & ~FILE_H);
         U64 pawnsCenter = shiftSouth(m_pieces[BLACK_PAWN]) & ~m_occupied;
 
         attacks = pawnsLeft & opponents & ~RANK_1;
@@ -973,7 +973,7 @@ void Board::getNonQuietMoves(MoveList *moves) {
     }
 
     while (knights) {
-        s = bitscanForward(knights);
+        s       = bitscanForward(knights);
         attacks = KNIGHT_ATTACKS[s] & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -983,7 +983,7 @@ void Board::getNonQuietMoves(MoveList *moves) {
         knights = lsbReset(knights);
     }
     while (bishops) {
-        s = bitscanForward(bishops);
+        s       = bitscanForward(bishops);
         attacks = lookUpBishopAttack(s, m_occupied) & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -997,7 +997,7 @@ void Board::getNonQuietMoves(MoveList *moves) {
         bishops = lsbReset(bishops);
     }
     while (rooks) {
-        s = bitscanForward(rooks);
+        s       = bitscanForward(rooks);
         attacks = lookUpRookAttack(s, m_occupied) & opponents;
 
         while (attacks) {
@@ -1025,7 +1025,7 @@ void Board::getNonQuietMoves(MoveList *moves) {
         queens &= (queens - 1);
     }
     while (kings) {
-        s = bitscanForward(kings);
+        s       = bitscanForward(kings);
         attacks = KING_ATTACKS[s] & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -1119,16 +1119,16 @@ Score Board::staticExchangeEvaluation(Move m) {
     }
 #endif
 
-    Square sqFrom = getSquareFrom(m);
-    Square sqTo = getSquareTo(m);
-    Piece capturedPiece = isCapture(m) ? getCapturedPiece(m) : -1;
-    Piece capturingPiece = getMovingPiece(m);
+    Square sqFrom         = getSquareFrom(m);
+    Square sqTo           = getSquareTo(m);
+    Piece  capturedPiece  = isCapture(m) ? getCapturedPiece(m) : -1;
+    Piece  capturingPiece = getMovingPiece(m);
 
     Color attacker = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
 
     Score gain[16], d = 0;
-    U64 fromSet = ONE << sqFrom;
-    U64 occ = m_occupied;
+    U64   fromSet = ONE << sqFrom;
+    U64   occ     = m_occupied;
 
     U64 sqBB = ONE << sqTo;
     U64 bishopsQueens, rooksQueens;
@@ -1176,7 +1176,7 @@ Score Board::staticExchangeEvaluation(Move m) {
 
 #ifdef SEE_CACHE_SIZE
     seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score = gain[0];
-    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key = zob ^ m;
+    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key   = zob ^ m;
 #endif
     return gain[0];
 }
@@ -1190,8 +1190,8 @@ Score Board::staticExchangeEvaluation(Move m) {
 U64 Board::attacksTo(U64 p_occupied, Square sq) {
     U64 sqBB = ONE << sq;
     U64 knights, kings, bishopsQueens, rooksQueens;
-    knights = m_pieces[WHITE_KNIGHT] | m_pieces[BLACK_KNIGHT];
-    kings = m_pieces[WHITE_KING] | m_pieces[BLACK_KING];
+    knights     = m_pieces[WHITE_KNIGHT] | m_pieces[BLACK_KNIGHT];
+    kings       = m_pieces[WHITE_KING] | m_pieces[BLACK_KING];
     rooksQueens = bishopsQueens = m_pieces[WHITE_QUEEN] | m_pieces[BLACK_QUEEN];
     rooksQueens |= m_pieces[WHITE_ROOK] | m_pieces[BLACK_ROOK];
     bishopsQueens |= m_pieces[WHITE_BISHOP] | m_pieces[BLACK_BISHOP];
@@ -1240,15 +1240,15 @@ bool Board::givesCheck(Move m) {
     int opponentKingPos;
     U64 opponentKing;
 
-    Piece pFrom = getMovingPiece(m);
-    Square sqTo = getSquareTo(m);
+    Piece  pFrom  = getMovingPiece(m);
+    Square sqTo   = getSquareTo(m);
     Square sqFrom = getSquareFrom(m);
 
     if (getActivePlayer() == BLACK) {
-        opponentKing = m_pieces[WHITE_KING];
+        opponentKing    = m_pieces[WHITE_KING];
         opponentKingPos = bitscanForward(opponentKing);
     } else {
-        opponentKing = m_pieces[BLACK_KING];
+        opponentKing    = m_pieces[BLACK_KING];
         opponentKingPos = bitscanForward(opponentKing);
     }
 
@@ -1356,19 +1356,19 @@ bool Board::givesCheck(Move m) {
  */
 bool Board::isLegal(Move m) {
     Square thisKing;
-    U64 opponentQueenBitboard;
-    U64 opponentRookBitboard;
-    U64 opponentBishopBitboard;
+    U64    opponentQueenBitboard;
+    U64    opponentRookBitboard;
+    U64    opponentBishopBitboard;
 
     if (this->getActivePlayer() == WHITE) {
-        thisKing = bitscanForward(m_pieces[WHITE_KING]);
-        opponentQueenBitboard = m_pieces[BLACK_QUEEN];
-        opponentRookBitboard = m_pieces[BLACK_ROOK];
+        thisKing               = bitscanForward(m_pieces[WHITE_KING]);
+        opponentQueenBitboard  = m_pieces[BLACK_QUEEN];
+        opponentRookBitboard   = m_pieces[BLACK_ROOK];
         opponentBishopBitboard = m_pieces[BLACK_BISHOP];
     } else {
-        thisKing = bitscanForward(m_pieces[BLACK_KING]);
-        opponentQueenBitboard = m_pieces[WHITE_QUEEN];
-        opponentRookBitboard = m_pieces[WHITE_ROOK];
+        thisKing               = bitscanForward(m_pieces[BLACK_KING]);
+        opponentQueenBitboard  = m_pieces[WHITE_QUEEN];
+        opponentRookBitboard   = m_pieces[WHITE_ROOK];
         opponentBishopBitboard = m_pieces[WHITE_BISHOP];
     }
 
@@ -1397,8 +1397,8 @@ bool Board::isLegal(Move m) {
     }
 
     Square sqFrom = getSquareFrom(m);
-    Square sqTo = getSquareTo(m);
-    bool isCap = isCapture(m);
+    Square sqTo   = getSquareTo(m);
+    bool   isCap  = isCapture(m);
 
     U64 occCopy = m_occupied;
 

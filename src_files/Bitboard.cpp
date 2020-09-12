@@ -4,7 +4,7 @@
 
 using namespace bb;
 
-U64 **bb::ROOK_ATTACKS = new U64 *[64];
+U64 **bb::ROOK_ATTACKS   = new U64 *[64];
 U64 **bb::BISHOP_ATTACKS = new U64 *[64];
 
 U64 **bb::all_hashes = {};
@@ -111,18 +111,18 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
 
 void bb::generateData() {
     for (int n = 0; n < 64; n++) {
-        ROOK_ATTACKS[n] = new U64[ONE << (64 - rookShifts[n])];
+        ROOK_ATTACKS[n]   = new U64[ONE << (64 - rookShifts[n])];
         BISHOP_ATTACKS[n] = new U64[ONE << (64 - bishopShifts[n])];
 
         for (int i = 0; i < pow(2, 64 - rookShifts[n]); i++) {
-            U64 rel_occ = populateMask(rookMasks[n], i);
-            int index = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
+            U64 rel_occ            = populateMask(rookMasks[n], i);
+            int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
             ROOK_ATTACKS[n][index] = generateRookAttack(n, rel_occ);
         }
 
         for (int i = 0; i < pow(2, 64 - bishopShifts[n]); i++) {
             U64 rel_occ = populateMask(bishopMasks[n], i);
-            int index = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
+            int index   = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
             BISHOP_ATTACKS[n][index] = generateBishopAttack(n, rel_occ);
         }
     }
@@ -133,7 +133,7 @@ void bb::generateData() {
         for (Square i = A1; i <= H8; i++) {
             if (i == n) continue;
 
-            U64 m = ZERO;
+            U64 m   = ZERO;
             U64 occ = ZERO;
             setBit(occ, n);
             setBit(occ, i);
@@ -166,8 +166,8 @@ void bb::generateData() {
  * @return
  */
 U64 bb::populateMask(U64 mask, U64 index) {
-    U64 res = 0;
-    Square i = 0;
+    U64    res = 0;
+    Square i   = 0;
 
     while (mask) {
         Square bit = bitscanForward(mask);
@@ -186,10 +186,10 @@ U64 bb::populateMask(U64 mask, U64 index) {
 void bb::generateZobristKeys() {
     all_hashes = new U64 *[12];
     for (int i = 0; i < 6; i++) {
-        all_hashes[i] = new U64[64];
+        all_hashes[i]     = new U64[64];
         all_hashes[i + 6] = new U64[64];
         for (int n = 0; n < 64; n++) {
-            all_hashes[i][n] = randU64();
+            all_hashes[i][n]     = randU64();
             all_hashes[i + 6][n] = randU64();
         }
     }

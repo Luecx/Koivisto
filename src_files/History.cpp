@@ -33,8 +33,8 @@ void SearchData::addHistoryScore(Move m, Depth depth, MoveList *mv, bool side) {
 };
 
 MoveScore SearchData::getHistoryMoveScore(Move m, bool side) {
-    int score = history[side][getSquareFrom(m)][getSquareTo(m)] + MAX_HISTORY_SCORE;
-    MoveScore ms = score;
+    int       score = history[side][getSquareFrom(m)][getSquareTo(m)] + MAX_HISTORY_SCORE;
+    MoveScore ms    = score;
     return ms;
 }
 
@@ -42,15 +42,15 @@ void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, 
     if (depth > 20) return;
     Move m2;
 
-    Piece prevPiece = getMovingPiece(previous) % 6;
-    Square prevTo = getSquareTo(previous);
-    Color color = getMovingPiece(m) / 6;
+    Piece  prevPiece = getMovingPiece(previous) % 6;
+    Square prevTo    = getSquareTo(previous);
+    Color  color     = getMovingPiece(m) / 6;
 
     for (int i = 0; i < mv->getSize(); i++) {
         m2 = mv->getMove(i);
 
-        Piece movingPiece = getMovingPiece(m2) % 6;
-        Square squareTo = getSquareTo(m2);
+        Piece  movingPiece = getMovingPiece(m2) % 6;
+        Square squareTo    = getSquareTo(m2);
 
         if (sameMove(m, m2)) {
             cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
@@ -70,11 +70,11 @@ void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, 
 }
 
 MoveScore SearchData::getCounterMoveHistoryScore(Move previous, Move m) {
-    Piece prevPiece = getMovingPiece(previous) % 6;
-    Square prevTo = getSquareTo(previous);
-    Color color = getMovingPiece(m) / 6;
-    Piece movingPiece = getMovingPiece(m) % 6;
-    Square squareTo = getSquareTo(m);
+    Piece  prevPiece   = getMovingPiece(previous) % 6;
+    Square prevTo      = getSquareTo(previous);
+    Color  color       = getMovingPiece(m) / 6;
+    Piece  movingPiece = getMovingPiece(m) % 6;
+    Square squareTo    = getSquareTo(m);
 
     int score = cmh[prevPiece][prevTo][color][movingPiece][squareTo] + MAX_HISTORY_SCORE;
 

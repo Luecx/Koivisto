@@ -6,7 +6,7 @@
 
 using namespace std;
 
-MoveList **buffer;
+MoveList **         buffer;
 TranspositionTable *tt;
 
 // int generations;
@@ -58,7 +58,7 @@ U64 perft(Board *b, int depth, bool print, bool d1, bool hash, int ply) {
             tt->clear();
         }
 
-        zob = b->zobrist();
+        zob      = b->zobrist();
         Entry en = tt->get(zob);
         if (en.depth == depth && en.zobrist == zob) {
             return en.move;

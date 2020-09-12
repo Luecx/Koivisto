@@ -17,7 +17,7 @@ TrainEntry* generateTrainEntry(std::string fen) {
 
     //    std::cout << splitFenAndEval.at(0) << std::endl;
 
-    float evalScore = 0;
+    float       evalScore = 0;
     std::string eval{splitFenAndEval[1]};
     eval = trim(eval);
 
@@ -36,8 +36,8 @@ TrainEntry* generateTrainEntry(std::string fen) {
     return entry;
 }
 
-std::vector<TrainEntry*>* generateTrainData(std::string file,
-                                            int max_count,
+std::vector<TrainEntry*>* generateTrainData(std::string               file,
+                                            int                       max_count,
                                             std::vector<TrainEntry*>* vec) {
     std::vector<TrainEntry*>* ve;
     if (vec != nullptr) {
@@ -49,7 +49,7 @@ std::vector<TrainEntry*>* generateTrainData(std::string file,
     std::ifstream infile(file);
 
     std::string line;
-    int posCount = 0;
+    int         posCount = 0;
     while (std::getline(infile, line)) {
         if (posCount % 10000 == 0) {
             std::cout << "\r" << loadingBar(posCount, max_count, "Loading data") << std::flush;
@@ -74,9 +74,9 @@ void writeInSparseFormat(std::vector<TrainEntry*>* data, std::string file) {
     for (int i = 0; i < data->size(); i++) {
         Board* board = data->at(i)->board;
 
-        Color activePlayer = board->getActivePlayer();
-        Square whiteKing = bitscanForward(board->getPieces()[WHITE_KING]);
-        Square blackKing = bitscanForward(board->getPieces()[BLACK_KING]);
+        Color  activePlayer = board->getActivePlayer();
+        Square whiteKing    = bitscanForward(board->getPieces()[WHITE_KING]);
+        Square blackKing    = bitscanForward(board->getPieces()[BLACK_KING]);
         for (Piece p = WHITE_PAWN; p <= BLACK_KING; p++) {
             U64 k = board->getPieces()[p];
             while (k) {
@@ -101,7 +101,7 @@ void writeInSparseFormat(std::string inputFile, std::string outputFile) {
     std::ifstream infile(inputFile);
 
     std::string line;
-    int posCount = 0;
+    int         posCount = 0;
     while (std::getline(infile, line)) {
         if (posCount % 10000 == 0) {
             std::cout << "\r" << loadingBar(posCount, 1e9, "Loading data") << std::flush;
@@ -112,9 +112,9 @@ void writeInSparseFormat(std::string inputFile, std::string outputFile) {
 
         Board* board = en->board;
 
-        Color activePlayer = board->getActivePlayer();
-        Square whiteKing = bitscanForward(board->getPieces()[WHITE_KING]);
-        Square blackKing = bitscanForward(board->getPieces()[BLACK_KING]);
+        Color  activePlayer = board->getActivePlayer();
+        Square whiteKing    = bitscanForward(board->getPieces()[WHITE_KING]);
+        Square blackKing    = bitscanForward(board->getPieces()[BLACK_KING]);
         for (Piece p = WHITE_PAWN; p <= BLACK_KING; p++) {
             U64 k = board->getPieces()[p];
             while (k) {

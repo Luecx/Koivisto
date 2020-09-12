@@ -33,14 +33,14 @@ double centipawnAdvantageToProbability(int centipawns) {
 void tuning::loadPositionFile(std::string path, int count, int start) {
     clearLoadedData();
     results = new double[count];
-    boards = new Board *[count];
+    boards  = new Board *[count];
 
     fstream newfile;
     newfile.open(path, ios::in);
     if (newfile.is_open()) {
         string tp;
-        int lineCount = 0;
-        int posCount = 0;
+        int    lineCount = 0;
+        int    posCount  = 0;
         while (getline(newfile, tp)) {
             if (lineCount < start) {
                 lineCount++;
@@ -49,7 +49,7 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
 
             // finding the first "c" to check where the fen ended
             auto firstC = tp.find_first_of('c');
-            auto lastC = tp.find_last_of('c');
+            auto lastC  = tp.find_last_of('c');
             if (firstC == string::npos || lastC == string::npos) {
                 continue;
             }
@@ -80,7 +80,7 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
             else {
                 try {
                     double actualResult = stod(res);
-                    results[posCount] = actualResult;
+                    results[posCount]   = actualResult;
                 } catch (std::invalid_argument &e) {
                     continue;
                 }
@@ -111,18 +111,18 @@ void tuning::findWorstPositions(Evaluator *evaluator, double K, int count) {
     double max = 2;
 
     for (int i = 0; i < count; i++) {
-        int indexOfHighest = 0;
-        double highestScore = 0;
+        int    indexOfHighest = 0;
+        double highestScore   = 0;
 
         for (int n = 0; n < dataCount; n++) {
-            Score q_i = evaluator->evaluate(boards[n]);
+            Score  q_i      = evaluator->evaluate(boards[n]);
             double expected = results[n];
-            double sig = sigmoid(q_i, K);
+            double sig      = sigmoid(q_i, K);
 
             double difference = abs(expected - sig);
 
             if (difference > highestScore && difference < max) {
-                highestScore = difference;
+                highestScore   = difference;
                 indexOfHighest = n;
             }
         }
@@ -188,14 +188,14 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
 
     if (earlyAndLate && asymmetric) {
         double *earlyWhite = new double[64]{0};
-        double *lateWhite = new double[64]{0};
+        double *lateWhite  = new double[64]{0};
         double *earlyBlack = new double[64]{0};
-        double *lateBlack = new double[64]{0};
+        double *lateBlack  = new double[64]{0};
 
         double *earlyWhiteCount = new double[64]{0};
-        double *lateWhiteCount = new double[64]{0};
+        double *lateWhiteCount  = new double[64]{0};
         double *earlyBlackCount = new double[64]{0};
-        double *lateBlackCount = new double[64]{0};
+        double *lateBlackCount  = new double[64]{0};
 
         for (int i = 0; i < dataCount; i++) {
             // dont look at equal positions
@@ -212,13 +212,13 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
                  3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN])) /
                 18.0;
 
-            Color winner = results[i] > 0.5 ? WHITE : BLACK;
-            int whiteFactor = winner == WHITE ? 1 : -1;
+            Color winner      = results[i] > 0.5 ? WHITE : BLACK;
+            int   whiteFactor = winner == WHITE ? 1 : -1;
             //            double earlyChange = phase < 0.3 ? 1:0;
             //            double lateChange = phase > 0.8 ? 1:0;
 
             double earlyChange = 1 - phase;
-            double lateChange = phase;
+            double lateChange  = phase;
 
             //            std::cout << *b << std::endl;
             //            std::cout << phase << std::endl;
@@ -285,10 +285,10 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
 
     if (earlyAndLate && !asymmetric) {
         double *earlyWhite = new double[64]{0};
-        double *lateWhite = new double[64]{0};
+        double *lateWhite  = new double[64]{0};
 
         double *earlyWhiteCount = new double[64]{0};
-        double *lateWhiteCount = new double[64]{0};
+        double *lateWhiteCount  = new double[64]{0};
 
         for (int i = 0; i < dataCount; i++) {
             // dont look at equal positions
@@ -305,13 +305,13 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
                  3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN])) /
                 18.0;
 
-            Color winner = results[i] > 0.5 ? WHITE : BLACK;
-            int whiteFactor = winner == WHITE ? 1 : -1;
+            Color winner      = results[i] > 0.5 ? WHITE : BLACK;
+            int   whiteFactor = winner == WHITE ? 1 : -1;
             //            double earlyChange = phase < 0.3 ? 1:0;
             //            double lateChange = phase > 0.8 ? 1:0;
 
             double earlyChange = 1 - phase;
-            double lateChange = phase;
+            double lateChange  = phase;
 
             //            std::cout << *b << std::endl;
             //            std::cout << phase << std::endl;
@@ -375,22 +375,22 @@ void tuning::clearLoadedData() {
 double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     int paramCount = evaluator->paramCount();
 
-    auto *earlyGrads = new double[paramCount]{0};
-    auto *lateGrads = new double[paramCount]{0};
+    auto *earlyGrads   = new double[paramCount]{0};
+    auto *lateGrads    = new double[paramCount]{0};
     auto *gradCounters = new int[paramCount]{0};
 
     double score = 0;
 
     for (int i = 0; i < dataCount; i++) {
-        Score q_i = evaluator->evaluate(boards[i]);
+        Score  q_i      = evaluator->evaluate(boards[i]);
         double expected = results[i];
 
-        double sig = sigmoid(q_i, K);
-        double sigPrime = sigmoidPrime(q_i, K);
+        double sig       = sigmoid(q_i, K);
+        double sigPrime  = sigmoidPrime(q_i, K);
         double lossPrime = -2 * (expected - sig);
 
         float *features = evaluator->getFeatures();
-        float phase = evaluator->getPhase();
+        float  phase    = evaluator->getPhase();
 
         for (int p = 0; p < paramCount; p++) {
             earlyGrads[p] += features[p] * (1 - phase) * sigPrime * lossPrime;
@@ -415,10 +415,10 @@ double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
 }
 
 double tuning::optimiseBlackBox(Evaluator *evaluator,
-                                double K,
-                                float *params,
-                                int paramCount,
-                                float lr) {
+                                double     K,
+                                float *    params,
+                                int        paramCount,
+                                float      lr) {
     for (int p = 0; p < paramCount; p++) {
         std::cout << "\r  param: " << p << std::flush;
 
@@ -442,33 +442,33 @@ double tuning::optimiseBlackBox(Evaluator *evaluator,
 }
 
 double tuning::optimiseAdaGrad(Evaluator *evaluator,
-                               double K,
-                               double learningRate,
-                               int iterations) {
+                               double     K,
+                               double     learningRate,
+                               int        iterations) {
     int paramCount = evaluator->paramCount();
 
     double score = 0;
 
     auto *earlyGradsSquaredSum = new double[paramCount]{0};
-    auto *lateGradsSquaredSum = new double[paramCount]{0};
+    auto *lateGradsSquaredSum  = new double[paramCount]{0};
 
-    auto *earlyGrads = new double[paramCount]{0};
-    auto *lateGrads = new double[paramCount]{0};
+    auto *earlyGrads   = new double[paramCount]{0};
+    auto *lateGrads    = new double[paramCount]{0};
     auto *gradCounters = new int[paramCount]{0};
 
     for (int iter = 0; iter < iterations; iter++) {
         score = 0;
 
         for (int i = 0; i < dataCount; i++) {
-            Score q_i = evaluator->evaluate(boards[i]);
+            Score  q_i      = evaluator->evaluate(boards[i]);
             double expected = results[i];
 
-            double sig = sigmoid(q_i, K);
-            double sigPrime = sigmoidPrime(q_i, K);
+            double sig       = sigmoid(q_i, K);
+            double sigPrime  = sigmoidPrime(q_i, K);
             double lossPrime = -2 * (expected - sig);
 
             float *features = evaluator->getFeatures();
-            float phase = evaluator->getPhase();
+            float  phase    = evaluator->getPhase();
 
             for (int p = 0; p < paramCount; p++) {
                 earlyGrads[p] += features[p] * (1 - phase) * sigPrime * lossPrime;
@@ -484,7 +484,7 @@ double tuning::optimiseAdaGrad(Evaluator *evaluator,
 
         for (int p = 0; p < paramCount; p++) {
             double earlyAdjust = sqrt(earlyGradsSquaredSum[p]);
-            double lateAdjust = sqrt(lateGradsSquaredSum[p]);
+            double lateAdjust  = sqrt(lateGradsSquaredSum[p]);
 
             if (earlyAdjust == 0) earlyAdjust = 1;
             if (lateAdjust == 0) lateAdjust = 1;
@@ -533,15 +533,15 @@ double tuning::optimisePST(Evaluator *evaluator, double K, double learningRate) 
     double score = 0;
 
     for (int i = 0; i < dataCount; i++) {
-        Score q_i = evaluator->evaluate(boards[i]);
+        Score  q_i      = evaluator->evaluate(boards[i]);
         double expected = results[i];
 
-        double sig = sigmoid(q_i, K);
-        double sigPrime = sigmoidPrime(q_i, K);
+        double sig       = sigmoid(q_i, K);
+        double sigPrime  = sigmoidPrime(q_i, K);
         double lossPrime = -2 * (expected - sig);
 
         float *features = evaluator->getFeatures();
-        double phase = evaluator->getPhase();
+        double phase    = evaluator->getPhase();
 
         for (int i = 0; i < 64; i++) {
             mg_pst_grads[i] +=
@@ -564,7 +564,7 @@ double tuning::optimisePST(Evaluator *evaluator, double K, double learningRate) 
 double tuning::computeError(Evaluator *evaluator, double K) {
     double score = 0;
     for (int i = 0; i < dataCount; i++) {
-        Score q_i = evaluator->evaluate(boards[i]);
+        Score  q_i      = evaluator->evaluate(boards[i]);
         double expected = results[i];
 
         double sig = sigmoid(q_i, K);
@@ -577,8 +577,8 @@ double tuning::computeError(Evaluator *evaluator, double K) {
 }
 
 double tuning::computeK(Evaluator *evaluator, double initK, double rate, double deviation) {
-    double K = initK;
-    double dK = 0.01;
+    double K    = initK;
+    double dK   = 0.01;
     double dEdK = 1;
 
     while (abs(dEdK) > deviation) {

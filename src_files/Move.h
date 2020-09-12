@@ -30,49 +30,49 @@ namespace move {
  */
 
 typedef uint32_t Move;
-typedef uint8_t Type;
+typedef uint8_t  Type;
 typedef uint32_t MoveScore;
 
-constexpr Move MASK_4 = 15;
-constexpr Move MASK_6 = 63;
-constexpr Move MASK_8 = 255;
+constexpr Move MASK_4  = 15;
+constexpr Move MASK_6  = 63;
+constexpr Move MASK_8  = 255;
 constexpr Move MASK_24 = (1 << 24) - 1;
 
-constexpr int SHIFT_FROM = 0;
-constexpr int SHIFT_TO = 6;
-constexpr int SHIFT_TYPE = 12;
-constexpr int SHIFT_MOVING_PIECE = 16;
+constexpr int SHIFT_FROM           = 0;
+constexpr int SHIFT_TO             = 6;
+constexpr int SHIFT_TYPE           = 12;
+constexpr int SHIFT_MOVING_PIECE   = 16;
 constexpr int SHIFT_CAPTURED_PIECE = 20;
-constexpr int SHIFT_SCORE_INFO = 24;
+constexpr int SHIFT_SCORE_INFO     = 24;
 
 // https://www.chessprogramming.org/Encoding_Moves
-constexpr Type QUIET = 0;
-constexpr Type DOUBLED_PAWN_PUSH = 1;
-constexpr Type KING_CASTLE = 2;
-constexpr Type QUEEN_CASTLE = 3;
-constexpr Type CAPTURE = 4;
-constexpr Type EN_PASSANT = 5;
-constexpr Type KNIGHT_PROMOTION = 8;
-constexpr Type BISHOP_PROMOTION = 9;
-constexpr Type ROOK_PROMOTION = 10;
-constexpr Type QUEEN_PROMOTION = 11;
+constexpr Type QUIET                    = 0;
+constexpr Type DOUBLED_PAWN_PUSH        = 1;
+constexpr Type KING_CASTLE              = 2;
+constexpr Type QUEEN_CASTLE             = 3;
+constexpr Type CAPTURE                  = 4;
+constexpr Type EN_PASSANT               = 5;
+constexpr Type KNIGHT_PROMOTION         = 8;
+constexpr Type BISHOP_PROMOTION         = 9;
+constexpr Type ROOK_PROMOTION           = 10;
+constexpr Type QUEEN_PROMOTION          = 11;
 constexpr Type KNIGHT_PROMOTION_CAPTURE = 12;
 constexpr Type BISHOP_PROMOTION_CAPTURE = 13;
-constexpr Type ROOK_PROMOTION_CAPTURE = 14;
-constexpr Type QUEEN_PROMOTION_CAPTURE = 15;
+constexpr Type ROOK_PROMOTION_CAPTURE   = 14;
+constexpr Type QUEEN_PROMOTION_CAPTURE  = 15;
 
 // Move genMove(const std::string str);
 
 Move genMove(const bb::Square from,
              const bb::Square to,
-             const Type type,
-             const bb::Piece movingPiece);
+             const Type       type,
+             const bb::Piece  movingPiece);
 
 Move genMove(const bb::Square from,
              const bb::Square to,
-             const Type type,
-             const bb::Piece movingPiece,
-             const bb::Piece capturedPiece);
+             const Type       type,
+             const bb::Piece  movingPiece,
+             const bb::Piece  capturedPiece);
 
 inline bool sameMove(const Move &m1, const Move &m2) {
     // toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
@@ -151,9 +151,9 @@ void printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {
    private:
-    move::Move moves[256];
+    move::Move      moves[256];
     move::MoveScore scores[256];
-    int size;
+    int             size;
 
    public:
     MoveList();

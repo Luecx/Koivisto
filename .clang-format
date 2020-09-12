@@ -13,3 +13,5 @@ ColumnLimit: 100
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterEnum: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true

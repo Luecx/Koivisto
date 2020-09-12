@@ -16,7 +16,7 @@ class DenseOutput {
     int inputSize;
 
     float *input;
-    float output;
+    float  output;
 
     Weight *bias;
     Weight *weights;
@@ -33,7 +33,7 @@ class DenseOutput {
         for (int col = 0; col < inputSize; col += 4) {
             __m128 vec = _mm_load_ps(&input[col]);
             __m128 mat = _mm_load_ps(&weights->value[col]);
-            acc = _mm_add_ps(acc, _mm_mul_ps(mat, vec));
+            acc        = _mm_add_ps(acc, _mm_mul_ps(mat, vec));
         }
 
         acc = _mm_hadd_ps(acc, acc);

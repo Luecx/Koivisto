@@ -45,10 +45,10 @@ std::string &findAndReplaceAll(std::string &data, std::string toSearch, std::str
     return data;
 }
 
-std::vector<std::string> &splitString(const std::string &txt,
+std::vector<std::string> &splitString(const std::string &       txt,
                                       std::vector<std::string> &strs,
-                                      char ch) {
-    size_t pos = txt.find(ch);
+                                      char                      ch) {
+    size_t pos        = txt.find(ch);
     size_t initialPos = 0;
     strs.clear();
 
@@ -68,7 +68,7 @@ std::vector<std::string> &splitString(const std::string &txt,
 
 std::string loadingBar(int count, int max, std::string msg) {
     std::stringstream ss{};
-    double p = count / (double)max;
+    double            p = count / (double)max;
 
     ss << (int)(100 * p) << "% [";
     for (int i = 0; i < 50 * p; i++) {
@@ -98,7 +98,7 @@ void startMeasure() {
  * @return
  */
 int stopMeasure() {
-    auto end = std::chrono::system_clock::now();
+    auto                          end  = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end - start;
 
     return round(diff.count() * 1000);

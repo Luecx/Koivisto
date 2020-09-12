@@ -10,11 +10,11 @@
  * -> hiddenLayerCount = 2
  */
 nn::DenseNetwork::DenseNetwork(int *sizes, int count) {
-    input = new DenseInput(sizes[0], sizes[1]);
+    input  = new DenseInput(sizes[0], sizes[1]);
     output = new DenseOutput(sizes[count - 1]);
 
     hiddenCount = count - 2;
-    layers = new DenseLayer *[hiddenCount];
+    layers      = new DenseLayer *[hiddenCount];
 
     for (int i = 1; i < count - 1; i++) {
         layers[i - 1] = new DenseLayer(sizes[i], sizes[i + 1]);
@@ -50,9 +50,9 @@ float nn::DenseNetwork::getInput(int index) {
 
 void nn::DenseNetwork::resetNetworkInput(Board *board) {
     clearInput();
-    Color activePlayer = board->getActivePlayer();
-    Square whiteKing = bitscanForward(board->getPieces()[WHITE_KING]);
-    Square blackKing = bitscanForward(board->getPieces()[BLACK_KING]);
+    Color  activePlayer = board->getActivePlayer();
+    Square whiteKing    = bitscanForward(board->getPieces()[WHITE_KING]);
+    Square blackKing    = bitscanForward(board->getPieces()[BLACK_KING]);
     for (Piece p = WHITE_PAWN; p <= BLACK_KING; p++) {
         U64 k = board->getPieces()[p];
         while (k) {
@@ -118,7 +118,7 @@ bool nn::DenseNetwork::validateNetworkInput(Board *board) {
 
 nn::DenseNetwork *nn::DenseNetwork::copy() {
     int *sizes = new int[hiddenCount + 2];
-    sizes[0] = getInputLayer()->getInputSize();
+    sizes[0]   = getInputLayer()->getInputSize();
     for (int i = 1; i <= hiddenCount; i++) {
         sizes[i] = layers[i - 1]->getInputSize();
     }
@@ -196,7 +196,7 @@ void nn::DenseNetwork::setWeights(nn::DenseNetwork *other) {
 
 nn::DenseNetwork *nn::DenseNetwork::shallowCopy() {
     int *sizes = new int[hiddenCount + 2];
-    sizes[0] = getInputLayer()->getInputSize();
+    sizes[0]   = getInputLayer()->getInputSize();
     for (int i = 1; i <= hiddenCount; i++) {
         sizes[i] = layers[i - 1]->getInputSize();
     }

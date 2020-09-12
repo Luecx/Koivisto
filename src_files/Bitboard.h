@@ -21,50 +21,50 @@ namespace bb {
 #define mirrorSquare(s) squareIndex(7 - rankIndex(s), fileIndex(s))
 
 typedef uint64_t U64;
-typedef int8_t Square;
-typedef int8_t Diagonal;
-typedef int8_t AntiDiagonal;
-typedef int8_t Direction;
+typedef int8_t   Square;
+typedef int8_t   Diagonal;
+typedef int8_t   AntiDiagonal;
+typedef int8_t   Direction;
 
-typedef int8_t File;
-typedef int8_t Rank;
-typedef int8_t Piece;
+typedef int8_t  File;
+typedef int8_t  Rank;
+typedef int8_t  Piece;
 typedef uint8_t Color;
 
 typedef uint8_t Depth;
 typedef int16_t Score;
 
-constexpr Depth ONE_PLY = 1;
-constexpr Depth MAX_PLY = 128;
+constexpr Depth ONE_PLY          = 1;
+constexpr Depth MAX_PLY          = 128;
 constexpr Depth MAX_INTERNAL_PLY = 255;
 
 constexpr Score TB_CURSED_SCORE = (Score)(1);
-constexpr Score TB_WIN_SCORE = (Score)((1 << 14) - MAX_INTERNAL_PLY);
-constexpr Score MAX_MATE_SCORE = (Score)((1 << 15) - 1);
-constexpr Score MIN_MATE_SCORE = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY);
+constexpr Score TB_WIN_SCORE    = (Score)((1 << 14) - MAX_INTERNAL_PLY);
+constexpr Score MAX_MATE_SCORE  = (Score)((1 << 15) - 1);
+constexpr Score MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY);
 
 constexpr Color WHITE = 0;
 constexpr Color BLACK = 1;
 
-constexpr Piece PAWN = 0;
+constexpr Piece PAWN   = 0;
 constexpr Piece KNIGHT = 1;
 constexpr Piece BISHOP = 2;
-constexpr Piece ROOK = 3;
-constexpr Piece QUEEN = 4;
-constexpr Piece KING = 5;
+constexpr Piece ROOK   = 3;
+constexpr Piece QUEEN  = 4;
+constexpr Piece KING   = 5;
 
-constexpr Piece WHITE_PAWN = 0;
+constexpr Piece WHITE_PAWN   = 0;
 constexpr Piece WHITE_KNIGHT = 1;
 constexpr Piece WHITE_BISHOP = 2;
-constexpr Piece WHITE_ROOK = 3;
-constexpr Piece WHITE_QUEEN = 4;
-constexpr Piece WHITE_KING = 5;
-constexpr Piece BLACK_PAWN = 6;
+constexpr Piece WHITE_ROOK   = 3;
+constexpr Piece WHITE_QUEEN  = 4;
+constexpr Piece WHITE_KING   = 5;
+constexpr Piece BLACK_PAWN   = 6;
 constexpr Piece BLACK_KNIGHT = 7;
 constexpr Piece BLACK_BISHOP = 8;
-constexpr Piece BLACK_ROOK = 9;
-constexpr Piece BLACK_QUEEN = 10;
-constexpr Piece BLACK_KING = 11;
+constexpr Piece BLACK_ROOK   = 9;
+constexpr Piece BLACK_QUEEN  = 10;
+constexpr Piece BLACK_KING   = 11;
 
 constexpr Square A1 = 0;
 constexpr Square B1 = 1;
@@ -147,10 +147,10 @@ constexpr char const *SQUARE_IDENTIFIER[]{
 
 constexpr char PIECE_IDENTIFER[]{'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
 
-constexpr Direction NORTH = 8;
-constexpr Direction SOUTH = -8;
-constexpr Direction WEST = -1;
-constexpr Direction EAST = 1;
+constexpr Direction NORTH      = 8;
+constexpr Direction SOUTH      = -8;
+constexpr Direction WEST       = -1;
+constexpr Direction EAST       = 1;
 constexpr Direction NORTH_WEST = 7;
 constexpr Direction NORTH_EAST = 9;
 constexpr Direction SOUTH_WEST = -9;
@@ -161,7 +161,7 @@ constexpr Square index64[64] = {0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 
                                 63, 47, 56, 27, 60, 41, 37, 16, 54, 35, 52, 21, 44, 32, 23, 11,
                                 46, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9,  13, 8,  7,  6};
 
-constexpr U64 ONE = (U64)1;
+constexpr U64 ONE  = (U64)1;
 constexpr U64 ZERO = (U64)0;
 
 constexpr U64 FILE_H = 0x8080808080808080L;
@@ -191,17 +191,17 @@ constexpr U64 ANTI_DIAGONAL_2 = ANTI_DIAGONAL_7 << 40;
 constexpr U64 ANTI_DIAGONAL_1 = ANTI_DIAGONAL_7 << 48;
 constexpr U64 ANTI_DIAGONAL_0 = ANTI_DIAGONAL_7 << 56;
 
-constexpr U64 ANTI_DIAGONAL_8 = ANTI_DIAGONAL_7 >> 8;
-constexpr U64 ANTI_DIAGONAL_9 = ANTI_DIAGONAL_7 >> 16;
+constexpr U64 ANTI_DIAGONAL_8  = ANTI_DIAGONAL_7 >> 8;
+constexpr U64 ANTI_DIAGONAL_9  = ANTI_DIAGONAL_7 >> 16;
 constexpr U64 ANTI_DIAGONAL_10 = ANTI_DIAGONAL_7 >> 24;
 constexpr U64 ANTI_DIAGONAL_11 = ANTI_DIAGONAL_7 >> 32;
 constexpr U64 ANTI_DIAGONAL_12 = ANTI_DIAGONAL_7 >> 40;
 constexpr U64 ANTI_DIAGONAL_13 = ANTI_DIAGONAL_7 >> 48;
 constexpr U64 ANTI_DIAGONAL_14 = ANTI_DIAGONAL_7 >> 56;
 
-constexpr U64 DIAGONAL_7 = 0x8040201008040201L;
-constexpr U64 DIAGONAL_8 = DIAGONAL_7 >> 8;
-constexpr U64 DIAGONAL_9 = DIAGONAL_7 >> 16;
+constexpr U64 DIAGONAL_7  = 0x8040201008040201L;
+constexpr U64 DIAGONAL_8  = DIAGONAL_7 >> 8;
+constexpr U64 DIAGONAL_9  = DIAGONAL_7 >> 16;
 constexpr U64 DIAGONAL_10 = DIAGONAL_7 >> 24;
 constexpr U64 DIAGONAL_11 = DIAGONAL_7 >> 32;
 constexpr U64 DIAGONAL_12 = DIAGONAL_7 >> 40;
@@ -229,7 +229,7 @@ constexpr U64 CIRCLE_D = 0x1818000000L;
 constexpr U64 WHITE_SQUARES = 0x55AA55AA55AA55AA;
 constexpr U64 BLACK_SQUARES = ~WHITE_SQUARES;
 
-constexpr U64 CENTER_SQUARES = CIRCLE_D;
+constexpr U64 CENTER_SQUARES          = CIRCLE_D;
 constexpr U64 CENTER_SQUARES_EXTENDED = CIRCLE_C | CIRCLE_D;
 
 constexpr U64 RANKS[]{RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8};
@@ -276,15 +276,15 @@ constexpr U64 ANTI_DIAGONALS[]{ANTI_DIAGONAL_0,
                                ANTI_DIAGONAL_14};
 
 constexpr U64 CASTLING_WHITE_QUEENSIDE_MASK = 0x000000000000000EL;
-constexpr U64 CASTLING_WHITE_KINGSIDE_MASK = 0x0000000000000060L;
+constexpr U64 CASTLING_WHITE_KINGSIDE_MASK  = 0x0000000000000060L;
 constexpr U64 CASTLING_BLACK_QUEENSIDE_MASK = CASTLING_WHITE_QUEENSIDE_MASK << (7 * 8);
-constexpr U64 CASTLING_BLACK_KINGSIDE_MASK = CASTLING_WHITE_KINGSIDE_MASK << (7 * 8);
+constexpr U64 CASTLING_BLACK_KINGSIDE_MASK  = CASTLING_WHITE_KINGSIDE_MASK << (7 * 8);
 
 // describes the fields that must not be attacked
 constexpr U64 CASTLING_WHITE_QUEENSIDE_SAFE = 0x000000000000001CL;
-constexpr U64 CASTLING_WHITE_KINGSIDE_SAFE = CASTLING_WHITE_QUEENSIDE_SAFE << 2;
+constexpr U64 CASTLING_WHITE_KINGSIDE_SAFE  = CASTLING_WHITE_QUEENSIDE_SAFE << 2;
 constexpr U64 CASTLING_BLACK_QUEENSIDE_SAFE = CASTLING_WHITE_QUEENSIDE_SAFE << (7 * 8);
-constexpr U64 CASTLING_BLACK_KINGSIDE_SAFE = CASTLING_WHITE_KINGSIDE_SAFE << (7 * 8);
+constexpr U64 CASTLING_BLACK_KINGSIDE_SAFE  = CASTLING_WHITE_KINGSIDE_SAFE << (7 * 8);
 
 constexpr U64 CASTLING_MASKS[] = {CASTLING_WHITE_QUEENSIDE_MASK,
                                   CASTLING_WHITE_KINGSIDE_MASK,
@@ -837,7 +837,7 @@ inline U64 lookUpRookAttack(Square index, U64 occupied) {
  * blockers.
  */
 inline U64 lookUpRookXRayAttack(Square index, U64 occupied, U64 opponent) {
-    U64 attacks = lookUpRookAttack(index, occupied);
+    U64 attacks  = lookUpRookAttack(index, occupied);
     U64 blockers = opponent & attacks;
     return attacks ^ lookUpRookAttack(index, occupied ^ blockers);
 }
@@ -860,7 +860,7 @@ inline U64 lookUpBishopAttack(Square index, U64 occupied) {
  * blockers.
  */
 inline U64 lookUpBishopXRayAttack(Square index, U64 occupied, U64 opponent) {
-    U64 attacks = lookUpBishopAttack(index, occupied);
+    U64 attacks  = lookUpBishopAttack(index, occupied);
     U64 blockers = opponent & attacks;
     return attacks ^ lookUpBishopAttack(index, occupied ^ blockers);
 }

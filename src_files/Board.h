@@ -20,9 +20,9 @@ using namespace bb;
 using namespace move;
 
 constexpr U64 STATUS_INDEX_WHITE_QUEENSIDE_CASTLING = 0;
-constexpr U64 STATUS_INDEX_WHITE_KINGSIDE_CASTLING = 1;
+constexpr U64 STATUS_INDEX_WHITE_KINGSIDE_CASTLING  = 1;
 constexpr U64 STATUS_INDEX_BLACK_QUEENSIDE_CASTLING = 2;
-constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING = 3;
+constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING  = 3;
 
 constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
 
@@ -42,7 +42,7 @@ static constexpr Score vals[]{100, 325, 325, 500, 1000, 10000};
  */
 
 struct seeCacheEntry {
-    U64 key;
+    U64   key;
     Score score;
 };
 
@@ -58,12 +58,12 @@ struct BoardStatus {
           move(a.move) {
     }
 
-    BoardStatus(U64 p_zobrist,
-                U64 p_enPassantTarget,
-                U64 p_metaInformation,
-                U64 p_fiftyMoveCounter,
-                U64 p_repetitionCounter,
-                U64 p_moveCounter,
+    BoardStatus(U64  p_zobrist,
+                U64  p_enPassantTarget,
+                U64  p_metaInformation,
+                U64  p_fiftyMoveCounter,
+                U64  p_repetitionCounter,
+                U64  p_moveCounter,
                 Move p_move)
         : zobrist(p_zobrist),
           enPassantTarget(p_enPassantTarget),
@@ -74,12 +74,12 @@ struct BoardStatus {
           move(p_move) {
     }
 
-    U64 zobrist;
-    U64 enPassantTarget;
-    U64 metaInformation;
-    U64 fiftyMoveCounter;
-    U64 repetitionCounter;
-    U64 moveCounter;
+    U64  zobrist;
+    U64  enPassantTarget;
+    U64  metaInformation;
+    U64  fiftyMoveCounter;
+    U64  repetitionCounter;
+    U64  moveCounter;
     Move move;
 
     bool operator==(const BoardStatus &rhs) const {

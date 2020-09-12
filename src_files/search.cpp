@@ -8,12 +8,12 @@
 #include "TimeManager.h"
 #include "syzygy/tbprobe.h"
 
-TranspositionTable *table;
-TimeManager *search_timeManager;
+TranspositionTable *     table;
+TimeManager *            search_timeManager;
 std::vector<std::thread> runningThreads;
-int threadCount = 1;
-bool useTB = false;
-bool printInfo = true;
+int                      threadCount = 1;
+bool                     useTB       = false;
+bool                     printInfo   = true;
 
 SearchOverview overview;
 
@@ -22,10 +22,10 @@ int lmrReductions[256][256];
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData **tds = new ThreadData *[MAX_THREADS];
 
-int RAZOR_MARGIN = 198;
-int FUTILITY_MARGIN = 92;
+int RAZOR_MARGIN     = 198;
+int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
-int LMR_DIV = 215;
+int LMR_DIV          = 215;
 
 void initLmr() {
     int d, m;
@@ -155,8 +155,8 @@ void search_cleanUp() {
 void extractPV(Board *b, MoveList *mvList, Depth depth) {
     if (depth <= 0) return;
 
-    U64 zob = b->zobrist();
-    Entry en = table->get(zob);
+    U64   zob = b->zobrist();
+    Entry en  = table->get(zob);
     if (en.zobrist == zob) {
         // extract the move from the table
         Move mov = en.move;
@@ -323,7 +323,7 @@ Move getDTZMove(Board *board) {
     Piece promo = 6 - TB_GET_PROMOTES(result);
 
     Square sqFrom = TB_GET_FROM(result);
-    Square sqTo = TB_GET_TO(result);
+    Square sqTo   = TB_GET_TO(result);
 
     MoveList *mv = new MoveList();
     board->getPseudoLegalMoves(mv);
@@ -398,8 +398,8 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         for (int i = 0; i < threadCount; i++) {
             // reseting the thread data
             tds[i]->threadID = i;
-            tds[i]->tbhits = 0;
-            tds[i]->nodes = 0;
+            tds[i]->tbhits   = 0;
+            tds[i]->nodes    = 0;
             tds[i]->seldepth = 0;
         }
 
@@ -445,8 +445,8 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
         overview.nodes = totalNodes();
         overview.depth = d;
         overview.score = s;
-        overview.time = timeManager->elapsedTime();
-        overview.move = best;
+        overview.time  = timeManager->elapsedTime();
+        overview.move  = best;
 
         // return the best move if its the main thread
         return best;
@@ -464,13 +464,13 @@ Move bestMove(Board *b, Depth maxDepth, TimeManager *timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board *b,
-               Score alpha,
-               Score beta,
-               Depth depth,
-               Depth ply,
+Score pvSearch(Board *     b,
+               Score       alpha,
+               Score       beta,
+               Depth       depth,
+               Depth       ply,
                ThreadData *td,
-               Move skipMove) {
+               Move        skipMove) {
     td->nodes++;
 
     if (!isTimeLeft()) {
@@ -497,15 +497,15 @@ Score pvSearch(Board *b,
         }
     }
 
-    SearchData *sd = td->searchData;
-    U64 zobrist = b->zobrist();
-    bool pv = (beta - alpha) != 1;
-    Score staticEval = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    Score originalAlpha = alpha;
-    Score highestScore = -MAX_MATE_SCORE;
-    Score score = -MAX_MATE_SCORE;
-    Move bestMove = 0;
-    Move hashMove = 0;
+    SearchData *sd         = td->searchData;
+    U64         zobrist    = b->zobrist();
+    bool        pv         = (beta - alpha) != 1;
+    Score       staticEval = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score       originalAlpha = alpha;
+    Score       highestScore  = -MAX_MATE_SCORE;
+    Score       score         = -MAX_MATE_SCORE;
+    Move        bestMove      = 0;
+    Move        hashMove      = 0;
 
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
 
@@ -631,7 +631,7 @@ Score pvSearch(Board *b,
 
     // count the legal moves
     int legalMoves = 0;
-    int quiets = 0;
+    int quiets     = 0;
 
     while (moveOrderer.hasNext()) {
         Move m = moveOrderer.next();
@@ -640,7 +640,7 @@ Score pvSearch(Board *b,
 
         if (sameMove(m, skipMove)) continue;
 
-        bool givesCheck = b->givesCheck(m);
+        bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
 
         if (!pv && ply > 0 && legalMoves >= 1) {
@@ -677,7 +677,7 @@ Score pvSearch(Board *b,
             abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) &&
             en.depth >= depth - 3) {
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
+            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) extension++;
             b->getPseudoLegalMoves(mv);
             moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
@@ -698,7 +698,7 @@ Score pvSearch(Board *b,
 
         if (lmr) {
             int history = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
-            lmr = lmr - history / 256;
+            lmr         = lmr - history / 256;
             if (sd->sideToReduce == b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
@@ -739,7 +739,7 @@ Score pvSearch(Board *b,
         // best move
         if (score > highestScore) {
             highestScore = score;
-            bestMove = m;
+            bestMove     = m;
         }
 
         // beta -cutoff
@@ -819,10 +819,10 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
     if (b->isDraw()) return 0;
 
     // extract information like search data (history tables), zobrist etc
-    SearchData *sd = td->searchData;
-    U64 zobrist = b->zobrist();
-    Entry en = table->get(b->zobrist());
-    NodeType ttNodeType = ALL_NODE;
+    SearchData *sd         = td->searchData;
+    U64         zobrist    = b->zobrist();
+    Entry       en         = table->get(b->zobrist());
+    NodeType    ttNodeType = ALL_NODE;
 
     // if there is an entry found, probe the tt for the score
     if (en.zobrist == zobrist) {
@@ -839,7 +839,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         }
     }
 
-    bool inCheck = b->isInCheck(b->getActivePlayer());
+    bool  inCheck   = b->isInCheck(b->getActivePlayer());
     Score stand_pat = -MAX_MATE_SCORE + ply;
     if (!inCheck) {
         stand_pat = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
@@ -862,7 +862,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
     MoveOrderer moveOrderer{};
     moveOrderer.setMovesQSearch(mv, b);
 
-    Move bestMove = 0;
+    Move  bestMove  = 0;
     Score bestScore = -MAX_MATE_SCORE;
 
     for (int i = 0; i < mv->getSize(); i++) {
@@ -882,7 +882,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
 
         if (score > bestScore) {
             bestScore = score;
-            bestMove = m;
+            bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
                 table->put(zobrist, bestScore, m, ttNodeType, 0);
@@ -890,7 +890,7 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
             }
             if (score > alpha) {
                 ttNodeType = PV_NODE;
-                alpha = score;
+                alpha      = score;
             }
         }
     }

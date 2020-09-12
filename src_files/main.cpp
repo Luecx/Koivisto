@@ -22,8 +22,8 @@ void main_tune_features_bb() {
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
     // tune Phase specificly
-    float *params = evaluator->getPhaseValues();
-    int paramCount = 6;
+    float *params     = evaluator->getPhaseValues();
+    int    paramCount = 6;
 
     for (int i = 0; i < 5000; i++) {
         std::cout << "--------------------------------------------------- [" << i
@@ -53,7 +53,7 @@ void main_tune_pst_bb(Piece piece) {
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
     for (int i = 0; i < 64; i++) {
-        evaluator->getPSQT(piece, true)[i] = round(evaluator->getPSQT(piece, true)[i]);
+        evaluator->getPSQT(piece, true)[i]  = round(evaluator->getPSQT(piece, true)[i]);
         evaluator->getPSQT(piece, false)[i] = round(evaluator->getPSQT(piece, false)[i]);
     }
 

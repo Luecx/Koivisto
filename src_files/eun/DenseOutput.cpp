@@ -8,9 +8,9 @@
 
 nn::DenseOutput::DenseOutput(int inputSize) : inputSize(inputSize) {
     //    input = new float[inputSize];
-    output = 1;
+    output  = 1;
     weights = new Weight(inputSize);
-    bias = new Weight(1);
+    bias    = new Weight(1);
 
     //    for(int i = 0; i < outputSize; i++){
     //        weights[i] = new float[inputSize];
@@ -20,7 +20,7 @@ nn::DenseOutput::DenseOutput(int inputSize) : inputSize(inputSize) {
 }
 
 void nn::DenseOutput::initWeights() {
-    float bound = 1.0f / sqrt(inputSize);
+    float bound    = 1.0f / sqrt(inputSize);
     bias->value[0] = nn::randFloat(-bound, bound);
 
     for (int n = 0; n < inputSize; n++) {

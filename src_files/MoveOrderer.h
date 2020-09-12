@@ -12,7 +12,7 @@
 class MoveOrderer {
    private:
     move::MoveList *moves;
-    int counter;
+    int             counter;
 
    public:
     bool skip;
@@ -22,10 +22,10 @@ class MoveOrderer {
     virtual ~MoveOrderer();
 
     void setMovesPVSearch(move::MoveList *p_moves,
-                          move::Move hashMove,
-                          SearchData *sd,
-                          Board *board,
-                          Depth ply);
+                          move::Move      hashMove,
+                          SearchData *    sd,
+                          Board *         board,
+                          Depth           ply);
 
     void setMovesQSearch(move::MoveList *p_moves, Board *b);
 

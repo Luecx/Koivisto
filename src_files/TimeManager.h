@@ -26,8 +26,8 @@ class TimeManager {
     bool isSafeToStop;
     bool forceStop;
 
-    int historyCount;
-    Move* moveHistory;
+    int    historyCount;
+    Move*  moveHistory;
     Score* scoreHistory;
     Depth* depthHistory;
 

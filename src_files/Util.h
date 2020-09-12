@@ -36,9 +36,9 @@ std::string loadingBar(int count, int max, std::string msg);
  */
 std::string &findAndReplaceAll(std::string &data, std::string toSearch, std::string replaceStr);
 
-std::vector<std::string> &splitString(const std::string &txt,
+std::vector<std::string> &splitString(const std::string &       txt,
                                       std::vector<std::string> &strs,
-                                      char ch);
+                                      char                      ch);
 
 // static void printArray(float* data, int count){
 //    int blocks = count / 64 + (count % 64 != 0 ? 1:0);

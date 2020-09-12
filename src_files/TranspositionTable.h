@@ -19,7 +19,7 @@ using namespace move;
 typedef uint8_t NodeType;
 typedef uint8_t NodeAge;
 
-constexpr NodeType PV_NODE = 0;
+constexpr NodeType PV_NODE  = 0;
 constexpr NodeType CUT_NODE = 1;
 constexpr NodeType ALL_NODE = 2;
 
@@ -36,10 +36,10 @@ struct Entry {
 
     void set(U64 p_zobrist, Score p_score, Move p_move, NodeType p_type, Depth p_depth) {
         this->zobrist = p_zobrist;
-        this->score = p_score;
-        this->move = p_move;
-        this->type = p_type;
-        this->depth = p_depth;
+        this->score   = p_score;
+        this->move    = p_move;
+        this->type    = p_type;
+        this->depth   = p_depth;
     }
 
     NodeAge getAge() {
@@ -50,19 +50,19 @@ struct Entry {
         setScore(move, p_age);
     }
 
-    U64 zobrist;    // 64 bit
-    Move move;      // 32 bit  (using the 8 msb for age)
-    Depth depth;    // 8 bit
-    NodeType type;  // 8 bit
-    Score score;    // 16 bit -> 128 bit = 16 byte
+    U64      zobrist;  // 64 bit
+    Move     move;     // 32 bit  (using the 8 msb for age)
+    Depth    depth;    // 8 bit
+    NodeType type;     // 8 bit
+    Score    score;    // 16 bit -> 128 bit = 16 byte
 };
 
 class TranspositionTable {
    private:
     NodeAge m_currentAge;
-    Entry *m_entries;
-    U64 m_size;
-    U64 m_mask;
+    Entry * m_entries;
+    U64     m_size;
+    U64     m_mask;
 
     void init(U64 MB);
 
