@@ -1,31 +1,29 @@
 
 
 #include "Bitboard.h"
-
+#include <random>
 
 using namespace bb;
 
-U64 **bb::ROOK_ATTACKS = new U64*[64];
-U64 **bb::BISHOP_ATTACKS = new U64*[64];
+U64** bb::ROOK_ATTACKS   = new U64* [64];
+U64** bb::BISHOP_ATTACKS = new U64* [64];
 
-U64 **bb::all_hashes = {};
+U64** bb::all_hashes = {};
 
-U64 **bb::inBetweenSquares = new U64*[64];
+U64** bb::inBetweenSquares = new U64* [64];
+
+std::mt19937_64 rng;
 
 void bb::bb_init() {
     
-    
-    std::srand(seed);
-    
-    
+    rng.seed(seed);
     
     generateZobristKeys();
     generateData();
-    
 }
 
 void bb::bb_cleanUp() {
-    for(int i = 0; i < 64; i++){
+    for (int i = 0; i < 64; i++) {
         delete[] ROOK_ATTACKS[i];
         ROOK_ATTACKS[i] = nullptr;
         delete[] BISHOP_ATTACKS[i];
@@ -40,7 +38,7 @@ void bb::bb_cleanUp() {
     delete[] inBetweenSquares;
     inBetweenSquares = nullptr;
     
-    for(int i = 0; i <12; i++){
+    for (int i = 0; i < 12; i++) {
         delete[] all_hashes[i];
         all_hashes[i] = nullptr;
     }
@@ -49,48 +47,50 @@ void bb::bb_cleanUp() {
     all_hashes = nullptr;
 }
 
-U64 bb::randU64(){
+U64 bb::randU64() {
     U64 res{0};
     
-    res ^= U64(rand()) << 0;
-    res ^= U64(rand()) << 10;
-    res ^= U64(rand()) << 20;
-    res ^= U64(rand()) << 30;
-    res ^= U64(rand()) << 40;
-    res ^= U64(rand()) << 50;
-    res ^= U64(rand()) << 60;
+    res ^= U64(rng()) << 0;
+    res ^= U64(rng()) << 10;
+    res ^= U64(rng()) << 20;
+    res ^= U64(rng()) << 30;
+    res ^= U64(rng()) << 40;
+    res ^= U64(rng()) << 50;
+    res ^= U64(rng()) << 60;
     
     return res;
 }
 
 double bb::randDouble(double min, double max) {
-    double f = static_cast<double>(rand()) / RAND_MAX;
+    double f = static_cast<double>(rng()) / rng.max();
     return min + f * (max - min);
 }
 
 
-
-U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ){
-    U64 res {0};
+U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
+    U64 res{0};
     
     static const U64 topBottom = RANK_1 | RANK_8;
     static const U64 leftRight = FILE_A | FILE_H;
     
-    if((1ULL << sq) & RANK_1 && direction < -2){
+    if ((1ULL << sq) & RANK_1 && direction < -2) {
         return res;
-    }if((1ULL << sq) & RANK_8 && direction > 2){
+    }
+    if ((1ULL << sq) & RANK_8 && direction > 2) {
         return res;
-    }if((1ULL << sq) & FILE_A && (direction == WEST || direction == SOUTH_WEST || direction == NORTH_WEST)){
+    }
+    if ((1ULL << sq) & FILE_A && (direction == WEST || direction == SOUTH_WEST || direction == NORTH_WEST)) {
         return res;
-    }if((1ULL << sq) & FILE_H && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)){
+    }
+    if ((1ULL << sq) & FILE_H && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
         return res;
     }
     
-    while(true) {
+    while (true) {
         sq += direction;
         
         
-        U64 currentSq = (U64)1 << sq;
+        U64 currentSq = (U64) 1 << sq;
         
         
         res |= currentSq;
@@ -102,12 +102,12 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ){
             if (currentSq & topBottom) {
                 return res;
             }
-        } else if(abs(direction) == 1){
+        } else if (abs(direction) == 1) {
             if (currentSq & leftRight) {
                 return res;
             }
-        } else{
-            if(currentSq & CIRCLE_A){
+        } else {
+            if (currentSq & CIRCLE_A) {
                 return res;
             }
         }
@@ -118,54 +118,53 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ){
 
 void bb::generateData() {
     for (int n = 0; n < 64; n++) {
-        ROOK_ATTACKS[n] = new U64[ONE << (64-rookShifts[n])];
-        BISHOP_ATTACKS[n] = new U64[ONE << (64-bishopShifts[n])];
+        ROOK_ATTACKS[n]   = new U64[ONE << (64 - rookShifts[n])];
+        BISHOP_ATTACKS[n] = new U64[ONE << (64 - bishopShifts[n])];
         
-        for(int i = 0; i < pow(2, 64 - rookShifts[n]); i++){
+        for (int i = 0; i < pow(2, 64 - rookShifts[n]); i++) {
             U64 rel_occ = populateMask(rookMasks[n], i);
-            int index = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
+            int index   = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
             ROOK_ATTACKS[n][index] = generateRookAttack(n, rel_occ);
         }
         
-        for(int i = 0; i < pow(2, 64 - bishopShifts[n]); i++){
+        for (int i = 0; i < pow(2, 64 - bishopShifts[n]); i++) {
             U64 rel_occ = populateMask(bishopMasks[n], i);
-            int index = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
+            int index   = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
             BISHOP_ATTACKS[n][index] = generateBishopAttack(n, rel_occ);
         }
         
     }
     
-    for(Square n = A1; n <= H8; n++){
+    for (Square n = A1; n <= H8; n++) {
         inBetweenSquares[n] = new U64[64];
-    
-        for(Square i = A1; i <= H8; i++){
-            if(i == n) continue;
+        
+        for (Square i = A1; i <= H8; i++) {
+            if (i == n) continue;
             
-            U64 m = ZERO;
+            U64 m   = ZERO;
             U64 occ = ZERO;
             setBit(occ, n);
             setBit(occ, i);
             
             Direction r = i - n;
             
-            if(rankIndex(n) == rankIndex(i)){
-                m = generateSlidingAttacks(n, EAST * r/abs(r), occ);
-            }else if(fileIndex(n) == fileIndex(i)){
-                m = generateSlidingAttacks(n, NORTH * r/abs(r), occ);
-            }else if(diagonalIndex(n) == diagonalIndex(i)){
-                m = generateSlidingAttacks(n, NORTH_EAST * r/abs(r), occ);
-            }else if(antiDiagonalIndex(n) == antiDiagonalIndex(i)){
-                m = generateSlidingAttacks(n, NORTH_WEST * r/abs(r), occ);
+            if (rankIndex(n) == rankIndex(i)) {
+                m = generateSlidingAttacks(n, EAST * r / abs(r), occ);
+            } else if (fileIndex(n) == fileIndex(i)) {
+                m = generateSlidingAttacks(n, NORTH * r / abs(r), occ);
+            } else if (diagonalIndex(n) == diagonalIndex(i)) {
+                m = generateSlidingAttacks(n, NORTH_EAST * r / abs(r), occ);
+            } else if (antiDiagonalIndex(n) == antiDiagonalIndex(i)) {
+                m = generateSlidingAttacks(n, NORTH_WEST * r / abs(r), occ);
             }
             
             m &= ~occ;
-          
             
             
             inBetweenSquares[n][i] = m;
             
         }
-    
+        
     }
     
 }
@@ -181,13 +180,13 @@ void bb::generateData() {
 U64 bb::populateMask(U64 mask, U64 index) {
     
     
-    U64 res = 0;
-    Square i = 0;
+    U64    res = 0;
+    Square i   = 0;
     
     while (mask) {
         Square bit = bitscanForward(mask);
         
-        if (getBit(index, i)){
+        if (getBit(index, i)) {
             setBit(res, bit);
         }
         
@@ -199,13 +198,13 @@ U64 bb::populateMask(U64 mask, U64 index) {
 }
 
 void bb::generateZobristKeys() {
-   
-    all_hashes = new U64*[12];
+    
+    all_hashes = new U64* [12];
     for (int i = 0; i < 6; i++) {
-        all_hashes[i] = new U64[64];
-        all_hashes[i+6] = new U64[64];
+        all_hashes[i]     = new U64[64];
+        all_hashes[i + 6] = new U64[64];
         for (int n = 0; n < 64; n++) {
-            all_hashes[i][n] = randU64();
+            all_hashes[i][n]     = randU64();
             all_hashes[i + 6][n] = randU64();
         }
     }
@@ -227,13 +226,12 @@ U64 bb::generateBishopAttack(Square sq, U64 occupied) {
 }
 
 
-
 void bb::printBitmap(U64 bb) {
     for (int i = 7; i >= 0; i--) {
         for (int n = 0; n < 8; n++) {
-            if((bb >> (i * 8 + n)) & (U64)1){
+            if ((bb >> (i * 8 + n)) & (U64) 1) {
                 std::cout << "1";
-            }else{
+            } else {
                 std::cout << "0";
             }
         }
@@ -241,7 +239,6 @@ void bb::printBitmap(U64 bb) {
     }
     std::cout << "\n";
 }
-
 
 
 

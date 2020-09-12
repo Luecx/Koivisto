@@ -283,9 +283,12 @@ void uci_set_option(std::string &name, std::string &value) {
         search_useTB(TB_LARGEST > 0);
     } else if (name == "Threads") {
         int count = stoi(value);
-        if (count < 1) count           = 1;
+        int processor_count = (int)std::thread::hardware_concurrency();
+        if (processor_count==0) processor_count = MAX_THREADS;
+        if (processor_count<count)count = processor_count;
+        if (count < 1) count = 1;
         if (count > MAX_THREADS) count = MAX_THREADS;
-    
+
         threadCount = count;
     }
     
