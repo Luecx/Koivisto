@@ -247,7 +247,7 @@ void printInfoString(Board *b, Depth d, Score score) {
     
     
     std::cout <<
-
+    
               " nodes " << nodes <<
               " nps " << nps <<
               " time " << search_timeManager->elapsedTime() <<
@@ -388,7 +388,7 @@ Move getDTZMove(Board *board) {
                 
                 
                 std::cout <<
-
+                
                           " nodes " << 1 <<
                           " nps " << 1 <<
                           " time " << search_timeManager->elapsedTime() <<
@@ -642,7 +642,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         /**************************************************************************************
          *                  N U L L - M O V E   P R U N I N G                                 *
          **************************************************************************************/
-        if (depth >= 2 && staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
+        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, td, 0);
@@ -761,7 +761,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             m = moveOrderer.next();
         }
         
-
+        
         if (ply == 0) {
             sd->sideToReduce                      = b->getActivePlayer();
             if (legalMoves == 0) sd->sideToReduce = !b->getActivePlayer();
@@ -771,7 +771,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         
         Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0
-                : lmrReductions[depth][legalMoves];
+                                                                                   : lmrReductions[depth][legalMoves];
         
         if (lmr) {
             int history = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
@@ -913,6 +913,15 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
         stand_pat = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     
+    if (en.zobrist == zobrist){
+        //adjusting eval
+        if ((en.type == PV_NODE) ||
+            (en.type == CUT_NODE && stand_pat < en.score) ||
+            (en.type == ALL_NODE && stand_pat > en.score)) {
+            
+            stand_pat = en.score;
+        }
+    }
     
     if (stand_pat >= beta)
         return beta;
