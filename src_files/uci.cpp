@@ -9,7 +9,7 @@
 #include "syzygy/tbprobe.h"
 
 #define MAJOR_VERSION 2
-#define MINOR_VERSION 0
+#define MINOR_VERSION 1
 
 
 TimeManager *timeManager;
@@ -27,7 +27,7 @@ void uci_loop(bool bench) {
     }
     
     
-    std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers" << std::endl;
+    std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno" << std::endl;
     
     
     board = new Board();
@@ -49,7 +49,7 @@ void uci_loop(bool bench) {
 
 void uci_uci() {
     std::cout << "id name Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
-    std::cout << "id author K. Kahre, F. Eggers" << std::endl;
+    std::cout << "id author K. Kahre, F. Eggers, E. Bruno" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
     std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
