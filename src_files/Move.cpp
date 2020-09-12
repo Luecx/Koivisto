@@ -16,9 +16,8 @@ using namespace move;
  * @return
  */
 Move move::genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece) {
-    
-    
-    Move m{0};
+
+    Move m {0};
     setSquareFrom(m, from);
     setSquareTo(m, to);
     setType(m, type);
@@ -35,25 +34,19 @@ Move move::genMove(const bb::Square from, const bb::Square to, const Type type, 
  * @param movingPiece
  * @return
  */
-Move move::genMove(
-        const bb::Square from,
-        const bb::Square to,
-        const Type type,
-        const bb::Piece movingPiece,
-        const bb::Piece capturedPiece) {
-    
-    Move m{0};
-    
+Move move::genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece,
+                   const bb::Piece capturedPiece) {
+
+    Move m {0};
+
     setSquareFrom(m, from);
     setSquareTo(m, to);
     setType(m, type);
     setMovingPiece(m, movingPiece);
     setCapturedPiece(m, capturedPiece);
-    
-    
+
     return m;
 }
-
 
 /**
  * prints the bits of the move.
@@ -85,8 +78,7 @@ void move::printMoveBits(Move move, bool bitInfo) {
     for (int i = 0; i < 6; i++) {
         std::cout << (bool) ((move >> (5 - i)) & 1UL);
     }
-    
-    
+
     if (bitInfo) {
         std::cout << "\n";
         std::cout << "|        |    |    |    |      |      squareFrom\n"
@@ -100,32 +92,26 @@ void move::printMoveBits(Move move, bool bitInfo) {
                      "|        |                            captured piece\n"
                      "|        +------------------------------------------------\n"
                      "|                                     score information\n"
-                     "+---------------------------------------------------------" << std::endl;
+                     "+---------------------------------------------------------"
+                  << std::endl;
     } else {
         std::cout << std::endl;
     }
-    
-    
 }
-
 
 /**
  * checks if the given move is a doubled pawn push
  * @param move
  * @return
  */
-bool move::isDoubledPawnPush(const Move move) {
-    return getType(move) == DOUBLED_PAWN_PUSH;
-}
+bool move::isDoubledPawnPush(const Move move) { return getType(move) == DOUBLED_PAWN_PUSH; }
 
 /**
  * checks if the given move is a capture
  * @param move
  * @return
  */
-bool move::isCapture(Move move) {
-    return move & 0x4000;
-}
+bool move::isCapture(Move move) { return move & 0x4000; }
 
 /**
  * checks if the given move castles
@@ -142,27 +128,21 @@ bool move::isCastle(Move move) {
  * @param move
  * @return
  */
-bool move::isEnPassant(Move move) {
-    return getType(move) == EN_PASSANT;
-}
+bool move::isEnPassant(Move move) { return getType(move) == EN_PASSANT; }
 
 /**
  * checks if the given move is a promotion
  * @param move
  * @return
  */
-bool move::isPromotion(Move move) {
-    return move & 0x8000;
-}
+bool move::isPromotion(Move move) { return move & 0x8000; }
 
 /**
  * returns the piece that has been promoted to.
  * @param move
  * @return
  */
-bb::Piece move::promotionPiece(Move move) {
-    return ((move & 0x3000) >> SHIFT_TYPE) + getMovingPiece(move) + 1;
-}
+bb::Piece move::promotionPiece(Move move) { return ((move & 0x3000) >> SHIFT_TYPE) + getMovingPiece(move) + 1; }
 
 /**
  * returns a string used for uci-output of the given move like: a2e3
@@ -172,37 +152,33 @@ bb::Piece move::promotionPiece(Move move) {
  * @return
  */
 std::string move::toString(const Move move) {
-    
-    std::string res{};
+
+    std::string res {};
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
     res.append(bb::SQUARE_IDENTIFIER[getSquareTo(move)]);
     if (isPromotion(move)) {
         char c = tolower(bb::PIECE_IDENTIFER[promotionPiece(move)]);
         res.push_back(c);
     }
-    
+
     return res;
 }
 
+MoveList::~MoveList() {}
 
-MoveList::~MoveList() {
-}
-
-
-MoveList::MoveList() {
-}
+MoveList::MoveList() {}
 
 /**
  * swaps the move object at index i1 and index i2
  */
 void MoveList::swap(int i1, int i2) {
-    Move m1 = moves[i1];
+    Move m1   = moves[i1];
     moves[i1] = moves[i2];
     moves[i2] = m1;
-    
+
     MoveScore s1 = scores[i1];
-    scores[i1] = scores[i2];
-    scores[i2] = s1;
+    scores[i1]   = scores[i2];
+    scores[i2]   = s1;
 }
 
 /**
@@ -210,47 +186,37 @@ void MoveList::swap(int i1, int i2) {
  * @param index
  * @return
  */
-move::Move MoveList::getMove(int index) {
-    return moves[index];
-}
+move::Move MoveList::getMove(int index) { return moves[index]; }
 
 /**
  * removes all moves
  */
-void MoveList::clear() {
-    size = 0;
-}
+void MoveList::clear() { size = 0; }
 
 /**
  * adds a move
  * @param move
  */
-void MoveList::add(Move move) {
-    moves[size++] = move;
-}
+void MoveList::add(Move move) { moves[size++] = move; }
 
 /**
  * returns the amount of stored moves
  * @return
  */
-int MoveList::getSize() const {
-    return size;
-}
+int MoveList::getSize() const { return size; }
 
 /**
  * assigns the score to the move at the given index
  */
 void MoveList::scoreMove(int index, MoveScore score) {
-//    setScore(moves[index], score);
+    //    setScore(moves[index], score);
     scores[index] = score;
 }
 
 /**
  *
  */
-MoveScore MoveList::getScore(int index) {
-    return scores[index];
-}
+MoveScore MoveList::getScore(int index) { return scores[index]; }
 
 /**
  * prints the bits of all the moves
@@ -260,5 +226,3 @@ void MoveList::printMoveBits() {
         ::move::printMoveBits(getMove(i), false);
     }
 }
-
-

@@ -5,21 +5,20 @@
 #ifndef KOIVISTO_UCI_H
 #define KOIVISTO_UCI_H
 
+#include "Bitboard.h"
+#include "Board.h"
+#include "Move.h"
+#include "Perft.h"
+#include "Util.h"
+#include "search.h"
+
 #include <cstdlib>
 #include <fcntl.h>
-#include <stdio.h>
 #include <iostream>
+#include <stdio.h>
 #include <string>
 #include <thread>
 #include <unistd.h>
-
-#include "Bitboard.h"
-#include "Move.h"
-#include "Board.h"
-#include "Perft.h"
-#include "search.h"
-#include "Util.h"
-
 
 void uci_loop(bool bench);
 
@@ -35,7 +34,7 @@ void uci_go_mate(int depth);
 
 void uci_stop();
 
-void uci_set_option(std::string &name, std::string &value);
+void uci_set_option(std::string& name, std::string& value);
 
 void uci_isReady();
 
@@ -50,4 +49,4 @@ void uci_bench();
 
 void uci_quit();
 
-#endif //KOIVISTO_UCI_H
+#endif    // KOIVISTO_UCI_H

@@ -4,57 +4,48 @@
 
 #include "TranspositionTable.h"
 
-
 /**
  * inits the table to the given size.
  * Calculates the amount of entries that can fit.
  * @param MB
  */
 void TranspositionTable::init(U64 MB) {
-    
+
     U64 bytes      = MB * 1024 * 1024;
     U64 maxEntries = bytes / sizeof(Entry);
-    
-    //size must be a power of 2!
+
+    // size must be a power of 2!
     m_size = 1;
-    
+
     while (m_size <= maxEntries) {
         m_size *= 2;
     }
-    
+
     m_size /= 2;
     m_mask = m_size - 1;
-    
-    
-    m_entries = (Entry *) (calloc(m_size, sizeof(Entry)));
+
+    m_entries = (Entry*) (calloc(m_size, sizeof(Entry)));
     clear();
 
     m_currentAge = 0;
-    
 }
 
 /**
  * returns the maximum amount of entries that can be stored.
  * @return
  */
-U64 TranspositionTable::getSize() {
-    return m_size;
-}
+U64 TranspositionTable::getSize() { return m_size; }
 
 /**
  * constructor which inits the table with a maximum size given by mb.
  * @param mb
  */
-TranspositionTable::TranspositionTable(U64 mb) {
-    init(mb);
-}
+TranspositionTable::TranspositionTable(U64 mb) { init(mb); }
 
 /**
  * destructor which deletes the table.
  */
-TranspositionTable::~TranspositionTable() {
-    free(m_entries);
-}
+TranspositionTable::~TranspositionTable() { free(m_entries); }
 
 /**
  * clears the content and enlarges the table if possibles to a maximum size of mb
@@ -68,9 +59,7 @@ void TranspositionTable::setSize(U64 mb) {
 /**
  * clears the content
  */
-void TranspositionTable::clear() {
-    std::memset(m_entries, 0, sizeof(Entry) * m_size);
-}
+void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_size); }
 
 /**
  * returns a floating value for the amount of values used.
@@ -79,18 +68,15 @@ void TranspositionTable::clear() {
 double TranspositionTable::usage() {
 
     double used = 0;
-    //Thank you Andrew for this idea :)
-    for(U64 i = 0; i < 100; i++){
-        if((m_entries[i].zobrist)){
-            used ++;
+    // Thank you Andrew for this idea :)
+    for (U64 i = 0; i < 100; i++) {
+        if ((m_entries[i].zobrist)) {
+            used++;
         }
     }
-    
+
     return used / 100;
 }
-
-
-
 
 /**
  * returns the Entry for the given key.
@@ -99,11 +85,11 @@ double TranspositionTable::usage() {
  * @return
  */
 Entry TranspositionTable::get(U64 zobrist) {
-    
+
     U64 index = zobrist & m_mask;
-    
+
     Entry enP = m_entries[index];
-        
+
     return enP;
 }
 
@@ -123,26 +109,23 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @return
  */
 bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
-    
+
     U64 index = zobrist & m_mask;
-    
-    Entry *enP = &m_entries[index];
-    
+
+    Entry* enP = &m_entries[index];
+
     if (enP->zobrist == 0) {
         enP->set(zobrist, score, move, type, depth);
         enP->setAge(m_currentAge);
         return true;
     } else {
-        if (
-                enP->getAge() != m_currentAge
-                || type == PV_NODE
-                || (enP->type != PV_NODE && enP->depth <= depth)) {
+        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth)) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -157,6 +140,4 @@ void TranspositionTable::incrementAge() {
  * returns the maximum TT size in MB
  * @return
  */
-int maxTTSize() {
-    return (ONE << (32 - 20)) * sizeof(Entry);
-}
+int maxTTSize() { return (ONE << (32 - 20)) * sizeof(Entry); }

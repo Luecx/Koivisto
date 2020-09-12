@@ -24,6 +24,7 @@ void verifySEE(){
     
     //100,325,325,500,1000,10000
     
+    // clang-format off
     verifySEECase("4R3/2r3p1/5bk1/1p1r3p/p2PR1P1/P1BK1P2/1P6/8 b - -", genMove(H5,G4,CAPTURE, BLACK_PAWN, WHITE_PAWN), 0);
     verifySEECase("4R3/2r3p1/5bk1/1p1r1p1p/p2PR1P1/P1BK1P2/1P6/8 b - -", genMove(H5,G4,CAPTURE, BLACK_PAWN, WHITE_PAWN), 0);
     verifySEECase("4r1k1/5pp1/nbp4p/1p2p2q/1P2P1b1/1BP2N1P/1B2QPPK/3R4 b - -", genMove(G4, F3, CAPTURE, BLACK_BISHOP, WHITE_KNIGHT), 0);
@@ -49,7 +50,8 @@ void verifySEE(){
     verifySEECase("8/pp6/2pkp3/4bp2/2R3b1/2P5/PP4B1/1K6 w - -", genMove(E5, C3, CAPTURE, BLACK_BISHOP, WHITE_PAWN), 100-325);
     verifySEECase("4q3/1p1pr1k1/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - -", genMove(E6, E4, CAPTURE, BLACK_ROOK, WHITE_PAWN), 100-500);
     verifySEECase("4q3/1p1pr1kb/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - -", genMove(H7, E4, CAPTURE, BLACK_BISHOP, WHITE_PAWN), 100);
-
+    
+    // clang-format on
 }
 
 
