@@ -36,7 +36,7 @@ void initLmr() {
             lmrReductions[d][m] = (0.5 + log(d) * log(m)) * 100 / LMR_DIV;
 }
 
-int lmp[2][11] = {
+int lmp[2][8] = {
         {0, 2, 3, 4, 6,  8, 13, 18},
         {0, 3, 4, 6, 8, 12, 20, 30}
 };
