@@ -37,8 +37,8 @@ void initLmr() {
 }
 
 int lmp[2][11] = {
-        {0, 2, 3, 5, 9,  13, 18, 25, 34, 45, 55},
-        {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}
+        {0, 2, 3, 4, 6,  8, 13, 18},
+        {0, 3, 4, 6, 8, 12, 20, 30}
 };
 
 /**
@@ -715,7 +715,7 @@ Score pvSearch(Board *b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (!isCapture(m) && !isPromotion && !givesCheck) {
                 quiets++;
                 // LMP
-                if (depth <= 10 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]){
+                if (depth <= 7 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]){
                     moveOrderer.skip = true;
                     continue;
                 }
