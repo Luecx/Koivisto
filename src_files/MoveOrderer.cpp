@@ -30,8 +30,8 @@ void MoveOrderer::setMovesPVSearch(move::MoveList *p_moves,
         } else if (isCapture(m)) {
             // add mvv lva score here
             Score     SEE    = board->staticExchangeEvaluation(m);
-            MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6) +
-                               (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
+            MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
+                               + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
             if (SEE >= 0) {
                 if (mvvLVA == 0) {
                     moves->scoreMove(i, 50000 + mvvLVA);
@@ -64,8 +64,8 @@ void MoveOrderer::setMovesQSearch(move::MoveList *p_moves, Board *b) {
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
 
-        MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6) +
-                           (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
+        MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
+                           + (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
         moves->scoreMove(i, 240 + mvvLVA);
     }
 }

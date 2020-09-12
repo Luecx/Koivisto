@@ -83,10 +83,10 @@ struct BoardStatus {
     Move move;
 
     bool operator==(const BoardStatus &rhs) const {
-        return zobrist == rhs.zobrist && enPassantTarget == rhs.enPassantTarget &&
-               metaInformation == rhs.metaInformation && fiftyMoveCounter == rhs.fiftyMoveCounter &&
-               repetitionCounter == rhs.repetitionCounter && moveCounter == rhs.moveCounter &&
-               move == rhs.move;
+        return zobrist == rhs.zobrist && enPassantTarget == rhs.enPassantTarget
+               && metaInformation == rhs.metaInformation && fiftyMoveCounter == rhs.fiftyMoveCounter
+               && repetitionCounter == rhs.repetitionCounter && moveCounter == rhs.moveCounter
+               && move == rhs.move;
     }
 
     bool operator!=(const BoardStatus &rhs) const {

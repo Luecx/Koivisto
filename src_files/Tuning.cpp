@@ -204,13 +204,13 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             Board *b = boards[i];
 
             // calculate the phase
-            double phase =
-                (18 -
-                 bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP] |
-                          b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT] |
-                          b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK]) -
-                 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN])) /
-                18.0;
+            double phase
+                = (18
+                   - bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP]
+                              | b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT]
+                              | b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
+                   - 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+                  / 18.0;
 
             Color winner      = results[i] > 0.5 ? WHITE : BLACK;
             int   whiteFactor = winner == WHITE ? 1 : -1;
@@ -297,13 +297,13 @@ void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
             Board *b = boards[i];
 
             // calculate the phase
-            double phase =
-                (18 -
-                 bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP] |
-                          b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT] |
-                          b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK]) -
-                 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN])) /
-                18.0;
+            double phase
+                = (18
+                   - bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP]
+                              | b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT]
+                              | b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
+                   - 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+                  / 18.0;
 
             Color winner      = results[i] > 0.5 ? WHITE : BLACK;
             int   whiteFactor = winner == WHITE ? 1 : -1;
@@ -405,10 +405,10 @@ double tuning::optimiseGD(Evaluator *evaluator, double K, double learningRate) {
     }
 
     for (int p = 0; p < paramCount; p++) {
-        evaluator->getEarlyGameParams()[p] -=
-            earlyGrads[p] * learningRate / -min(-1, -gradCounters[p]);
-        evaluator->getLateGameParams()[p] -=
-            lateGrads[p] * learningRate / -min(-1, -gradCounters[p]);
+        evaluator->getEarlyGameParams()[p]
+            -= earlyGrads[p] * learningRate / -min(-1, -gradCounters[p]);
+        evaluator->getLateGameParams()[p]
+            -= lateGrads[p] * learningRate / -min(-1, -gradCounters[p]);
     }
 
     return score / dataCount;
@@ -489,10 +489,10 @@ double tuning::optimiseAdaGrad(Evaluator *evaluator,
             if (earlyAdjust == 0) earlyAdjust = 1;
             if (lateAdjust == 0) lateAdjust = 1;
 
-            evaluator->getEarlyGameParams()[p] -=
-                earlyGrads[p] * learningRate / earlyAdjust / dataCount;
-            evaluator->getLateGameParams()[p] -=
-                lateGrads[p] * learningRate / lateAdjust / dataCount;
+            evaluator->getEarlyGameParams()[p]
+                -= earlyGrads[p] * learningRate / earlyAdjust / dataCount;
+            evaluator->getLateGameParams()[p]
+                -= lateGrads[p] * learningRate / lateAdjust / dataCount;
 
             earlyGradsSquaredSum[p] += earlyGrads[p] * earlyGrads[p];
             lateGradsSquaredSum[p] += lateGrads[p] * lateGrads[p];
@@ -544,8 +544,8 @@ double tuning::optimisePST(Evaluator *evaluator, double K, double learningRate) 
         double phase    = evaluator->getPhase();
 
         for (int i = 0; i < 64; i++) {
-            mg_pst_grads[i] +=
-                evaluator->getTunablePST_MG_grad()[i] * (1 - phase) * sigPrime * lossPrime;
+            mg_pst_grads[i]
+                += evaluator->getTunablePST_MG_grad()[i] * (1 - phase) * sigPrime * lossPrime;
             eg_pst_grads[i] += evaluator->getTunablePST_EG_grad()[i] * phase * sigPrime * lossPrime;
         }
 

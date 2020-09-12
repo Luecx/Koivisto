@@ -218,13 +218,13 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     U64 sq = ONE << s;
 
     if (c == WHITE) {
-        if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 &&
-            (sq & pawnCover)) {
+        if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0
+            && (sq & pawnCover)) {
             return true;
         }
     } else {
-        if (((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 &&
-            (sq & pawnCover)) {
+        if (((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0
+            && (sq & pawnCover)) {
             return true;
         }
     }
@@ -236,8 +236,8 @@ void Evaluator::computeHangingPieces(Board *b) {
     U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
 
     for (int i = PAWN; i <= QUEEN; i++) {
-        features[INDEX_PAWN_HANGING + i] = +bitCount(b->getPieces(WHITE, i) & WnotAttacked) -
-                                           bitCount(b->getPieces(BLACK, i) & BnotAttacked);
+        features[INDEX_PAWN_HANGING + i] = +bitCount(b->getPieces(WHITE, i) & WnotAttacked)
+                                           - bitCount(b->getPieces(BLACK, i) & BnotAttacked);
     }
 }
 
@@ -248,49 +248,53 @@ void Evaluator::computePinnedPieces(Board *b) {
 
     Square square;
     Square wkingSq = bitscanForward(b->getPieces(WHITE, KING));
-    U64    pinner  = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE]) &
-                 (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
+    U64    pinner  = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE])
+                 & (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
     while (pinner) {
         square = bitscanForward(pinner);
-        Square pinnedPlace =
-            bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) +
-                 (b->getPiece(square) % 6 - BISHOP)] += 1;
+        Square pinnedPlace
+            = bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
+        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
+                 + (b->getPiece(square) % 6 - BISHOP)]
+            += 1;
         pinner = lsbReset(pinner);
     }
 
-    pinner = lookUpBishopXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE]) &
-             (b->getPieces(BLACK, BISHOP) | b->getPieces(BLACK, QUEEN));
+    pinner = lookUpBishopXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE])
+             & (b->getPieces(BLACK, BISHOP) | b->getPieces(BLACK, QUEEN));
     while (pinner) {
         square = bitscanForward(pinner);
-        Square pinnedPlace =
-            bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
+        Square pinnedPlace
+            = bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
 
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) +
-                 (b->getPiece(square) % 6 - BISHOP)] += 1;
+        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
+                 + (b->getPiece(square) % 6 - BISHOP)]
+            += 1;
         pinner = lsbReset(pinner);
     }
 
     Square bkingSq = bitscanForward(b->getPieces(BLACK, KING));
-    pinner         = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK]) &
-             (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
+    pinner         = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK])
+             & (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
     while (pinner) {
         square = bitscanForward(pinner);
-        Square pinnedPlace =
-            bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) +
-                 (b->getPiece(square) % 6 - BISHOP)] -= 1;
+        Square pinnedPlace
+            = bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
+        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
+                 + (b->getPiece(square) % 6 - BISHOP)]
+            -= 1;
         pinner = lsbReset(pinner);
     }
-    pinner = lookUpBishopXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK]) &
-             (b->getPieces(WHITE, BISHOP) | b->getPieces(WHITE, QUEEN));
+    pinner = lookUpBishopXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK])
+             & (b->getPieces(WHITE, BISHOP) | b->getPieces(WHITE, QUEEN));
     while (pinner) {
         square = bitscanForward(pinner);
-        Square pinnedPlace =
-            bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
+        Square pinnedPlace
+            = bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
 
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6) +
-                 (b->getPiece(square) % 6 - BISHOP)] -= 1;
+        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
+                 + (b->getPiece(square) % 6 - BISHOP)]
+            -= 1;
         pinner = lsbReset(pinner);
     }
 }
@@ -326,14 +330,14 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64    attacks;
     U64    k;
 
-    phase =
-        (24.0f + phaseValues[5] -
-         phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN]) -
-         phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT]) -
-         phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP]) -
-         phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK]) -
-         phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN])) /
-        24.0f;
+    phase
+        = (24.0f + phaseValues[5]
+           - phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
+           - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
+           - phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])
+           - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
+           - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+          / 24.0f;
 
     if (phase > 1) phase = 1;
     if (phase < 0) phase = 0;
@@ -370,25 +374,25 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 blackDoubledWithoutFirst = bFrontSpans(blackPawns) & blackPawns;
 
     // all doubled pawns
-    U64 whiteDoubledPawns =
-        whiteDoubledWithoutFirst | (wRearSpans(whiteDoubledWithoutFirst) & whitePawns);
-    U64 blackDoubledPawns =
-        blackDoubledWithoutFirst | (bRearSpans(blackDoubledWithoutFirst) & blackPawns);
+    U64 whiteDoubledPawns
+        = whiteDoubledWithoutFirst | (wRearSpans(whiteDoubledWithoutFirst) & whitePawns);
+    U64 blackDoubledPawns
+        = blackDoubledWithoutFirst | (bRearSpans(blackDoubledWithoutFirst) & blackPawns);
 
     // all isolated pawns
-    U64 whiteIsolatedPawns =
-        whitePawns & ~(fillFile(shiftWest(whitePawns) | shiftEast(whitePawns)));
-    U64 blackIsolatedPawns =
-        blackPawns & ~(fillFile(shiftWest(blackPawns) | shiftEast(blackPawns)));
+    U64 whiteIsolatedPawns
+        = whitePawns & ~(fillFile(shiftWest(whitePawns) | shiftEast(whitePawns)));
+    U64 blackIsolatedPawns
+        = blackPawns & ~(fillFile(shiftWest(blackPawns) | shiftEast(blackPawns)));
 
     k = whitePawns;
     while (k) {
         square = bitscanForward(k);
 
-        features[INDEX_PAWN_PSQT] +=
-            psqt_pawn[squareIndex(rankIndex(square),
-                                  (wKSide ? fileIndex(square) : 7 - fileIndex(square)))] *
-            earlyPSTScalar;
+        features[INDEX_PAWN_PSQT]
+            += psqt_pawn[squareIndex(rankIndex(square),
+                                     (wKSide ? fileIndex(square) : 7 - fileIndex(square)))]
+               * earlyPSTScalar;
         features[INDEX_PAWN_PSQT] += psqt_pawn_endgame[square] * latePSTScalar;
 
         k = lsbReset(k);
@@ -398,13 +402,13 @@ bb::Score Evaluator::evaluate(Board *b) {
     while (k) {
         square = bitscanForward(k);
 
-        features[INDEX_PAWN_PSQT] -=
-            psqt_pawn[squareIndex(7 - rankIndex(square),
-                                  (bKSide ? fileIndex(square) : 7 - fileIndex(square)))] *
-            earlyPSTScalar;
-        features[INDEX_PAWN_PSQT] -=
-            psqt_pawn_endgame[squareIndex(7 - rankIndex(square), fileIndex(square))] *
-            latePSTScalar;
+        features[INDEX_PAWN_PSQT]
+            -= psqt_pawn[squareIndex(7 - rankIndex(square),
+                                     (bKSide ? fileIndex(square) : 7 - fileIndex(square)))]
+               * earlyPSTScalar;
+        features[INDEX_PAWN_PSQT]
+            -= psqt_pawn_endgame[squareIndex(7 - rankIndex(square), fileIndex(square))]
+               * latePSTScalar;
 
         k = lsbReset(k);
     }
@@ -417,22 +421,22 @@ bb::Score Evaluator::evaluate(Board *b) {
     U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
-    features[INDEX_PAWN_DOUBLED_AND_ISOLATED] = +bitCount(whiteIsolatedPawns & whiteDoubledPawns) -
-                                                bitCount(blackIsolatedPawns & blackDoubledPawns);
-    features[INDEX_PAWN_DOUBLED] = +bitCount(~whiteIsolatedPawns & whiteDoubledPawns) -
-                                   bitCount(~blackIsolatedPawns & blackDoubledPawns);
-    features[INDEX_PAWN_ISOLATED] = +bitCount(whiteIsolatedPawns & ~whiteDoubledPawns) -
-                                    bitCount(blackIsolatedPawns & ~blackDoubledPawns);
+    features[INDEX_PAWN_DOUBLED_AND_ISOLATED] = +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
+                                                - bitCount(blackIsolatedPawns & blackDoubledPawns);
+    features[INDEX_PAWN_DOUBLED] = +bitCount(~whiteIsolatedPawns & whiteDoubledPawns)
+                                   - bitCount(~blackIsolatedPawns & blackDoubledPawns);
+    features[INDEX_PAWN_ISOLATED] = +bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
+                                    - bitCount(blackIsolatedPawns & ~blackDoubledPawns);
     features[INDEX_PAWN_PASSED] = +bitCount(whitePassers) - bitCount(blackPassers);
-    features[INDEX_PAWN_VALUE] =
-        +bitCount(b->getPieces()[WHITE_PAWN]) - bitCount(b->getPieces()[BLACK_PAWN]);
-    features[INDEX_PAWN_STRUCTURE] = +bitCount(whitePawnEastCover) + bitCount(whitePawnWestCover) -
-                                     bitCount(blackPawnEastCover) - bitCount(blackPawnWestCover);
-    features[INDEX_PAWN_OPEN] = +bitCount(whitePawns & ~fillSouth(blackPawns)) -
-                                bitCount(blackPawns & ~fillNorth(whitePawns));
-    features[INDEX_PAWN_BACKWARD] =
-        +bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns) -
-        bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns);
+    features[INDEX_PAWN_VALUE]
+        = +bitCount(b->getPieces()[WHITE_PAWN]) - bitCount(b->getPieces()[BLACK_PAWN]);
+    features[INDEX_PAWN_STRUCTURE] = +bitCount(whitePawnEastCover) + bitCount(whitePawnWestCover)
+                                     - bitCount(blackPawnEastCover) - bitCount(blackPawnWestCover);
+    features[INDEX_PAWN_OPEN] = +bitCount(whitePawns & ~fillSouth(blackPawns))
+                                - bitCount(blackPawns & ~fillNorth(whitePawns));
+    features[INDEX_PAWN_BACKWARD]
+        = +bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
+          - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns);
 
     /*
      * only these squares are counted for mobility
@@ -452,8 +456,8 @@ bb::Score Evaluator::evaluate(Board *b) {
         features[INDEX_KNIGHT_PSQT] += psqt_knight[pst_index_white(square)] * earlyPSTScalar;
         features[INDEX_KNIGHT_PSQT] += psqt_knight_endgame[pst_index_white(square)] * latePSTScalar;
 
-        features[INDEX_KNIGHT_MOBILITY] +=
-            sqrts[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
+        features[INDEX_KNIGHT_MOBILITY]
+            += sqrts[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
         features[INDEX_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
         features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
 
@@ -487,8 +491,8 @@ bb::Score Evaluator::evaluate(Board *b) {
 
         k = lsbReset(k);
     }
-    features[INDEX_KNIGHT_VALUE] =
-        (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT]));
+    features[INDEX_KNIGHT_VALUE]
+        = (bitCount(b->getPieces()[WHITE_KNIGHT]) - bitCount(b->getPieces()[BLACK_KNIGHT]));
     /**********************************************************************************
      *                                  B I S H O P S                                 *
      **********************************************************************************/
@@ -499,26 +503,26 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_white(square)] +=
-            _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1 - phase) / 100;
-        tunablePST_EG_grad[pst_index_white(square)] +=
-            _pieceValuesLate[INDEX_BISHOP_PSQT] * phase / 100;
+        tunablePST_MG_grad[pst_index_white(square)]
+            += _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1 - phase) / 100;
+        tunablePST_EG_grad[pst_index_white(square)]
+            += _pieceValuesLate[INDEX_BISHOP_PSQT] * phase / 100;
 #endif
 
         features[INDEX_BISHOP_PSQT] += psqt_bishop[pst_index_white(square)] * earlyPSTScalar;
-        features[INDEX_BISHOP_PSQT] +=
-            psqt_bishop_endgame[pst_index_white(square)] * (phase) / 100.0;
+        features[INDEX_BISHOP_PSQT]
+            += psqt_bishop_endgame[pst_index_white(square)] * (phase) / 100.0;
 
         features[INDEX_BISHOP_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
         features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(
             blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
 
-        features[INDEX_BISHOP_FIANCHETTO] +=
-            (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2 &&
-             whitePawns & (ONE << G3 | ONE << G4));
-        features[INDEX_BISHOP_FIANCHETTO] +=
-            (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2 &&
-             whitePawns & (ONE << B3 | ONE << B4));
+        features[INDEX_BISHOP_FIANCHETTO]
+            += (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
+                && whitePawns & (ONE << G3 | ONE << G4));
+        features[INDEX_BISHOP_FIANCHETTO]
+            += (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
+                && whitePawns & (ONE << B3 | ONE << B4));
 
         addToKingSafety(attacks,
                         blackKingZone,
@@ -535,10 +539,10 @@ bb::Score Evaluator::evaluate(Board *b) {
         attacks = lookUpBishopAttack(square, occupied);
 
 #ifdef TUNE_PST
-        tunablePST_MG_grad[pst_index_black(square)] -=
-            _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1 - phase) / 100;
-        tunablePST_EG_grad[pst_index_black(square)] -=
-            _pieceValuesLate[INDEX_BISHOP_PSQT] * phase / 100;
+        tunablePST_MG_grad[pst_index_black(square)]
+            -= _pieceValuesEarly[INDEX_BISHOP_PSQT] * (1 - phase) / 100;
+        tunablePST_EG_grad[pst_index_black(square)]
+            -= _pieceValuesLate[INDEX_BISHOP_PSQT] * phase / 100;
 #endif
 
         features[INDEX_BISHOP_PSQT] -= psqt_bishop[pst_index_black(square)] * earlyPSTScalar;
@@ -548,12 +552,12 @@ bb::Score Evaluator::evaluate(Board *b) {
         features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(
             whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
 
-        features[INDEX_BISHOP_FIANCHETTO] -=
-            (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7 &&
-             blackPawns & (ONE << G6 | ONE << G5));
-        features[INDEX_BISHOP_FIANCHETTO] -=
-            (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7 &&
-             blackPawns & (ONE << B6 | ONE << B5));
+        features[INDEX_BISHOP_FIANCHETTO]
+            -= (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
+                && blackPawns & (ONE << G6 | ONE << G5));
+        features[INDEX_BISHOP_FIANCHETTO]
+            -= (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
+                && blackPawns & (ONE << B6 | ONE << B5));
 
         addToKingSafety(attacks,
                         whiteKingZone,
@@ -563,10 +567,10 @@ bb::Score Evaluator::evaluate(Board *b) {
 
         k = lsbReset(k);
     }
-    features[INDEX_BISHOP_VALUE] =
-        (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
-    features[INDEX_BISHOP_DOUBLED] = (bitCount(b->getPieces()[WHITE_BISHOP]) == 2) -
-                                     (bitCount(b->getPieces()[BLACK_BISHOP]) == 2);
+    features[INDEX_BISHOP_VALUE]
+        = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
+    features[INDEX_BISHOP_DOUBLED] = (bitCount(b->getPieces()[WHITE_BISHOP]) == 2)
+                                     - (bitCount(b->getPieces()[BLACK_BISHOP]) == 2);
     /**********************************************************************************
      *                                  R O O K S                                     *
      **********************************************************************************/
@@ -637,8 +641,8 @@ bb::Score Evaluator::evaluate(Board *b) {
 
         k = lsbReset(k);
     }
-    features[INDEX_ROOK_VALUE] =
-        (bitCount(b->getPieces()[WHITE_ROOK]) - bitCount(b->getPieces()[BLACK_ROOK]));
+    features[INDEX_ROOK_VALUE]
+        = (bitCount(b->getPieces()[WHITE_ROOK]) - bitCount(b->getPieces()[BLACK_ROOK]));
 
     /**********************************************************************************
      *                                  Q U E E N S                                   *
@@ -683,8 +687,8 @@ bb::Score Evaluator::evaluate(Board *b) {
 
         k = lsbReset(k);
     }
-    features[INDEX_QUEEN_VALUE] =
-        bitCount(b->getPieces()[WHITE_QUEEN]) - bitCount(b->getPieces()[BLACK_QUEEN]);
+    features[INDEX_QUEEN_VALUE]
+        = bitCount(b->getPieces()[WHITE_QUEEN]) - bitCount(b->getPieces()[BLACK_QUEEN]);
 
     /**********************************************************************************
      *                                  K I N G S                                     *
@@ -719,9 +723,9 @@ bb::Score Evaluator::evaluate(Board *b) {
     computeHangingPieces(b);
     computePinnedPieces(b);
 
-    features[INDEX_KING_SAFETY] = (kingSafetyTable[blackkingSafety_valueOfAttacks] -
-                                   kingSafetyTable[whitekingSafety_valueOfAttacks]) /
-                                  100;
+    features[INDEX_KING_SAFETY] = (kingSafetyTable[blackkingSafety_valueOfAttacks]
+                                   - kingSafetyTable[whitekingSafety_valueOfAttacks])
+                                  / 100;
 
     __m128 earlyRes{};
     __m128 lateRes{};
@@ -854,8 +858,8 @@ void printEvaluation(Board *board) {
            << std::setw(20) << ev.getLateGameParams()[i] << " | " << std::setw(20)
            << ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase << " | "
            << std::setw(20)
-           << (ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase) *
-                  ev.getFeatures()[i]
+           << (ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase)
+                  * ev.getFeatures()[i]
            << " | \n";
     }
     ss << "-----------------------------------------+----------------------+"

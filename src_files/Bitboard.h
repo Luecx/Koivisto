@@ -156,10 +156,10 @@ constexpr Direction NORTH_EAST = 9;
 constexpr Direction SOUTH_WEST = -9;
 constexpr Direction SOUTH_EAST = -7;
 
-constexpr Square index64[64] = {0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 38, 29, 17, 4,
-                                62, 55, 59, 36, 53, 51, 43, 22, 45, 39, 33, 30, 24, 18, 12, 5,
-                                63, 47, 56, 27, 60, 41, 37, 16, 54, 35, 52, 21, 44, 32, 23, 11,
-                                46, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9,  13, 8,  7,  6};
+constexpr Square index64[64]
+    = {0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 38, 29, 17, 4,  62, 55, 59, 36, 53, 51,
+       43, 22, 45, 39, 33, 30, 24, 18, 12, 5,  63, 47, 56, 27, 60, 41, 37, 16, 54, 35, 52, 21,
+       44, 32, 23, 11, 46, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9,  13, 8,  7,  6};
 
 constexpr U64 ONE  = (U64)1;
 constexpr U64 ZERO = (U64)0;
@@ -825,8 +825,8 @@ inline U64 getHash(Piece piece, Square sq) {
  * @return
  */
 inline U64 lookUpRookAttack(Square index, U64 occupied) {
-    return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index] >>
-                                                (rookShifts[index]))];
+    return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index]
+                                                >> (rookShifts[index]))];
 
     //    return generateRookAttack(index, occupied);
 }

@@ -34,8 +34,8 @@ void initLmr() {
         for (m = 0; m < 256; m++) lmrReductions[d][m] = (0.5 + log(d) * log(m)) * 100 / LMR_DIV;
 }
 
-int lmp[2][11] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55},
-                  {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
+int lmp[2][11]
+    = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
 
 /**
  * =================================================================================
@@ -99,8 +99,8 @@ void search_stop() {
  * @return
  */
 bool hasOnlyPawns(Board *board, Color color) {
-    return board->getTeamOccupied()[color] ==
-           ((board->getPieces()[PAWN + color * 6] | board->getPieces()[KING + color * 6]));
+    return board->getTeamOccupied()[color]
+           == ((board->getPieces()[PAWN + color * 6] | board->getPieces()[KING + color * 6]));
 }
 
 /**
@@ -206,8 +206,8 @@ void printInfoString(Board *b, Depth d, Score score) {
 
     U64 nodes = totalNodes();
 
-    U64 nps =
-        static_cast<U64>(nodes * 1000) / static_cast<U64>(search_timeManager->elapsedTime() + 1);
+    U64 nps
+        = static_cast<U64>(nodes * 1000) / static_cast<U64>(search_timeManager->elapsedTime() + 1);
 
     std::cout << "info"
               << " depth " << static_cast<int>(d) << " seldepth " << static_cast<int>(selDepth());
@@ -250,8 +250,8 @@ Score getWDL(Board *board) {
                                 board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
                                 board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN],
                                 board->getCurrent50MoveRuleCount(),
-                                board->getCastlingChance(0) | board->getCastlingChance(1) |
-                                    board->getCastlingChance(2) | board->getCastlingChance(3),
+                                board->getCastlingChance(0) | board->getCastlingChance(1)
+                                    | board->getCastlingChance(2) | board->getCastlingChance(3),
                                 board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0,
                                 board->getActivePlayer() == WHITE);
 
@@ -279,24 +279,24 @@ Score getWDL(Board *board) {
 Move getDTZMove(Board *board) {
     if (bitCount(*board->getOccupied()) > (signed)TB_LARGEST) return 0;
 
-    unsigned result =
-        tb_probe_root(board->getTeamOccupied()[WHITE],
-                      board->getTeamOccupied()[BLACK],
-                      board->getPieces()[WHITE_KING] | board->getPieces()[BLACK_KING],
-                      board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN],
-                      board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK],
-                      board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP],
-                      board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
-                      board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN],
-                      board->getCurrent50MoveRuleCount(),
-                      board->getCastlingChance(0) | board->getCastlingChance(1) |
-                          board->getCastlingChance(2) | board->getCastlingChance(3),
-                      board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0,
-                      board->getActivePlayer() == WHITE,
-                      NULL);
+    unsigned result
+        = tb_probe_root(board->getTeamOccupied()[WHITE],
+                        board->getTeamOccupied()[BLACK],
+                        board->getPieces()[WHITE_KING] | board->getPieces()[BLACK_KING],
+                        board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN],
+                        board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK],
+                        board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP],
+                        board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
+                        board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN],
+                        board->getCurrent50MoveRuleCount(),
+                        board->getCastlingChance(0) | board->getCastlingChance(1)
+                            | board->getCastlingChance(2) | board->getCastlingChance(3),
+                        board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0,
+                        board->getActivePlayer() == WHITE,
+                        NULL);
 
-    if (result == TB_RESULT_FAILED || result == TB_RESULT_CHECKMATE ||
-        result == TB_RESULT_STALEMATE)
+    if (result == TB_RESULT_FAILED || result == TB_RESULT_CHECKMATE
+        || result == TB_RESULT_STALEMATE)
         return 0;
 
     int dtz = TB_GET_DTZ(result);
@@ -332,8 +332,8 @@ Move getDTZMove(Board *board) {
         Move m = mv->getMove(i);
 
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if ((promo == 6 && !isPromotion(m)) ||
-                (isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo)) {
+            if ((promo == 6 && !isPromotion(m))
+                || (isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo)) {
                 std::cout << "info"
                              " depth "
                           << static_cast<int>(dtz) << " seldepth " << static_cast<int>(selDepth());
@@ -518,8 +518,8 @@ Score pvSearch(Board *     b,
         hashMove = en.move;
 
         // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score) ||
-            (en.type == ALL_NODE && staticEval > en.score)) {
+        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+            || (en.type == ALL_NODE && staticEval > en.score)) {
             staticEval = en.score;
         }
 
@@ -647,16 +647,17 @@ Score pvSearch(Board *     b,
             if (!isCapture(m) && !isPromotion && !givesCheck) {
                 quiets++;
                 // LMP
-                if (depth <= 10 &&
-                    quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]) {
+                if (depth <= 10
+                    && quiets
+                           > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
             }
 
             // SEE Pruning
-            if (depth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) &&
-                b->staticExchangeEvaluation(m) <= -100 * depth)
+            if (depth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
+                && b->staticExchangeEvaluation(m) <= -100 * depth)
                 continue;
         }
 
@@ -672,10 +673,10 @@ Score pvSearch(Board *     b,
         }
 
         // singular extensions
-        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) &&
-            ply > 0 && b->getActivePlayer() != sd->sideToReduce && en.zobrist == zobrist &&
-            abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) &&
-            en.depth >= depth - 3) {
+        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove)
+            && ply > 0 && b->getActivePlayer() != sd->sideToReduce && en.zobrist == zobrist
+            && abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE)
+            && en.depth >= depth - 3) {
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) extension++;
@@ -870,8 +871,8 @@ Score qSearch(Board *b, Score alpha, Score beta, Depth ply, ThreadData *td) {
 
         if (!b->isLegal(m)) continue;
 
-        if (!inCheck && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) &&
-            b->staticExchangeEvaluation(m) < 0)
+        if (!inCheck && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
+            && b->staticExchangeEvaluation(m) < 0)
             continue;
 
         b->move(m);

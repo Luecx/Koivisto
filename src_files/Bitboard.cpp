@@ -74,12 +74,12 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     if ((1ULL << sq) & RANK_8 && direction > 2) {
         return res;
     }
-    if ((1ULL << sq) & FILE_A &&
-        (direction == WEST || direction == SOUTH_WEST || direction == NORTH_WEST)) {
+    if ((1ULL << sq) & FILE_A
+        && (direction == WEST || direction == SOUTH_WEST || direction == NORTH_WEST)) {
         return res;
     }
-    if ((1ULL << sq) & FILE_H &&
-        (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
+    if ((1ULL << sq) & FILE_H
+        && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
         return res;
     }
 
@@ -196,16 +196,16 @@ void bb::generateZobristKeys() {
 }
 
 U64 bb::generateRookAttack(Square sq, U64 occupied) {
-    return generateSlidingAttacks(sq, NORTH, occupied) |
-           generateSlidingAttacks(sq, EAST, occupied) | generateSlidingAttacks(sq, WEST, occupied) |
-           generateSlidingAttacks(sq, SOUTH, occupied);
+    return generateSlidingAttacks(sq, NORTH, occupied) | generateSlidingAttacks(sq, EAST, occupied)
+           | generateSlidingAttacks(sq, WEST, occupied)
+           | generateSlidingAttacks(sq, SOUTH, occupied);
 }
 
 U64 bb::generateBishopAttack(Square sq, U64 occupied) {
-    return generateSlidingAttacks(sq, NORTH_WEST, occupied) |
-           generateSlidingAttacks(sq, NORTH_EAST, occupied) |
-           generateSlidingAttacks(sq, SOUTH_WEST, occupied) |
-           generateSlidingAttacks(sq, SOUTH_EAST, occupied);
+    return generateSlidingAttacks(sq, NORTH_WEST, occupied)
+           | generateSlidingAttacks(sq, NORTH_EAST, occupied)
+           | generateSlidingAttacks(sq, SOUTH_WEST, occupied)
+           | generateSlidingAttacks(sq, SOUTH_EAST, occupied);
 }
 
 void bb::printBitmap(U64 bb) {

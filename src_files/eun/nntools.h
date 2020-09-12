@@ -7,9 +7,9 @@
 
 #define whiteInputIndex(activePlayer, piece, square, opponentKing) \
     activePlayer*(6 * 64 * 64) + opponentKing*(6 * 64) + piece * 64 + square
-#define blackInputIndex(activePlayer, piece, square, opponentKing)                                \
-    (1 - activePlayer) * (6 * 64 * 64) + mirrorSquare(opponentKing) * (6 * 64) + piece % 6 * 64 + \
-        mirrorSquare(square)
+#define blackInputIndex(activePlayer, piece, square, opponentKing)                              \
+    (1 - activePlayer) * (6 * 64 * 64) + mirrorSquare(opponentKing) * (6 * 64) + piece % 6 * 64 \
+        + mirrorSquare(square)
 
 #include <immintrin.h>
 #include <cmath>
