@@ -25,3 +25,9 @@ callgrind.out.106985
 Koivisto
 
 src_files/.vscode/
+
+src_files/main.cpp
+
+threadScaling.png
+
+ThreadScalingScript.py
