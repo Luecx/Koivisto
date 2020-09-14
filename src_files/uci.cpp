@@ -24,23 +24,26 @@ void uci_loop(bool bench) {
 
     if (bench) {
         uci_bench();
-    }
 
-    std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
-              << std::endl;
+        search_cleanUp();
+        bb_cleanUp();
+    } else {
+        std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
+                  << std::endl;
 
-    board = new Board();
+        board = new Board();
 
-    std::atexit(uci_quit);
-    std::string line;
+        std::atexit(uci_quit);
+        std::string line;
 
-    while (true) {
-        getline(cin, line);
+        while (true) {
+            getline(cin, line);
 
-        if (line == "quit") {
-            exit(0);
-        } else {
-            uci_processCommand(line);
+            if (line == "quit") {
+                exit(0);
+            } else {
+                uci_processCommand(line);
+            }
         }
     }
 }

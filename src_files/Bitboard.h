@@ -276,7 +276,7 @@ constexpr U64 whitePassedPawnMask[] {
     0xc000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L,
     0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L};
 constexpr U64 blackPassedPawnMask[] {
-
+    
     0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L,
     0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000003L, 0x0000000000000007L,
     0x000000000000000eL, 0x000000000000001cL, 0x0000000000000038L, 0x0000000000000070L, 0x00000000000000e0L,
@@ -344,7 +344,7 @@ constexpr U64 bishopMagics[] {
     0x0000002084100000L, 0x0000000020880000L, 0x0000001002020000L, 0x0000040408020000L, 0x0004040404040000L,
     0x0002020202020000L, 0x0000104104104000L, 0x0000002082082000L, 0x0000000020841000L, 0x0000000000208800L,
     0x0000000010020200L, 0x0000000404080200L, 0x0000040404040400L, 0x0002020202020200L
-
+    
 };
 constexpr U64 rookMagics[] {
     0x0080001020400080L, 0x0040001000200040L, 0x0080081000200080L, 0x0080040800100080L, 0x0080020400080080L,
@@ -421,10 +421,10 @@ inline File fileIndex(Square square_index) { return square_index & 7; }
 inline Square squareIndex(Rank rank, File file) { return 8 * rank + file; }
 
 inline Square squareIndex(std::string& str) {
-
+    
     Rank r = str.at(1) - '1';
     File f = toupper(str.at(0)) - 'A';
-
+    
     return squareIndex(r, f);
 }
 
@@ -715,8 +715,8 @@ inline U64 getHash(Piece piece, Square sq) { return all_hashes[piece][sq]; }
  */
 inline U64 lookUpRookAttack(Square index, U64 occupied) {
     return ROOK_ATTACKS[index]
-                       [static_cast<int>((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
-
+    [static_cast<int>((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
+    
     //    return generateRookAttack(index, occupied);
 }
 
@@ -738,7 +738,7 @@ inline U64 lookUpRookXRayAttack(Square index, U64 occupied, U64 opponent) {
  */
 inline U64 lookUpBishopAttack(Square index, U64 occupied) {
     return BISHOP_ATTACKS[index][static_cast<int>((occupied & bishopMasks[index]) * bishopMagics[index]
-                                                  >> (bishopShifts[index]))];
+        >> (bishopShifts[index]))];
     //    return generateBishopAttack(index, occupied);
 }
 
@@ -804,12 +804,12 @@ inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) { return max(ab
  * @return
  */
 inline int chebyshevDistance(Square sq1, Square sq2) {
-
+    
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
     Rank rI2 = rankIndex(sq2);
-
+    
     return chebyshevDistance(fI1, rI1, fI2, rI2);
 }
 
@@ -835,7 +835,7 @@ inline int manhattanDistance(Square sq1, Square sq2) {
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
     Rank rI2 = rankIndex(sq2);
-
+    
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
 
