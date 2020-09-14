@@ -418,8 +418,29 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     Score s = 0;
     for (d = 1; d <= maxDepth; d++) {
 
-        // call the pvs framework
-        s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
+        if (d<6) {
+            s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
+        }else {
+            Score window = 10;
+            Score alpha = s-window;
+            Score beta = s+window;
+
+            while (isTimeLeft()){
+                s = pvSearch(b, alpha, beta, d, 0, td, 0);
+                
+                window += window;
+                if (window>500) window = MIN_MATE_SCORE;
+                if (s>=beta) {
+                    beta += window;
+                }else if (s<=alpha) {
+                    alpha-=window;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        if (threadId == 0)printInfoString(b, d, s);
 
         // if the search finished due to timeout, we also need to stop here
         if (!isTimeLeft())
@@ -736,7 +757,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove) {
                 // put the beta cutoff into the tt
-                table->put(zobrist, highestScore, m, CUT_NODE, depth);
+                table->put(zobrist, score, m, CUT_NODE, depth);
                 // also set this move as a killer move into the history
                 sd->setKiller(m, ply, b->getActivePlayer());
                 // if the move is not a capture, we also update counter move history tables and history scores.
@@ -749,20 +770,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
 
         if (score > alpha) {
-
-            // we only record pv changes at the root if its the main thread
-            if (!skipMove && ply == 0 && isTimeLeft() && td->threadID == 0) {
-                // we need to put the transposition in here so that printInfoString displays the correct pv
-                table->put(zobrist, score, bestMove, PV_NODE, depth);
-                // print an updated version of the info string including nodes, nps etc.
-                printInfoString(b, depth, score);
-                // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
-            }
             // increase alpha
             alpha = score;
             // store the best move for this node
             bestMove = m;
+            if (!skipMove && ply == 0 && isTimeLeft() && td->threadID == 0) {
+                // we need to put the transposition in here so that printInfoString displays the correct pv
+                table->put(zobrist, score, bestMove, ALL_NODE, depth);
+                // the time manager needs to be updated to know if its safe to stop the search
+                search_timeManager->updatePV(m, score, depth);
+            }
         }
 
         // if this loop finished, we can increment the legal move counter by one which is important for detecting mates
