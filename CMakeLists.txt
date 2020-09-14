@@ -50,7 +50,7 @@ add_executable(Koivisto
         src_files/eun/data/CompactInput.h
         src_files/eun/data/Weight.cpp
         src_files/eun/data/Weight.h
-        )
+        src_files/fecppnn/layer/Layer.cpp src_files/fecppnn/layer/Layer.h src_files/fecppnn/data/Data.cpp src_files/fecppnn/data/Data.h src_files/fecppnn/layer/DenseLayer.h src_files/fecppnn/layer/DenseLayer.cpp src_files/fecppnn/layer/DenseLayer.h src_files/fecppnn/layer/InputLayer.cpp src_files/fecppnn/layer/InputLayer.h src_files/fecppnn/layer/ReLU.cpp src_files/fecppnn/layer/ReLU.h src_files/fecppnn/layer/Sigmoid.cpp src_files/fecppnn/layer/Sigmoid.h src_files/fecppnn/loss/Loss.cpp src_files/fecppnn/loss/Loss.h src_files/fecppnn/loss/MSE.cpp src_files/fecppnn/loss/MSE.h src_files/fecppnn/optimiser/Optimiser.cpp src_files/fecppnn/optimiser/Optimiser.h src_files/fecppnn/optimiser/GD.cpp src_files/fecppnn/optimiser/GD.h src_files/fecppnn/layer/Concat.cpp src_files/fecppnn/layer/Concat.h src_files/fecppnn/layer/EDenseLayer.cpp src_files/fecppnn/layer/EDenseLayer.h src_files/fecppnn/layer/ClippedReLU.cpp src_files/fecppnn/layer/ClippedReLU.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
