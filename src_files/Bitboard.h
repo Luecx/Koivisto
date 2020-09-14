@@ -39,8 +39,8 @@ constexpr Depth MAX_PLY          = 128;
 constexpr Depth MAX_INTERNAL_PLY = 255;
 
 constexpr Score TB_CURSED_SCORE = (Score)(1);
-constexpr Score TB_WIN_SCORE    = (Score)((1 << 14) - MAX_INTERNAL_PLY);
-constexpr Score MAX_MATE_SCORE  = (Score)((1 << 15) - 1);
+constexpr Score TB_WIN_SCORE    = (Score)((1 << 13) - MAX_INTERNAL_PLY);
+constexpr Score MAX_MATE_SCORE  = (Score)((1 << 14) - 1);
 constexpr Score MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY);
 
 constexpr Color WHITE = 0;
