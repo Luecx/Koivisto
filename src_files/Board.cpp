@@ -300,6 +300,22 @@ void Board::move(Move m) {
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
+        
+        if(getPiece(sqTo) % 6 == ROOK){
+            if (color == BLACK) {
+                if (sqTo == A1) {
+                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_WHITE_QUEENSIDE_CASTLING));
+                } else if (sqTo == H1) {
+                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_WHITE_KINGSIDE_CASTLING));
+                }
+            } else {
+                if (sqTo == A8) {
+                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_BLACK_QUEENSIDE_CASTLING));
+                } else if (sqTo == H8) {
+                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                }
+            }
+        }
     }
 
     newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
