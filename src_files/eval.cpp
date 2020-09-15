@@ -691,6 +691,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     const __m128 sumL = _mm_add_ss(tL, _mm_shuffle_ps(tL, tL, 1));
     
     res = sumE[0] * (1 - phase) + sumL[0] * (phase);
+    res += (b->getActivePlayer() == WHITE ? 15 : -15);
     return res;
     // clang-format on
 }
