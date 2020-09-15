@@ -516,15 +516,14 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     SearchData* sd            = td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
-    Score       staticEval    = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score       staticEval    = inCheck ? -MAX_MATE_SCORE+ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     Score       originalAlpha = alpha;
     Score       highestScore  = -MAX_MATE_SCORE;
     Score       score         = -MAX_MATE_SCORE;
     Move        bestMove      = 0;
     Move        hashMove      = 0;
-    
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    
+    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
     /**************************************************************************************
      *                  T R A N S P O S I T I O N - T A B L E   P R O B E                 *
      **************************************************************************************/
@@ -554,7 +553,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
     }
-    
+
     /**************************************************************************************
      *                            T A B L E B A S E - P R O B E                           *
      **************************************************************************************/
@@ -670,7 +669,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (!isCapture(m) && !isPromotion && !givesCheck) {
                 quiets++;
                 // LMP
-                if (depth <= 7 && quiets > lmp[sd->isImproving(staticEval, b->getActivePlayer(), ply)][depth]) {
+                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
@@ -721,7 +720,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         if (lmr) {
             int history = sd->getHistoryMoveScore(m, !b->getActivePlayer()) - 512;
-            lmr         = lmr - history / 256;
+            lmr     = lmr - history / 256;
+            lmr     += !isImproving;
             if (sd->sideToReduce == b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
