@@ -754,6 +754,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
+            if (ply == 0 && isTimeLeft() && td->threadID == 0) {
+                //Store bestMove for bestMove
+                sd->bestMove = m;
+                // the time manager needs to be updated to know if its safe to stop the search
+                search_timeManager->updatePV(m, score, depth);
+            }
         }
         
         // beta -cutoff
@@ -775,14 +781,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > alpha) {
             // increase alpha
             alpha = score;
-            // store the best move for this node
-            bestMove = m;
-            if (!skipMove && ply == 0 && isTimeLeft() && td->threadID == 0) {
-                //Store bestMove for bestMove
-                sd->bestMove = m;
-                // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
-            }
         }
         
         // if this loop finished, we can increment the legal move counter by one which is important for detecting mates
