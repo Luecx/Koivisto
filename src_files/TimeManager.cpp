@@ -6,7 +6,7 @@
 
 #include "Board.h"
 
-auto startTime = std::chrono::system_clock::now();
+auto startTime = std::chrono::steady_clock::now();
 
 /**
  * for exact timings
@@ -18,7 +18,7 @@ TimeManager::TimeManager(int moveTime) {
 
     timeToUse      = moveTime;
     upperTimeBound = moveTime;
-    startTime      = std::chrono::system_clock::now();
+    startTime      = std::chrono::steady_clock::now();
 }
 
 /**
@@ -32,7 +32,7 @@ TimeManager::TimeManager() {
     timeToUse      = 1 << 30;
     upperTimeBound = 1 << 30;
 
-    startTime = std::chrono::system_clock::now();
+    startTime = std::chrono::steady_clock::now();
 }
 
 /**
@@ -82,11 +82,11 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     if (timeToUse > upperTimeBound)
         timeToUse = upperTimeBound / 3;
 
-    startTime = std::chrono::system_clock::now();
+    startTime = std::chrono::steady_clock::now();
 }
 
 int TimeManager::elapsedTime() {
-    auto                          end  = std::chrono::system_clock::now();
+    auto                          end  = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = end - startTime;
 
     return round(diff.count() * 1000);
