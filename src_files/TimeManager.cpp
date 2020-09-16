@@ -86,10 +86,10 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
 }
 
 int TimeManager::elapsedTime() {
-    auto                          end  = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-    std::chrono::duration<double> diff = end - startTime;
+    auto                       end  = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    auto                       diff = end - startTime;
 
-    return round(diff.count() * 1000);
+    return diff;
     // std::cout << "measurement finished! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
