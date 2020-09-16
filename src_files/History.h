@@ -14,6 +14,8 @@ using namespace move;
 
 struct SearchData {
 
+    Move bestMove = 0;
+
     MoveList** moves;
     Evaluator  evaluator {};
 
