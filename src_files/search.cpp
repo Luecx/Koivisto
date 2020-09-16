@@ -446,9 +446,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (!isTimeLeft())
             break;
     }
-    
-    delete sd;
-    
+        
     // if the main thread finishes, we will record the data of this thread
     if (threadId == 0) {
         
@@ -460,8 +458,10 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         runningThreads.clear();
         
         // retrieve the best move from the search
-        Move best = table->get(b->zobrist()).move;
+        Move best = sd->bestMove;
         
+        delete sd;
+
         // collect some information which can be used for benching
         overview.nodes = totalNodes();
         overview.depth = d;
@@ -472,6 +472,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         // return the best move if its the main thread
         return best;
     }
+
+    delete sd;
+
     // return nothing (doesnt matter)
     return 0;
 }
@@ -751,6 +754,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
+            if (ply == 0 && isTimeLeft() && td->threadID == 0) {
+                //Store bestMove for bestMove
+                sd->bestMove = m;
+                // the time manager needs to be updated to know if its safe to stop the search
+                search_timeManager->updatePV(m, score, depth);
+            }
         }
         
         // beta -cutoff
@@ -772,14 +781,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > alpha) {
             // increase alpha
             alpha = score;
-            // store the best move for this node
-            bestMove = m;
-            if (!skipMove && ply == 0 && isTimeLeft() && td->threadID == 0) {
-                // we need to put the transposition in here so that printInfoString displays the correct pv
-                table->put(zobrist, score, bestMove, ALL_NODE, depth);
-                // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
-            }
         }
         
         // if this loop finished, we can increment the legal move counter by one which is important for detecting mates
