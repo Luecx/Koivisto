@@ -6,7 +6,7 @@
 
 using namespace std;
 
-MoveList**          buffer;
+MoveList          buffer[100]{};
 TranspositionTable* tt;
 
 // int generations;
@@ -25,11 +25,7 @@ void perft_init(bool hash) {
     if (hash)
         tt = new TranspositionTable(512);
 
-    buffer = new MoveList*[100];
-
-    for (int i = 0; i < 100; i++) {
-        buffer[i] = new MoveList();
-    }
+    
 }
 
 /**
@@ -40,11 +36,6 @@ void perft_cleanUp() {
     if (tt != nullptr)
         delete tt;
 
-    for (int i = 0; i < 100; i++) {
-        delete buffer[i];
-    }
-
-    delete[] buffer;
 }
 
 /**
@@ -75,12 +66,12 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     if (depth == 0)
         return 1;
 
-    b->getPseudoLegalMoves(buffer[depth]);
+    b->getPseudoLegalMoves(&buffer[depth]);
     //    generations ++;
 
-    for (i = 0; i < buffer[depth]->getSize(); i++) {
+    for (i = 0; i < buffer[depth].getSize(); i++) {
 
-        Move m = buffer[depth]->getMove(i);
+        Move m = buffer[depth].getMove(i);
         //        checks ++;
 
         if (!b->isLegal(m)) {
