@@ -719,7 +719,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Depth lmr =
                   (legalMoves == 0
              || depth <= 2
-             || isCapture(m) && staticExchangeEval
+             || isCapture(m) && staticExchangeEval >= 0
              || isPromotion && (promotionPiece(m) % 6 == QUEEN)
              ) ? 0 : lmrReductions[depth][legalMoves];
         
