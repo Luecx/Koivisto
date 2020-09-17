@@ -717,7 +717,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
         
         Depth lmr =
-                  (legalMoves == 0 || depth <= 2 || isCapture(m) || isPromotion) ? 0 : lmrReductions[depth][legalMoves];
+                  (legalMoves == 0
+             || depth <= 2
+             || isCapture(m) && staticExchangeEval >= 0
+             || isPromotion && (promotionPiece(m) % 6 == QUEEN)
+             ) ? 0 : lmrReductions[depth][legalMoves];
         
         if (lmr) {
             int history = sd->getHistoryMoveScore(m, b->getActivePlayer()) - 512;
