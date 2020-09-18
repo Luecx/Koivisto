@@ -6,8 +6,8 @@
 #define KOIVISTO_NNTOOLS_H
 
 
-#define whiteInputIndex(activePlayer, piece, square, opponentKing)    activePlayer  * (6 * 64 * 64) +              opponentKing  * (6*64) + piece   * 64 +              square
-#define blackInputIndex(activePlayer, piece, square, opponentKing) (1-activePlayer) * (6 * 64 * 64) + mirrorSquare(opponentKing) * (6*64) + piece%6 * 64 + mirrorSquare(square)
+#define whiteInputIndex(activePlayer, piece, square, king)    activePlayer  * (5 * 64 * 64) +              king  * (5*64) + (piece  ) * 64 +              square
+#define blackInputIndex(activePlayer, piece, square, king) (1-activePlayer) * (5 * 64 * 64) + mirrorSquare(king) * (5*64) + (piece%6) * 64 + mirrorSquare(square)
 
 #include <immintrin.h>
 #include <cmath>
@@ -15,7 +15,7 @@
 namespace nn{
 
 inline float activation(float x){
-    if (x < 0) return x*0.1;
+    if (x < 0) return 0;
 //    if (x > 1) return 1;
     return x;
 }
@@ -62,5 +62,8 @@ static inline float _mm256_reduce_add_ps(__m256 x) {
     return _mm_cvtss_f32(x32);
 }
 }
+
+
+
 
 #endif //KOIVISTO_NNTOOLS_H

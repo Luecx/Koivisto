@@ -11,6 +11,7 @@
 #include "data/CompactInput.h"
 #include <immintrin.h>
 #include <memory.h>
+#include <ostream>
 #include "nntools.h"
 #include "data/Weight.h"
 
@@ -57,6 +58,15 @@ struct InputTracker{
 
         int at(int index){
             return indices[index];
+        }
+        
+        friend std::ostream &operator<<(std::ostream &os, const InputTracker &tracker) {
+            for(int i = 0; i < tracker.size; i++){
+                os << tracker.indices[i] << " ";
+            }
+            os << std::endl;
+            
+            return os;
         }
 };
 

@@ -67,13 +67,14 @@ void nn::DenseNetwork::resetNetworkInput(Board *board) {
     Square blackKing = bitscanForward(board->getPieces()[BLACK_KING]);
     for(Piece p = WHITE_PAWN; p <= BLACK_KING; p++){
         U64 k = board->getPieces()[p];
+        if(p % 6 == KING) continue;
         while(k){
             Square s = bitscanForward(k);
 
             if(p / 6 == WHITE){
-                adjustInput(whiteInputIndex(activePlayer, p, s, blackKing),1);
+                adjustInput(whiteInputIndex(activePlayer, p, s, whiteKing),1);
             }else{
-                adjustInput(blackInputIndex(activePlayer, p, s, whiteKing),1);
+                adjustInput(blackInputIndex(activePlayer, p, s, blackKing),1);
             }
 
             k = lsbReset(k);

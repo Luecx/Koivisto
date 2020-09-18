@@ -71,6 +71,7 @@ class DenseNetwork {
                 fread(output->getWeights()->getValue(),sizeof(float ), output->getInputSize() * output->getOutputSize(), outfile);
     
                 fclose(outfile);
+                std::cout << "loaded binary weights!" << std::endl;
     
             }else{
                 std::ifstream infile(file);
@@ -91,10 +92,11 @@ class DenseNetwork {
                 for(int i = 0; i < hiddenCount; i++){
                     for(int j = 0; j < layers[i]->getOutputSize(); j++){
                         infile >> layers[i]->getBias()->value[j] ;
-//            std::cout << layers[i]->getBias()->value[j] << std::endl;
+                        count ++;
                     }
                     for(int j = 0; j < layers[i]->getInputSize() * layers[i]->getOutputSize(); j++){
                         infile >> layers[i]->getWeights()->value[j] ;
+                        count ++;
             
                     }
                 }
@@ -102,11 +104,16 @@ class DenseNetwork {
                 //output layer
                 for(int j = 0; j < output->getOutputSize(); j++){
                     infile >> output->getBias()->value[0];
+                    count ++;
                 }
                 for(int j = 0; j < output->getInputSize() * output->getOutputSize(); j++){
                     infile >> output->getWeights()->value[j];
+                    count ++;
                 }
-    
+                
+                std::cout << "loaded " << count << " entries!" << std::endl;
+                
+                
                 infile.close();
             }
             
@@ -136,6 +143,7 @@ class DenseNetwork {
                 fwrite(output->getWeights()->getValue(),sizeof(float ), output->getInputSize() * output->getOutputSize(), outfile);
                 
                 fclose(outfile);
+                std::cout << "written binary weights!" << std::endl;
                 
             }else{
     
@@ -167,6 +175,7 @@ class DenseNetwork {
                 for(int j = 0; j < output->getInputSize() * output->getOutputSize(); j++){
                     outfile << output->getWeights()->value[j] << std::endl;
                 }
+                std::cout << "written editable weights!" << std::endl;
                 outfile.close();
             }
             

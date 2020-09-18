@@ -4,6 +4,7 @@
 
 #include "uci.h"
 
+#include "eun/DenseNetwork.h"
 #include "syzygy/tbprobe.h"
 
 #include <fstream>
@@ -13,9 +14,10 @@
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 1
 
-TimeManager* timeManager;
-Board*       board;
-std::thread* searchThread = nullptr;
+TimeManager*      timeManager;
+Board*            board;
+std::thread*      searchThread = nullptr;
+nn::DenseNetwork* denseNetwork = nullptr;
 
 void uci_loop(bool bench) {
 
@@ -183,6 +185,58 @@ void uci_processCommand(std::string str) {
         std::cout << *board << std::endl;
     } else if (split.at(0) == "eval") {
         printEvaluation(board);
+    } else if (split.at(0) == "nn") {
+
+        if (split.at(1) == "create") {
+            int* sizes = new int[split.size() - 1] {};
+            sizes[0]   = 10 * 64 * 64;
+            for (int i = 2; i < split.size(); i++) {
+                sizes[i - 1] = stoi(split.at(i));
+                if (sizes[i - 1] % 8 != 0) {
+                    std::cout << "[ERROR] the size of a hidden layer is not a multiple of 8" << std::endl;
+                    return;
+                }
+            }
+            denseNetwork = new nn::DenseNetwork(sizes, split.size() - 1);
+
+        } else if (split.at(1) == "load") {
+            if (denseNetwork == nullptr) {
+                std::cout << "[ERROR] first create a network" << std::endl;
+                return;
+            }
+
+            bool        binary = str.find("binary") != string::npos;
+            std::string path   = uci_getValue(split, "path");
+
+            std::cout << "trying to load data from: " << path << std::endl;
+
+            if (binary) {
+                denseNetwork->load_weights<true>(path);
+            } else {
+                denseNetwork->load_weights<false>(path);
+            }
+        } else if (split.at(1) == "write") {
+            if (denseNetwork == nullptr) {
+                std::cout << "[ERROR] first create a network" << std::endl;
+                return;
+            }
+
+            bool        binary = str.find("binary") != string::npos;
+            std::string path   = uci_getValue(split, "path");
+
+            if (binary) {
+                denseNetwork->write_weights<true>(path);
+            } else {
+                denseNetwork->write_weights<false>(path);
+            }
+        } else if (split.at(1) == "eval") {
+            if (denseNetwork == nullptr) {
+                std::cout << "[ERROR] first create a network" << std::endl;
+                return;
+            }
+            denseNetwork->resetNetworkInput(board);
+            std::cout << denseNetwork->compute<true>();
+        }
     }
 }
 

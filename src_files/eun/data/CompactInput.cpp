@@ -148,14 +148,19 @@ void writeInSparseFormat(std::string inputFile, std::string outputFile) {
         Square whiteKing = bitscanForward(board->getPieces()[WHITE_KING]);
         Square blackKing = bitscanForward(board->getPieces()[BLACK_KING]);
         for(Piece p = WHITE_PAWN; p <= BLACK_KING; p++){
+            
+            //we ignore king positions as there can only be 1 king on the board and this is included in the eval
+            if(p % 6 == KING) continue;
+            
+            //iterate over all the piece
             U64 k = board->getPieces()[p];
             while(k){
                 Square s = bitscanForward(k);
                 
                 if(p / 6 == WHITE){
-                    out << whiteInputIndex(activePlayer, p, s, blackKing) << " ";
+                    out << whiteInputIndex(activePlayer, p, s, whiteKing) << " ";
                 }else{
-                    out << blackInputIndex(activePlayer, p, s, whiteKing) << " ";
+                    out << blackInputIndex(activePlayer, p, s, blackKing) << " ";
                 }
                 k = lsbReset(k);
             }
