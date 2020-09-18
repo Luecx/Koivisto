@@ -1,5 +1,5 @@
 CC      = g++
-SRC     = *.cpp syzygy/*.c eun/*.cpp nn/data/*.cpp
+SRC     = *.cpp syzygy/*.c eun/*.cpp eun/data/*.cpp
 #SRC     = *.cpp syzygy/tbprobe.c
 LIBS    = -lpthread -lm
 EXE     = ../Koivisto
