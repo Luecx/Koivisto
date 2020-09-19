@@ -209,7 +209,7 @@ void uci_processCommand(std::string str) {
             std::string path   = uci_getValue(split, "path");
 
             std::cout << "trying to load data from: " << path << std::endl;
-
+            
             if (binary) {
                 denseNetwork->load_weights<true>(path);
             } else {
@@ -237,6 +237,8 @@ void uci_processCommand(std::string str) {
             }
             denseNetwork->resetNetworkInput(board);
             std::cout << denseNetwork->compute<true>();
+        } else if (split.at(1) == "influence") {
+            search_setNetworkInfluence(stod(split.at(2)));
         }
     }
 }
