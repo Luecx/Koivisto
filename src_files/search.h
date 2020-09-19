@@ -21,6 +21,7 @@
 #include "MoveOrderer.h"
 #include "TimeManager.h"
 #include "TranspositionTable.h"
+#include "eun/DenseNetwork.h"
 #include "eval.h"
 
 extern int threadCount;
@@ -47,6 +48,8 @@ void  initLmr();
 Score getWDL(Board* board);
 void  search_stop();
 void  search_setHashSize(int hashSize);
+void  search_setNetwork(nn::DenseNetwork* network);
+void  search_setNetworkInfluence(double d);
 void  search_clearHash();
 void  search_useTB(bool val);
 void  search_init(int hashSize);     // used to create arrays, movelists etc

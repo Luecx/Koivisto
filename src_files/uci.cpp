@@ -215,6 +215,7 @@ void uci_processCommand(std::string str) {
             } else {
                 denseNetwork->load_weights<false>(path);
             }
+            search_setNetwork(denseNetwork);
         } else if (split.at(1) == "write") {
             if (denseNetwork == nullptr) {
                 std::cout << "[ERROR] first create a network" << std::endl;
