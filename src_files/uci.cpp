@@ -38,6 +38,10 @@ void uci_loop(bool bench) {
         std::atexit(uci_quit);
         std::string line;
 
+        uci_processCommand("nn create 512 32 32\n");
+        uci_processCommand("nn load binary path nn.bin\n");
+        uci_processCommand("nn influence 1\n");
+
         while (true) {
             getline(cin, line);
 
