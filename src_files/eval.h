@@ -73,6 +73,8 @@ static int INDEX_BISHOP_HANGING = unusedVariable++;
 static int INDEX_ROOK_HANGING   = unusedVariable++;
 static int INDEX_QUEEN_HANGING  = unusedVariable++;
 
+static int INDEX_CASTLING_RIGHTS = unusedVariable++;
+
 static int SPACER1 = unusedVariable += unusedVariable % 4 == 0 ? 0 : (4 - unusedVariable % 4);
 
 class Evaluator {
