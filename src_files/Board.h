@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string>
 
-#define SEE_CACHE_SIZE 2048
+//#define SEE_CACHE_SIZE 2048
 
 using namespace bb;
 using namespace move;
