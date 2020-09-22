@@ -1,6 +1,7 @@
 
 
 #include "Bitboard.h"
+#include <random>
 
 
 using namespace bb;
@@ -12,12 +13,11 @@ U64 **bb::all_hashes = {};
 
 U64 **bb::inBetweenSquares = new U64*[64];
 
+std::mt19937_64 rng;
+
 void bb::bb_init() {
     
-    
-    std::srand(seed);
-    
-    
+    rng.seed(seed);    
     
     generateZobristKeys();
     generateData();
@@ -52,19 +52,19 @@ void bb::bb_cleanUp() {
 U64 bb::randU64(){
     U64 res{0};
     
-    res ^= U64(rand()) << 0;
-    res ^= U64(rand()) << 10;
-    res ^= U64(rand()) << 20;
-    res ^= U64(rand()) << 30;
-    res ^= U64(rand()) << 40;
-    res ^= U64(rand()) << 50;
-    res ^= U64(rand()) << 60;
-    
+    res ^= U64(rng()) << 0;
+    res ^= U64(rng()) << 10;
+    res ^= U64(rng()) << 20;
+    res ^= U64(rng()) << 30;
+    res ^= U64(rng()) << 40;
+    res ^= U64(rng()) << 50;
+    res ^= U64(rng()) << 60;
+
     return res;
 }
 
 double bb::randDouble(double min, double max) {
-    double f = static_cast<double>(rand()) / RAND_MAX;
+    double f = static_cast<double>(rng()) / rng.max();
     return min + f * (max - min);
 }
 
