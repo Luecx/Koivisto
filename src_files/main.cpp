@@ -24,14 +24,14 @@ void main_tune_features_bb() {
 
     // tune Phase specificly
     float* params     = evaluator->getPhaseValues();
-    int    paramCount = 6;
+    int    paramCount = 16;
 
     for (int i = 0; i < 5000; i++) {
 
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-        std::cout << std::setprecision(8) << tuning::optimiseBlackBox(evaluator, K, params, paramCount, 0.01)
+        std::cout << std::setprecision(8) << tuning::optimiseBlackBox(evaluator, K, params, paramCount, 0.3)
                   << std::endl;
 
         for (int e = 0; e < paramCount; e++) {
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
 
     //main_tune_features();
     // main_tune_pst();
-    // main_tune_features_bb();
+    //main_tune_features_bb();
 
     return 0;
 }

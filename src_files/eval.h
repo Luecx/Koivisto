@@ -77,6 +77,8 @@ static int INDEX_CASTLING_RIGHTS = unusedVariable++;
 
 static int INDEX_BLOCKED_PAWN = unusedVariable++;
 
+static int INDEX_PASSER_RANK = unusedVariable++;
+
 static int SPACER1 = unusedVariable += unusedVariable % 4 == 0 ? 0 : (4 - unusedVariable % 4);
 
 class Evaluator {
