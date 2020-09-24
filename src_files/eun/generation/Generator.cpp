@@ -23,6 +23,9 @@ void generator::generate(const string& outpath) {
     double king_walk_p          = 0.1;
     
     
+    int totalCount = 0;
+    
+    
     while (true) {
         
         Board b {};
@@ -71,7 +74,7 @@ void generator::generate(const string& outpath) {
                 std::vector<Board*> leafs;
                 collectAllQuietPositions(&b, leafs);
                 
-                std::cout << "collected " << leafs.size() << " positions" << std::endl;
+//                std::cout << "collected " << leafs.size() << " positions" << std::endl;
                 
                 // iterate over each position and run a quick search
                 for (Board* b : leafs) {
@@ -79,13 +82,17 @@ void generator::generate(const string& outpath) {
                     double eval = evalPosition(b);
                     search_clearHash();
                     
-                    std::cout << eval << std::endl;
-                    
-                    
                     if (abs(eval) < adjudicate) {
                         (*outFile) << b->fen() << ";" << eval << "\n";
+                        totalCount ++;
+                        
+                        if(totalCount % 1000 == 0){
+                            std::cout << totalCount << std::endl;
+                        }
+                        
                     }
                 }
+                
             }
         }
     }
