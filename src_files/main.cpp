@@ -156,14 +156,14 @@ void main_tune_pst() {
 #include "eun/generation/Generator.h"
 
 int main(int argc, char* argv[]) {
-    
+
     
     if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     } else if (argc > 2 && strcmp(argv[1], "gen") == 0){
-        generator::generate(argv[2]);
+        generator::generate(std::string(argv[2]));
     }
 
     /**********************************************************************************
