@@ -9,6 +9,8 @@ std::ofstream*      generator::outFile;
 Evaluator           generator::evaluator {};
 
 void generator::generate(const string& outpath) {
+    srand(time(0));
+
     bb_init();
     search_init(8);
     search_disable_infoStrings();
