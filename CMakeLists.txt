@@ -49,10 +49,9 @@ add_executable(Koivisto
         src_files/eun/data/CompactInput.cpp
         src_files/eun/data/CompactInput.h
         src_files/eun/data/Weight.cpp
-        src_files/eun/data/Weight.h)
+        src_files/eun/data/Weight.h src_files/eun/generation/Generator.cpp src_files/eun/generation/Generator.h)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
 set(CMAKE_EXE_LINKER_FLAGS " -static")

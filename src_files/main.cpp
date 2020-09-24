@@ -153,13 +153,19 @@ void main_tune_pst() {
 }
 #endif
 
-int main(int argc, char* argv[]) {
+#include "eun/generation/Generator.h"
 
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+int main(int argc, char* argv[]) {
+    
+    
+    generator::generate("test.fens");
+//    if (argc == 1) {
+//        uci_loop(false);
+//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+//        uci_loop(true);
+//    } else if (argc > 2 && strcmp(argv[1], "gen") == 0){
+//        generator::generate(argv[2]);
+//    }
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
