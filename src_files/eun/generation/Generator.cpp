@@ -72,22 +72,24 @@ void generator::generate(const string& outpath) {
                 // for this position, run a qsearch to collect all quiet positions
                 std::vector<Board*> leafs;
                 collectAllQuietPositions(&b, leafs);
-                std::cout << "collected " << leafs.size() << " positions" << std::endl;
+//                std::cout << "collected " << leafs.size() << " positions" << std::endl;
 
                 // iterate over each position and run a quick search
-                for (Board* b : leafs) {
+                for (Board* bs : leafs) {
 
-                    double eval = evalPosition(b);
+                    double eval = evalPosition(bs);
                     search_clearHash();
 
                     if (abs(eval) < adjudicate) {
-                        (*outFile) << b->fen() << ";" << eval << "\n";
+                        (*outFile) << bs->fen() << ";" << eval << "\n";
                         totalCount++;
 
                         if (totalCount % 100 == 0) {
                             std::cout << totalCount << std::endl;
                         }
                     }
+                    
+                    delete bs;
                 }
             }
         }
