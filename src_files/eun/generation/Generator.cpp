@@ -3,21 +3,35 @@
 //
 
 #include "Generator.h"
+#include <unistd.h> 
 
 TranspositionTable* generator::searchedPosition;
 std::ofstream*      generator::outFile;
 Evaluator           generator::evaluator {};
 
-void generator::generate(const string& outpath) {
-    srand(time(0));
 
+unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
+{
+    a=a-b;  a=a-c;  a=a^(c >> 13);
+    b=b-c;  b=b-a;  b=b^(a << 8);
+    c=c-a;  c=c-b;  c=c^(b >> 13);
+    a=a-b;  a=a-c;  a=a^(c >> 12);
+    b=b-c;  b=b-a;  b=b^(a << 16);
+    c=c-a;  c=c-b;  c=c^(b >> 5);
+    a=a-b;  a=a-c;  a=a^(c >> 3);
+    b=b-c;  b=b-a;  b=b^(a << 10);
+    c=c-a;  c=c-b;  c=c^(b >> 15);
+    return c;
+}
+
+void generator::generate(const string& outpath) {
     bb_init();
     search_init(8);
     search_disable_infoStrings();
     outFile          = new std::ofstream(outpath, std::ios_base::app);
     searchedPosition = new TranspositionTable(64);
 
-    int    min_ply              = 16;
+    int    min_ply              =  0;
     int    max_ply              = 500;
     int    adjudicate           = 1000;
     int    legalityCheckCounter = 10;
@@ -25,8 +39,11 @@ void generator::generate(const string& outpath) {
 
     int totalCount = 0;
 
-    while (true) {
+    unsigned long seed = mix(clock(), time(NULL), getpid());
+    srand(seed);
 
+    while (true) {
+        search_clearHash();
         Board b {};
 
         for (int i = 0; i < max_ply; i++) {
@@ -67,26 +84,23 @@ void generator::generate(const string& outpath) {
             // do the move
             b.move(r);
 
-            if (i >= min_ply) {
+            // for this position, run a qsearch to collect all quiet positions
+            std::vector<Board*> leafs;
+            collectAllQuietPositions(&b, leafs);
+            
+            // std::cout << "collected " << leafs.size() << " positions" << std::endl;
 
-                // for this position, run a qsearch to collect all quiet positions
-                std::vector<Board*> leafs;
-                collectAllQuietPositions(&b, leafs);
-                std::cout << "collected " << leafs.size() << " positions" << std::endl;
+            // iterate over each position and run a quick search
+            for (Board* b : leafs) {
 
-                // iterate over each position and run a quick search
-                for (Board* b : leafs) {
+                double eval = evalPosition(b);
 
-                    double eval = evalPosition(b);
-                    search_clearHash();
+                if (abs(eval) < adjudicate) {
+                    (*outFile) << b->fen() << ";" << eval << "\n";
+                    totalCount++;
 
-                    if (abs(eval) < adjudicate) {
-                        (*outFile) << b->fen() << ";" << eval << "\n";
-                        totalCount++;
-
-                        if (totalCount % 100 == 0) {
-                            std::cout << totalCount << std::endl;
-                        }
+                    if (totalCount % 100 == 0) {
+                        std::cout << totalCount << std::endl;
                     }
                 }
             }
@@ -198,7 +212,7 @@ Move generator::selectRandomMove(MoveList& moveList, double king_walk_p) {
 // gets the evaluation for the position
 Score generator::evalPosition(Board* b) {
     TimeManager manager {};
-    bestMove(b, 8, &manager);
+    bestMove(b, 12, &manager);
     SearchOverview ov = search_overview();
     return ov.score;
 }

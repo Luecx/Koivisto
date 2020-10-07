@@ -183,6 +183,9 @@ void uci_processCommand(std::string str) {
         std::cout << *board << std::endl;
     } else if (split.at(0) == "eval") {
         printEvaluation(board);
+    } else if (split.at(0) == "staticeval") {
+        Evaluator e;
+        std::cout << e.evaluate(board) << std::endl;
     }
 }
 
