@@ -102,6 +102,8 @@ void generator::generate(const string& outpath) {
                     if (totalCount % 100 == 0) {
                         std::cout << totalCount << std::endl;
                     }
+                    
+                    delete bs;
                 }
             }
         }
