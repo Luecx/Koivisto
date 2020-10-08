@@ -690,11 +690,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
         
         int extension = 0;
-        
-        if (givesCheck && staticExchangeEval > 0) {
-            extension = 1;
-        }
-        
+
         // singular extensions
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && b->getActivePlayer() != sd->sideToReduce && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
@@ -741,6 +737,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         b->move(m);
         
+        if (extension == 0 && b->isInCheck(b->getActivePlayer())) extension = 1;
+
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
