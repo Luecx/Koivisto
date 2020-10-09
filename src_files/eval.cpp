@@ -124,6 +124,13 @@ float kingSafetyTable[100] {0,   0,   1,   2,   3,   5,   7,   9,   12,  15,  18
  * @param valueOfAttacks
  * @param factor
  */
+
+bool hasMatingMaterial(Board *b, bool side)
+{
+    if ((b->getPieces()[QUEEN+side*6]|b->getPieces()[ROOK+side*6]|b->getPieces()[PAWN+side*6])||(bitCount(b->getPieces()[BISHOP+side*6]|b->getPieces()[KNIGHT+side*6])>1&&b->getPieces()[BISHOP+side*6])) return true;
+    return false;
+}
+
 void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor) {
     if (attacks & kingZone) {
         pieceCount++;
@@ -694,6 +701,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     res = sumE[0] * (1 - phase) + sumL[0] * (phase);
     res += (b->getActivePlayer() == WHITE ? 15 : -15);
+    if (!hasMatingMaterial(b, res>0?WHITE:BLACK))res=res/10;
     return res;
     // clang-format on
 }
