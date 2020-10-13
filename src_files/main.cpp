@@ -200,8 +200,8 @@ int main(int argc, char* argv[]) {
     // bb_cleanUp();
 
     // main_tune_pst_bb(PAWN);
-    eval_init();
-    main_tune_features();
+    //eval_init();
+    //main_tune_features();
     // main_tune_pst();
     //main_tune_features_bb();
 
