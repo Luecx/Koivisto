@@ -17,6 +17,86 @@ TimeManager* timeManager;
 Board*       board;
 std::thread* searchThread = nullptr;
 
+std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
+    int index = 0;
+    for (std::string s : vec) {
+        if (s == key) {
+            return vec.at(index + 1);
+        }
+        index++;
+    }
+    return "";
+}
+
+Move uci_uci_to_move(const std::string& string, Board* board) {
+
+    std::string str1 = string.substr(0, 2);
+    std::string str2 = string.substr(2, 4);
+    Square      s1   = squareIndex(str1);
+    Square      s2   = squareIndex(str2);
+
+    Piece moving   = board->getPiece(s1);
+    Piece captured = board->getPiece(s2);
+
+    assert(moving >= 0);
+
+    Type type;
+
+    if (string.size() > 4) {
+
+        Piece promo = QUEEN;
+        switch (string.at(4)) {
+            case 'q': promo = QUEEN; break;
+            case 'r': promo = ROOK; break;
+            case 'b': promo = BISHOP; break;
+            case 'n': promo = KNIGHT; break;
+        }
+
+        if (captured >= 0) {
+            type = 11 + promo;
+        } else {
+            type = 7 + promo;
+        }
+
+    } else {
+        if ((moving % 6) == KING) {
+            if (abs(s2 - s1) == 2) {
+                if (s2 > s1) {
+                    type = KING_CASTLE;
+                } else {
+                    type = QUEEN_CASTLE;
+                }
+            } else {
+                if (captured >= 0) {
+                    type = CAPTURE;
+                } else {
+                    type = QUIET;
+                }
+            }
+        } else if ((moving % 6) == PAWN) {
+            if (abs(s2 - s1) == 16) {
+                type = DOUBLED_PAWN_PUSH;
+            } else if (abs(s2 - s1) != 8) {
+                if (captured >= 0) {
+                    type = CAPTURE;
+                } else {
+                    type = EN_PASSANT;
+                }
+            } else {
+                type = QUIET;
+            }
+        } else {
+            if (captured >= 0) {
+                type = CAPTURE;
+            } else {
+                type = QUIET;
+            }
+        }
+    }
+    Move m = genMove(s1, s2, type, moving, captured);
+    return m;
+}
+
 void uci_loop(bool bench) {
 
     bb_init();
@@ -57,17 +137,6 @@ void uci_uci() {
     std::cout << "option name SyzygyPath type string default" << std::endl;
 
     std::cout << "uciok" << std::endl;
-}
-
-std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
-    int index = 0;
-    for (std::string s : vec) {
-        if (s == key) {
-            return vec.at(index + 1);
-        }
-        index++;
-    }
-    return "";
 }
 
 void uci_endThread() {
@@ -184,7 +253,38 @@ void uci_processCommand(std::string str) {
         std::cout << *board << std::endl;
     } else if (split.at(0) == "eval") {
         printEvaluation(board);
+    } else if (split.at(0) == "tt") {
+        uci_tt();
+    } else if (split.at(0) == "move") {
+        uci_move(split.at(1));
+    } else if (split.at(0) == "undo") {
+        board->undoMove();
     }
+}
+
+void uci_move(string& str) { board->move(uci_uci_to_move(str, board)); }
+void uci_tt() {
+
+    MoveList mv {};
+    board->getPseudoLegalMoves(&mv);
+
+    for (int i = 0; i < mv.getSize(); i++) {
+        Move m = mv.getMove(i);
+        if (!board->isLegal(m))
+            continue;
+        board->move(m);
+        Entry en = search_transpositions()->get(board->zobrist());
+        if (en.zobrist != board->zobrist()) {
+            std::cout << setw(6) << left <<  toString(m) << ": -" << std::endl;
+            } else {
+                std::cout << setw(6) << left << toString(m) << ": "
+                          << (en.type == PV_NODE ? "=" : (en.type == CUT_NODE ? "<" : ">")) << setw(5) << right
+                          << en.score * (board->getActivePlayer() == WHITE ? 1 : -1) << std::endl;
+            }
+        board->undoMove();
+    }
+
+    search_transpositions();
 }
 
 void uci_go_perft(int depth, bool hash) {
@@ -305,72 +405,7 @@ void uci_position_fen(std::string fen, std::string moves) {
     splitString(moves, mv, ' ');
 
     for (string s : mv) {
-
-        string str1 = s.substr(0, 2);
-        string str2 = s.substr(2, 4);
-        Square s1   = squareIndex(str1);
-        Square s2   = squareIndex(str2);
-
-        Piece moving   = board->getPiece(s1);
-        Piece captured = board->getPiece(s2);
-
-        assert(moving >= 0);
-
-        Type type;
-
-        if (s.size() > 4) {
-
-            Piece promo = QUEEN;
-            switch (s.at(4)) {
-                case 'q': promo = QUEEN; break;
-                case 'r': promo = ROOK; break;
-                case 'b': promo = BISHOP; break;
-                case 'n': promo = KNIGHT; break;
-            }
-
-            if (captured >= 0) {
-                type = 11 + promo;
-            } else {
-                type = 7 + promo;
-            }
-
-        } else {
-            if ((moving % 6) == KING) {
-                if (abs(s2 - s1) == 2) {
-                    if (s2 > s1) {
-                        type = KING_CASTLE;
-                    } else {
-                        type = QUEEN_CASTLE;
-                    }
-                } else {
-                    if (captured >= 0) {
-                        type = CAPTURE;
-                    } else {
-                        type = QUIET;
-                    }
-                }
-            } else if ((moving % 6) == PAWN) {
-                if (abs(s2 - s1) == 16) {
-                    type = DOUBLED_PAWN_PUSH;
-                } else if (abs(s2 - s1) != 8) {
-                    if (captured >= 0) {
-                        type = CAPTURE;
-                    } else {
-                        type = EN_PASSANT;
-                    }
-                } else {
-                    type = QUIET;
-                }
-            } else {
-                if (captured >= 0) {
-                    type = CAPTURE;
-                } else {
-                    type = QUIET;
-                }
-            }
-        }
-        Move m = genMove(s1, s2, type, moving, captured);
-
+        Move m = uci_uci_to_move(s, board);
         assert(board->isLegal(m));
         board->move(m);
     }

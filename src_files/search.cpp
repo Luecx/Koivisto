@@ -358,6 +358,8 @@ Move getDTZMove(Board* board) {
 
 SearchOverview search_overview() { return overview; }
 
+TranspositionTable* search_transpositions() {return table;}
+
 /**
  * =================================================================================
  *                                M A I N

@@ -52,6 +52,7 @@ void  search_useTB(bool val);
 void  search_init(int hashSize);     // used to create arrays, movelists etc
 void  search_cleanUp();              // used to clean up the memory
 SearchOverview search_overview();    // used to get information about the latest search
+TranspositionTable* search_transpositions();
 void search_enable_infoStrings();
 void search_disable_infoStrings();
 
