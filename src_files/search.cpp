@@ -596,7 +596,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         /**************************************************************************************
          *                      F U T I L I T Y   P R U N I N G                               *
          **************************************************************************************/
-        if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN)
+        if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         /**************************************************************************************
@@ -802,7 +802,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     if (!skipMove) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, alpha, bestMove, PV_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
             table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
         }
