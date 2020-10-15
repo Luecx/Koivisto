@@ -2,7 +2,7 @@
 
 CC      = g++
 SRC     = *.cpp syzygy/tbprobe.c
-LIBS    = -lpthread -lm
+LIBS    = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER  = bin/
 ROOT    = ../
 NAME    = Koivisto
