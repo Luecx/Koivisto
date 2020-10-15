@@ -547,11 +547,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 if (en.score >= beta) {
-                    return beta;
+                    return en.score;
                 }
             } else if (en.type == ALL_NODE) {
                 if (en.score <= alpha) {
-                    return alpha;
+                    return en.score;
                 }
             }
         }
@@ -841,11 +841,11 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             return en.score;
         } else if (en.type == CUT_NODE) {
             if (en.score >= beta) {
-                return beta;
+                return en.score;
             }
         } else if (en.type == ALL_NODE) {
             if (en.score <= alpha) {
-                return alpha;
+                return en.score;
             }
         }
     }
