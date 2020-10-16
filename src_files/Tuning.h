@@ -44,6 +44,8 @@ double optimiseBlackBox(Evaluator* evaluator, double K, float* params, int param
 
 
 double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr);
+
+double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore, int count, int lr);
 /**
  * uses the loaded data to optimise the evaluator
  */

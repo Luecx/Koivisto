@@ -23,20 +23,17 @@ extern EvalScore* psqt[6];
 
 extern EvalScore pieceScores[6];
 
+extern EvalScore* features[];
+extern EvalScore hangingEval[5];
+
+extern EvalScore pinnedEval[15];
+
 static int unusedVariable = 0;
-
-
 static int INDEX_KNIGHT_MOBILITY = unusedVariable++;
-
 static int INDEX_BISHOP_MOBILITY         = unusedVariable++;
-
 static int INDEX_ROOK_MOBILITY       = unusedVariable++;
-
 static int INDEX_QUEEN_MOBILITY = unusedVariable++;
-
 static int INDEX_KING_SAFETY         = unusedVariable++;
-
-
 static int INDEX_PASSER_RANK = unusedVariable++;
 
 

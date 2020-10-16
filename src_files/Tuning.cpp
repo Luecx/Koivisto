@@ -411,7 +411,7 @@ double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, i
     return computeError(evaluator, K);
 }
 
-double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr) {
+double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr){
     double er;
     
     for(int p = 0; p < count; p++){
@@ -454,6 +454,51 @@ double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* ev
             
             if(lower >= er){
                 evalScore[p] += M(0,+lr);
+                eval_init();
+            }
+        }
+    }
+    std::cout << std::endl;
+    return er;
+}
+double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore, int count, int lr) {
+    double er;
+    
+    for(int p = 0; p < count; p++){
+        
+        std::cout << "\r  param: " << p << std::flush;
+        
+        er = computeError(evaluator, K);
+        *evalScore[p] += M(+lr,0);
+        eval_init();
+        
+        double upper = computeError(evaluator, K);
+        if(upper >= er){
+            *evalScore[p] += M(-2*lr,0);
+            eval_init();
+            
+            double lower = computeError(evaluator, K);
+            
+            if(lower >= er){
+                *evalScore[p] += M(+lr,0);
+                eval_init();
+            }
+        }
+        
+        
+        er = computeError(evaluator, K);
+        *evalScore[p] += M(0,+lr);
+        eval_init();
+        
+        upper = computeError(evaluator, K);
+        if(upper >= er){
+            *evalScore[p] += M(0,-2*lr);
+            eval_init();
+            
+            double lower = computeError(evaluator, K);
+            
+            if(lower >= er){
+                *evalScore[p] += M(0,+lr);
                 eval_init();
             }
         }
