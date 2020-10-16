@@ -194,10 +194,10 @@ int main(int argc, char* argv[]) {
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    bb_init();
-    eval_init();
-    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
-    std::cout << tuning::computeError(new Evaluator(), 3);
+//    bb_init();
+//    eval_init();
+//    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
+//    std::cout << tuning::computeError(new Evaluator(), 3);
     // tuning::evalSpeed();
     // bb_cleanUp();
 
