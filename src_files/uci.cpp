@@ -10,8 +10,14 @@
 #include <iostream>
 #include <thread>
 
-#define MAJOR_VERSION 2
-#define MINOR_VERSION 1
+#ifndef MINOR_VERSION
+#  define MINOR_VERSION 0
+#endif
+#ifndef MAJOR_VERSION
+#  define MAJOR_VERSION 0
+#endif
+
+
 
 TimeManager* timeManager;
 Board*       board;
