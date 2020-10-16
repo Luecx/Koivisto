@@ -182,20 +182,22 @@ void main_tune_pst() {
 
 int main(int argc, char* argv[]) {
     
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
-    
+//    if (argc == 1) {
+//        uci_loop(false);
+//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+//        uci_loop(true);
+//    }
+
     
     
     /**********************************************************************************
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    // bb_init();
-    // tuning::loadPositionFile("resources/quiet-labeled.epd", 1000000);
+    bb_init();
+    eval_init();
+    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
+    std::cout << tuning::computeError(new Evaluator(), 3);
     // tuning::evalSpeed();
     // bb_cleanUp();
 
