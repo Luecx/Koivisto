@@ -75,6 +75,7 @@ Board::Board(std::string fen) {
     if (split.size() >= 2 && split[1].length() == 1) {
         if (split[1].at(0) != 'w') {
             changeActivePlayer();
+            getBoardStatus()->zobrist^=ZOBRIST_WHITE_BLACK_SWAP;
         }
     }
     //</editor-fold>
