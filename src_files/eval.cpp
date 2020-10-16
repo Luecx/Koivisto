@@ -155,19 +155,15 @@ EvalScore pinnedEval[15]{
 
 
 
-float* _pieceValuesEarly = new float[30]{
+float* _pieceValuesEarly = new float[6]{
         
-        27.236883,  24.555048,  22.751461,  8.7743282, 371.82693,
-         13.374145, 5.2139874
+        27.236883,  24.555048,  22.751461,  8.7743282, 371.82693,5.2139874
 };
 
 
-float* _pieceValuesLate = new float[30]{
+float* _pieceValuesLate = new float[6]{
         
-        20.023214,  36.51939,
-        32.432838,  60.920574, -144.92081,
-         -4.4698701,
-        17.488422
+        20.023214,  36.51939,32.432838,  60.920574, -144.92081,17.488422
 };
 
 float* phaseValues = new float[6] {
@@ -707,39 +703,11 @@ bb::Score Evaluator::evaluate(Board* b) {
             + b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
             - b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
             - b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
-//    features[INDEX_CASTLING_RIGHTS] =
-//            + b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
-//            + b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
-//            - b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-//            - b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING);
-    
-    
-    
-    
-    
-    
-//    __m128 earlyRes{};
-//    __m128 lateRes{};
-//
-//    for (int i = 0; i < 60; i += 4) {
-//        __m128 *feat = (__m128 *) (features + (i));
-//
-//        __m128 *w1 = (__m128 *) (_pieceValuesEarly + (i));
-//        __m128 *w2 = (__m128 *) (_pieceValuesLate + (i));
-//
-//        earlyRes = _mm_add_ps(earlyRes, _mm_mul_ps(*w1, *feat));
-//        lateRes  = _mm_add_ps(lateRes, _mm_mul_ps(*w2, *feat));
-//    }
-//
-//
-//    const __m128 tE   = _mm_add_ps(earlyRes, _mm_movehl_ps(earlyRes, earlyRes));
-//    const __m128 sumE = _mm_add_ss(tE, _mm_shuffle_ps(tE, tE, 1));
-//    const __m128 tL   = _mm_add_ps(lateRes, _mm_movehl_ps(lateRes, lateRes));
-//    const __m128 sumL = _mm_add_ss(tL, _mm_shuffle_ps(tL, tL, 1));
+
     
     float earlySum = 0;
     float endSum = 0;
-    for(int i = 0; i < 20; i++){
+    for(int i = 0; i < 6; i++){
         earlySum += features[i] * _pieceValuesEarly[i];
         endSum += features[i] * _pieceValuesLate[i];
     }

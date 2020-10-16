@@ -36,7 +36,6 @@ static int INDEX_QUEEN_MOBILITY = unusedVariable++;
 
 static int INDEX_KING_SAFETY         = unusedVariable++;
 
-static int INDEX_CASTLING_RIGHTS = unusedVariable++;
 
 static int INDEX_PASSER_RANK = unusedVariable++;
 
@@ -45,7 +44,7 @@ void eval_init();
 
 class Evaluator {
     public:
-    float features[20];
+    float features[6];
 
     float phase;
 
