@@ -90,69 +90,95 @@ EvalScore* psqt[6]{
     psqt_pawn_n, psqt_knight_n, psqt_bishop_n, psqt_rook_n, psqt_queen_n, psqt_king_n
 };
 
+
 EvalScore pieceScores[6] = {
     M( 90, 105),M( 463, 328), M( 474, 287),M( 574, 590),M(1350,1121),M(0,0)
 };
 
-EvalScore   PAWN_STRUCTURE           = M(7,13);
-EvalScore  PAWN_PASSED               = M(3,43);
-EvalScore  PAWN_ISOLATED             = M(-8,-7);
-EvalScore  PAWN_DOUBLED              = M(9,-3);
-EvalScore PAWN_DOUBLED_AND_ISOLATED  = M(-4, -16);
-EvalScore  PAWN_BACKWARD             = M(-12, 1);
-EvalScore  PAWN_OPEN                 = M(16,-8);
-EvalScore  PAWN_BLOCKED              = M(-7,-10);
+EvalScore PAWN_STRUCTURE            = M(    7,   11);
+EvalScore PAWN_PASSED               = M(    4,   42);
+EvalScore PAWN_ISOLATED             = M(   -9,   -8);
+EvalScore PAWN_DOUBLED              = M(    8,   -5);
+EvalScore PAWN_DOUBLED_AND_ISOLATED = M(   -1,  -17);
+EvalScore PAWN_BACKWARD             = M(  -13,    1);
+EvalScore PAWN_OPEN                 = M(   14,   -8);
+EvalScore PAWN_BLOCKED              = M(  -10,  -11);
 
-EvalScore  KNIGHT_OUTPOST            = M(22,17);
-EvalScore  KNIGHT_DISTANCE_ENEMY_KING= M(-6,1);
+EvalScore KNIGHT_OUTPOST             = M(   22,   13);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING = M(   -6,    0);
 
-EvalScore ROOK_OPEN_FILE              = M(61, -17);
-EvalScore ROOK_HALF_OPEN_FILE         = M(16, 2);
-EvalScore ROOK_KING_LINE              = M(12, 8);
+EvalScore ROOK_OPEN_FILE      = M(   57,  -21);
+EvalScore ROOK_HALF_OPEN_FILE = M(    4,   -3);
+EvalScore ROOK_KING_LINE      = M(   11,   8);
 
-EvalScore BISHOP_DOUBLED          = M(44,56);
-EvalScore BISHOP_PAWN_SAME_SQUARE = M(-5,6);
-EvalScore BISHOP_FIANCHETTO       = M(13,-4);
+EvalScore BISHOP_DOUBLED          = M(   43,   54);
+EvalScore BISHOP_PAWN_SAME_SQUARE = M(   -5,    5);
+EvalScore BISHOP_FIANCHETTO       = M(    6,    14);
 
-EvalScore QUEEN_DISTANCE_ENEMY_KING = M(7,-24);
+EvalScore QUEEN_DISTANCE_ENEMY_KING = M(    6,  -25);
 
-EvalScore KING_CLOSE_OPPONENT = M(-37,60);
-EvalScore KING_PAWN_SHIELD    = M(12,0);
+EvalScore KING_CLOSE_OPPONENT = M(  -38,   53);
+EvalScore KING_PAWN_SHIELD    = M(   14,    3);
 
-EvalScore CASTLING_RIGHTS     = M(13,-4);
+EvalScore CASTLING_RIGHTS = M(   17,   -6);
 
-EvalScore fast_pawn_psqt[2][2][64];
-EvalScore fast_psqt[12][64];
-
-
-
+EvalScore* features[]{
+        &PAWN_STRUCTURE,
+        &PAWN_PASSED,
+        &PAWN_ISOLATED,
+        &PAWN_DOUBLED,
+        &PAWN_DOUBLED_AND_ISOLATED,
+        &PAWN_BACKWARD,
+        &PAWN_OPEN,
+        &PAWN_BLOCKED,
+        
+        &KNIGHT_OUTPOST,
+        &KNIGHT_DISTANCE_ENEMY_KING,
+        
+        &ROOK_OPEN_FILE,
+        &ROOK_HALF_OPEN_FILE,
+        &ROOK_KING_LINE,
+        
+        &BISHOP_DOUBLED,
+        &BISHOP_PAWN_SAME_SQUARE,
+        &BISHOP_FIANCHETTO,
+        
+        &QUEEN_DISTANCE_ENEMY_KING,
+        
+        &KING_CLOSE_OPPONENT,
+        &KING_PAWN_SHIELD,
+        
+        &CASTLING_RIGHTS,
+};
 EvalScore hangingEval[5]{
-    M(-7,4),
-    M(-20,-9),
-    M(-11,-12),
-    M(-10,-10),
-    M(-10,-16)
+        M(   -7,    3),
+        M(  -19,   -4),
+        M(  -11,  -11),
+        M(  -10,   -7),
+        M(  -11,  -11),
 };
 
 EvalScore pinnedEval[15]{
-    M(20,-43),
-    M(-9,22),
-    M(0,27),
-    M(-39, -140),
-    M(-35, -46),
-    M(-35, 15),
-    M(-18,-15),
-    M(-63, -61),
-    M(10,-86),
-    M(-59, -383),
-    M(-20, 5),
-    M(-13, -71),
-    M(-181, -524),
-    M(-339, -640),
-    M(-13, -10)
+        M(   16,  -38),
+        M(  -10,   23),
+        M(    0,   29),
+        M(  -36, -145),
+        M(  -37,  -49),
+        M(  -34,   -3),
+        M(  -15,  -15),
+        M(  -60,  -64),
+        M(   13,  -85),
+        M(  -55, -388),
+        M(  -18,   -1),
+        M(  -16,  -75),
+        M( -174, -519),
+        M( -328, -637),
+        M(  -22,  -18),
 };
 
 
+EvalScore fast_pawn_psqt[2][2][64];
+EvalScore fast_psqt[12][64];
 
 
 float* _pieceValuesEarly = new float[6]{
@@ -312,7 +338,7 @@ bb::Score Evaluator::evaluate(Board* b) {
 
 
 
-    memset(features, 0, 50 * sizeof(float));
+    memset(features, 0, 6 * sizeof(float));
 
     U64 whiteTeam = b->getTeamOccupied()[WHITE];
     U64 blackTeam = b->getTeamOccupied()[BLACK];
@@ -616,8 +642,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     }
     
     featureScore += ROOK_KING_LINE * (
-            + bitCount(lookUpRookAttack(blackKingSquare, occupied) & b->getPieces(WHITE, ROOK))
-            - bitCount(lookUpRookAttack(whiteKingSquare, occupied) & b->getPieces(BLACK, ROOK)));
+            + bitCount(lookUpRookAttack(blackKingSquare, ZERO) & b->getPieces(WHITE, ROOK))
+            - bitCount(lookUpRookAttack(whiteKingSquare, ZERO) & b->getPieces(BLACK, ROOK)));
     featureScore += ROOK_OPEN_FILE * (
             + bitCount(openFiles & b->getPieces(WHITE, ROOK))
             - bitCount(openFiles & b->getPieces(BLACK, ROOK)));
