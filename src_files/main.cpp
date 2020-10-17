@@ -94,6 +94,7 @@ void main_tune_pst_bb(Piece piece) {
 }
 
 void main_tune_features() {
+    eval_init();
     bb_init();
     Evaluator* evaluator = new Evaluator();
 
@@ -106,37 +107,33 @@ void main_tune_features() {
 
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
-//        std::cout << std::setprecision(8) << tuning::optimiseGD(evaluator, K, 1e4) << std::endl;
-        
-        for(Piece p = BISHOP; p <= KING; p++){
     
-            std::cout << tuning::optimisePSTBlackBox(new Evaluator,K, psqt[p], 64, 3);
-        }
-//        std::cout << tuning::optimisePSTBlackBox(new Evaluator,K, psqt[KNIGHT], 64, 5);
-//        std::cout << tuning::optimisePSTBlackBox(new Evaluator,K, psqt[PAWN], 64, 5);
-//        std::cout << tuning::optimisePSTBlackBox(new Evaluator,K, psqt[PAWN], 64, 5);
-//        std::cout << tuning::optimisePSTBlackBox(new Evaluator,K, psqt[PAWN], 64, 5);
-//        std::cout << tuning::optimisePSTBlackBox(new Evaluator,K, psqt[PAWN], 64, 5);
-        
-//        for (int k = 0; k < evaluator->paramCount(); k++) {
-//            std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k] << ",";
-//        }
-//        std::cout << std::endl;
-//        for (int k = 0; k < evaluator->paramCount(); k++) {
-//            std::cout << std::setw(14) << evaluator->getLateGameParams()[k] << ",";
-//        }
-//        std::cout << std::endl;
-        for(Piece p = BISHOP; p <= KING; p++){
-            for(Square s = 0; s < 64; s++){
-                std::cout << "M(" << setw(5) << MgScore(psqt[p][s]) << "," << setw(5) <<EgScore(psqt[p][s]) << "), ";
-                if(s % 8 == 7){
-                    std::cout << std::endl;
-                }
-            }
+        std::cout <<tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1)<< std::endl;
+        std::cout << tuning::optimisePSTBlackBox(evaluator, K, evfeatures, 20, 1) << std::endl;
+        std::cout <<tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1)<< std::endl;
+        std::cout <<tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1)<< std::endl;
+
+        for (Square s = 0; s < 6; s++) {
+            std::cout << "M(" << setw(5) << MgScore(pieceScores[s]) << "," << setw(5) << EgScore(pieceScores[s]) << "), ";
             std::cout << std::endl;
         }
-    
-    
+        std::cout << std::endl;
+        for (Square s = 0; s < 20; s++) {
+            std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s]) << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+
+        for (Square s = 0; s < 15; s++) {
+            std::cout << "M(" << setw(5) << MgScore(pinnedEval[s]) << "," << setw(5) << EgScore(pinnedEval[s]) << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        for (Square s = 0; s < 5; s++) {
+            std::cout << "M(" << setw(5) << MgScore(hangingEval[s]) << "," << setw(5) << EgScore(hangingEval[s]) << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
     }
 
     delete evaluator;
@@ -181,27 +178,31 @@ void main_tune_pst() {
 #endif
 
 int main(int argc, char* argv[]) {
+
     
     if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     }
-    
+ 
     
     
     /**********************************************************************************
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    // bb_init();
-    // tuning::loadPositionFile("resources/quiet-labeled.epd", 1000000);
-    // tuning::evalSpeed();
-    // bb_cleanUp();
+//    bb_init();
+//    eval_init();
+//    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
+////    std::cout << tuning::computeError(new Evaluator(), 3);
+//     for(int i = 0; i < 10; i++)
+//     tuning::evalSpeed();
+//     bb_cleanUp();
 
     // main_tune_pst_bb(PAWN);
-    //eval_init();
-    //main_tune_features();
+//    eval_init();
+//    main_tune_features();
     // main_tune_pst();
     //main_tune_features_bb();
 

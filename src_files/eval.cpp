@@ -11,173 +11,229 @@
 
 
 float sqrts[28] = {
-    0,       1,       1.41421, 1.73205, 2,       2.23607, 2.44949, 2.64575, 2.82843, 3,
-    3.16228, 3.31662, 3.4641,  3.60555, 3.74166, 3.87298, 4,       4.12311, 4.24264, 4.3589,
-    4.47214, 4.58258, 4.69042, 4.79583, 4.89898, 5,       5.09902, 5.19615,
+        0,       1,       1.41421, 1.73205, 2,       2.23607, 2.44949, 2.64575, 2.82843, 3,
+        3.16228, 3.31662, 3.4641,  3.60555, 3.74166, 3.87298, 4,       4.12311, 4.24264, 4.3589,
+        4.47214, 4.58258, 4.69042, 4.79583, 4.89898, 5,       5.09902, 5.19615,
 };
 
 float passer_rank[16] = {             0,    -18.000015,           -14,           2.3,     18.599987,     23.999985,     16.299986,             0,             0,    0.99999994,    -41.700001,    -16.700014,           -14,    -29.000015,    -31.700001,             0,
 };
 
-float psqt_pawn_endgame[64] = {
-    0,  0,  0,  0,  0,   0,   0,   0,   12,  -1,  3,   6,   9,  -3, -11, -1, 2,  2,  -6, -3, -4, -4,
-    -8, -5, 15, 8,  -3,  -15, -12, -5,  0,   4,   29,  22,  13, -1, -1,  7,  15, 17, 84, 88, 77, 58,
-    51, 55, 73, 75, 172, 163, 144, 132, 135, 131, 150, 163, 0,  0,  0,   0,  0,  0,  0,  0,
-};
 
-float psqt_pawn[64] = {
-    0,   0,   0,   0,  0,  0,  0,  0,  -21, 38,  39, -2, -13, -30, -7, -20, -12, 11,  7,  8,  -7, -9,
-    -29, -23, -25, -8, 7,  33, 23, -2, -28, -31, -2, 14, 27,  22,  23, -4,  -12, -12, 26, 37, 39, 39,
-    34,  15,  -3,  7,  35, 34, 36, 36, 36,  36,  38, 37, 0,   0,   0,  0,   0,   0,   0,  0,
+EvalScore passer_rank_n[16] = {
+        M(    0,    0), M(   -9,  -31), M(   -7,  -24), M(    1,    4), M(   10,   33),
+        M(   13,   42), M(    8,   29), M(    0,    0), M(    0,    0), M(    1,    2),
+        M(  -22,  -73), M(   -9,  -29), M(   -7,  -24), M(  -15,  -51), M(  -17,  -55),
+        M(    0,    0),
 };
-
-float psqt_knight[64] = {
-    -243, -75, -77, -67, -7,  -190, -72, -134, -196, -173, 115, -21, -30,  29, -39, -131, -141, 52,  -19, 52,  96, 154,
-    60,   5,   -36, -4,  -41, 68,   16,  106,  -14,  20,   -36, -10, -5,   7,  42,  20,   39,   -12, -80, -42, 14, 16,
-    47,   24,  32,  -52, -37, -79,  -28, 40,   39,   37,   -10, -15, -124, 0,  -89, -28,  27,   -37, 4,   -47,
-};
-float psqt_knight_endgame[64] = {
-    -63, -58, -5,  -36, -26, -25, -85, -132, -1,  23,  -52, 8,   -2,  -33, -19, -43, -17, -28, 17,  0,   -19, -26,
-    -34, -54, -11, -2,  31,  11,  23,  -5,   6,   -26, -15, -15, 14,  31,  12,  11,  -4,  -24, -8,  3,   -16, 11,
-    -4,  -20, -36, -13, -40, -11, -7,  -19,  -11, -27, -24, -59, -17, -42, -13, -1,  -32, -10, -49, -70,
-};
-
-float psqt_bishop[64] = {
-    -233, -118, -254, -158, -98, -175, -36, -71,  -332, -132, -210, -219, -27,  100, -51,  -401,
-    -214, -93,  33,   -43,  -43, 71,   50,  -148, -159, -68,  -110, 82,   4,    25,  -79,  -88,
-    -86,  -85,  -22,  -15,  62,  -78,  -58, -59,  -102, 22,   -22,  -9,   -52,  54,  -32,  -69,
-    22,   -11,  30,   -60,  11,  -8,   43,  -44,  -180, 10,   -86,  -116, -107, -59, -150, -198,
-};
-
-float psqt_bishop_endgame[64] = {
-    -62, -25, -52, -28, -21, -30, -7,  -49, 3,  -15, 6,   -44, 2,  0,  -17, -21, 11,  12, -23, -18, -14, 11,
-    4,   17,  -4,  28,  50,  5,   25,  13,  -3, -7,  -11, 10,  38, 87, -30, 32,  -21, 13, 8,   -9,  86,  55,
-    135, 17,  28,  23,  -18, -19, -19, 31,  44, 14,  9,   -35, 2,  27, 27,  44,  43,  7,  41,  11,
-};
-
-float psqt_rook[64] = {
-    -5, 4,  -17, 9,   5,   -3,  -3,  -8, -16, -6, 19,  18,  29,  28, -9, -1,  -13, 7,  1,   6,   -10, 13,
-    26, 6,  -31, -11, 0,   6,   5,   12, -10, -1, -33, -18, -12, -7, 3,  -13, 2,   -2, -42, -13, -7,  -15,
-    -5, -4, -8,  -19, -38, -12, -20, -1, 8,   8,  -16, -59, -10, -5, 4,  12,  12,  9,  -21, 9,
-};
-
-float psqt_rook_endgame[64] = {
-    20, 14, 24, 17,  25, 21, 21, 15, 29, 29, 24, 25, 11, 20, 30, 20, 15, 16, 15, 21,  16, 13,
-    9,  2,  17, 10,  24, 8,  15, 15, 9,  6,  14, 16, 18, 13, 3,  7,  5,  -7, 10, 7,   -1, 7,
-    1,  -3, 3,  -11, 6,  4,  9,  10, -5, 0,  1,  8,  1,  8,  4,  0,  -3, -2, 6,  -25,
-};
-
-float psqt_queen[64] = {
-    -5, 4,  -17, 9,   5,   -3,  -3,  -8, -16, -6, 19,  18,  29,  28, -9, -1,  -13, 7,  1,   6,   -10, 13,
-    26, 6,  -31, -11, 0,   6,   5,   12, -10, -1, -33, -18, -12, -7, 3,  -13, 2,   -2, -42, -13, -7,  -15,
-    -5, -4, -8,  -19, -38, -12, -20, -1, 8,   8,  -16, -59, -10, -5, 4,  12,  12,  9,  -21, 9,
-};
-
-float psqt_queen_endgame[64] = {
-    20, 14, 24, 17,  25, 21, 21, 15, 29, 29, 24, 25, 11, 20, 30, 20, 15, 16, 15, 21,  16, 13,
-    9,  2,  17, 10,  24, 8,  15, 15, 9,  6,  14, 16, 18, 13, 3,  7,  5,  -7, 10, 7,   -1, 7,
-    1,  -3, 3,  -11, 6,  4,  9,  10, -5, 0,  1,  8,  1,  8,  4,  0,  -3, -2, 6,  -25,
-    
-};
-
-float psqt_king[64] = {
-    -46, -8,  -3,  -42, -43, -15, -12, -3,  -3,  -14, -1,  -22, -23, 0,   -1,  -10, 9,   0,   -7, -39, -32, -9,
-    0,   -17, -15, -18, -34, -37, -48, -32, -10, -46, -41, -31, -42, -69, -64, -47, -15, -28, -9, -7,  -30, -43,
-    -41, -22, 0,   -17, 26,  28,  -9,  -23, -22, -12, 21,  18,  28,  30,  1,   5,   5,   1,   32, 33,
-};
-float psqt_king_endgame[64] = {
-    -59, -13, 7,   -22, -11, -16, -17, -68, -8, 10,  30,  29,  28,  30,  19,  -20, -10, 30,  51,  33,  27, 50,
-    30,  -11, -18, 16,  34,  35,  40,  38,  17, -22, -33, -3,  28,  42,  38,  29,  -8,  -36, -26, 6,   20, 34,
-    33,  21,  2,   -27, -44, -24, 10,  15,  15, 7,   -20, -39, -84, -45, -32, -40, -40, -31, -46, -84,
-};
-
 
 EvalScore psqt_pawn_n[64] = {
-    M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
-    M(  -11,   -9), M(   35,  -13), M(   30,   -3), M(   -4,   16), M(   -6,   11), M(  -20,   15), M(  -13,    4), M(  -22,   14),
-    M(   -8,   -7), M(   22,  -13), M(   13,   -1), M(    2,    3), M(   -4,    1), M(   -6,   -8), M(  -32,    5), M(  -25,    3),
-    M(  -26,   10), M(   -2,    7), M(   16,   -3), M(   26,   -7), M(   19,  -12), M(   -1,   -6), M(  -25,    9), M(  -30,   11),
-    M(  -19,   31), M(    6,   28), M(   18,   16), M(   27,   -4), M(   22,   -7), M(    1,    3), M(   -8,   16), M(  -17,   25),
-    M(   -6,  100), M(   40,   99), M(   78,   67), M(   51,   54), M(   26,   48), M(   28,   59), M(   -2,   83), M(    4,   88),
-    M(    0,  247), M(   23,  218), M(   76,  199), M(   70,  192), M(   73,  163), M(   76,  164), M(   77,  216), M(   46,  221),
-    M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+        M(  -11,   -9), M(   35,  -13), M(   30,   -3), M(   -4,   16), M(   -6,   11), M(  -20,   15), M(  -13,    4), M(  -22,   14),
+        M(   -8,   -7), M(   22,  -13), M(   13,   -1), M(    2,    3), M(   -4,    1), M(   -6,   -8), M(  -32,    5), M(  -25,    3),
+        M(  -26,   10), M(   -2,    7), M(   16,   -3), M(   26,   -7), M(   19,  -12), M(   -1,   -6), M(  -25,    9), M(  -30,   11),
+        M(  -19,   31), M(    6,   28), M(   18,   16), M(   27,   -4), M(   22,   -7), M(    1,    3), M(   -8,   16), M(  -17,   25),
+        M(   -6,  100), M(   40,   99), M(   78,   67), M(   51,   54), M(   26,   48), M(   28,   59), M(   -2,   83), M(    4,   88),
+        M(    0,  247), M(   23,  218), M(   76,  199), M(   70,  192), M(   73,  163), M(   76,  164), M(   77,  216), M(   46,  221),
+        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
 };
 
 EvalScore psqt_knight_n[64] = {
-    M( -136,  -72), M(  -56,  -53), M(  -57,  -13), M(  -52,  -26), M(   18,  -33), M( -111,  -23), M(  -55,  -66), M(  -84, -116),
-    M( -111,  -15), M(  -79,    3), M(   66,  -33), M(   -9,   15), M(  -11,    2), M(   22,  -17), M(  -21,  -21), M(  -62,  -50),
-    M(  -79,  -19), M(   24,  -22), M(   -6,   13), M(   18,   12), M(   60,    0), M(   94,  -15), M(   31,  -24), M(   20,  -55),
-    M(  -11,  -14), M(   -4,   -4), M(  -19,   22), M(   32,   20), M(    1,   27), M(   53,    8), M(   -9,    4), M(   15,  -21),
-    M(  -20,  -15), M(  -13,  -12), M(   -5,   11), M(   -6,   22), M(   19,   12), M(    9,    8), M(   21,   -3), M(   -5,  -19),
-    M(  -35,  -21), M(  -22,   -4), M(    3,  -16), M(    1,   11), M(   19,   -3), M(   14,  -13), M(   18,  -32), M(  -21,  -25),
-    M(  -26,  -38), M(  -52,  -17), M(  -19,  -11), M(   16,  -15), M(   15,  -11), M(   14,  -30), M(  -10,  -28), M(  -10,  -51),
-    M(  -79,  -22), M(    0,  -49), M(  -48,  -19), M(  -22,   -9), M(   12,  -26), M(  -26,  -17), M(    1,  -51), M(  -25,  -62)
+        M( -136,  -72), M(  -56,  -53), M(  -57,  -13), M(  -52,  -26), M(   18,  -33), M( -111,  -23), M(  -55,  -66), M(  -84, -116),
+        M( -111,  -15), M(  -79,    3), M(   66,  -33), M(   -9,   15), M(  -11,    2), M(   22,  -17), M(  -21,  -21), M(  -62,  -50),
+        M(  -79,  -19), M(   24,  -22), M(   -6,   13), M(   18,   12), M(   60,    0), M(   94,  -15), M(   31,  -24), M(   20,  -55),
+        M(  -11,  -14), M(   -4,   -4), M(  -19,   22), M(   32,   20), M(    1,   27), M(   53,    8), M(   -9,    4), M(   15,  -21),
+        M(  -20,  -15), M(  -13,  -12), M(   -5,   11), M(   -6,   22), M(   19,   12), M(    9,    8), M(   21,   -3), M(   -5,  -19),
+        M(  -35,  -21), M(  -22,   -4), M(    3,  -16), M(    1,   11), M(   19,   -3), M(   14,  -13), M(   18,  -32), M(  -21,  -25),
+        M(  -26,  -38), M(  -52,  -17), M(  -19,  -11), M(   16,  -15), M(   15,  -11), M(   14,  -30), M(  -10,  -28), M(  -10,  -51),
+        M(  -79,  -22), M(    0,  -49), M(  -48,  -19), M(  -22,   -9), M(   12,  -26), M(  -26,  -17), M(    1,  -51), M(  -25,  -62)
 };
 
 EvalScore psqt_bishop_n[64] = {
-    M(  -74,    2), M(  -64,    1), M( -117,    5), M(  -86,   10), M(  -61,   14), M(  -91,    7), M(  -44,    6), M(  -22,   -9),
-    M(  -78,   21), M(  -24,    2), M(  -67,   21), M(  -81,    3), M(  -23,    9), M(   25,    3), M(  -25,   11), M( -109,   14),
-    M(  -65,   18), M(  -17,    3), M(   -2,   -1), M(  -25,    2), M(  -16,    2), M(   -2,    6), M(   -9,    6), M(  -47,   22),
-    M(  -38,    6), M(  -27,    5), M(  -20,   10), M(   20,    0), M(   -5,    5), M(   -2,    4), M(  -22,   -3), M(  -28,    9),
-    M(  -33,    0), M(  -18,    0), M(  -10,    3), M(   -7,   12), M(   10,   -5), M(  -21,    5), M(  -12,   -7), M(  -18,    7),
-    M(  -23,    3), M(   -2,    0), M(   -4,    6), M(   -8,   10), M(  -10,   13), M(   20,   -8), M(   -7,   -1), M(  -10,   -5),
-    M(   -5,   -7), M(   -3,  -10), M(   -3,   -4), M(  -19,    8), M(    0,    0), M(   -8,   -2), M(   13,  -15), M(  -17,  -14),
-    M(  -60,    3), M(    0,    5), M(  -24,    5), M(  -31,    9), M(  -22,    9), M(  -27,    9), M(  -68,   18), M(  -48,    3),
+        M(  -74,    2), M(  -64,    1), M( -117,    5), M(  -86,   10), M(  -61,   14), M(  -91,    7), M(  -44,    6), M(  -22,   -9),
+        M(  -78,   21), M(  -24,    2), M(  -67,   21), M(  -81,    3), M(  -23,    9), M(   25,    3), M(  -25,   11), M( -109,   14),
+        M(  -65,   18), M(  -17,    3), M(   -2,   -1), M(  -25,    2), M(  -16,    2), M(   -2,    6), M(   -9,    6), M(  -47,   22),
+        M(  -38,    6), M(  -27,    5), M(  -20,   10), M(   20,    0), M(   -5,    5), M(   -2,    4), M(  -22,   -3), M(  -28,    9),
+        M(  -33,    0), M(  -18,    0), M(  -10,    3), M(   -7,   12), M(   10,   -5), M(  -21,    5), M(  -12,   -7), M(  -18,    7),
+        M(  -23,    3), M(   -2,    0), M(   -4,    6), M(   -8,   10), M(  -10,   13), M(   20,   -8), M(   -7,   -1), M(  -10,   -5),
+        M(   -5,   -7), M(   -3,  -10), M(   -3,   -4), M(  -19,    8), M(    0,    0), M(   -8,   -2), M(   13,  -15), M(  -17,  -14),
+        M(  -60,    3), M(    0,    5), M(  -24,    5), M(  -31,    9), M(  -22,    9), M(  -27,    9), M(  -68,   18), M(  -48,    3),
 };
 
 EvalScore psqt_rook_n[64] = {
-    M(  -17,   26), M(    1,   17), M(  -44,   33), M(    6,   20), M(    8,   25), M(  -15,   27), M(   -9,   24), M(  -14,   21),
-    M(  -10,   29), M(   -3,   29), M(   31,   21), M(   27,   22), M(   47,    8), M(   58,   14), M(  -12,   33), M(    2,   20),
-    M(  -22,   24), M(   -5,   25), M(   -2,   21), M(    6,   24), M(  -16,   25), M(   31,   10), M(   56,    6), M(    9,    5),
-    M(  -34,   23), M(  -26,   22), M(   -9,   30), M(    0,   17), M(   -1,   21), M(   24,   18), M(  -16,   18), M(  -19,   21),
-    M(  -39,   23), M(  -27,   22), M(  -18,   24), M(  -16,   19), M(    0,    9), M(   -1,    7), M(    8,    5), M(  -14,    5),
-    M(  -42,   13), M(  -19,   13), M(  -10,    2), M(  -18,   10), M(   -2,    1), M(   11,   -6), M(    4,    0), M(  -19,   -5),
-    M(  -35,    9), M(  -12,    4), M(  -23,   12), M(    2,    7), M(   11,   -5), M(   20,  -12), M(   -4,   -8), M(  -51,    8),
-    M(  -13,    4), M(   -2,    5), M(    7,    4), M(   18,   -3), M(   21,   -9), M(   21,  -11), M(  -12,   -3), M(    3,  -22),
+        M(  -17,   26), M(    1,   17), M(  -44,   33), M(    6,   20), M(    8,   25), M(  -15,   27), M(   -9,   24), M(  -14,   21),
+        M(  -10,   29), M(   -3,   29), M(   31,   21), M(   27,   22), M(   47,    8), M(   58,   14), M(  -12,   33), M(    2,   20),
+        M(  -22,   24), M(   -5,   25), M(   -2,   21), M(    6,   24), M(  -16,   25), M(   31,   10), M(   56,    6), M(    9,    5),
+        M(  -34,   23), M(  -26,   22), M(   -9,   30), M(    0,   17), M(   -1,   21), M(   24,   18), M(  -16,   18), M(  -19,   21),
+        M(  -39,   23), M(  -27,   22), M(  -18,   24), M(  -16,   19), M(    0,    9), M(   -1,    7), M(    8,    5), M(  -14,    5),
+        M(  -42,   13), M(  -19,   13), M(  -10,    2), M(  -18,   10), M(   -2,    1), M(   11,   -6), M(    4,    0), M(  -19,   -5),
+        M(  -35,    9), M(  -12,    4), M(  -23,   12), M(    2,    7), M(   11,   -5), M(   20,  -12), M(   -4,   -8), M(  -51,    8),
+        M(  -13,    4), M(   -2,    5), M(    7,    4), M(   18,   -3), M(   21,   -9), M(   21,  -11), M(  -12,   -3), M(    3,  -22),
 };
 
 EvalScore psqt_queen_n[64] = {
-    M(  -23,  -13), M(  -23,   24), M(  -11,   12), M(  -29,    4), M(   29,  -12), M(   17,   -4), M(    5,   -1), M(   30,   10),
-    M(  -34,    5), M(  -38,   -1), M(  -24,   18), M(  -13,   18), M(  -22,   15), M(   22,  -10), M(   -4,   14), M(   30,    5),
-    M(  -15,   10), M(  -18,    4), M(    9,  -29), M(  -34,   32), M(    2,   22), M(   27,   -6), M(   15,    2), M(   17,    0),
-    M(  -39,   40), M(  -38,   26), M(  -33,    6), M(  -34,   17), M(   -4,   10), M(   -4,    7), M(   -4,   35), M(   -9,   34),
-    M(  -10,    0), M(  -41,   37), M(   -8,    4), M(   -9,   18), M(   -2,    3), M(    3,    4), M(    3,   31), M(    3,   20),
-    M(  -29,   26), M(    9,  -32), M(   -6,    3), M(   -1,   -8), M(   -2,   -3), M(    8,    6), M(   18,   18), M(    9,   21),
-    M(  -39,   22), M(   -8,  -11), M(    9,  -13), M(   12,  -16), M(   24,  -16), M(   21,  -27), M(   -4,  -36), M(    7,  -10),
-    M(  -13,    9), M(   -8,   -7), M(   -2,    1), M(    5,    0), M(   -1,   15), M(  -20,    0), M(  -19,   -8), M(  -32,  -36),
+        M(  -23,  -13), M(  -23,   24), M(  -11,   12), M(  -29,    4), M(   29,  -12), M(   17,   -4), M(    5,   -1), M(   30,   10),
+        M(  -34,    5), M(  -38,   -1), M(  -24,   18), M(  -13,   18), M(  -22,   15), M(   22,  -10), M(   -4,   14), M(   30,    5),
+        M(  -15,   10), M(  -18,    4), M(    9,  -29), M(  -34,   32), M(    2,   22), M(   27,   -6), M(   15,    2), M(   17,    0),
+        M(  -39,   40), M(  -38,   26), M(  -33,    6), M(  -34,   17), M(   -4,   10), M(   -4,    7), M(   -4,   35), M(   -9,   34),
+        M(  -10,    0), M(  -41,   37), M(   -8,    4), M(   -9,   18), M(   -2,    3), M(    3,    4), M(    3,   31), M(    3,   20),
+        M(  -29,   26), M(    9,  -32), M(   -6,    3), M(   -1,   -8), M(   -2,   -3), M(    8,    6), M(   18,   18), M(    9,   21),
+        M(  -39,   22), M(   -8,  -11), M(    9,  -13), M(   12,  -16), M(   24,  -16), M(   21,  -27), M(   -4,  -36), M(    7,  -10),
+        M(  -13,    9), M(   -8,   -7), M(   -2,    1), M(    5,    0), M(   -1,   15), M(  -20,    0), M(  -19,   -8), M(  -32,  -36),
 };
 
 EvalScore psqt_king_n[64] = {
-    M( -152,  -60), M(  -11,  -38), M(   23,  -25), M(  -70,  -18), M(  -99,   -4), M(  -58,   15), M(   -3,  -10), M(   11,  -40),
-    M(   20,  -18), M(   -5,   16), M(   10,   12), M(  -19,   24), M(  -31,   17), M(   33,   27), M(    4,    4), M(  -58,    4),
-    M(   40,   -7), M(   33,    9), M(   19,   18), M(  -62,   22), M(  -44,   20), M(   14,   38), M(   36,   24), M(  -19,   -1),
-    M(  -22,  -13), M(  -21,   15), M(  -50,   29), M(  -63,   35), M(  -85,   31), M(  -50,   30), M(   -7,    7), M(  -95,    3),
-    M(  -76,  -10), M(  -42,   -1), M(  -73,   32), M( -138,   47), M( -125,   48), M(  -85,   33), M(  -34,    3), M(  -70,  -11),
-    M(  -10,  -19), M(   10,   -4), M(  -39,   23), M(  -72,   35), M(  -70,   40), M(  -34,   29), M(   12,    6), M(  -25,   -8),
-    M(   44,  -48), M(   49,  -18), M(    8,   10), M(  -34,   21), M(  -25,   24), M(  -12,   14), M(   44,  -11), M(   45,  -28),
-    M(   34,  -70), M(   57,  -45), M(   35,  -22), M(  -24,  -10), M(   15,  -22), M(   -7,   -6), M(   68,  -37), M(   53,  -67),
+        M( -152,  -60), M(  -11,  -38), M(   23,  -25), M(  -70,  -18), M(  -99,   -4), M(  -58,   15), M(   -3,  -10), M(   11,  -40),
+        M(   20,  -18), M(   -5,   16), M(   10,   12), M(  -19,   24), M(  -31,   17), M(   33,   27), M(    4,    4), M(  -58,    4),
+        M(   40,   -7), M(   33,    9), M(   19,   18), M(  -62,   22), M(  -44,   20), M(   14,   38), M(   36,   24), M(  -19,   -1),
+        M(  -22,  -13), M(  -21,   15), M(  -50,   29), M(  -63,   35), M(  -85,   31), M(  -50,   30), M(   -7,    7), M(  -95,    3),
+        M(  -76,  -10), M(  -42,   -1), M(  -73,   32), M( -138,   47), M( -125,   48), M(  -85,   33), M(  -34,    3), M(  -70,  -11),
+        M(  -10,  -19), M(   10,   -4), M(  -39,   23), M(  -72,   35), M(  -70,   40), M(  -34,   29), M(   12,    6), M(  -25,   -8),
+        M(   44,  -48), M(   49,  -18), M(    8,   10), M(  -34,   21), M(  -25,   24), M(  -12,   14), M(   44,  -11), M(   45,  -28),
+        M(   34,  -70), M(   57,  -45), M(   35,  -22), M(  -24,  -10), M(   15,  -22), M(   -7,   -6), M(   68,  -37), M(   53,  -67),
 };
 
 EvalScore* psqt[6]{
-    psqt_pawn_n, psqt_knight_n, psqt_bishop_n, psqt_rook_n, psqt_queen_n, psqt_king_n
+        psqt_pawn_n, psqt_knight_n, psqt_bishop_n, psqt_rook_n, psqt_queen_n, psqt_king_n
 };
 
 EvalScore pieceScores[6] = {
-    M( 90, 105),M( 463, 328), M( 474, 287),M( 574, 590),M(1350,1121),M(0,0)
+        M(   90,  104),
+        M(  463,  326),
+        M(  474,  288),
+        M(  577,  594),
+        M( 1359, 1121),
+        M(    0,    0),
+};
+
+EvalScore SIDE_TO_MOVE               = M(   24,   26);
+EvalScore PAWN_STRUCTURE             = M(    7,   12);
+EvalScore PAWN_PASSED                = M(    4,   42);
+EvalScore PAWN_ISOLATED              = M(   -9,   -8);
+EvalScore PAWN_DOUBLED               = M(    8,   -4);
+EvalScore PAWN_DOUBLED_AND_ISOLATED  = M(    0,  -17);
+EvalScore PAWN_BACKWARD              = M(  -13,    2);
+EvalScore PAWN_OPEN                  = M(   15,   -7);
+EvalScore PAWN_BLOCKED               = M(   -9,  -12);
+EvalScore KNIGHT_OUTPOST             = M(   23,   15);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING = M(   -6,    1);
+EvalScore ROOK_OPEN_FILE             = M(   58,  -22);
+EvalScore ROOK_HALF_OPEN_FILE        = M(    4,   -2);
+EvalScore ROOK_KING_LINE             = M(   36,   32);
+EvalScore BISHOP_DOUBLED             = M(   42,   55);
+EvalScore BISHOP_PAWN_SAME_SQUARE    = M(   -5,    5);
+EvalScore BISHOP_FIANCHETTO          = M(    5,    7);
+EvalScore QUEEN_DISTANCE_ENEMY_KING  = M(    6,  -25);
+EvalScore KING_CLOSE_OPPONENT        = M(  -37,   57);
+EvalScore KING_PAWN_SHIELD           = M(   13,    3);
+EvalScore CASTLING_RIGHTS            = M(13, -4);
+
+EvalScore fast_pawn_psqt[2][2][64];
+EvalScore fast_psqt[12][64];
+
+
+EvalScore* evfeatures[]{
+        &SIDE_TO_MOVE,
+        &PAWN_STRUCTURE,
+        &PAWN_PASSED,
+        &PAWN_ISOLATED,
+        &PAWN_DOUBLED,
+        &PAWN_DOUBLED_AND_ISOLATED,
+        &PAWN_BACKWARD,
+        &PAWN_OPEN,
+        &PAWN_BLOCKED,
+        
+        &KNIGHT_OUTPOST,
+        &KNIGHT_DISTANCE_ENEMY_KING,
+        
+        &ROOK_OPEN_FILE,
+        &ROOK_HALF_OPEN_FILE,
+        &ROOK_KING_LINE,
+        
+        &BISHOP_DOUBLED,
+        &BISHOP_PAWN_SAME_SQUARE,
+        &BISHOP_FIANCHETTO,
+        
+        &QUEEN_DISTANCE_ENEMY_KING,
+        
+        &KING_CLOSE_OPPONENT,
+        &KING_PAWN_SHIELD,
+        
+        &CASTLING_RIGHTS,
+};
+
+EvalScore hangingEval[5]{
+        M(   -7,    2),
+        M(  -19,   -5),
+        M(  -11,  -10),
+        M(   -9,   -8),
+        M(  -10,  -12),
+};
+
+EvalScore pinnedEval[15]{
+        M(   20,  -40),
+        M(  -20,   12),
+        M(    2,   27),
+        M(  -36, -142),
+        M(  -48,  -58),
+        M(  -34,    1),
+        M(  -13,  -10),
+        M(  -72,  -72),
+        M(   15,  -83),
+        M(  -68, -395),
+        M(  -26,   -3),
+        M(  -13,  -73),
+        M( -176, -522),
+        M( -336, -639),
+        M(  -17,   -9),
+};
+
+EvalScore mobilityKnight[9]{
+        M(    0,    0), M(   27,   20), M(   39,   28), M(   47,   35), M(   54,   40),
+        M(   61,   45), M(   67,   49), M(   72,   53), M(   77,   57),
+};
+EvalScore mobilityBishop[15]{
+        M(    0,    0), M(   25,   37), M(   35,   52), M(   43,   63), M(   49,   73),
+        M(   55,   82), M(   60,   89), M(   65,   97), M(   69,  103), M(   74,  110),
+        M(   78,  115), M(   81,  121), M(   85,  127), M(   89,  132), M(   92,  137),
+};
+EvalScore mobilityRook[15]{
+        M(    0,    0), M(   23,   32), M(   32,   46), M(   39,   56), M(   46,   65),
+        M(   51,   73), M(   56,   79), M(   60,   86), M(   64,   92), M(   68,   97),
+        M(   72,  103), M(   75,  108), M(   79,  112), M(   82,  117), M(   85,  121),
+};
+EvalScore mobilityQueen[29]{
+        M(    0,    0), M(    9,   61), M(   12,   86), M(   15,  106), M(   18,  122),
+        M(   20,  136), M(   21,  149), M(   23,  161), M(   25,  172), M(   26,  183),
+        M(   28,  193), M(   29,  202), M(   30,  211), M(   32,  220), M(   33,  228),
+        M(   34,  236), M(   35,  244), M(   36,  251), M(   37,  258), M(   38,  266),
+        M(   39,  272), M(   40,  279), M(   41,  286), M(   42,  292), M(   43,  298),
+        M(   44,  305), M(   45,  311), M(   46,  317), M(   46,  322),
 };
 
 
-
-float* _pieceValuesEarly = new float[unusedVariable] {
-    90.211487,     69.899239,     6.5583091,     2.7514994,    -8.4710112,     9.2352791,    -3.9996982,    -11.724748,     15.682275,     463.04376,     47.557571,     27.236883,     22.470167,     473.91107,     31.915777,     24.555048,      44.26646,    -5.4452815,     13.440103,     574.08636,     101.79205,     22.751461,     60.778076,      16.03401,     11.974633,     1350.0123,     49.171928,     8.7743282,     371.82693,     253.04475,    -36.660572,     12.461931,    -6.0049338,     6.9675751,     19.520021,    -9.0453672,    0.38983789,    -39.311699,    -34.931709,    -34.711975,    -17.775248,    -62.941067,     9.7022018,    -58.727798,    -19.853893,    -12.940718,    -181.47153,    -339.05478,    -13.401001,    -6.9997177,    -19.536156,    -10.951163,    -9.8206406,     -9.745079,     13.374145,    -7.1317616,     5.2139874,             0,             0,             0,
+int mobEntryCount[6]{
+    0,9,15,15,29,0
 };
 
-float* _pieceValuesLate = new float[unusedVariable] {
-    104.82733,     130.21487,     13.074448,     43.098183,    -7.1356182,     -3.349977,    -16.267263,    0.86154455,    -7.8027592,     327.79779,     81.411537,     20.023214,     17.405874,     287.31894,     8.0259972,      36.51939,      55.96928,     5.8669152,    -4.2994347,     590.33789,     100.65056,     32.432838,    -17.388809,     2.2121568,     8.0876961,     1121.1086,     27.764854,     60.920574,    -144.92081,     41.508553,     60.507843,   -0.28126299,    0.94094306,    -23.738617,    -42.729908,     22.038324,     27.377895,     -140.7112,    -45.690758,    -14.956862,    -15.006504,     -61.28532,    -85.660538,     -382.9115,     4.5046525,    -71.037308,    -524.81067,    -640.02246,    -9.7734966,     4.1307931,    -8.8795471,     -11.95022,    -9.6440353,    -16.468803,    -4.4698701,    -9.6051769,     17.488422,             0,             0,             0,
+
+EvalScore* mobilities[6]{
+    nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr
 };
+
+//float* _pieceValuesEarly = new float[6]{
+//
+//        371.82693,5.2139874
+//};
+//
+//
+//float* _pieceValuesLate = new float[6]{
+//
+//       -144.92081,17.488422
+//};
 
 float* phaseValues = new float[6] {
-    0, 1, 1, 2, 4, 0,
+        0, 1, 1, 2, 4, 0,
 };
 
 // TODO tweak values
@@ -189,21 +245,13 @@ float kingSafetyTable[100] {0,   0,   1,   2,   3,   5,   7,   9,   12,  15,  18
                             500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500};
 
 
-EvalScore fast_pawn_psqt[2][2][64];
-EvalScore fast_psqt[12][64];
-
 void eval_init() {
     for (int i = 0; i < 64; i++) {
         for (int kside = 0; kside < 2; kside++) {
-//            fast_pawn_psqt[WHITE][kside][i] =+ pieceScores[PAWN];
-//                +psqt_pawn_n[pst_index_white(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
-//            fast_pawn_psqt[BLACK][kside][i] =- pieceScores[PAWN];
-//                -psqt_pawn_n[pst_index_black(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] - pieceScores[PAWN];
-    
             fast_pawn_psqt[WHITE][kside][i] =
-                +psqt_pawn_n[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
+                    +psqt_pawn_n[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
             fast_pawn_psqt[BLACK][kside][i] =
-                -psqt_pawn_n[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]- pieceScores[PAWN];
+                    -psqt_pawn_n[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]- pieceScores[PAWN];
         }
         
         for(Piece p = KNIGHT; p <= KING; p++){
@@ -212,6 +260,7 @@ void eval_init() {
         }
     }
 }
+
 
 
 /**
@@ -241,7 +290,7 @@ void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAtt
  */
 bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     U64 sq = ONE << s;
-
+    
     if (c == WHITE) {
         if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
@@ -254,53 +303,56 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     return false;
 }
 
-void Evaluator::computeHangingPieces(Board* b) {
+EvalScore Evaluator::computeHangingPieces(Board* b) {
     U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
     U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
-
+    
+    EvalScore res = M(0,0);
+    
     for (int i = PAWN; i <= QUEEN; i++) {
-        features[INDEX_PAWN_HANGING + i] =
-            +bitCount(b->getPieces(WHITE, i) & WnotAttacked) - bitCount(b->getPieces(BLACK, i) & BnotAttacked);
+        res += hangingEval[i] *(
+                + bitCount(b->getPieces(WHITE, i) & WnotAttacked)
+                - bitCount(b->getPieces(BLACK, i) & BnotAttacked));
+        
     }
+    return res;
 }
 
-void Evaluator::computePinnedPieces(Board* b) {
-
-    for (int i = 0; i < 15; i++) {
-        features[INDEX_PINNED_PAWN_BY_BISHOP + i] = 0;
-    }
-
+EvalScore Evaluator::computePinnedPieces(Board* b) {
+    
+    
+    EvalScore res = M(0,0);
+    
     Square square;
     Square wkingSq = bitscanForward(b->getPieces(WHITE, KING));
     U64    pinner  = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE])
-                 & (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
+                     & (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
     while (pinner) {
         square             = bitscanForward(pinner);
         Square pinnedPlace = bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
-                 + (b->getPiece(square) % 6 - BISHOP)] += 1;
+        res += pinnedEval[3 * (b->getPiece(pinnedPlace) % 6)+ (b->getPiece(square) % 6 - BISHOP)];
+        
+        
         pinner = lsbReset(pinner);
     }
-
+    
     pinner = lookUpBishopXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE])
              & (b->getPieces(BLACK, BISHOP) | b->getPieces(BLACK, QUEEN));
     while (pinner) {
         square             = bitscanForward(pinner);
         Square pinnedPlace = bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
-
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
-                 + (b->getPiece(square) % 6 - BISHOP)] += 1;
+        
+        res += pinnedEval[3 * (b->getPiece(pinnedPlace) % 6)+ (b->getPiece(square) % 6 - BISHOP)];
         pinner = lsbReset(pinner);
     }
-
+    
     Square bkingSq = bitscanForward(b->getPieces(BLACK, KING));
     pinner         = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK])
-             & (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
+                     & (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
     while (pinner) {
         square             = bitscanForward(pinner);
         Square pinnedPlace = bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
-                 + (b->getPiece(square) % 6 - BISHOP)] -= 1;
+        res -= pinnedEval[3 * (b->getPiece(pinnedPlace) % 6)+ (b->getPiece(square) % 6 - BISHOP)];
         pinner = lsbReset(pinner);
     }
     pinner = lookUpBishopXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK])
@@ -308,11 +360,11 @@ void Evaluator::computePinnedPieces(Board* b) {
     while (pinner) {
         square             = bitscanForward(pinner);
         Square pinnedPlace = bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
-
-        features[INDEX_PINNED_PAWN_BY_BISHOP + 3 * (b->getPiece(pinnedPlace) % 6)
-                 + (b->getPiece(square) % 6 - BISHOP)] -= 1;
+        
+        res-= pinnedEval[3 * (b->getPiece(pinnedPlace) % 6)+ (b->getPiece(square) % 6 - BISHOP)];
         pinner = lsbReset(pinner);
     }
+    return res;
 }
 
 /**
@@ -321,32 +373,23 @@ void Evaluator::computePinnedPieces(Board* b) {
  * @return
  */
 bb::Score Evaluator::evaluate(Board* b) {
-
+    
     Score res = 0;
-
-#ifdef TUNE_PST
-    for (int i = 0; i < 64; i++) {
-        tunablePST_MG_grad[i] = 0;
-        tunablePST_EG_grad[i] = 0;
-    }
-#endif
-
-    memset(features, 0, unusedVariable * sizeof(float));
-
+    
     U64 whiteTeam = b->getTeamOccupied()[WHITE];
     U64 blackTeam = b->getTeamOccupied()[BLACK];
     U64 occupied  = *b->getOccupied();
-
+    
     Square whiteKingSquare = bitscanForward(b->getPieces()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieces()[BLACK_KING]);
-
+    
     U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
     U64 blackKingZone = KING_ATTACKS[blackKingSquare];
-
+    
     Square square;
     U64    attacks;
     U64    k;
-
+    
     // clang-format off
     phase =
             (24.0f + phaseValues[5]
@@ -416,20 +459,21 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 whiteBlockedPawns = shiftNorth(whitePawns)&(whiteTeam|blackTeam);
     U64 blackBlockedPawns = shiftSouth(blackPawns)&(whiteTeam|blackTeam);
     
+    U64 openFilesWhite = ~fillFile(whitePawns);
+    U64 openFilesBlack = ~fillFile(blackPawns);
+    U64 openFiles      = openFilesBlack & openFilesWhite;
+    
     k = whitePawns;
     
     EvalScore evalScore = M(0,0);
-
+    EvalScore featureScore = M(0,0);
+    EvalScore mobScore = M(0,0);
+    
     while (k) {
         square = bitscanForward(k);
-
-        evalScore += fast_pawn_psqt[WHITE][wKSide][square];
-//        showScore(fast_pawn_psqt[WHITE][wKSide][square]);
-//        features[INDEX_PAWN_PSQT] += psqt_pawn[squareIndex(rankIndex(square), (wKSide ? fileIndex(square) : 7 - fileIndex(square)))] * earlyPSTScalar;
-//        features[INDEX_PAWN_PSQT] += psqt_pawn_endgame[square] * latePSTScalar;
         
-        if (getBit(whitePassers,square)) features[INDEX_PASSER_RANK] += passer_rank[getBit(whiteBlockedPawns,square)*8+rankIndex(square)]/10;
-
+        evalScore += fast_pawn_psqt[WHITE][wKSide][square];
+        
         k = lsbReset(k);
     }
     
@@ -437,17 +481,24 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore += fast_pawn_psqt[BLACK][bKSide][square];
-//        showScore(fast_pawn_psqt[BLACK][bKSide][square]);
-//        features[INDEX_PAWN_PSQT] -=
-//                psqt_pawn[squareIndex(7 - rankIndex(square), (bKSide ? fileIndex(square) : 7 - fileIndex(square)))] * earlyPSTScalar;
-//        features[INDEX_PAWN_PSQT] -=
-//                psqt_pawn_endgame[squareIndex(7 - rankIndex(square), fileIndex(square))] * latePSTScalar;
         
-        if (getBit(blackPassers,square)) features[INDEX_PASSER_RANK] -= passer_rank[getBit(blackBlockedPawns,square)*8+7-rankIndex(square)]/10;
-
+        
         k = lsbReset(k);
     }
-    
+    k = whitePassers;
+    while(k){
+        square = bitscanForward(k);
+        featureScore += passer_rank_n[getBit(whiteBlockedPawns,square)*8+rankIndex(square)];
+//        features[INDEX_PASSER_RANK] += passer_rank[getBit(whiteBlockedPawns,square)*8+rankIndex(square)]/10;
+        k = lsbReset(k);
+    }
+    k=blackPassers;
+    while (k){
+        square = bitscanForward(k);
+        featureScore -= passer_rank_n[getBit(blackBlockedPawns,square)*8+7-rankIndex(square)];
+//        features[INDEX_PASSER_RANK] -= passer_rank[getBit(blackBlockedPawns,square)*8+7-rankIndex(square)]/10;
+        k = lsbReset(k);
+    }
     
     U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
     U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
@@ -457,35 +508,32 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     
-    features[INDEX_PAWN_DOUBLED_AND_ISOLATED] =
-            +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
-            - bitCount(blackIsolatedPawns & blackDoubledPawns);
-    features[INDEX_PAWN_DOUBLED]              =
-            +bitCount(~whiteIsolatedPawns & whiteDoubledPawns)
-            - bitCount(~blackIsolatedPawns & blackDoubledPawns);
-    features[INDEX_PAWN_ISOLATED]             =
-            +bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
-            - bitCount(blackIsolatedPawns & ~blackDoubledPawns);
-    features[INDEX_PAWN_PASSED]               =
-            +bitCount(whitePassers)
-            - bitCount(blackPassers);
-//    features[INDEX_PAWN_VALUE]                =
-//            +bitCount(b->getPieces()[WHITE_PAWN])
-//            - bitCount(b->getPieces()[BLACK_PAWN]);
-    features[INDEX_PAWN_STRUCTURE]            =
-            +bitCount(whitePawnEastCover)
+    featureScore += PAWN_DOUBLED_AND_ISOLATED * (
+            + bitCount(whiteIsolatedPawns & whiteDoubledPawns)
+            - bitCount(blackIsolatedPawns & blackDoubledPawns));
+    featureScore += PAWN_DOUBLED * (
+            + bitCount(~whiteIsolatedPawns & whiteDoubledPawns)
+            - bitCount(~blackIsolatedPawns & blackDoubledPawns));
+    featureScore += PAWN_ISOLATED * (
+            + bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
+            - bitCount(blackIsolatedPawns & ~blackDoubledPawns));
+    featureScore += PAWN_PASSED * (
+            + bitCount(whitePassers)
+            - bitCount(blackPassers));
+    featureScore += PAWN_STRUCTURE * (
+            + bitCount(whitePawnEastCover)
             + bitCount(whitePawnWestCover)
             - bitCount(blackPawnEastCover)
-            - bitCount(blackPawnWestCover);
-    features[INDEX_PAWN_OPEN]                 =
-            +bitCount(whitePawns & ~fillSouth(blackPawns))
-            - bitCount(blackPawns & ~fillNorth(whitePawns));
-    features[INDEX_PAWN_BACKWARD]             =
-            +bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
-            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns);
-    features[INDEX_BLOCKED_PAWN]              = 
-            +bitCount(whiteBlockedPawns)
-            -bitCount(blackBlockedPawns);
+            - bitCount(blackPawnWestCover));
+    featureScore += PAWN_OPEN * (
+            + bitCount(whitePawns & ~fillSouth(blackPawns))
+            - bitCount(blackPawns & ~fillNorth(whitePawns)));
+    featureScore += PAWN_BACKWARD * (
+            + bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
+            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns));
+    featureScore += PAWN_BLOCKED * (
+            + bitCount(whiteBlockedPawns)
+            - bitCount(blackBlockedPawns));
     
     
     /*
@@ -497,22 +545,21 @@ bb::Score Evaluator::evaluate(Board* b) {
     /**********************************************************************************
      *                                  K N I G H T S                                 *
      **********************************************************************************/
-
+    
     
     
     k = b->getPieces()[WHITE_KNIGHT];
     while (k) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
-    
+        
         evalScore += fast_psqt[WHITE_KNIGHT][square];
-//        features[INDEX_KNIGHT_PSQT] += psqt_knight[pst_index_white_s(square)] * earlyPSTScalar;
-//        features[INDEX_KNIGHT_PSQT] += psqt_knight_endgame[pst_index_white_s(square)] * latePSTScalar;
     
     
-        features[INDEX_KNIGHT_MOBILITY] += sqrts[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
-        features[INDEX_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
-        features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
+        mobScore += mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
+
+        featureScore += KNIGHT_OUTPOST * isOutpost(square, WHITE, blackPawns, whitePawnCover);
+        featureScore += KNIGHT_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
         
         
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks,
@@ -526,52 +573,45 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
-    
+        
         evalScore += fast_psqt[BLACK_KNIGHT][square];
-//        features[INDEX_KNIGHT_PSQT] -= psqt_knight[pst_index_black_s(square)] * earlyPSTScalar;
-//        features[INDEX_KNIGHT_PSQT] -= psqt_knight_endgame[pst_index_black_s(square)] * latePSTScalar;;
     
-    
-        features[INDEX_KNIGHT_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
-        features[INDEX_KNIGHT_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
-        features[INDEX_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
+        mobScore -= mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresBlack)];
+
+        featureScore -= KNIGHT_OUTPOST * isOutpost(square, BLACK, whitePawns, blackPawnCover);
+        featureScore -= KNIGHT_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
         
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks,
                         2);
         
         k = lsbReset(k);
     }
-//    features[INDEX_KNIGHT_VALUE] = (bitCount(b->getPieces()[WHITE_KNIGHT]) -
-//                                    bitCount(b->getPieces()[BLACK_KNIGHT]));
     /**********************************************************************************
      *                                  B I S H O P S                                 *
      **********************************************************************************/
-
+    
     k = b->getPieces()[WHITE_BISHOP];
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
-    
-    
+        
+        
         evalScore += fast_psqt[WHITE_BISHOP][square];
-//        features[INDEX_BISHOP_PSQT] += psqt_bishop[pst_index_white_s(square)] * earlyPSTScalar;
-//        features[INDEX_BISHOP_PSQT] += psqt_bishop_endgame[pst_index_white_s(square)] * (phase) / 100.0;
     
-        features[INDEX_BISHOP_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
-        features[INDEX_BISHOP_PAWN_SAME_SQUARE] += bitCount(
-                blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
-    
-    
-        features[INDEX_BISHOP_FIANCHETTO] +=
-                (square == G2 &&
-                 whitePawns & ONE << F2 &&
-                 whitePawns & ONE << H2 &&
-                 whitePawns & (ONE << G3 | ONE << G4));
-        features[INDEX_BISHOP_FIANCHETTO] +=
-                (square == B2 &&
-                 whitePawns & ONE << A2 &&
-                 whitePawns & ONE << C2 &&
-                 whitePawns & (ONE << B3 | ONE << B4));
+        mobScore += mobilityBishop[bitCount(attacks & mobilitySquaresWhite)];
+        
+        featureScore += BISHOP_PAWN_SAME_SQUARE *
+                        bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+        featureScore += BISHOP_FIANCHETTO *
+                        (square == G2 &&
+                         whitePawns & ONE << F2 &&
+                         whitePawns & ONE << H2 &&
+                         whitePawns & (ONE << G3 | ONE << G4));
+        featureScore += BISHOP_FIANCHETTO *
+                        (square == B2 &&
+                         whitePawns & ONE << A2 &&
+                         whitePawns & ONE << C2 &&
+                         whitePawns & (ONE << B3 | ONE << B4));
         
         
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks,
@@ -585,69 +625,45 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
-
-
-    
-        evalScore += fast_psqt[BLACK_BISHOP][square];
-//        features[INDEX_BISHOP_PSQT] -= psqt_bishop[pst_index_black_s(square)] * earlyPSTScalar;
-//        features[INDEX_BISHOP_PSQT] -= psqt_bishop_endgame[pst_index_black_s(square)] * latePSTScalar;
-
-        features[INDEX_BISHOP_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
-        features[INDEX_BISHOP_PAWN_SAME_SQUARE] -= bitCount(
-                whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
-    
-    
-        features[INDEX_BISHOP_FIANCHETTO] -=
-                (square == G7 &&
-                 blackPawns & ONE << F7 &&
-                 blackPawns & ONE << H7 &&
-                 blackPawns & (ONE << G6 | ONE << G5));
-        features[INDEX_BISHOP_FIANCHETTO] -=
-                (square == B2 &&
-                 blackPawns & ONE << A7 &&
-                 blackPawns & ONE << C7 &&
-                 blackPawns & (ONE << B6 | ONE << B5));
         
+        evalScore += fast_psqt[BLACK_BISHOP][square];
+    
+        mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
+        featureScore -= BISHOP_PAWN_SAME_SQUARE *
+                        bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+        
+        featureScore -= BISHOP_FIANCHETTO *
+                        (square == G7 &&
+                         blackPawns & ONE << F7 &&
+                         blackPawns & ONE << H7 &&
+                         blackPawns & (ONE << G6 | ONE << G5));
+        featureScore -= BISHOP_FIANCHETTO *
+                        (square == B2 &&
+                         blackPawns & ONE << A7 &&
+                         blackPawns & ONE << C7 &&
+                         blackPawns & (ONE << B6 | ONE << B5));
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks,
                         2);
         
         k = lsbReset(k);
     }
-//    features[INDEX_BISHOP_VALUE] = (bitCount(b->getPieces()[WHITE_BISHOP]) - bitCount(b->getPieces()[BLACK_BISHOP]));
-    features[INDEX_BISHOP_DOUBLED] =
-            (bitCount(b->getPieces()[WHITE_BISHOP]) == 2) - (bitCount(b->getPieces()[BLACK_BISHOP]) == 2);
+    featureScore += BISHOP_DOUBLED * (
+            + (bitCount(b->getPieces()[WHITE_BISHOP]) == 2)
+            - (bitCount(b->getPieces()[BLACK_BISHOP]) == 2));
     /**********************************************************************************
      *                                  R O O K S                                     *
      **********************************************************************************/
-
+    
     k = b->getPieces()[WHITE_ROOK];
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
-    
+        
         evalScore += fast_psqt[WHITE_ROOK][square];
-//        features[INDEX_ROOK_PSQT] += psqt_rook[pst_index_white_s(square)] * earlyPSTScalar;
-//        features[INDEX_ROOK_PSQT] += psqt_rook_endgame[pst_index_white_s(square)] * (phase) / 100.0;
     
-    
-        features[INDEX_ROOK_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
+        mobScore += mobilityRook[bitCount(attacks & mobilitySquaresWhite)];
         
-        if (lookUpRookAttack(square, ZERO) & b->getPieces()[BLACK_KING]) {
-            //rook on same file or rank as king
-            features[INDEX_ROOK_KING_LINE]++;
-        }
-        if ((whitePawns & FILES[fileIndex(square)]) == 0) {
-            if ((blackPawns & FILES[fileIndex(square)]) == 0) {
-                //open
-                features[INDEX_ROOK_OPEN_FILE]++;
-            } else {
-                //half open
-                features[INDEX_ROOK_HALF_OPEN_FILE]++;
-            }
-        }
-        
-        addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks,
-                        3);
+        addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks,3);
         
         
         k = lsbReset(k);
@@ -657,53 +673,41 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
-    
+        
         evalScore += fast_psqt[BLACK_ROOK][square];
-//        features[INDEX_ROOK_PSQT] -= psqt_rook[pst_index_black_s(square)] * earlyPSTScalar;
-//        features[INDEX_ROOK_PSQT] -= psqt_rook_endgame[pst_index_black_s(square)] * (phase) / 100.0;
     
-        features[INDEX_ROOK_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
-        
-        if (lookUpRookAttack(square, ZERO) & b->getPieces()[WHITE_KING]) {
-            //rook on same file or rank as king
-            features[INDEX_ROOK_KING_LINE]--;
-        }
-        
-        if ((whitePawns & FILES[fileIndex(square)]) == 0) {
-            if ((blackPawns & FILES[fileIndex(square)]) == 0) {
-                //open
-                features[INDEX_ROOK_OPEN_FILE]--;
-            } else {
-                //half open
-                features[INDEX_ROOK_HALF_OPEN_FILE]--;
-            }
-        }
-        
+        mobScore -= mobilityRook[bitCount(attacks & mobilitySquaresBlack)];
         
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks,
                         3);
         
         k = lsbReset(k);
     }
-//    features[INDEX_ROOK_VALUE] = (bitCount(b->getPieces()[WHITE_ROOK]) - bitCount(b->getPieces()[BLACK_ROOK]));
+    
+    featureScore += ROOK_KING_LINE * (
+            + bitCount(lookUpRookAttack(blackKingSquare, occupied) & b->getPieces(WHITE, ROOK))
+            - bitCount(lookUpRookAttack(whiteKingSquare, occupied) & b->getPieces(BLACK, ROOK)));
+    featureScore += ROOK_OPEN_FILE * (
+            + bitCount(openFiles & b->getPieces(WHITE, ROOK))
+            - bitCount(openFiles & b->getPieces(BLACK, ROOK)));
+    featureScore += ROOK_HALF_OPEN_FILE * (
+            + bitCount(openFilesBlack & ~openFiles & b->getPieces(WHITE, ROOK))
+            - bitCount(openFilesWhite & ~openFiles & b->getPieces(BLACK, ROOK)));
     
     /**********************************************************************************
      *                                  Q U E E N S                                   *
      **********************************************************************************/
-
+    
     
     k = b->getPieces()[WHITE_QUEEN];
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied) | lookUpBishopAttack(square, occupied);
-    
+        
         evalScore += fast_psqt[WHITE_QUEEN][square];
-//        features[INDEX_QUEEN_PSQT] += psqt_queen[pst_index_white_s(square)] * earlyPSTScalar;
-//        features[INDEX_QUEEN_PSQT] += psqt_queen_endgame[pst_index_white_s(square)] * latePSTScalar;
     
-    
-        features[INDEX_QUEEN_MOBILITY] += sqrts[bitCount(attacks & mobilitySquaresWhite)];
-        features[INDEX_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
+        mobScore += mobilityQueen[bitCount(attacks & mobilitySquaresWhite)];
+        featureScore += QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
         
         addToKingSafety(attacks, blackKingZone, blackkingSafety_attackingPiecesCount, blackkingSafety_valueOfAttacks,
                         4);
@@ -715,37 +719,33 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied) | lookUpBishopAttack(square, occupied);
-    
+        
         evalScore += fast_psqt[BLACK_QUEEN][square];
-//        features[INDEX_QUEEN_PSQT] -= psqt_queen[pst_index_black_s(square)] * earlyPSTScalar;
-//        features[INDEX_QUEEN_PSQT] -= psqt_queen_endgame[pst_index_black_s(square)] * latePSTScalar;
     
     
-        features[INDEX_QUEEN_MOBILITY] -= sqrts[bitCount(attacks & mobilitySquaresBlack)];
-        features[INDEX_QUEEN_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
+        mobScore -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack)];
+        featureScore -= QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
         
         addToKingSafety(attacks, whiteKingZone, whitekingSafety_attackingPiecesCount, whitekingSafety_valueOfAttacks,
                         4);
         
         k = lsbReset(k);
     }
-//    features[INDEX_QUEEN_VALUE] = bitCount(b->getPieces()[WHITE_QUEEN]) - bitCount(b->getPieces()[BLACK_QUEEN]);
     
     /**********************************************************************************
      *                                  K I N G S                                     *
      **********************************************************************************/
     k = b->getPieces()[WHITE_KING];
-
+    
     
     while (k) {
         square = bitscanForward(k);
-    
+        
         evalScore += fast_psqt[WHITE_KING][square];
-//        features[INDEX_KING_PSQT] += psqt_king[63 - square] * earlyPSTScalar;
-//        features[INDEX_KING_PSQT] += psqt_king_endgame[63 - square] * latePSTScalar;
-    
-        features[INDEX_KING_PAWN_SHIELD] += bitCount(KING_ATTACKS[square] & whitePawns);
-        features[INDEX_KING_CLOSE_OPPONENT] += bitCount(KING_ATTACKS[square] & blackTeam);
+        
+        featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
+        featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
+        
         
         k = lsbReset(k);
     }
@@ -753,55 +753,41 @@ bb::Score Evaluator::evaluate(Board* b) {
     k = b->getPieces()[BLACK_KING];
     while (k) {
         square = bitscanForward(k);
-    
+        
         evalScore += fast_psqt[BLACK_KING][square];
-//        features[INDEX_KING_PSQT] -= psqt_king[square] * earlyPSTScalar;
-//        features[INDEX_KING_PSQT] -= psqt_king_endgame[square] * latePSTScalar;
-    
-        features[INDEX_KING_PAWN_SHIELD] -= bitCount(KING_ATTACKS[square] & blackPawns);
-        features[INDEX_KING_CLOSE_OPPONENT] -= bitCount(KING_ATTACKS[square] & whiteTeam);
+        
+        featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
+        featureScore -= KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
         
         k = lsbReset(k);
     }
     
-    computeHangingPieces(b);
-    computePinnedPieces(b);
+    EvalScore hangingEval = computeHangingPieces(b);
+    EvalScore pinnedEval = computePinnedPieces(b);
     
-    features[INDEX_KING_SAFETY] =
-            (kingSafetyTable[blackkingSafety_valueOfAttacks] - kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
-    features[INDEX_CASTLING_RIGHTS] =
+    
+    float kingSafetyTableScore = (kingSafetyTable[blackkingSafety_valueOfAttacks] - kingSafetyTable[whitekingSafety_valueOfAttacks]);
+    float earlySum = kingSafetyTableScore * 3.7182693;
+    float endSum = kingSafetyTableScore * -1.4492081;
+  
+//    features[INDEX_KING_SAFETY] =
+//            (kingSafetyTable[blackkingSafety_valueOfAttacks] - kingSafetyTable[whitekingSafety_valueOfAttacks]) / 100;
+    featureScore += CASTLING_RIGHTS*(
             + b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
             + b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
             - b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-            - b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING);
+            - b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+    featureScore += SIDE_TO_MOVE * (b->getActivePlayer() == WHITE ? 1:-1);
     
+//    for(int i = 0; i < 6; i++){
+//        earlySum += features[i] * _pieceValuesEarly[i];
+//        endSum += features[i] * _pieceValuesLate[i];
+//    }
     
+    EvalScore totalScore = evalScore + pinnedEval + hangingEval + featureScore + mobScore;
     
-    
-    
-    
-    __m128 earlyRes{};
-    __m128 lateRes{};
-    
-    for (int i = 0; i < unusedVariable; i += 4) {
-        __m128 *feat = (__m128 *) (features + (i));
-        
-        __m128 *w1 = (__m128 *) (_pieceValuesEarly + (i));
-        __m128 *w2 = (__m128 *) (_pieceValuesLate + (i));
-        
-        earlyRes = _mm_add_ps(earlyRes, _mm_mul_ps(*w1, *feat));
-        lateRes  = _mm_add_ps(lateRes, _mm_mul_ps(*w2, *feat));
-    }
-    
-    
-    const __m128 tE   = _mm_add_ps(earlyRes, _mm_movehl_ps(earlyRes, earlyRes));
-    const __m128 sumE = _mm_add_ss(tE, _mm_shuffle_ps(tE, tE, 1));
-    const __m128 tL   = _mm_add_ps(lateRes, _mm_movehl_ps(lateRes, lateRes));
-    const __m128 sumL = _mm_add_ss(tL, _mm_shuffle_ps(tL, tL, 1));
-    
-    res = sumE[0] * (1 - phase) + sumL[0] * (phase);
-    res += (b->getActivePlayer() == WHITE ? 15 : -15);
-    res += MgScore(evalScore) * (1 - phase) + EgScore(evalScore) * (phase);
+    res = earlySum * (1 - phase) + endSum * (phase);
+    res += MgScore(totalScore) * (1 - phase) + EgScore(totalScore) * (phase);
     
     if (!hasMatingMaterial(b, res>0?WHITE:BLACK))res=res/10;
     return res;
@@ -809,17 +795,17 @@ bb::Score Evaluator::evaluate(Board* b) {
 }
 
 void printEvaluation(Board* board) {
-
+    
     using namespace std;
-
+    
     Evaluator ev {};
     Score     score = ev.evaluate(board);
     float     phase = ev.getPhase();
-
+    
     stringstream ss {};
-
+    
     // String format = "%-30s | %-20s | %-20s %n";
-
+    
     ss << std::setw(40) << std::left << "feature"
        << " | " << std::setw(20) << std::right << "difference"
        << " | " << std::setw(20) << "early weight"
@@ -827,7 +813,7 @@ void printEvaluation(Board* board) {
        << " | " << std::setw(20) << "tapered weight"
        << " | " << std::setw(20) << "sum"
        << "\n";
-
+    
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
@@ -836,84 +822,84 @@ void printEvaluation(Board* board) {
        << " | " << std::setw(20) << "0"
        << " | " << std::setw(20) << "1"
        << " | " << std::setw(20) << phase << " | " << std::setw(20) << phase << " | \n";
-
+    
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
-
+    
     string names[] {
-        "INDEX_PAWN_VALUE",
-        "INDEX_PAWN_PSQT",
-        "INDEX_PAWN_STRUCTURE",
-        "INDEX_PAWN_PASSED",
-        "INDEX_PAWN_ISOLATED",
-        "INDEX_PAWN_DOUBLED",
-        "INDEX_PAWN_DOUBLED_AND_ISOLATED",
-        "INDEX_PAWN_BACKWARD",
-        "INDEX_PAWN_OPEN",
-
-        "INDEX_KNIGHT_VALUE",
-        "INDEX_KNIGHT_PSQT",
-        "INDEX_KNIGHT_MOBILITY",
-        "INDEX_KNIGHT_OUTPOST",
-
-        "INDEX_BISHOP_VALUE",
-        "INDEX_BISHOP_PSQT",
-        "INDEX_BISHOP_MOBILITY",
-        "INDEX_BISHOP_DOUBLED",
-        "INDEX_BISHOP_PAWN_SAME_SQUARE",
-        "INDEX_BISHOP_FIANCHETTO",
-
-        "INDEX_ROOK_VALUE",
-        "INDEX_ROOK_PSQT",
-        "INDEX_ROOK_MOBILITY",
-        "INDEX_ROOK_OPEN_FILE",
-        "INDEX_ROOK_HALF_OPEN_FILE",
-        "INDEX_ROOK_KING_LINE",
-
-        "INDEX_QUEEN_VALUE",
-        "INDEX_QUEEN_PSQT",
-        "INDEX_QUEEN_MOBILITY",
-
-        "INDEX_KING_SAFETY",
-        "INDEX_KING_PSQT",
-        "INDEX_KING_CLOSE_OPPONENT",
-        "INDEX_KING_PAWN_SHIELD",
-
-        "INDEX_KNIGHT_DISTANCE_ENEMY_KING",
-        "INDEX_QUEEN_DISTANCE_ENEMY_KING",
-
-        "INDEX_PINNED_PAWN_BY_BISHOP",
-        "INDEX_PINNED_PAWN_BY_ROOK",
-        "INDEX_PINNED_PAWN_BY_QUEEN",
-        "INDEX_PINNED_KNIGHT_BY_BISHOP",
-        "INDEX_PINNED_KNIGHT_BY_ROOK",
-        "INDEX_PINNED_KNIGHT_BY_QUEEN",
-        "INDEX_PINNED_BISHOP_BY_BISHOP",
-        "INDEX_PINNED_BISHOP_BY_ROOK",
-        "INDEX_PINNED_BISHOP_BY_QUEEN",
-        "INDEX_PINNED_ROOK_BY_BISHOP",
-        "INDEX_PINNED_ROOK_BY_ROOK",
-        "INDEX_PINNED_ROOK_BY_QUEEN",
-        "INDEX_PINNED_QUEEN_BY_BISHOP",
-        "INDEX_PINNED_QUEEN_BY_ROOK",
-        "INDEX_PINNED_QUEEN_BY_QUEEN",
-
-        "INDEX_PAWN_HANGING",
-        "INDEX_KNIGHT_HANGING",
-        "INDEX_BISHOP_HANGING",
-        "INDEX_ROOK_HANGING",
-        "INDEX_QUEEN_HANGING",
-
-        // ignore this and place new values before here
-        "-",
-        "-",
-        "-",
-        "-",
+            "INDEX_PAWN_VALUE",
+            "INDEX_PAWN_PSQT",
+            "INDEX_PAWN_STRUCTURE",
+            "INDEX_PAWN_PASSED",
+            "INDEX_PAWN_ISOLATED",
+            "INDEX_PAWN_DOUBLED",
+            "INDEX_PAWN_DOUBLED_AND_ISOLATED",
+            "INDEX_PAWN_BACKWARD",
+            "INDEX_PAWN_OPEN",
+            
+            "INDEX_KNIGHT_VALUE",
+            "INDEX_KNIGHT_PSQT",
+            "INDEX_KNIGHT_MOBILITY",
+            "INDEX_KNIGHT_OUTPOST",
+            
+            "INDEX_BISHOP_VALUE",
+            "INDEX_BISHOP_PSQT",
+            "INDEX_BISHOP_MOBILITY",
+            "INDEX_BISHOP_DOUBLED",
+            "INDEX_BISHOP_PAWN_SAME_SQUARE",
+            "INDEX_BISHOP_FIANCHETTO",
+            
+            "INDEX_ROOK_VALUE",
+            "INDEX_ROOK_PSQT",
+            "INDEX_ROOK_MOBILITY",
+            "INDEX_ROOK_OPEN_FILE",
+            "INDEX_ROOK_HALF_OPEN_FILE",
+            "INDEX_ROOK_KING_LINE",
+            
+            "INDEX_QUEEN_VALUE",
+            "INDEX_QUEEN_PSQT",
+            "INDEX_QUEEN_MOBILITY",
+            
+            "INDEX_KING_SAFETY",
+            "INDEX_KING_PSQT",
+            "INDEX_KING_CLOSE_OPPONENT",
+            "INDEX_KING_PAWN_SHIELD",
+            
+            "INDEX_KNIGHT_DISTANCE_ENEMY_KING",
+            "INDEX_QUEEN_DISTANCE_ENEMY_KING",
+            
+            "INDEX_PINNED_PAWN_BY_BISHOP",
+            "INDEX_PINNED_PAWN_BY_ROOK",
+            "INDEX_PINNED_PAWN_BY_QUEEN",
+            "INDEX_PINNED_KNIGHT_BY_BISHOP",
+            "INDEX_PINNED_KNIGHT_BY_ROOK",
+            "INDEX_PINNED_KNIGHT_BY_QUEEN",
+            "INDEX_PINNED_BISHOP_BY_BISHOP",
+            "INDEX_PINNED_BISHOP_BY_ROOK",
+            "INDEX_PINNED_BISHOP_BY_QUEEN",
+            "INDEX_PINNED_ROOK_BY_BISHOP",
+            "INDEX_PINNED_ROOK_BY_ROOK",
+            "INDEX_PINNED_ROOK_BY_QUEEN",
+            "INDEX_PINNED_QUEEN_BY_BISHOP",
+            "INDEX_PINNED_QUEEN_BY_ROOK",
+            "INDEX_PINNED_QUEEN_BY_QUEEN",
+            
+            "INDEX_PAWN_HANGING",
+            "INDEX_KNIGHT_HANGING",
+            "INDEX_BISHOP_HANGING",
+            "INDEX_ROOK_HANGING",
+            "INDEX_QUEEN_HANGING",
+            
+            // ignore this and place new values before here
+            "-",
+            "-",
+            "-",
+            "-",
     };
-
+    
     for (int i = 0; i < unusedVariable; i++) {
-
+        
         ss << std::setw(40) << std::left << names[i] << " | " << std::setw(20) << std::right << ev.getFeatures()[i]
            << " | " << std::setw(20) << ev.getEarlyGameParams()[i] << " | " << std::setw(20)
            << ev.getLateGameParams()[i] << " | " << std::setw(20)
@@ -924,28 +910,28 @@ void printEvaluation(Board* board) {
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
-
+    
     ss << std::setw(40) << std::left << "TOTAL"
        << " | " << std::setw(20) << std::right << ""
        << " | " << std::setw(20) << ""
        << " | " << std::setw(20) << ""
        << " | " << std::setw(20) << ""
        << " | " << std::setw(20) << score << " | \n";
-
+    
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
-
+    
     std::cout << ss.str() << std::endl;
 }
 
-float* Evaluator::getFeatures() { return features; }
+float* Evaluator::getFeatures() { return nullptr; }
 
 float Evaluator::getPhase() { return phase; }
 
-float* Evaluator::getEarlyGameParams() { return _pieceValuesEarly; }
+float* Evaluator::getEarlyGameParams() { return nullptr; }
 
-float* Evaluator::getLateGameParams() { return _pieceValuesLate; }
+float* Evaluator::getLateGameParams() { return nullptr; }
 
 int Evaluator::paramCount() { return unusedVariable; }
 
