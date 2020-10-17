@@ -152,7 +152,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
     
     U64   zob = b->zobrist();
     Entry en  = table->get(zob);
-    if (en.zobrist == zob) {
+    if (en.zobrist == zob && en.type == PV_NODE) {
         
         // extract the move from the table
         Move mov = en.move;
