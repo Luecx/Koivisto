@@ -28,7 +28,7 @@ one of the future releases.
 ## Windows / Linux
 
 
-We do provide binaries for Windows / Linux systems. You can either download them for each release after Koivisto 3.0 [here](https://github.com/Luecx/Koivisto/releases). 
+We do provide binaries for Windows / Linux systems. You can download them for each release after Koivisto 3.0 [here](https://github.com/Luecx/Koivisto/releases). 
 Note that we **strongly recommend** that you build the binaries yourself for best performance.
 Assuming build tools have been installed, one can type:
 
@@ -41,7 +41,7 @@ cd src_files
 make native
 ```
 
-Beside compiling a native version which should be best in terms of performance, one can also compile static executables using:
+Besides compiling a native version which should be best in terms of performance, one can also compile static executables using:
 ```
 mkdir bin/ 
 cd src_files
