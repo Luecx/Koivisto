@@ -10,9 +10,11 @@ MINOR   = 0
 MAJOR   = 3
 EXE     = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 ifeq ($(OS),Windows_NT)
-    SUFFIX := windows
+    PREFIX := windows
+    SUFFIX := .exe
 else
-    SUFFIX := linux
+    PREFIX := linux
+    SUFFIX := 
 endif
 
 WFLAGS = -std=c++17 -Wall -Wextra -Wshadow
@@ -31,12 +33,12 @@ openbench:
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
 
 native:
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-native-$(SUFFIX)
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
     
 release:
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-native-$(SUFFIX)
-	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) -o $(EXE)-x64-$(SUFFIX)
-	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-popcnt-$(SUFFIX)
-	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) $(AVX) -o $(EXE)-x64-popcnt-avx-$(SUFFIX)
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
+	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) -o $(EXE)-x64-$(PREFIX)$(SUFFIX)
+	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-popcnt$(SUFFIX)
+	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) $(AVX) -o $(EXE)-x64-$(PREFIX)-popcnt-avx$(SUFFIX)
 
 	
