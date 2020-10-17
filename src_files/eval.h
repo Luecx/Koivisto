@@ -23,7 +23,7 @@ extern EvalScore* psqt[6];
 
 extern EvalScore pieceScores[6];
 
-extern EvalScore* features[];
+extern EvalScore* evfeatures[];
 extern EvalScore hangingEval[5];
 
 extern EvalScore pinnedEval[15];

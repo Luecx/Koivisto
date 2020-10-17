@@ -98,43 +98,41 @@ EvalScore* psqt[6]{
 };
 
 EvalScore pieceScores[6] = {
-        M( 90, 105),M( 463, 328), M( 474, 287),M( 574, 590),M(1354,1121),M(0,0)
+        M(   90,  104),
+        M(  463,  326),
+        M(  474,  288),
+        M(  577,  594),
+        M( 1359, 1121),
+        M(    0,    0),
 };
 
-EvalScore SIDE_TO_MOVE               = M(   25,   26);
-
-EvalScore   PAWN_STRUCTURE           = M(7,13);
-EvalScore  PAWN_PASSED               = M(3,43);
-EvalScore  PAWN_ISOLATED             = M(-8,-7);
-EvalScore  PAWN_DOUBLED              = M(9,-3);
-EvalScore PAWN_DOUBLED_AND_ISOLATED  = M(-4, -16);
-EvalScore  PAWN_BACKWARD             = M(-12, 1);
-EvalScore  PAWN_OPEN                 = M(16,-8);
-EvalScore  PAWN_BLOCKED              = M(-7,-10);
-
-EvalScore  KNIGHT_OUTPOST            = M(22,17);
-EvalScore  KNIGHT_DISTANCE_ENEMY_KING= M(-6,1);
-
-EvalScore ROOK_OPEN_FILE              = M(61, -17);
-EvalScore ROOK_HALF_OPEN_FILE         = M(16, 2);
-EvalScore ROOK_KING_LINE              = M(12, 8);
-
-EvalScore BISHOP_DOUBLED          = M(44,56);
-EvalScore BISHOP_PAWN_SAME_SQUARE = M(-5,6);
-EvalScore BISHOP_FIANCHETTO       = M(13,-4);
-
-EvalScore QUEEN_DISTANCE_ENEMY_KING = M(7,-24);
-
-EvalScore KING_CLOSE_OPPONENT = M(-37,60);
-EvalScore KING_PAWN_SHIELD    = M(12,0);
-
-EvalScore CASTLING_RIGHTS     = M(13,-4);
+EvalScore SIDE_TO_MOVE               = M(   24,   26);
+EvalScore PAWN_STRUCTURE             = M(    7,   12);
+EvalScore PAWN_PASSED                = M(    4,   42);
+EvalScore PAWN_ISOLATED              = M(   -9,   -8);
+EvalScore PAWN_DOUBLED               = M(    8,   -4);
+EvalScore PAWN_DOUBLED_AND_ISOLATED  = M(    0,  -17);
+EvalScore PAWN_BACKWARD              = M(  -13,    2);
+EvalScore PAWN_OPEN                  = M(   15,   -7);
+EvalScore PAWN_BLOCKED               = M(   -9,  -12);
+EvalScore KNIGHT_OUTPOST             = M(   23,   15);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING = M(   -6,    1);
+EvalScore ROOK_OPEN_FILE             = M(   58,  -22);
+EvalScore ROOK_HALF_OPEN_FILE        = M(    4,   -2);
+EvalScore ROOK_KING_LINE             = M(   36,   32);
+EvalScore BISHOP_DOUBLED             = M(   42,   55);
+EvalScore BISHOP_PAWN_SAME_SQUARE    = M(   -5,    5);
+EvalScore BISHOP_FIANCHETTO          = M(    5,    7);
+EvalScore QUEEN_DISTANCE_ENEMY_KING  = M(    6,  -25);
+EvalScore KING_CLOSE_OPPONENT        = M(  -37,   57);
+EvalScore KING_PAWN_SHIELD           = M(   13,    3);
+EvalScore CASTLING_RIGHTS            = M(13, -4);
 
 EvalScore fast_pawn_psqt[2][2][64];
 EvalScore fast_psqt[12][64];
 
 
-EvalScore* features[]{
+EvalScore* evfeatures[]{
         &SIDE_TO_MOVE,
         &PAWN_STRUCTURE,
         &PAWN_PASSED,
@@ -165,29 +163,29 @@ EvalScore* features[]{
 };
 
 EvalScore hangingEval[5]{
-        M(-7,4),
-        M(-20,-9),
-        M(-11,-12),
-        M(-10,-10),
-        M(-10,-16)
+        M(   -7,    2),
+        M(  -19,   -5),
+        M(  -11,  -10),
+        M(   -9,   -8),
+        M(  -10,  -12),
 };
 
 EvalScore pinnedEval[15]{
-        M(20,-43),
-        M(-9,22),
-        M(0,27),
-        M(-39, -140),
-        M(-35, -46),
-        M(-35, 15),
-        M(-18,-15),
-        M(-63, -61),
-        M(10,-86),
-        M(-59, -383),
-        M(-20, 5),
-        M(-13, -71),
-        M(-181, -524),
-        M(-339, -640),
-        M(-13, -10)
+        M(   20,  -40),
+        M(  -20,   12),
+        M(    2,   27),
+        M(  -36, -142),
+        M(  -48,  -58),
+        M(  -34,    1),
+        M(  -13,  -10),
+        M(  -72,  -72),
+        M(   15,  -83),
+        M(  -68, -395),
+        M(  -26,   -3),
+        M(  -13,  -73),
+        M( -176, -522),
+        M( -336, -639),
+        M(  -17,   -9),
 };
 
 EvalScore mobilityKnight[9]{
@@ -377,10 +375,6 @@ EvalScore Evaluator::computePinnedPieces(Board* b) {
 bb::Score Evaluator::evaluate(Board* b) {
     
     Score res = 0;
-    
-    
-    
-    memset(features, 0, 6 * sizeof(float));
     
     U64 whiteTeam = b->getTeamOccupied()[WHITE];
     U64 blackTeam = b->getTeamOccupied()[BLACK];
