@@ -28,11 +28,12 @@ extern EvalScore hangingEval[5];
 
 extern EvalScore pinnedEval[15];
 
+extern EvalScore* mobilities[6];
+
+extern int mobEntryCount[6];
+
 static int unusedVariable = 0;
-static int INDEX_KNIGHT_MOBILITY = unusedVariable++;
-static int INDEX_BISHOP_MOBILITY         = unusedVariable++;
-static int INDEX_ROOK_MOBILITY       = unusedVariable++;
-static int INDEX_QUEEN_MOBILITY = unusedVariable++;
+
 static int INDEX_KING_SAFETY         = unusedVariable++;
 static int INDEX_PASSER_RANK = unusedVariable++;
 
@@ -41,7 +42,7 @@ void eval_init();
 
 class Evaluator {
     public:
-    float features[6];
+//    float features[6];
 
     float phase;
 

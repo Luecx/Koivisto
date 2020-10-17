@@ -184,7 +184,7 @@ int main(int argc, char* argv[]) {
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     }
-
+ 
     
     
     /**********************************************************************************
@@ -194,9 +194,10 @@ int main(int argc, char* argv[]) {
 //    bb_init();
 //    eval_init();
 //    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
-//    std::cout << tuning::computeError(new Evaluator(), 3);
-    // tuning::evalSpeed();
-    // bb_cleanUp();
+////    std::cout << tuning::computeError(new Evaluator(), 3);
+//     for(int i = 0; i < 10; i++)
+//     tuning::evalSpeed();
+//     bb_cleanUp();
 
     // main_tune_pst_bb(PAWN);
 //    eval_init();
