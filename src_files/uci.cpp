@@ -11,8 +11,14 @@
 #include <iostream>
 #include <thread>
 
-#define MAJOR_VERSION 2
-#define MINOR_VERSION 1
+#ifndef MINOR_VERSION
+#  define MINOR_VERSION 0
+#endif
+#ifndef MAJOR_VERSION
+#  define MAJOR_VERSION 0
+#endif
+
+
 
 TimeManager*      timeManager;
 Board*            board;
@@ -23,6 +29,7 @@ void uci_loop(bool bench) {
 
     bb_init();
     search_init(16);
+    eval_init();
 
     if (bench) {
         uci_bench();

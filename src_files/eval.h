@@ -8,6 +8,19 @@
 #include "Bitboard.h"
 #include "Board.h"
 
+#define pst_index_white(r, f) squareIndex(7 - r, f)
+#define pst_index_white_s(s)  squareIndex(7 - rankIndex(s), fileIndex(s))
+#define pst_index_black(r, f) squareIndex(r, f)
+#define pst_index_black_s(s)  s
+
+typedef int32_t EvalScore;
+#define M(mg, eg)    ((EvalScore)((unsigned int) (eg) << 16) + (mg))
+#define MgScore(s)   ((Score)((uint16_t)((unsigned) ((s)))))
+#define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
+#define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
+
+extern EvalScore* psqt[6];
+
 static int unusedVariable = 0;
 
 static int INDEX_PAWN_VALUE                = unusedVariable++;
@@ -73,7 +86,15 @@ static int INDEX_BISHOP_HANGING = unusedVariable++;
 static int INDEX_ROOK_HANGING   = unusedVariable++;
 static int INDEX_QUEEN_HANGING  = unusedVariable++;
 
+static int INDEX_CASTLING_RIGHTS = unusedVariable++;
+
+static int INDEX_BLOCKED_PAWN = unusedVariable++;
+
+static int INDEX_PASSER_RANK = unusedVariable++;
+
 static int SPACER1 = unusedVariable += unusedVariable % 4 == 0 ? 0 : (4 - unusedVariable % 4);
+
+void eval_init();
 
 class Evaluator {
     public:

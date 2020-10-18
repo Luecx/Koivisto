@@ -1,6 +1,6 @@
 # Koivisto UCI
 
-Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and Eugenio Bruno. The strength is estimated to be around 2860 CCRL on a single core.
+Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and Eugenio Bruno.
 
 ### Supported UCI settings:
 - Hash
@@ -8,23 +8,68 @@ Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and
 - Threads (up to 32)
 
 ### Acknowledgements
-- [Eugenio Bruno](https://github.com/Eugenio-Bruno)
 - [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page)
 - [Andrew Grant](https://github.com/AndyGrant/Ethereal)
 - [Fathom](https://github.com/jdart1/Fathom)
 - [Mk-Chan](https://github.com/Mk-Chan)
 - [Terje Kirstihagen](https://github.com/TerjeKir)
 - [kz04px](https://github.com/kz04px)
+- [bobsquared](https://github.com/bobsquared/Mr_Bob_Chess)
 
 
-### Compiling
+
+
+# Compiling
+
+
+Note that compiler warnings might pop up which can be safely ignored and will most likely be fixed in 
+one of the future releases.
+
+## Windows
+
+
+We do provide binaries for Windows systems. You can either download them for each release after Koivisto 3.0 here.
+Note that we **strongly recommend** that you build the binaries yourself for best performance.
+Assuming build tools have been installed, one can type:
 
 ```
+git clone https://github.com/Luecx/Koivisto.git
+cd Koivisto/
+
+mkdir bin/ 
 cd src_files
-make
+make native
 ```
 
-A few compiler warnings about unused functions might pop up. Those functions are only from the syzygy code which have been copied from Fathom
+Beside compiling a native version which should be best in terms of performance, one can also perform static executables using:
+```
+mkdir bin/ 
+cd src_files
+make release
+```
+
+
+## Linux
+
+We do not provide binaries for linux systems. For Linux users, its the best to compile a binary yourself.
+Assuming make and gcc is installed, you can do the following:
+
+```
+git clone https://github.com/Luecx/Koivisto.git
+cd Koivisto/
+
+mkdir bin/ 
+cd src_files
+make native
+```
+
+You will find a compiled executable inside the `bin/` folder.
+
+#### MacOS
+
+We do not provide binaries for MacOS yet. 
+
+
 
 
 
