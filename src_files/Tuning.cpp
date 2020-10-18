@@ -411,6 +411,57 @@ double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, i
     return computeError(evaluator, K);
 }
 
+double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr) {
+    double er;
+    
+    for(int p = 0; p < count; p++){
+        
+        std::cout << "\r  param: " << p << std::flush;
+        
+        er = computeError(evaluator, K);
+//        std::cout << er << std::endl;
+        evalScore[p] += M(+lr,0);
+        eval_init();
+//        showScore(M(+lr,0));
+        
+        double upper = computeError(evaluator, K);
+//        std::cout << upper << std::endl;
+        if(upper >= er){
+            evalScore[p] += M(-2*lr,0);
+            eval_init();
+//            showScore(evalScore[p]);
+            
+            double lower = computeError(evaluator, K);
+            
+            if(lower >= er){
+                evalScore[p] += M(+lr,0);
+//                showScore(evalScore[p]);
+                eval_init();
+            }
+        }
+        
+        
+        er = computeError(evaluator, K);
+        evalScore[p] += M(0,+lr);
+        eval_init();
+        
+        upper = computeError(evaluator, K);
+        if(upper >= er){
+            evalScore[p] += M(0,-2*lr);
+            eval_init();
+            
+            double lower = computeError(evaluator, K);
+            
+            if(lower >= er){
+                evalScore[p] += M(0,+lr);
+                eval_init();
+            }
+        }
+    }
+    std::cout << std::endl;
+    return er;
+}
+
 double tuning::optimiseAdaGrad(Evaluator* evaluator, double K, double learningRate, int iterations) {
     int paramCount = evaluator->paramCount();
 

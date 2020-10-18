@@ -547,11 +547,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 if (en.score >= beta) {
-                    return beta;
+                    return en.score;
                 }
             } else if (en.type == ALL_NODE) {
                 if (en.score <= alpha) {
-                    return alpha;
+                    return en.score;
                 }
             }
         }
@@ -596,7 +596,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         /**************************************************************************************
          *                      F U T I L I T Y   P R U N I N G                               *
          **************************************************************************************/
-        if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN)
+        if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         /**************************************************************************************
@@ -690,11 +690,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
         
         int extension = 0;
-        
-        if (givesCheck && staticExchangeEval > 0) {
-            extension = 1;
-        }
-        
+
         // singular extensions
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && b->getActivePlayer() != sd->sideToReduce && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
@@ -741,6 +737,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         b->move(m);
         
+        if (extension == 0 && b->isInCheck(b->getActivePlayer())) extension = 1;
+
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
@@ -804,7 +802,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     if (!skipMove) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, alpha, bestMove, PV_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
             table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
         }
@@ -843,11 +841,11 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             return en.score;
         } else if (en.type == CUT_NODE) {
             if (en.score >= beta) {
-                return beta;
+                return en.score;
             }
         } else if (en.type == ALL_NODE) {
             if (en.score <= alpha) {
-                return alpha;
+                return en.score;
             }
         }
     }

@@ -42,6 +42,8 @@ double optimiseGD(Evaluator* evaluator, double K, double learningRate);
  */
 double optimiseBlackBox(Evaluator* evaluator, double K, float* params, int paramCount, float lr);
 
+
+double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr);
 /**
  * uses the loaded data to optimise the evaluator
  */

@@ -31,3 +31,5 @@ src_files/main.cpp
 threadScaling.png
 
 ThreadScalingScript.py
+
+bin/
