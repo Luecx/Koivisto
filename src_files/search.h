@@ -29,6 +29,7 @@ extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
+extern float LMR_BONUS;
 
 #define MAX_THREADS 32
 

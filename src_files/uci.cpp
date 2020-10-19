@@ -165,6 +165,9 @@ void uci_processCommand(std::string str) {
         if (str.find("SE_MARGIN_STATIC") != string::npos) {
             SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
         }
+        if (str.find("LMR_BONUS") != string::npos) {
+            SE_MARGIN_STATIC = stof(uci_getValue(split, "LMR_BONUS"));
+        }
         if (str.find("LMR_DIV") != string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
         }
