@@ -166,7 +166,7 @@ void uci_processCommand(std::string str) {
             SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
         }
         if (str.find("LMR_BONUS") != string::npos) {
-            SE_MARGIN_STATIC = stof(uci_getValue(split, "LMR_BONUS"));
+            LMR_BONUS = stof(uci_getValue(split, "LMR_BONUS"));
             initLmr();
         }
         if (str.find("LMR_DIV") != string::npos) {
