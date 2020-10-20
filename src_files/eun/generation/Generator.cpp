@@ -27,6 +27,7 @@ unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
 void generator::generate(const string& outpath) {
     bb_init();
     search_init(8);
+    eval_init();
     search_disable_infoStrings();
     outFile          = new std::ofstream(outpath, std::ios_base::app);
     searchedPosition = new TranspositionTable(64);
@@ -215,7 +216,7 @@ Move generator::selectRandomMove(MoveList& moveList, double king_walk_p) {
 // gets the evaluation for the position
 Score generator::evalPosition(Board* b) {
     TimeManager manager {};
-    bestMove(b, 12, &manager);
+    bestMove(b, 8, &manager);
     SearchOverview ov = search_overview();
     return ov.score;
 }

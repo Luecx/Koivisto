@@ -19,7 +19,7 @@ def killall():
         if proc.name() == "Koivisto.exe":
             proc.kill()
 
-N_PROC = 10
+N_PROC = 12
 while True:
     break_due_to_ourbench_running = False
     killall()
@@ -35,7 +35,7 @@ while True:
             break
 
         print(f"Created proc {i + 1} out of {N_PROC}")
-        procs.append(subprocess.Popen(["Koivisto.exe", "gen", f"positions.{i}.txt"], stdout = subprocess.DEVNULL))
+        procs.append(subprocess.Popen(["./Koivisto.exe", "gen", f"positions.{i}.txt"], stdout = subprocess.DEVNULL))
         time.sleep(0.1)
 
     os.system("cat positions.*.txt | wc -l > n_pos")
