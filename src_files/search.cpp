@@ -27,8 +27,8 @@ ThreadData** tds = new ThreadData*[MAX_THREADS];
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
-int LMR_DIV          = 215;
-float LMR_BONUS      = 0;
+int LMR_DIV          = 235;
+float LMR_BONUS      = 0.675;
 void initLmr() {
     int d, m;
     
