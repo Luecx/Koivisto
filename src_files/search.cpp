@@ -825,10 +825,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     // increase the nodes for this thread
     td->nodes++;
     
-    // if its a draw (3-fold), return 0
-    if (b->isDraw())
-        return 0;
-    
     // extract information like search data (history tables), zobrist etc
     SearchData* sd         = td->searchData;
     U64         zobrist    = b->zobrist();
