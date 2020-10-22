@@ -12,7 +12,7 @@
 void TranspositionTable::init(U64 MB) {
 
     U64 bytes      = MB * 1024 * 1024;
-    U64 maxEntries = bytes / sizeof(Entry);
+    U64 maxEntries = bytes / sizeof(TTBucket);
 
     // size must be a power of 2!
     m_size = 1;
@@ -24,7 +24,7 @@ void TranspositionTable::init(U64 MB) {
     m_size /= 2;
     m_mask = m_size - 1;
 
-    m_entries = (Entry*) (calloc(m_size, sizeof(Entry)));
+    m_entries = (TTBucket*) (calloc(m_size, sizeof(TTBucket)));
     clear();
 
     m_currentAge = 0;
@@ -70,7 +70,7 @@ double TranspositionTable::usage() {
     double used = 0;
     // Thank you Andrew for this idea :)
     for (U64 i = 0; i < 100; i++) {
-        if ((m_entries[i].zobrist)) {
+        if ((m_entries[i].entries[i/25].zobrist)) {
             used++;
         }
     }
@@ -88,9 +88,11 @@ Entry TranspositionTable::get(U64 zobrist) {
 
     U64 index = zobrist & m_mask;
 
-    Entry enP = m_entries[index];
+    for (int i = 0; i < TT_BUCKET_SIZE; i++){
+        if (m_entries[index].entries[i].zobrist == zobrist) return m_entries[index].entries[i];
+    }
 
-    return enP;
+    return m_entries[index].entries[0];
 }
 
 /**
@@ -112,21 +114,30 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
 
     U64 index = zobrist & m_mask;
 
-    Entry* enP = &m_entries[index];
 
-    if (enP->zobrist == 0) {
-        enP->set(zobrist, score, move, type, depth);
-        enP->setAge(m_currentAge);
-        return true;
-    } else {
-        if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE||enP->zobrist == zobrist) && enP->depth <= depth)) {
-            enP->set(zobrist, score, move, type, depth);
-            enP->setAge(m_currentAge);
-            return true;
+    Entry* candidate;
+    Entry* replaceThis = nullptr;
+    Depth lowestDepth = MAX_INTERNAL_PLY;
+    for (int i = 0; i < TT_BUCKET_SIZE; i++){
+        candidate = &m_entries[index].entries[i];
+        if (candidate->zobrist == zobrist) {
+            replaceThis = candidate;
+            break;
+        }
+        if (candidate->depth <= lowestDepth && (candidate->getAge() != m_currentAge || (candidate->depth<=depth && candidate->type!= PV_NODE) ||type == PV_NODE)){
+            replaceThis = candidate;
+            lowestDepth = candidate->depth;
         }
     }
 
-    return false;
+    if (replaceThis == nullptr) return false;
+
+    if (replaceThis->zobrist==zobrist && depth<replaceThis->depth-2 && type != PV_NODE) return false;
+
+    replaceThis->set(zobrist, score, move, type, depth);
+    replaceThis->setAge(m_currentAge);
+
+    return true;
 }
 
 void TranspositionTable::incrementAge() {

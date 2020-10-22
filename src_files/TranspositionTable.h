@@ -5,6 +5,8 @@
 #ifndef CHESSCOMPUTER_HASHMAP_H
 #define CHESSCOMPUTER_HASHMAP_H
 
+#define TT_BUCKET_SIZE 4
+
 #include "Bitboard.h"
 #include "Board.h"
 #include "Move.h"
@@ -54,11 +56,15 @@ struct Entry {
     Score    score;      // 16 bit -> 128 bit = 16 byte
 };
 
+struct TTBucket {
+    struct Entry entries[TT_BUCKET_SIZE];
+};
+
 class TranspositionTable {
 
     private:
     NodeAge m_currentAge;
-    Entry*  m_entries;
+    TTBucket*  m_entries;
     U64     m_size;
     U64     m_mask;
 
