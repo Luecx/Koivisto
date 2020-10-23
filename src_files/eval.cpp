@@ -27,17 +27,10 @@ EvalScore passer_rank_n[16] = {
         M(    0,    0),
 };
 
-EvalScore psqt_pawn_n[64] = {
-        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
-        M(  -11,   -9), M(   35,  -13), M(   30,   -3), M(   -4,   16), M(   -6,   11), M(  -20,   15), M(  -13,    4), M(  -22,   14),
-        M(   -8,   -7), M(   22,  -13), M(   13,   -1), M(    2,    3), M(   -4,    1), M(   -6,   -8), M(  -32,    5), M(  -25,    3),
-        M(  -26,   10), M(   -2,    7), M(   16,   -3), M(   26,   -7), M(   19,  -12), M(   -1,   -6), M(  -25,    9), M(  -30,   11),
-        M(  -19,   31), M(    6,   28), M(   18,   16), M(   27,   -4), M(   22,   -7), M(    1,    3), M(   -8,   16), M(  -17,   25),
-        M(   -6,  100), M(   40,   99), M(   78,   67), M(   51,   54), M(   26,   48), M(   28,   59), M(   -2,   83), M(    4,   88),
-        M(    0,  247), M(   23,  218), M(   76,  199), M(   70,  192), M(   73,  163), M(   76,  164), M(   77,  216), M(   46,  221),
-        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+EvalScore psqt_pawn_n_same_side_castle[64] = {M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    4,   -6), M(   35,   10), M(   21,   29), M(  -10,   44), M(   -5,   12), M(  -13,   20), M(  -18,   19), M(  -17,   29), M(   15,    0), M(   23,    4), M(   19,   15), M(    3,   17), M(    0,    4), M(   -5,    9), M(  -24,   13), M(  -19,   22), M(    9,   10), M(   16,   17), M(   15,   13), M(   16,    8), M(    7,   -2), M(    2,    4), M(  -13,   22), M(  -17,   29), M(   13,   24), M(   30,   31), M(   50,   12), M(   35,   10), M(   22,   -4), M(    5,   20), M(   -4,   37), M(  -12,   50), M(   20,   69), M(   85,   56), M(  123,   33), M(   80,   44), M(   63,   50), M(   52,   81), M(   25,  105), M(   -8,  118), M(   -5,  150), M(   -3,  116), M(  188,   62), M(  178,   85), M(  169,  111), M(  138,  166), M(  154,  175), M(  133,  203), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), 
 };
-
+EvalScore psqt_pawn_opposite_side_castle[64] = {M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(   20,   24), M(   39,   14), M(   29,   19), M(   -4,   28), M(  -34,   40), M(  -26,   37), M(  -53,   46), M(  -51,   41), M(   27,   15), M(   34,    9), M(   11,   20), M(   -9,   20), M(  -12,   25), M(  -17,   27), M(  -76,   39), M(  -52,   32), M(   17,   38), M(   16,   34), M(   15,   25), M(   11,   22), M(   10,   17), M(   -4,   22), M(  -41,   36), M(  -49,   35), M(   23,   68), M(   19,   61), M(   22,   47), M(   10,   35), M(   30,   21), M(   30,   17), M(  -13,   37), M(  -36,   32), M(  -12,  183), M(   14,  176), M(   20,  145), M(   21,  108), M(  108,   41), M(   89,   35), M(   45,   43), M(   11,   57), M(  -14,  291), M(   53,  263), M(   52,  255), M(  115,  184), M(   71,  150), M(  163,   61), M(  -35,  107), M(  -91,  164), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+};
 EvalScore psqt_knight_n[64] = {
         M( -136,  -72), M(  -56,  -53), M(  -57,  -13), M(  -52,  -26), M(   18,  -33), M( -111,  -23), M(  -55,  -66), M(  -84, -116),
         M( -111,  -15), M(  -79,    3), M(   66,  -33), M(   -9,   15), M(  -11,    2), M(   22,  -17), M(  -21,  -21), M(  -62,  -50),
@@ -93,9 +86,10 @@ EvalScore psqt_king_n[64] = {
         M(   34,  -70), M(   57,  -45), M(   35,  -22), M(  -24,  -10), M(   15,  -22), M(   -7,   -6), M(   68,  -37), M(   53,  -67),
 };
 
-EvalScore* psqt[6]{
-        psqt_pawn_n, psqt_knight_n, psqt_bishop_n, psqt_rook_n, psqt_queen_n, psqt_king_n
+EvalScore* psqt[7]{
+        psqt_pawn_n_same_side_castle, psqt_pawn_opposite_side_castle, psqt_knight_n, psqt_bishop_n, psqt_rook_n, psqt_queen_n, psqt_king_n
 };
+
 
 EvalScore pieceScores[6] = {
         M(   90,  104),
@@ -128,7 +122,7 @@ EvalScore KING_CLOSE_OPPONENT        = M(  -37,   57);
 EvalScore KING_PAWN_SHIELD           = M(   13,    3);
 EvalScore CASTLING_RIGHTS            = M(13, -4);
 
-EvalScore fast_pawn_psqt[2][2][64];
+EvalScore fast_pawn_psqt[2][2][2][64];
 EvalScore fast_psqt[12][64];
 
 
@@ -248,15 +242,15 @@ float kingSafetyTable[100] {0,   0,   1,   2,   3,   5,   7,   9,   12,  15,  18
 void eval_init() {
     for (int i = 0; i < 64; i++) {
         for (int kside = 0; kside < 2; kside++) {
-            fast_pawn_psqt[WHITE][kside][i] =
-                    +psqt_pawn_n[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
-            fast_pawn_psqt[BLACK][kside][i] =
-                    -psqt_pawn_n[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]- pieceScores[PAWN];
+            fast_pawn_psqt[WHITE][kside][0][i] = psqt_pawn_n_same_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
+            fast_pawn_psqt[BLACK][kside][0][i] = psqt_pawn_n_same_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[PAWN];
+            fast_pawn_psqt[WHITE][kside][1][i] = psqt_pawn_opposite_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
+            fast_pawn_psqt[BLACK][kside][1][i] = psqt_pawn_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[PAWN];
         }
         
         for(Piece p = KNIGHT; p <= KING; p++){
-            fast_psqt[p  ][i] = +psqt[p][pst_index_white_s(i)] + pieceScores[p];
-            fast_psqt[p+6][i] = -psqt[p][pst_index_black_s(i)] - pieceScores[p];
+            fast_psqt[p  ][i] = +psqt[p+1][pst_index_white_s(i)] + pieceScores[p];
+            fast_psqt[p+6][i] = -psqt[p+1][pst_index_black_s(i)] - pieceScores[p];
         }
     }
 }
@@ -472,7 +466,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         
-        evalScore += fast_pawn_psqt[WHITE][wKSide][square];
+        evalScore += fast_pawn_psqt[WHITE][wKSide][wKSide!=bKSide][square];
         
         k = lsbReset(k);
     }
@@ -480,7 +474,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     k = b->getPieces()[BLACK_PAWN];
     while (k) {
         square = bitscanForward(k);
-        evalScore += fast_pawn_psqt[BLACK][bKSide][square];
+
+        evalScore -= fast_pawn_psqt[BLACK][bKSide][wKSide!=bKSide][square];
         
         
         k = lsbReset(k);
@@ -937,7 +932,7 @@ int Evaluator::paramCount() { return unusedVariable; }
 
 float* Evaluator::getPSQT(Piece piece, bool early) {
     switch (piece) {
-//        case PAWN: return early ? psqt_pawn : psqt_pawn_endgame;
+//         case PAWN: return early ? psqt_pawn : psqt_pawn_endgame;
 //        case KNIGHT: return early ? psqt_knight : psqt_knight_endgame;
 //        case BISHOP: return early ? psqt_bishop : psqt_bishop_endgame;
 //        case ROOK: return early ? psqt_rook : psqt_rook_endgame;

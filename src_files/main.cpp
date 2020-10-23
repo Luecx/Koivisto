@@ -46,47 +46,42 @@ void main_tune_features_bb() {
 }
 
 void main_tune_pst_bb(Piece piece) {
+    eval_init();
     bb_init();
     Evaluator* evaluator = new Evaluator();
 
     using namespace tuning;
 
-    loadPositionFile("resources/other/quiet-labeled.epd", 1e7);
+    loadPositionFile("../resources/other/tuningset_clear2.epd", 2500000);
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
-    for (int i = 0; i < 64; i++) {
-        evaluator->getPSQT(piece, true)[i]  = round(evaluator->getPSQT(piece, true)[i]);
-        evaluator->getPSQT(piece, false)[i] = round(evaluator->getPSQT(piece, false)[i]);
-    }
+    int lr = 5;
 
-    for (int i = 0; i < 5000; i++) {
+    for (int i = 1; i < 5000; i++) {
 
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
-        
-        for(Piece p = PAWN; p <= KING; p++){
-            std::cout << std::setprecision(8)
-                      << tuning::optimiseBlackBox(evaluator, K, evaluator->getPSQT(p, true), 64, 1) << std::endl;
-            std::cout << std::setprecision(8)
-                      << tuning::optimiseBlackBox(evaluator, K, evaluator->getPSQT(piece, false), 64, 1) << std::endl;
     
-            std::cout << std::endl;
-            for (int n = 0; n < 64; n++) {
-                std::cout << std::right << std::setw(6) << evaluator->getPSQT(piece, true)[n] << ",";
-                if (n % 8 == 7)
-                    std::cout << std::endl;
-            }
-            for (int n = 0; n < 64; n++) {
-                std::cout << std::right << std::setw(6) << evaluator->getPSQT(piece, false)[n] << ",";
-                if (n % 8 == 7)
-                    std::cout << std::endl;
-            }
+        std::cout <<tuning::optimisePSTBlackBox(evaluator, K, psqt[0], 64, lr)<< std::endl;
+        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[1], 64, lr) << std::endl;
+
+        for (Square s = 0; s < 64; s++) {
+            std::cout << "M(" << setw(5) << MgScore(psqt[0][s]) << "," << setw(5) << EgScore(psqt[0][s]) << "), ";
+            if ((i+1)%8==0)std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        for (Square s = 0; s < 64; s++) {
+            std::cout << "M(" << setw(5) << MgScore(psqt[1][s]) << "," << setw(5) << EgScore(psqt[1][s]) << "), ";
+            if ((i+1)%8==0)std::cout << std::endl;
+        }
+        std::cout << std::endl;
+
+        if (i%10 == 0 && lr>1){
+            lr /= 2;
+            std::cout << "Lr Dropped to " << lr;
             std::cout << std::endl;
         }
-        
-        
 
-        std::cout << std::endl;
     }
 
     delete evaluator;
@@ -180,7 +175,7 @@ void main_tune_pst() {
 int main(int argc, char* argv[]) {
 
     
-    if (argc == 1) {
+   if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
@@ -200,7 +195,7 @@ int main(int argc, char* argv[]) {
 //     tuning::evalSpeed();
 //     bb_cleanUp();
 
-    // main_tune_pst_bb(PAWN);
+    //main_tune_pst_bb(PAWN);
 //    eval_init();
 //    main_tune_features();
     // main_tune_pst();
