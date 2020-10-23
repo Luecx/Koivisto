@@ -24,17 +24,19 @@ int lmrReductions[256][256];
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData** tds = new ThreadData*[MAX_THREADS];
 
-int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 92;
-int SE_MARGIN_STATIC = 0;
-int LMR_DIV          = 215;
+// 2020-10-23 12:27:32,366 INFO     Testing {'FUTILITY_MARGIN': 107, 'RAZOR_MARGIN': 171, 'LMR_DIV': 228, 'LMR_BONUS': 0.8261383308882415}
 
+int RAZOR_MARGIN     = 171;
+int FUTILITY_MARGIN  = 107;
+int SE_MARGIN_STATIC = 0;
+int LMR_DIV = 228;
+float LMR_BONUS      = 0.826;
 void initLmr() {
     int d, m;
     
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = (0.5 + log(d) * log(m)) * 100 / LMR_DIV;
+            lmrReductions[d][m] = LMR_BONUS + log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
