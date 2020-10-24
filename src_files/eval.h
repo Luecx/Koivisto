@@ -19,7 +19,7 @@ typedef int32_t EvalScore;
 #define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
 #define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
 
-extern EvalScore* psqt[7];
+extern EvalScore* psqt[11];
 
 extern EvalScore pieceScores[6];
 

@@ -55,7 +55,7 @@ void main_tune_pst_bb(Piece piece) {
     loadPositionFile("../resources/other/tuningset_clear2.epd", 2500000);
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
-    int lr = 5;
+    int lr = 10;
 
     for (int i = 1; i < 5000; i++) {
 
@@ -175,11 +175,11 @@ void main_tune_pst() {
 int main(int argc, char* argv[]) {
 
     
-   if (argc == 1) {
+   /*if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
-    }
+    }*/
  
     
     
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
 //     tuning::evalSpeed();
 //     bb_cleanUp();
 
-    //main_tune_pst_bb(PAWN);
+        main_tune_pst_bb(PAWN);
 //    eval_init();
 //    main_tune_features();
     // main_tune_pst();
