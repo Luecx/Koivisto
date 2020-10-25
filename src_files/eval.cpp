@@ -748,8 +748,8 @@ void eval_init() {
             fast_queen_psqt[BLACK][kside][1][i] = psqt_queen_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[QUEEN];
         }
 
-        fast_king_psqt[WHITE][i] = M (0,0);//psqt_king_n[pst_index_white_s(i)];
-        fast_king_psqt[BLACK][i] = M (0,0);//psqt_king_n[pst_index_black_s(i)];
+        fast_king_psqt[WHITE][i] = psqt_king_n[pst_index_white_s(i)];
+        fast_king_psqt[BLACK][i] = psqt_king_n[pst_index_black_s(i)];
     }
 }
 
