@@ -50,6 +50,9 @@ add_executable(Koivisto
         src_files/eun/data/CompactInput.h
         src_files/eun/data/Weight.cpp
         src_files/eun/data/Weight.h)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAJOR_VERSION=3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info")
