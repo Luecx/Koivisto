@@ -27,60 +27,530 @@ EvalScore passer_rank_n[16] = {
         M(    0,    0),
 };
 
-EvalScore psqt_pawn_n[64] = {
-        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
-        M(  -11,   -9), M(   35,  -13), M(   30,   -3), M(   -4,   16), M(   -6,   11), M(  -20,   15), M(  -13,    4), M(  -22,   14),
-        M(   -8,   -7), M(   22,  -13), M(   13,   -1), M(    2,    3), M(   -4,    1), M(   -6,   -8), M(  -32,    5), M(  -25,    3),
-        M(  -26,   10), M(   -2,    7), M(   16,   -3), M(   26,   -7), M(   19,  -12), M(   -1,   -6), M(  -25,    9), M(  -30,   11),
-        M(  -19,   31), M(    6,   28), M(   18,   16), M(   27,   -4), M(   22,   -7), M(    1,    3), M(   -8,   16), M(  -17,   25),
-        M(   -6,  100), M(   40,   99), M(   78,   67), M(   51,   54), M(   26,   48), M(   28,   59), M(   -2,   83), M(    4,   88),
-        M(    0,  247), M(   23,  218), M(   76,  199), M(   70,  192), M(   73,  163), M(   76,  164), M(   77,  216), M(   46,  221),
-        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+EvalScore psqt_pawn_same_side_castle[64] = {M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    4,   -6), M(   35,   12), M(   17,   33), M(  -10,   46), M(   -7,   14), M(  -13,   20), M(  -20,   21), M(  -17,   29), M(   15,    2), M(   23,    6), M(   15,   19), M(    3,   19), M(   -2,    8), M(   -5,    9), M(  -26,   15), M(  -19,   24), M(    9,   12), M(   16,   19), M(   13,   15), M(   15,   10), M(    7,    0), M(    2,    4), M(  -15,   26), M(  -17,   29), M(   15,   26), M(   30,   33), M(   46,   16), M(   33,   12), M(   20,   -2), M(    3,   22), M(   -5,   39), M(  -10,   50), M(   20,   70), M(   84,   58), M(  120,   37), M(   79,   46), M(   61,   52), M(   53,   83), M(   25,  109), M(   -8,  120), M(   -4,  152), M(  -48,  133), M(  189,   62), M(  192,   85), M(  193,  106), M(  166,  158), M(  175,  170), M(  202,  181), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), 
 };
+EvalScore psqt_pawn_opposite_side_castle[64] = {M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(   21,   24), M(   37,   15), M(   29,   19), M(   -6,   31), M(  -34,   42), M(  -27,   37), M(  -53,   48), M(  -51,   41), M(   27,   16), M(   34,   11), M(    9,   22), M(  -10,   21), M(  -14,   27), M(  -17,   28), M(  -77,   39), M(  -53,   32), M(   20,   37), M(   15,   35), M(   14,   27), M(   11,   22), M(    9,   17), M(   -4,   24), M(  -41,   37), M(  -49,   35), M(   30,   68), M(   18,   62), M(   21,   49), M(   10,   36), M(   28,   23), M(   29,   17), M(  -15,   39), M(  -36,   34), M(   12,  178), M(   61,  167), M(   24,  145), M(   76,   92), M(  110,   41), M(   91,   35), M(   49,   44), M(   11,   57), M(  158,  252), M(  222,  224), M(  121,  238), M(  180,  164), M(  158,  129), M(  176,   60), M(  -23,  106), M(   15,  114), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), 
+};
+EvalScore psqt_knight_same_side_castle[64] = {M(  -36, -102),
+M(   -3,  -68),
+M(    0,  -29),
+M(   13,  -38),
+M(    3,  -27),
+M(  -22,  -48),
+M(   -2,  -70),
+M( -125,  -59),
+M(   -1,  -52),
+M(   -9,  -18),
+M(    3,  -28),
+M(    0,  -10),
+M(    6,  -15),
+M(  -14,  -25),
+M(  -22,  -19),
+M(  -14,  -60),
+M(   -5,  -43),
+M(    3,   -6),
+M(    7,   -5),
+M(   15,    8),
+M(    7,   16),
+M(   -9,  -16),
+M(   -7,  -14),
+M(  -24,  -62),
+M(    8,  -15),
+M(   40,   22),
+M(    6,   37),
+M(   16,   38),
+M(    0,   34),
+M(   -6,   21),
+M(   -9,    2),
+M(  -17,  -29),
+M(   32,    5),
+M(   -6,   38),
+M(   31,   53),
+M(    0,   55),
+M(   16,   50),
+M(   16,   19),
+M(  -10,   -5),
+M(  -11,  -11),
+M(    0,    4),
+M(   15,   25),
+M(   76,   53),
+M(   65,   29),
+M(   29,   30),
+M(   25,   22),
+M(   -8,    0),
+M(  -76,  -21),
+M(   39,  -27),
+M(  -96,   22),
+M(   82,   -3),
+M(   54,   21),
+M(   58,   24),
+M(   27,   -6),
+M(  -16,  -12),
+M(  -13,  -28),
+M( -202,  -53),
+M(  112,  -35),
+M(  -41,   24),
+M(   -8,   17),
+M(  -22,    6),
+M( -153,   43),
+M(  -47,  -32),
+M( -228,  -30),
+};
+EvalScore psqt_knight_opposite_side_castle[64] = {M(  -64,  -75),
+M(  -47,  -35),
+M(   -3,  -30),
+M(   13,  -24),
+M(  -31,    8),
+M(   -9,  -33),
+M(   -5,  -38),
+M( -111,    3),
+M(  -26,  -47),
+M(   -5,  -22),
+M(    3,  -13),
+M(    3,  -10),
+M(   13,  -13),
+M(  -10,   -5),
+M(  -33,   15),
+M(  -48,  -19),
+M(  -23,  -37),
+M(    1,   -4),
+M(    6,    0),
+M(   22,   15),
+M(   23,   25),
+M(    0,    3),
+M(    1,    0),
+M(  -32,  -26),
+M(    6,   -2),
+M(   69,   -4),
+M(   29,   34),
+M(   28,   40),
+M(   35,   46),
+M(   13,   40),
+M(   58,   22),
+M(   14,   -5),
+M(   -1,    0),
+M(   19,   16),
+M(   72,   21),
+M(   50,   53),
+M(   25,   65),
+M(   33,   54),
+M(   19,   21),
+M(   55,  -10),
+M(   35,  -13),
+M(   24,   13),
+M(   71,   22),
+M(   63,   32),
+M(   82,   40),
+M(  131,   27),
+M(   80,    0),
+M(   90,  -34),
+M(   -7,  -22),
+M(   22,  -23),
+M(   77,    2),
+M(  108,   15),
+M(   62,   19),
+M(    8,    6),
+M(  -10,   -4),
+M(   61,  -34),
+M( -260,   21),
+M( -167,   24),
+M( -142,   37),
+M(  -25,   19),
+M(   98,  -21),
+M(   -4,   -6),
+M( -202,    4),
+M( -228,  -47),};
 
-EvalScore psqt_knight_n[64] = {
-        M( -136,  -72), M(  -56,  -53), M(  -57,  -13), M(  -52,  -26), M(   18,  -33), M( -111,  -23), M(  -55,  -66), M(  -84, -116),
-        M( -111,  -15), M(  -79,    3), M(   66,  -33), M(   -9,   15), M(  -11,    2), M(   22,  -17), M(  -21,  -21), M(  -62,  -50),
-        M(  -79,  -19), M(   24,  -22), M(   -6,   13), M(   18,   12), M(   60,    0), M(   94,  -15), M(   31,  -24), M(   20,  -55),
-        M(  -11,  -14), M(   -4,   -4), M(  -19,   22), M(   32,   20), M(    1,   27), M(   53,    8), M(   -9,    4), M(   15,  -21),
-        M(  -20,  -15), M(  -13,  -12), M(   -5,   11), M(   -6,   22), M(   19,   12), M(    9,    8), M(   21,   -3), M(   -5,  -19),
-        M(  -35,  -21), M(  -22,   -4), M(    3,  -16), M(    1,   11), M(   19,   -3), M(   14,  -13), M(   18,  -32), M(  -21,  -25),
-        M(  -26,  -38), M(  -52,  -17), M(  -19,  -11), M(   16,  -15), M(   15,  -11), M(   14,  -30), M(  -10,  -28), M(  -10,  -51),
-        M(  -79,  -22), M(    0,  -49), M(  -48,  -19), M(  -22,   -9), M(   12,  -26), M(  -26,  -17), M(    1,  -51), M(  -25,  -62)
+EvalScore psqt_bishop_same_side_castle[64] = {M(    0,  -26),
+M(  -27,  -33),
+M(  -19,    0),
+M(  -30,   -2),
+M(  -26,    0),
+M(  -21,  -20),
+M(    3,  -11),
+M(   -4,  -18),
+M(  -11,  -32),
+M(   11,  -20),
+M(   -9,  -12),
+M(   -9,   -3),
+M(  -22,    4),
+M(   -1,   -6),
+M(   -4,  -24),
+M(    1,  -12),
+M(   11,    0),
+M(   -6,    3),
+M(    2,   10),
+M(  -11,   17),
+M(   -6,   21),
+M(   -7,    7),
+M(    0,    0),
+M(  -17,   -4),
+M(   -7,   15),
+M(  -13,   21),
+M(  -26,   26),
+M(   10,   21),
+M(    7,   24),
+M(    0,   18),
+M(  -13,   10),
+M(  -32,    1),
+M(  -19,   21),
+M(  -10,   32),
+M(   15,   42),
+M(    5,   39),
+M(   32,   22),
+M(   -8,   20),
+M(   -1,    9),
+M(  -46,   17),
+M(  -14,   16),
+M(   30,   35),
+M(   34,   50),
+M(   32,   34),
+M(    3,   22),
+M(   15,   16),
+M(   -7,   21),
+M(  -19,    9),
+M(  -49,   30),
+M(  -40,   29),
+M(   12,   28),
+M(  -27,   38),
+M(  -47,   32),
+M(  -34,   29),
+M(  -25,   28),
+M(  -66,   18),
+M(  -19,   14),
+M(   47,    3),
+M( -133,   34),
+M( -129,   44),
+M( -118,   52),
+M( -127,   53),
+M( -123,   48),
+M(  -97,   36),
 };
+EvalScore psqt_bishop_opposite_side_castle[64] = {M(   13,    3),
+M(   20,   -3),
+M(    6,    3),
+M(  -38,   19),
+M(  -45,   19),
+M(  -37,   -1),
+M(  -32,   12),
+M(  -49,   34),
+M(   38,    2),
+M(   47,    6),
+M(   31,  -10),
+M(   19,    6),
+M(  -19,   19),
+M(   -3,   17),
+M(  -16,    6),
+M(   -3,    9),
+M(   26,    9),
+M(   34,   15),
+M(   35,   21),
+M(    0,   28),
+M(    0,   37),
+M(  -15,   24),
+M(    0,   21),
+M(  -37,   35),
+M(    7,   22),
+M(   12,   32),
+M(   10,   24),
+M(   53,   22),
+M(   12,   34),
+M(   16,   37),
+M(  -20,   25),
+M(    3,   22),
+M(  -16,   40),
+M(    3,   31),
+M(   21,   40),
+M(   47,   40),
+M(   44,   48),
+M(   22,   40),
+M(   36,   29),
+M(   22,    6),
+M(    3,   29),
+M(    3,   37),
+M(   20,   35),
+M(   35,   45),
+M(   50,   49),
+M(  103,   41),
+M(   62,   19),
+M(   11,   27),
+M(   -2,   30),
+M(  -12,   41),
+M(  -14,   49),
+M(  -18,   46),
+M(    6,   41),
+M(   66,   29),
+M(   78,   18),
+M(  -20,   14),
+M( -103,   69),
+M(   -9,   48),
+M(  -69,   46),
+M(  -79,   58),
+M(  -22,   41),
+M(   -1,   31),
+M(  -65,   47),
+M(    7,   22),};
 
-EvalScore psqt_bishop_n[64] = {
-        M(  -74,    2), M(  -64,    1), M( -117,    5), M(  -86,   10), M(  -61,   14), M(  -91,    7), M(  -44,    6), M(  -22,   -9),
-        M(  -78,   21), M(  -24,    2), M(  -67,   21), M(  -81,    3), M(  -23,    9), M(   25,    3), M(  -25,   11), M( -109,   14),
-        M(  -65,   18), M(  -17,    3), M(   -2,   -1), M(  -25,    2), M(  -16,    2), M(   -2,    6), M(   -9,    6), M(  -47,   22),
-        M(  -38,    6), M(  -27,    5), M(  -20,   10), M(   20,    0), M(   -5,    5), M(   -2,    4), M(  -22,   -3), M(  -28,    9),
-        M(  -33,    0), M(  -18,    0), M(  -10,    3), M(   -7,   12), M(   10,   -5), M(  -21,    5), M(  -12,   -7), M(  -18,    7),
-        M(  -23,    3), M(   -2,    0), M(   -4,    6), M(   -8,   10), M(  -10,   13), M(   20,   -8), M(   -7,   -1), M(  -10,   -5),
-        M(   -5,   -7), M(   -3,  -10), M(   -3,   -4), M(  -19,    8), M(    0,    0), M(   -8,   -2), M(   13,  -15), M(  -17,  -14),
-        M(  -60,    3), M(    0,    5), M(  -24,    5), M(  -31,    9), M(  -22,    9), M(  -27,    9), M(  -68,   18), M(  -48,    3),
-};
+EvalScore psqt_rook_same_side_castle[64] = {M(  -42,   -2),
+M(   -4,    9),
+M(   26,  -10),
+M(   21,  -15),
+M(   19,   -8),
+M(    9,   -3),
+M(    3,   -7),
+M(   -8,  -10),
+M(  -45,    0),
+M(    9,   -4),
+M(   24,  -22),
+M(   -5,   -8),
+M(    5,  -12),
+M(  -21,    6),
+M(  -10,  -12),
+M(  -39,  -14),
+M(   -4,   -7),
+M(   12,   15),
+M(    3,    0),
+M(   -5,    5),
+M(   -7,   10),
+M(  -30,   20),
+M(  -12,   21),
+M(  -25,    3),
+M(   -7,   24),
+M(   13,   34),
+M(    7,   29),
+M(   -6,   30),
+M(   -8,   38),
+M(  -16,   34),
+M(  -19,   40),
+M(  -22,   28),
+M(   21,   34),
+M(   27,   46),
+M(   53,   43),
+M(   30,   42),
+M(   41,   41),
+M(   21,   44),
+M(    9,   38),
+M(   -3,   38),
+M(   64,   25),
+M(  132,   17),
+M(  104,   48),
+M(   93,   31),
+M(   57,   36),
+M(   24,   48),
+M(   44,   34),
+M(   -5,   47),
+M(  109,   18),
+M(   85,   38),
+M(  133,   25),
+M(   60,   58),
+M(   37,   62),
+M(   12,   68),
+M(  -15,   72),
+M(    6,   56),
+M(   98,   26),
+M(  140,   23),
+M(  103,   34),
+M(   17,   43),
+M(   18,   40),
+M(   23,   44),
+M(   36,   39),
+M(   24,   42),};
+EvalScore psqt_rook_opposite_side_castle[64] = {M(  -53,   24),
+M(  -25,   21),
+M(   21,    0),
+M(   15,    9),
+M(   15,   -4),
+M(   33,    0),
+M(   33,   -6),
+M(   -1,   -7),
+M( -110,   26),
+M(  -48,    5),
+M(   11,  -13),
+M(   -6,    9),
+M(  -21,    9),
+M(   -4,    6),
+M(   19,   -6),
+M(  -53,    9),
+M(  -27,   12),
+M(    9,   16),
+M(  -10,   15),
+M(  -21,   23),
+M(  -33,   19),
+M(  -18,   41),
+M(   -7,   24),
+M(    2,   -1),
+M(  -17,   25),
+M(   28,   30),
+M(  -32,   55),
+M(  -10,   49),
+M(  -14,   39),
+M(    8,   49),
+M(    1,   45),
+M(   -7,   26),
+M(   25,   36),
+M(   28,   40),
+M(   69,   27),
+M(   49,   53),
+M(   15,   66),
+M(   30,   68),
+M(   43,   42),
+M(   56,   18),
+M(   79,   34),
+M(   81,   24),
+M(   65,   39),
+M(   84,   46),
+M(  171,   12),
+M(  106,   40),
+M(  127,   12),
+M(   55,   27),
+M(   83,   48),
+M(   66,   49),
+M(   55,   55),
+M(   53,   69),
+M(  103,   43),
+M(  153,   12),
+M(  118,   18),
+M(   62,   30),
+M(  148,   12),
+M(  127,   27),
+M(   90,   39),
+M(   60,   42),
+M(   86,   25),
+M(  157,    6),
+M(  147,   12),
+M(   91,   24),};
 
-EvalScore psqt_rook_n[64] = {
-        M(  -17,   26), M(    1,   17), M(  -44,   33), M(    6,   20), M(    8,   25), M(  -15,   27), M(   -9,   24), M(  -14,   21),
-        M(  -10,   29), M(   -3,   29), M(   31,   21), M(   27,   22), M(   47,    8), M(   58,   14), M(  -12,   33), M(    2,   20),
-        M(  -22,   24), M(   -5,   25), M(   -2,   21), M(    6,   24), M(  -16,   25), M(   31,   10), M(   56,    6), M(    9,    5),
-        M(  -34,   23), M(  -26,   22), M(   -9,   30), M(    0,   17), M(   -1,   21), M(   24,   18), M(  -16,   18), M(  -19,   21),
-        M(  -39,   23), M(  -27,   22), M(  -18,   24), M(  -16,   19), M(    0,    9), M(   -1,    7), M(    8,    5), M(  -14,    5),
-        M(  -42,   13), M(  -19,   13), M(  -10,    2), M(  -18,   10), M(   -2,    1), M(   11,   -6), M(    4,    0), M(  -19,   -5),
-        M(  -35,    9), M(  -12,    4), M(  -23,   12), M(    2,    7), M(   11,   -5), M(   20,  -12), M(   -4,   -8), M(  -51,    8),
-        M(  -13,    4), M(   -2,    5), M(    7,    4), M(   18,   -3), M(   21,   -9), M(   21,  -11), M(  -12,   -3), M(    3,  -22),
-};
+EvalScore psqt_queen_same_side_castle[64] = {M(  -40,   19),
+M(  -43,  -36),
+M(  -15,  -34),
+M(   18,  -42),
+M(    1,    1),
+M(   -5,  -27),
+M(    0,  -44),
+M(   -7,  -11),
+M(  -21,   -9),
+M(   23,  -99),
+M(   25,  -94),
+M(    3,  -22),
+M(    0,   -6),
+M(    0,  -35),
+M(   -3,  -12),
+M(   -3,  -34),
+M(   31,  -29),
+M(   22,    4),
+M(    6,   10),
+M(   -1,  -18),
+M(   -6,  -12),
+M(    0,    7),
+M(    0,   -3),
+M(  -13,  -11),
+M(   28,   38),
+M(   18,   39),
+M(   15,   29),
+M(    0,   25),
+M(   -9,   19),
+M(   -1,   -2),
+M(   -3,   23),
+M(  -13,    8),
+M(   18,   54),
+M(   31,   78),
+M(   12,   80),
+M(   -9,   55),
+M(  -18,   52),
+M(  -18,   21),
+M(  -29,   49),
+M(  -34,   49),
+M(  -52,  115),
+M(   62,   82),
+M(    8,   82),
+M(   24,   45),
+M(   -7,   28),
+M(  -37,   41),
+M(  -31,   45),
+M(  -49,   73),
+M(  120,   12),
+M(  -75,  124),
+M(   94,   22),
+M(  -66,  112),
+M(  -63,   85),
+M(  -38,   51),
+M(  -85,  103),
+M(  -39,   84),
+M(  118,    5),
+M(   29,   84),
+M(   81,   32),
+M(    1,   45),
+M(   11,   25),
+M(  -17,   45),
+M(  -14,   61),
+M(  -45,   60),};
+EvalScore psqt_queen_opposite_side_castle[64] = {M(  -92,   49),
+M( -136,   54),
+M(  -31,  -28),
+M(   -1,  -15),
+M(    0,    8),
+M(  -22,   29),
+M(  -17,   39),
+M(   32,  -22),
+M(  -30,  -36),
+M(    2,  -67),
+M(   18,  -44),
+M(   15,   10),
+M(    6,  -32),
+M(    9,  -19),
+M(   21,    2),
+M(   47,  -76),
+M(  -47,   66),
+M(    4,   15),
+M(   16,    4),
+M(    0,   15),
+M(   12,  -10),
+M(    0,   50),
+M(   18,    4),
+M(   18,    9),
+M(    0,   71),
+M(    2,   43),
+M(   -9,   69),
+M(   -3,   77),
+M(   -1,   41),
+M(    2,   46),
+M(   24,   44),
+M(   28,   36),
+M(   16,   15),
+M(  -19,   61),
+M(    3,   58),
+M(  -30,  102),
+M(   18,   82),
+M(   44,   52),
+M(   47,   74),
+M(   22,   33),
+M(  -16,   86),
+M(  -15,   56),
+M(   23,   46),
+M(  -12,   76),
+M(   55,   70),
+M(   22,  137),
+M(  131,    2),
+M(   14,   19),
+M(   31,    7),
+M(  -41,  124),
+M(   36,   60),
+M(  -51,  140),
+M(  -81,  174),
+M(   -2,  123),
+M(  -65,  158),
+M(  109,   10),
+M(   59,   31),
+M(   30,   70),
+M(  -17,   92),
+M(  -40,  114),
+M(   19,   83),
+M(   62,   24),
+M(   77,    6),
+M(   94,   18),};
 
-EvalScore psqt_queen_n[64] = {
-        M(  -23,  -13), M(  -23,   24), M(  -11,   12), M(  -29,    4), M(   29,  -12), M(   17,   -4), M(    5,   -1), M(   30,   10),
-        M(  -34,    5), M(  -38,   -1), M(  -24,   18), M(  -13,   18), M(  -22,   15), M(   22,  -10), M(   -4,   14), M(   30,    5),
-        M(  -15,   10), M(  -18,    4), M(    9,  -29), M(  -34,   32), M(    2,   22), M(   27,   -6), M(   15,    2), M(   17,    0),
-        M(  -39,   40), M(  -38,   26), M(  -33,    6), M(  -34,   17), M(   -4,   10), M(   -4,    7), M(   -4,   35), M(   -9,   34),
-        M(  -10,    0), M(  -41,   37), M(   -8,    4), M(   -9,   18), M(   -2,    3), M(    3,    4), M(    3,   31), M(    3,   20),
-        M(  -29,   26), M(    9,  -32), M(   -6,    3), M(   -1,   -8), M(   -2,   -3), M(    8,    6), M(   18,   18), M(    9,   21),
-        M(  -39,   22), M(   -8,  -11), M(    9,  -13), M(   12,  -16), M(   24,  -16), M(   21,  -27), M(   -4,  -36), M(    7,  -10),
-        M(  -13,    9), M(   -8,   -7), M(   -2,    1), M(    5,    0), M(   -1,   15), M(  -20,    0), M(  -19,   -8), M(  -32,  -36),
-};
+
+
 
 EvalScore psqt_king_n[64] = {
         M( -152,  -60), M(  -11,  -38), M(   23,  -25), M(  -70,  -18), M(  -99,   -4), M(  -58,   15), M(   -3,  -10), M(   11,  -40),
@@ -93,9 +563,10 @@ EvalScore psqt_king_n[64] = {
         M(   34,  -70), M(   57,  -45), M(   35,  -22), M(  -24,  -10), M(   15,  -22), M(   -7,   -6), M(   68,  -37), M(   53,  -67),
 };
 
-EvalScore* psqt[6]{
-        psqt_pawn_n, psqt_knight_n, psqt_bishop_n, psqt_rook_n, psqt_queen_n, psqt_king_n
+EvalScore* psqt[11]{
+        psqt_pawn_same_side_castle, psqt_pawn_opposite_side_castle, psqt_knight_same_side_castle, psqt_knight_opposite_side_castle, psqt_bishop_same_side_castle, psqt_bishop_opposite_side_castle, psqt_rook_same_side_castle, psqt_rook_opposite_side_castle, psqt_queen_same_side_castle, psqt_queen_opposite_side_castle, psqt_king_n
 };
+
 
 EvalScore pieceScores[6] = {
         M(   90,  104),
@@ -128,9 +599,12 @@ EvalScore KING_CLOSE_OPPONENT        = M(  -37,   57);
 EvalScore KING_PAWN_SHIELD           = M(   13,    3);
 EvalScore CASTLING_RIGHTS            = M(13, -4);
 
-EvalScore fast_pawn_psqt[2][2][64];
-EvalScore fast_psqt[12][64];
-
+EvalScore fast_pawn_psqt[2][2][2][64];
+EvalScore fast_knight_psqt[2][2][2][64];
+EvalScore fast_bishop_psqt[2][2][2][64];
+EvalScore fast_rook_psqt[2][2][2][64];
+EvalScore fast_queen_psqt[2][2][2][64];
+EvalScore fast_king_psqt[2][64];
 
 EvalScore* evfeatures[]{
         &SIDE_TO_MOVE,
@@ -248,16 +722,34 @@ float kingSafetyTable[100] {0,   0,   1,   2,   3,   5,   7,   9,   12,  15,  18
 void eval_init() {
     for (int i = 0; i < 64; i++) {
         for (int kside = 0; kside < 2; kside++) {
-            fast_pawn_psqt[WHITE][kside][i] =
-                    +psqt_pawn_n[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
-            fast_pawn_psqt[BLACK][kside][i] =
-                    -psqt_pawn_n[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]- pieceScores[PAWN];
+            fast_pawn_psqt[WHITE][kside][0][i] = psqt_pawn_same_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
+            fast_pawn_psqt[BLACK][kside][0][i] = psqt_pawn_same_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[PAWN];
+            fast_pawn_psqt[WHITE][kside][1][i] = psqt_pawn_opposite_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[PAWN];
+            fast_pawn_psqt[BLACK][kside][1][i] = psqt_pawn_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[PAWN];
+
+            fast_knight_psqt[WHITE][kside][0][i] = psqt_knight_same_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[KNIGHT];
+            fast_knight_psqt[BLACK][kside][0][i] = psqt_knight_same_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[KNIGHT];
+            fast_knight_psqt[WHITE][kside][1][i] = psqt_knight_opposite_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[KNIGHT];
+            fast_knight_psqt[BLACK][kside][1][i] = psqt_knight_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[KNIGHT];
+
+            fast_bishop_psqt[WHITE][kside][0][i] = psqt_bishop_same_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[BISHOP];
+            fast_bishop_psqt[BLACK][kside][0][i] = psqt_bishop_same_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[BISHOP];
+            fast_bishop_psqt[WHITE][kside][1][i] = psqt_bishop_opposite_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[BISHOP];
+            fast_bishop_psqt[BLACK][kside][1][i] = psqt_bishop_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[BISHOP];
+
+            fast_rook_psqt[WHITE][kside][0][i] = psqt_rook_same_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[ROOK];
+            fast_rook_psqt[BLACK][kside][0][i] = psqt_rook_same_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[ROOK];
+            fast_rook_psqt[WHITE][kside][1][i] = psqt_rook_opposite_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[ROOK];
+            fast_rook_psqt[BLACK][kside][1][i] = psqt_rook_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[ROOK];
+
+            fast_queen_psqt[WHITE][kside][0][i] = psqt_queen_same_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[QUEEN];
+            fast_queen_psqt[BLACK][kside][0][i] = psqt_queen_same_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[QUEEN];
+            fast_queen_psqt[WHITE][kside][1][i] = psqt_queen_opposite_side_castle[squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))] + pieceScores[QUEEN];
+            fast_queen_psqt[BLACK][kside][1][i] = psqt_queen_opposite_side_castle[squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))]+ pieceScores[QUEEN];
         }
-        
-        for(Piece p = KNIGHT; p <= KING; p++){
-            fast_psqt[p  ][i] = +psqt[p][pst_index_white_s(i)] + pieceScores[p];
-            fast_psqt[p+6][i] = -psqt[p][pst_index_black_s(i)] - pieceScores[p];
-        }
+
+        fast_king_psqt[WHITE][i] = psqt_king_n[pst_index_white_s(i)];
+        fast_king_psqt[BLACK][i] = psqt_king_n[pst_index_black_s(i)];
     }
 }
 
@@ -320,7 +812,7 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
 
 EvalScore Evaluator::computePinnedPieces(Board* b) {
     
-    
+
     EvalScore res = M(0,0);
     
     Square square;
@@ -472,7 +964,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         
-        evalScore += fast_pawn_psqt[WHITE][wKSide][square];
+        evalScore += fast_pawn_psqt[WHITE][wKSide][wKSide!=bKSide][square];
         
         k = lsbReset(k);
     }
@@ -480,7 +972,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     k = b->getPieces()[BLACK_PAWN];
     while (k) {
         square = bitscanForward(k);
-        evalScore += fast_pawn_psqt[BLACK][bKSide][square];
+
+        evalScore -= fast_pawn_psqt[BLACK][bKSide][wKSide!=bKSide][square];
         
         
         k = lsbReset(k);
@@ -553,7 +1046,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
         
-        evalScore += fast_psqt[WHITE_KNIGHT][square];
+        evalScore += fast_knight_psqt[WHITE][wKSide][wKSide!=bKSide][square];
     
     
         mobScore += mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
@@ -574,7 +1067,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
         
-        evalScore += fast_psqt[BLACK_KNIGHT][square];
+        evalScore -= fast_knight_psqt[BLACK][bKSide][wKSide!=bKSide][square];
     
         mobScore -= mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresBlack)];
 
@@ -596,7 +1089,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         attacks = lookUpBishopAttack(square, occupied);
         
         
-        evalScore += fast_psqt[WHITE_BISHOP][square];
+        evalScore += fast_bishop_psqt[WHITE][wKSide][wKSide!=bKSide][square];
     
         mobScore += mobilityBishop[bitCount(attacks & mobilitySquaresWhite)];
         
@@ -626,7 +1119,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
         
-        evalScore += fast_psqt[BLACK_BISHOP][square];
+        evalScore -= fast_bishop_psqt[BLACK][bKSide][wKSide!=bKSide][square];
     
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
         featureScore -= BISHOP_PAWN_SAME_SQUARE *
@@ -659,7 +1152,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
         
-        evalScore += fast_psqt[WHITE_ROOK][square];
+        evalScore += fast_rook_psqt[WHITE][wKSide][wKSide!=bKSide][square];
     
         mobScore += mobilityRook[bitCount(attacks & mobilitySquaresWhite)];
         
@@ -674,7 +1167,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
         
-        evalScore += fast_psqt[BLACK_ROOK][square];
+        evalScore -= fast_rook_psqt[BLACK][bKSide][wKSide!=bKSide][square];
     
         mobScore -= mobilityRook[bitCount(attacks & mobilitySquaresBlack)];
         
@@ -704,7 +1197,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied) | lookUpBishopAttack(square, occupied);
         
-        evalScore += fast_psqt[WHITE_QUEEN][square];
+        evalScore += fast_queen_psqt[WHITE][wKSide][wKSide!=bKSide][square];
     
         mobScore += mobilityQueen[bitCount(attacks & mobilitySquaresWhite)];
         featureScore += QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
@@ -720,7 +1213,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied) | lookUpBishopAttack(square, occupied);
         
-        evalScore += fast_psqt[BLACK_QUEEN][square];
+        evalScore -= fast_queen_psqt[BLACK][bKSide][wKSide!=bKSide][square];
     
     
         mobScore -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack)];
@@ -741,8 +1234,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         
-        evalScore += fast_psqt[WHITE_KING][square];
-        
+        evalScore += fast_king_psqt[WHITE][square];
         featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
         featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
         
@@ -754,8 +1246,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         
-        evalScore += fast_psqt[BLACK_KING][square];
-        
+        evalScore -= fast_king_psqt[BLACK][square];
         featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
         featureScore -= KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
         
@@ -937,7 +1428,7 @@ int Evaluator::paramCount() { return unusedVariable; }
 
 float* Evaluator::getPSQT(Piece piece, bool early) {
     switch (piece) {
-//        case PAWN: return early ? psqt_pawn : psqt_pawn_endgame;
+//         case PAWN: return early ? psqt_pawn : psqt_pawn_endgame;
 //        case KNIGHT: return early ? psqt_knight : psqt_knight_endgame;
 //        case BISHOP: return early ? psqt_bishop : psqt_bishop_endgame;
 //        case ROOK: return early ? psqt_rook : psqt_rook_endgame;
