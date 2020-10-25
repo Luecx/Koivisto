@@ -15,9 +15,11 @@ TimeManager::TimeManager(int moveTime) {
     isSafeToStop = true;
     ignorePV     = true;
     forceStop    = false;
-
+    
     timeToUse      = moveTime;
     upperTimeBound = moveTime;
+    mode           = MOVETIME;
+    
     startTime      = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
@@ -31,6 +33,7 @@ TimeManager::TimeManager() {
 
     timeToUse      = 1 << 30;
     upperTimeBound = 1 << 30;
+    mode           = DEPTH;
 
     startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
@@ -52,6 +55,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     isSafeToStop = true;
     ignorePV     = false;
     forceStop    = false;
+    mode         = TOURNAMENT;
 
     double phase = (18
                     - bitCount(board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP]
@@ -178,3 +182,5 @@ void TimeManager::computeSafetyToStop() {
         isSafeToStop = true;
     }
 }
+
+TimeMode TimeManager::getMode() const { return mode; }

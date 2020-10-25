@@ -11,6 +11,12 @@
 using namespace move;
 using namespace bb;
 
+enum TimeMode{
+    DEPTH,
+    MOVETIME,
+    TOURNAMENT
+};
+
 class TimeManager {
 
     private:
@@ -19,6 +25,7 @@ class TimeManager {
     //        int whiteInc;
     //        int blackInc;
     //        int movesToGo;
+    TimeMode mode;
 
     int timeToUse;
     int upperTimeBound;
@@ -69,6 +76,12 @@ class TimeManager {
      * @return
      */
     bool isTimeLeft();
+    
+    /**
+     * returns the timemode
+     * @return
+     */
+    TimeMode getMode() const;
 };
 
 #endif    // KOIVISTO_TIMEMANAGER_H
