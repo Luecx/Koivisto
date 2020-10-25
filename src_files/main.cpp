@@ -137,7 +137,7 @@ void main_tune_features() {
 
     using namespace tuning;
 
-    loadPositionFile("../resources/other/quiet-labeled.epd", 1e6);
+    loadPositionFile("../resources/other/tuningset_clear2.epd", 2500000);
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
     for (int i = 0; i < 5000; i++) {
@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
 
        // main_tune_pst_bb(PAWN);
 //    eval_init();
-//    main_tune_features();
+    //main_tune_features();
     // main_tune_pst();
     //main_tune_features_bb();
 

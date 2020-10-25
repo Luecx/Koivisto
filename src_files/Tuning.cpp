@@ -412,14 +412,13 @@ double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, i
 }
 
 double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr){
-    double er;
-    
+    double er = computeError(evaluator, K);
+
     for(int p = 0; p < count; p++){
         
         std::cout << "\r  param: " << p << std::flush;
         
-        er = computeError(evaluator, K);
-//        std::cout << er << std::endl;
+        //        std::cout << er << std::endl;
         evalScore[p] += M(+lr,0);
         eval_init();
 //        showScore(M(+lr,0));
@@ -462,13 +461,12 @@ double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* ev
     return er;
 }
 double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore, int count, int lr) {
-    double er;
-    
+    double er = computeError(evaluator, K);
+
     for(int p = 0; p < count; p++){
         
         std::cout << "\r  param: " << p << std::flush;
         
-        er = computeError(evaluator, K);
         *evalScore[p] += M(+lr,0);
         eval_init();
         

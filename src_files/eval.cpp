@@ -484,70 +484,15 @@ M(   11,   25),
 M(  -17,   45),
 M(  -14,   61),
 M(  -45,   60),};
-EvalScore psqt_queen_opposite_side_castle[64] = {M(  -92,   49),
-M( -136,   54),
-M(  -31,  -28),
-M(   -1,  -15),
-M(    0,    8),
-M(  -22,   29),
-M(  -17,   39),
-M(   32,  -22),
-M(  -30,  -36),
-M(    2,  -67),
-M(   18,  -44),
-M(   15,   10),
-M(    6,  -32),
-M(    9,  -19),
-M(   21,    2),
-M(   47,  -76),
-M(  -47,   66),
-M(    4,   15),
-M(   16,    4),
-M(    0,   15),
-M(   12,  -10),
-M(    0,   50),
-M(   18,    4),
-M(   18,    9),
-M(    0,   71),
-M(    2,   43),
-M(   -9,   69),
-M(   -3,   77),
-M(   -1,   41),
-M(    2,   46),
-M(   24,   44),
-M(   28,   36),
-M(   16,   15),
-M(  -19,   61),
-M(    3,   58),
-M(  -30,  102),
-M(   18,   82),
-M(   44,   52),
-M(   47,   74),
-M(   22,   33),
-M(  -16,   86),
-M(  -15,   56),
-M(   23,   46),
-M(  -12,   76),
-M(   55,   70),
-M(   22,  137),
-M(  131,    2),
-M(   14,   19),
-M(   31,    7),
-M(  -41,  124),
-M(   36,   60),
-M(  -51,  140),
-M(  -81,  174),
-M(   -2,  123),
-M(  -65,  158),
-M(  109,   10),
-M(   59,   31),
-M(   30,   70),
-M(  -17,   92),
-M(  -40,  114),
-M(   19,   83),
-M(   62,   24),
-M(   77,    6),
-M(   94,   18),};
+EvalScore psqt_queen_opposite_side_castle[64] = {
+M(  -92,   49), M( -136,   54), M(  -31,  -28), M(   -1,  -15), M(    0,    8), M(  -22,   29), M(  -17,   39), M(   32,  -22), 
+M(  -30,  -36), M(    2,  -67), M(   18,  -44), M(   15,   10), M(    6,  -32), M(    9,  -19), M(   21,    2), M(   47,  -76),
+M(  -47,   66), M(    4,   15), M(   16,    4), M(    0,   15), M(   12,  -10), M(    0,   50), M(   18,    4), M(   18,    9),
+M(    0,   71), M(    2,   43), M(   -9,   69), M(   -3,   77), M(   -1,   41), M(    2,   46), M(   24,   44), M(   28,   36), 
+M(   16,   15), M(  -19,   61), M(    3,   58), M(  -30,  102), M(   18,   82), M(   44,   52), M(   47,   74), M(   22,   33), 
+M(  -16,   86), M(  -15,   56), M(   23,   46), M(  -12,   76), M(   55,   70), M(   22,  137), M(  131,    2), M(   14,   19),
+M(   31,    7), M(  -41,  124), M(   36,   60), M(  -51,  140), M(  -81,  174), M(   -2,  123), M(  -65,  158), M(  109,   10),
+M(   59,   31), M(   30,   70), M(  -17,   92), M(  -40,  114), M(   19,   83), M(   62,   24), M(   77,    6), M(   94,   18),};
 
 
 
@@ -569,34 +514,34 @@ EvalScore* psqt[11]{
 
 
 EvalScore pieceScores[6] = {
-        M(   90,  104),
-        M(  463,  326),
-        M(  474,  288),
-        M(  577,  594),
-        M( 1359, 1121),
-        M(    0,    0),
+        M(  100,  119),
+        M(  447,  401),
+        M(  456,  368),
+        M(  568,  726),
+        M( 1427, 1328),
+        M(   0,    0),
 };
 
-EvalScore SIDE_TO_MOVE               = M(   24,   26);
-EvalScore PAWN_STRUCTURE             = M(    7,   12);
-EvalScore PAWN_PASSED                = M(    4,   42);
-EvalScore PAWN_ISOLATED              = M(   -9,   -8);
-EvalScore PAWN_DOUBLED               = M(    8,   -4);
-EvalScore PAWN_DOUBLED_AND_ISOLATED  = M(    0,  -17);
-EvalScore PAWN_BACKWARD              = M(  -13,    2);
-EvalScore PAWN_OPEN                  = M(   15,   -7);
-EvalScore PAWN_BLOCKED               = M(   -9,  -12);
-EvalScore KNIGHT_OUTPOST             = M(   23,   15);
+EvalScore SIDE_TO_MOVE               = M(   12,   14);
+EvalScore PAWN_STRUCTURE             = M(    9,    8);
+EvalScore PAWN_PASSED                = M(    8,   45);
+EvalScore PAWN_ISOLATED              = M(   -5,  -11);
+EvalScore PAWN_DOUBLED               = M(   -3,   -5);
+EvalScore PAWN_DOUBLED_AND_ISOLATED  = M(   -7,  -24);
+EvalScore PAWN_BACKWARD              = M(  -12,    0);
+EvalScore PAWN_OPEN                  = M(   -5,   -3);
+EvalScore PAWN_BLOCKED               = M(   -7,  -17);
+EvalScore KNIGHT_OUTPOST             = M(   23,   21);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING = M(   -6,    1);
-EvalScore ROOK_OPEN_FILE             = M(   58,  -22);
-EvalScore ROOK_HALF_OPEN_FILE        = M(    4,   -2);
-EvalScore ROOK_KING_LINE             = M(   36,   32);
-EvalScore BISHOP_DOUBLED             = M(   42,   55);
-EvalScore BISHOP_PAWN_SAME_SQUARE    = M(   -5,    5);
-EvalScore BISHOP_FIANCHETTO          = M(    5,    7);
-EvalScore QUEEN_DISTANCE_ENEMY_KING  = M(    6,  -25);
-EvalScore KING_CLOSE_OPPONENT        = M(  -37,   57);
-EvalScore KING_PAWN_SHIELD           = M(   13,    3);
+EvalScore ROOK_OPEN_FILE             = M(   36,   -9);
+EvalScore ROOK_HALF_OPEN_FILE        = M(    0,   -6);
+EvalScore ROOK_KING_LINE             = M(   13,    6);
+EvalScore BISHOP_DOUBLED             = M(   22,   80);
+EvalScore BISHOP_PAWN_SAME_SQUARE    = M(   -2,    3);
+EvalScore BISHOP_FIANCHETTO          = M(   -4,   15);
+EvalScore QUEEN_DISTANCE_ENEMY_KING  = M(    7,  -26);
+EvalScore KING_CLOSE_OPPONENT        = M(   -7,   51);
+EvalScore KING_PAWN_SHIELD           = M(   10,    7);
 EvalScore CASTLING_RIGHTS            = M(13, -4);
 
 EvalScore fast_pawn_psqt[2][2][2][64];
@@ -637,29 +582,29 @@ EvalScore* evfeatures[]{
 };
 
 EvalScore hangingEval[5]{
-        M(   -7,    2),
-        M(  -19,   -5),
-        M(  -11,  -10),
-        M(   -9,   -8),
-        M(  -10,  -12),
+        M(   -3,    3),
+        M(   -4,   -4),
+        M(   -7,   -8),
+        M(    2,  -22),
+        M(  -11,  -21),
 };
 
 EvalScore pinnedEval[15]{
-        M(   20,  -40),
-        M(  -20,   12),
-        M(    2,   27),
-        M(  -36, -142),
-        M(  -48,  -58),
-        M(  -34,    1),
-        M(  -13,  -10),
-        M(  -72,  -72),
-        M(   15,  -83),
-        M(  -68, -395),
-        M(  -26,   -3),
-        M(  -13,  -73),
-        M( -176, -522),
-        M( -336, -639),
-        M(  -17,   -9),
+        M(    1,  -20),
+        M(  -18,   13),
+        M(   -4,   34),
+        M(  -20,  -69),
+        M(  -28,  -12),
+        M(  -25,   38),
+        M(    5,  -23),
+        M(  -37,  -14),
+        M(  -18,   26),
+        M(  -77,  -50),
+        M(    4,  -17),
+        M(  -29,   22),
+        M(   11, -174),
+        M(   14, -207),
+        M(  -14,   13),
 };
 
 EvalScore mobilityKnight[9]{
