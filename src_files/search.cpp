@@ -618,15 +618,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
      **************************************************************************************/
     
     /*
-     * internal iterative deepening
+     * internal iterative deepening by Ed Schröder: http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
      */
-    if (depth >= 6 && pv && !hashMove && !skipMove) {
-        pvSearch(b, alpha, beta, depth - 2, ply, td, 0);
-        en = table->get(zobrist);
-        if (en.zobrist == zobrist) {
-            hashMove = en.move;
-        }
-    }
+    if (depth >= 4 && !hashMove) 
+        depth--;
     
     /**************************************************************************************
      *              M A T E - D I S T A N C E   P R U N I N G                             *
