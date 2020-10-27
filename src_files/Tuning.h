@@ -14,7 +14,17 @@
 #include <string>
 #include <unistd.h>
 
+using namespace eval;
+
 namespace tuning {
+
+extern int dataCount;
+extern Board** boards;
+extern double* results;
+
+double sigmoid(double s, double K);
+
+double sigmoidPrime(double s, double K);
 
 /**
  * loads a position file
@@ -29,10 +39,12 @@ void loadPositionFile(std::string path, int count, int start = 0);
 void clearLoadedData();
 
 /**
- * uses the loaded data to optimise the evaluator
+ * does blackbox tuning on the given data. This is usually very inefficient.
  * @param evaluator
+ * @param K
+ * @return
  */
-double optimiseGD(Evaluator* evaluator, double K, double learningRate);
+double optimiseBlackBox(double K, float* params, int paramCount, float lr);
 
 /**
  * does blackbox tuning on the given data. This is usually very inefficient.
@@ -40,35 +52,20 @@ double optimiseGD(Evaluator* evaluator, double K, double learningRate);
  * @param K
  * @return
  */
-double optimiseBlackBox(Evaluator* evaluator, double K, float* params, int paramCount, float lr);
-
-
-double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr);
-
-double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore, int count, int lr);
-/**
- * uses the loaded data to optimise the evaluator
- */
-double optimiseAdaGrad(Evaluator* evaluator, double K, double learningRate, int iterations);
+double optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int lr);
 
 /**
- * uses the loaded data to optimise the evaluator
+ * does blackbox tuning on the given data. This is usually very inefficient.
  * @param evaluator
+ * @param K
+ * @return
  */
-double optimisePST(Evaluator* evaluator, double K, double learningRate);
+double optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int lr);
 
 /**
  * computes the error of the evaluator on the given set
  */
-double computeError(Evaluator* evaluator, double K);
-
-/**
- * finds the count positions which have the largest difference to the calculated outcome of the evaluator.
- * @param evaluator
- * @param K
- * @param count
- */
-void findWorstPositions(Evaluator* evaluator, double K, int count);
+double computeError(double K);
 
 /**
  * computes the K value
@@ -78,17 +75,7 @@ void findWorstPositions(Evaluator* evaluator, double K, int count);
  * @param deviation
  * @return
  */
-double computeK(Evaluator* evaluator, double initK, double rate, double deviation);
-
-/**
- * generates a heat map for the given piece.
- * generates 2 seperate tables for early and late if requested. it will also split into 2 tables
- * for both sides if requested
- * @param piece
- * @param earlyAndLate
- * @param asymmetric
- */
-void generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric);
+double computeK(double initK, double rate, double deviation);
 
 /**
  * computes the average time for evaluation

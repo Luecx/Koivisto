@@ -8,6 +8,8 @@
 #include "Bitboard.h"
 #include "Board.h"
 
+namespace eval {
+
 #define pst_index_white_s(s)                         squareIndex(7 - rankIndex(s), fileIndex(s))
 #define pst_index_black_s(s)                         s
 #define pst_index_white(i, kside)                    squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))
@@ -30,58 +32,17 @@ extern int        mobEntryCount[6];
 
 void eval_init();
 
-class Evaluator {
-    public:
-    //    float features[6];
 
-    float phase;
+EvalScore computePinnedPieces(Board* b);
 
-    EvalScore computePinnedPieces(Board* b);
+EvalScore computeHangingPieces(Board* b);
 
-    EvalScore computeHangingPieces(Board* b);
+float phase(Board* b);
 
-    bb::Score evaluate(Board* b);
-
-    /**
-     * returns the phase of the last calculation
-     * @return
-     */
-    float getPhase();
-
-    /**
-     * returns a list of features of the last calculation
-     * @return
-     */
-    float* getFeatures();
-
-    /**
-     * returns a list of early game parameters
-     * @return
-     */
-    float* getEarlyGameParams();
-
-    /**
-     * returns a list of late game parameters
-     */
-    float* getLateGameParams();
-
-    float* getPSQT(Piece piece, bool early);
-
-    /**
-     * returns the amount of tunable parameters
-     */
-    int paramCount();
-
-    float* getPhaseValues();
-
-#ifdef TUNE_PST
-    float* getTunablePST_MG();
-    float* getTunablePST_EG();
-    float* getTunablePST_MG_grad();
-    float* getTunablePST_EG_grad();
-#endif
-};
+bb::Score evaluate(Board* b);
 
 void printEvaluation(Board* b);
+
+}
 
 #endif    // KOIVISTO_EVAL_H

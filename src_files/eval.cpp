@@ -6,6 +6,7 @@
 
 #include <immintrin.h>
 #include <iomanip>
+namespace eval {
 
 float sqrts[28] = {
     0,       1,       1.41421, 1.73205, 2,       2.23607, 2.44949, 2.64575, 2.82843, 3,
@@ -203,26 +204,28 @@ EvalScore pinnedEval[15] {
     M(15, -83), M(-68, -395), M(-26, -3), M(-13, -73),  M(-176, -522), M(-336, -639), M(-17, -9),
 };
 
-EvalScore mobilityKnight[9] {
-    M(0, 0), M(27, 20), M(39, 28), M(47, 35), M(54, 40), M(61, 45), M(67, 49), M(72, 53), M(77, 57),
+EvalScore       mobilityKnight[9]{
+    M(   14,  -32), M(   33,   14), M(   39,   38), M(   45,   49), M(   50,   52),
+    M(   55,   59), M(   63,   59), M(   72,   53), M(   83,   39), };
+
+EvalScore       mobilityBishop[15]{
+    M(   16,    6), M(   23,   37), M(   31,   60), M(   37,   73), M(   43,   85),
+    M(   49,   98), M(   50,  107), M(   51,  113), M(   53,  115), M(   58,  118),
+    M(   62,  115), M(   79,  111), M(   85,  121), M(  111,   96), };
+
+EvalScore       mobilityRook[15]{
+    M(   14,   48), M(   25,   64), M(   36,   62), M(   43,   66), M(   42,   83),
+    M(   49,   85), M(   54,   95), M(   58,   96), M(   62,  100), M(   64,  109),
+    M(   62,  113), M(   65,  120), M(   69,  122), M(   80,  117), M(  139,   89),
 };
 
-EvalScore mobilityBishop[14] {
-    M(0, 0),    M(25, 37),  M(35, 52),  M(43, 63),  M(49, 73),  M(55, 82),  M(60, 89),  M(65, 97),
-    M(69, 103), M(74, 110), M(78, 115), M(81, 121), M(85, 127), M(89, 132)
-};
-
-EvalScore mobilityRook[15] {
-    M(0, 0),   M(23, 32), M(32, 46),  M(39, 56),  M(46, 65),  M(51, 73),  M(56, 79),  M(60, 86),
-    M(64, 92), M(68, 97), M(72, 103), M(75, 108), M(79, 112), M(82, 117), M(85, 121),
-};
-
-EvalScore mobilityQueen[29] {
-    M(0, 0),    M(9, 61),   M(12, 86),  M(15, 106), M(18, 122), M(20, 136), M(21, 149), M(23, 161),
-    M(25, 172), M(26, 183), M(28, 193), M(29, 202), M(30, 211), M(32, 220), M(33, 228), M(34, 236),
-    M(35, 244), M(36, 251), M(37, 258), M(38, 266), M(39, 272), M(40, 279), M(41, 286), M(42, 292),
-    M(43, 298), M(44, 305), M(45, 311), M(46, 317)
-};
+EvalScore       mobilityQueen[28]{
+    M(   10, -100), M(   13,   31), M(   14,  106), M(   15,  164), M(   16,  196),
+    M(   22,  178), M(   25,  197), M(   27,  205), M(   31,  220), M(   34,  227),
+    M(   36,  233), M(   41,  238), M(   40,  243), M(   40,  252), M(   39,  254),
+    M(   40,  258), M(   37,  260), M(  134,  171), M(   39,  262), M(   48,  254),
+    M(   33,  270), M(   54,  241), M(   53,  234), M(   60,  232), M(   35,  198),
+    M(  142,  205), M(  -55,  305), M(  -54,  317), };
 
 int mobEntryCount[6] {0, 9, 14, 15, 28, 0};
 
@@ -354,7 +357,7 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     return false;
 }
 
-EvalScore Evaluator::computeHangingPieces(Board* b) {
+EvalScore computeHangingPieces(Board* b) {
     U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
     U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
 
@@ -367,7 +370,7 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
     return res;
 }
 
-EvalScore Evaluator::computePinnedPieces(Board* b) {
+EvalScore computePinnedPieces(Board* b) {
 
     EvalScore res = M(0, 0);
 
@@ -414,12 +417,28 @@ EvalScore Evaluator::computePinnedPieces(Board* b) {
     return res;
 }
 
+float phase(Board* b) {
+    float phase =
+        (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
+         - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
+         - phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])
+         - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
+         - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+        / 24.0f;
+
+    if (phase > 1)
+        phase = 1;
+    if (phase < 0)
+        phase = 0;
+    return phase;
+}
+
 /**
  * evaluates the board.
  * @param b
  * @return
  */
-bb::Score Evaluator::evaluate(Board* b) {
+bb::Score evaluate(Board* b) {
 
     Score res = 0;
 
@@ -437,29 +456,10 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64    attacks;
     U64    k;
 
-    phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
-             - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
-             - phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])
-             - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-             - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
-            / 24.0f;
-
-    if (phase > 1)
-        phase = 1;
-    if (phase < 0)
-        phase = 0;
-
-    // values to scale early/lategame weights
-    float earlyWeightScalar = (1 - phase);
-    float lateWeightScalar  = (phase);
-
-    // the pst are multiples of 100
-    float earlyPSTScalar = earlyWeightScalar / 100;
-    float latePSTScalar  = lateWeightScalar / 100;
+    float phase = eval::phase(b);
 
     int wkingSafety_attPiecesCount = 0;
     int wkingSafety_valueOfAttacks = 0;
-
     int bkingSafety_attPiecesCount = 0;
     int bkingSafety_valueOfAttacks = 0;
     /**********************************************************************************
@@ -787,9 +787,8 @@ void printEvaluation(Board* board) {
 
     using namespace std;
 
-    Evaluator ev {};
-    Score     score = ev.evaluate(board);
-    float     phase = ev.getPhase();
+    Score score = evaluate(board);
+    float phase = eval::phase(board);
 
     stringstream ss {};
 
@@ -887,15 +886,17 @@ void printEvaluation(Board* board) {
         "-",
     };
 
-//    for (int i = 0; i < unusedVariable; i++) {
-//
-//        ss << std::setw(40) << std::left << names[i] << " | " << std::setw(20) << std::right << ev.getFeatures()[i]
-//           << " | " << std::setw(20) << ev.getEarlyGameParams()[i] << " | " << std::setw(20)
-//           << ev.getLateGameParams()[i] << " | " << std::setw(20)
-//           << ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase << " | " << std::setw(20)
-//           << (ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase) * ev.getFeatures()[i]
-//           << " | \n";
-//    }
+    //    for (int i = 0; i < unusedVariable; i++) {
+    //
+    //        ss << std::setw(40) << std::left << names[i] << " | " << std::setw(20) << std::right <<
+    //        ev.getFeatures()[i]
+    //           << " | " << std::setw(20) << ev.getEarlyGameParams()[i] << " | " << std::setw(20)
+    //           << ev.getLateGameParams()[i] << " | " << std::setw(20)
+    //           << ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase << " | " <<
+    //           std::setw(20)
+    //           << (ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase) * ev.getFeatures()[i]
+    //           << " | \n";
+    //    }
     ss << "-----------------------------------------+----------------------+"
           "----------------------+----------------------+"
           "----------------------+----------------------+\n";
@@ -913,35 +914,4 @@ void printEvaluation(Board* board) {
 
     std::cout << ss.str() << std::endl;
 }
-
-float* Evaluator::getFeatures() { return nullptr; }
-
-float Evaluator::getPhase() { return phase; }
-
-float* Evaluator::getEarlyGameParams() { return nullptr; }
-
-float* Evaluator::getLateGameParams() { return nullptr; }
-
-int Evaluator::paramCount() { return 0; }
-
-float* Evaluator::getPSQT(Piece piece, bool early) {
-    switch (piece) {
-        //         case PAWN: return early ? psqt_pawn : psqt_pawn_endgame;
-        //        case KNIGHT: return early ? psqt_knight : psqt_knight_endgame;
-        //        case BISHOP: return early ? psqt_bishop : psqt_bishop_endgame;
-        //        case ROOK: return early ? psqt_rook : psqt_rook_endgame;
-        //        case QUEEN: return early ? psqt_queen : psqt_queen_endgame;
-        //        case KING: return early ? psqt_king : psqt_king_endgame;
-    }
-    return nullptr;
-}
-float* Evaluator::getPhaseValues() { return passer_rank; }
-#ifdef TUNE_PST
-float* Evaluator::getTunablePST_MG() { return psqt_bishop; }
-
-float* Evaluator::getTunablePST_EG() { return psqt_bishop_endgame; }
-
-float* Evaluator::getTunablePST_MG_grad() { return tunablePST_MG_grad; }
-
-float* Evaluator::getTunablePST_EG_grad() { return tunablePST_EG_grad; }
-#endif
+}    // namespace eval

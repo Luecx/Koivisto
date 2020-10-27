@@ -27,7 +27,7 @@ void uci_loop(bool bench) {
 
     bb_init();
     search_init(16);
-    eval_init();
+    eval::eval_init();
 
     if (bench) {
         uci_bench();
@@ -189,7 +189,7 @@ void uci_processCommand(std::string str) {
     } else if (split.at(0) == "print") {
         std::cout << *board << std::endl;
     } else if (split.at(0) == "eval") {
-        printEvaluation(board);
+        eval::printEvaluation(board);
     }
 }
 

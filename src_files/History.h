@@ -17,7 +17,6 @@ struct SearchData {
     Move bestMove = 0;
 
     MoveList** moves;
-    Evaluator  evaluator {};
 
     int   history[2][64][64]   = {0};    // history table (from-to)
     int   cmh[6][64][2][6][64] = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
