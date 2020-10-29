@@ -152,7 +152,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
     
     U64   zob = b->zobrist();
     Entry en  = table->get(zob);
-    if (en.zobrist == zob) {
+    if (en.zobrist == zob && en.type == PV_NODE) {
         
         // extract the move from the table
         Move mov = en.move;
@@ -618,15 +618,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
      **************************************************************************************/
     
     /*
-     * internal iterative deepening
+     * internal iterative deepening by Ed Schröder: http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
      */
-    if (depth >= 6 && pv && !hashMove && !skipMove) {
-        pvSearch(b, alpha, beta, depth - 2, ply, td, 0);
-        en = table->get(zobrist);
-        if (en.zobrist == zobrist) {
-            hashMove = en.move;
-        }
-    }
+    if (depth >= 4 && !hashMove) 
+        depth--;
     
     /**************************************************************************************
      *              M A T E - D I S T A N C E   P R U N I N G                             *
@@ -790,6 +785,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         legalMoves++;
     }
     
+    
+    // if we are inside a tournament game and at the root and there is only one legal move, no need to search at all.
+    if (search_timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1){
+        search_timeManager->stopSearch();
+        return alpha;
+    }
+    
     // if there are no legal moves, its either stalemate or checkmate.
     if (legalMoves == 0) {
         // if we are not in check, it must be stalemate (draw)
@@ -824,10 +826,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     
     // increase the nodes for this thread
     td->nodes++;
-    
-    // if its a draw (3-fold), return 0
-    if (b->isDraw())
-        return 0;
     
     // extract information like search data (history tables), zobrist etc
     SearchData* sd         = td->searchData;

@@ -8,10 +8,11 @@
 #include "Bitboard.h"
 #include "Board.h"
 
-#define pst_index_white(r, f) squareIndex(7 - r, f)
-#define pst_index_white_s(s)  squareIndex(7 - rankIndex(s), fileIndex(s))
-#define pst_index_black(r, f) squareIndex(r, f)
-#define pst_index_black_s(s)  s
+#define pst_index_white_s(s)                         squareIndex(7 - rankIndex(s), fileIndex(s))
+#define pst_index_black_s(s)                         s
+#define pst_index_white(i, kside)                    squareIndex(rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))
+#define pst_index_black(i, kside)                    squareIndex(7 - rankIndex(i), (kside ? fileIndex(i) : 7 - fileIndex(i)))
+#define psqt_kingside_indexing(wkingside, bkingside) (wkingside) * 2 + (bkingside)
 
 typedef int32_t EvalScore;
 #define M(mg, eg)    ((EvalScore)((unsigned int) (eg) << 16) + (mg))
@@ -19,92 +20,25 @@ typedef int32_t EvalScore;
 #define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
 #define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
 
-extern EvalScore* psqt[6];
-
-static int unusedVariable = 0;
-
-static int INDEX_PAWN_VALUE                = unusedVariable++;
-static int INDEX_PAWN_PSQT                 = unusedVariable++;
-static int INDEX_PAWN_STRUCTURE            = unusedVariable++;
-static int INDEX_PAWN_PASSED               = unusedVariable++;
-static int INDEX_PAWN_ISOLATED             = unusedVariable++;
-static int INDEX_PAWN_DOUBLED              = unusedVariable++;
-static int INDEX_PAWN_DOUBLED_AND_ISOLATED = unusedVariable++;
-static int INDEX_PAWN_BACKWARD             = unusedVariable++;
-static int INDEX_PAWN_OPEN                 = unusedVariable++;
-
-static int INDEX_KNIGHT_VALUE    = unusedVariable++;
-static int INDEX_KNIGHT_PSQT     = unusedVariable++;
-static int INDEX_KNIGHT_MOBILITY = unusedVariable++;
-static int INDEX_KNIGHT_OUTPOST  = unusedVariable++;
-
-static int INDEX_BISHOP_VALUE            = unusedVariable++;
-static int INDEX_BISHOP_PSQT             = unusedVariable++;
-static int INDEX_BISHOP_MOBILITY         = unusedVariable++;
-static int INDEX_BISHOP_DOUBLED          = unusedVariable++;
-static int INDEX_BISHOP_PAWN_SAME_SQUARE = unusedVariable++;
-static int INDEX_BISHOP_FIANCHETTO       = unusedVariable++;
-
-static int INDEX_ROOK_VALUE          = unusedVariable++;
-static int INDEX_ROOK_PSQT           = unusedVariable++;
-static int INDEX_ROOK_MOBILITY       = unusedVariable++;
-static int INDEX_ROOK_OPEN_FILE      = unusedVariable++;
-static int INDEX_ROOK_HALF_OPEN_FILE = unusedVariable++;
-static int INDEX_ROOK_KING_LINE      = unusedVariable++;
-
-static int INDEX_QUEEN_VALUE    = unusedVariable++;
-static int INDEX_QUEEN_PSQT     = unusedVariable++;
-static int INDEX_QUEEN_MOBILITY = unusedVariable++;
-
-static int INDEX_KING_SAFETY         = unusedVariable++;
-static int INDEX_KING_PSQT           = unusedVariable++;
-static int INDEX_KING_CLOSE_OPPONENT = unusedVariable++;
-static int INDEX_KING_PAWN_SHIELD    = unusedVariable++;
-
-static int INDEX_KNIGHT_DISTANCE_ENEMY_KING = unusedVariable++;
-static int INDEX_QUEEN_DISTANCE_ENEMY_KING  = unusedVariable++;
-
-static int INDEX_PINNED_PAWN_BY_BISHOP   = unusedVariable++;
-static int INDEX_PINNED_PAWN_BY_ROOK     = unusedVariable++;
-static int INDEX_PINNED_PAWN_BY_QUEEN    = unusedVariable++;
-static int INDEX_PINNED_KNIGHT_BY_BISHOP = unusedVariable++;
-static int INDEX_PINNED_KNIGHT_BY_ROOK   = unusedVariable++;
-static int INDEX_PINNED_KNIGHT_BY_QUEEN  = unusedVariable++;
-static int INDEX_PINNED_BISHOP_BY_BISHOP = unusedVariable++;
-static int INDEX_PINNED_BISHOP_BY_ROOK   = unusedVariable++;
-static int INDEX_PINNED_BISHOP_BY_QUEEN  = unusedVariable++;
-static int INDEX_PINNED_ROOK_BY_BISHOP   = unusedVariable++;
-static int INDEX_PINNED_ROOK_BY_ROOK     = unusedVariable++;
-static int INDEX_PINNED_ROOK_BY_QUEEN    = unusedVariable++;
-static int INDEX_PINNED_QUEEN_BY_BISHOP  = unusedVariable++;
-static int INDEX_PINNED_QUEEN_BY_ROOK    = unusedVariable++;
-static int INDEX_PINNED_QUEEN_BY_QUEEN   = unusedVariable++;
-
-static int INDEX_PAWN_HANGING   = unusedVariable++;
-static int INDEX_KNIGHT_HANGING = unusedVariable++;
-static int INDEX_BISHOP_HANGING = unusedVariable++;
-static int INDEX_ROOK_HANGING   = unusedVariable++;
-static int INDEX_QUEEN_HANGING  = unusedVariable++;
-
-static int INDEX_CASTLING_RIGHTS = unusedVariable++;
-
-static int INDEX_BLOCKED_PAWN = unusedVariable++;
-
-static int INDEX_PASSER_RANK = unusedVariable++;
-
-static int SPACER1 = unusedVariable += unusedVariable % 4 == 0 ? 0 : (4 - unusedVariable % 4);
+extern EvalScore* psqt[11];
+extern EvalScore  pieceScores[6];
+extern EvalScore* evfeatures[];
+extern EvalScore  hangingEval[5];
+extern EvalScore  pinnedEval[15];
+extern EvalScore* mobilities[6];
+extern int        mobEntryCount[6];
 
 void eval_init();
 
 class Evaluator {
     public:
-    float* features = new float[unusedVariable];
+    //    float features[6];
 
     float phase;
 
-    void computePinnedPieces(Board* b);
+    EvalScore computePinnedPieces(Board* b);
 
-    void computeHangingPieces(Board* b);
+    EvalScore computeHangingPieces(Board* b);
 
     bb::Score evaluate(Board* b);
 
