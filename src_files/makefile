@@ -6,7 +6,7 @@ LIBS    = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER  = bin/
 ROOT    = ../
 NAME    = Koivisto
-MINOR   = 5
+MINOR   = 6
 MAJOR   = 3
 EXE     = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 ifeq ($(OS),Windows_NT)
