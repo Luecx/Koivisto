@@ -179,7 +179,7 @@ Score generator::collectAllQuietPositions(Board* b, std::vector<Board> *leafs, S
         }
     }
     
-    if(legalMoves == 0){
+    if(legalMoves == 0 && !b->isInCheck(b->getActivePlayer())){
         leafs->emplace_back(b);
     }
     
