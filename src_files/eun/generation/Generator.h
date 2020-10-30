@@ -27,7 +27,7 @@ Move selectRandomMove(MoveList& moveList, double king_walk_p);
 
 Score evalPosition(Board* b);
 
-Score collectAllQuietPositions(Board* b, LINE *pline, Score alpha=-MAX_MATE_SCORE, Score beta=MAX_MATE_SCORE, Depth ply=0);
+Score collectAllQuietPositions(Board* b,  std::vector<Board> *leafs, Score alpha=-MAX_MATE_SCORE, Score beta=MAX_MATE_SCORE, Depth ply=0);
 
 [[noreturn]] void generate(const std::string& outpath);
 

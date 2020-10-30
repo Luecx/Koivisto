@@ -23,6 +23,24 @@ unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
     return c;
 }
 
+int legalNonQuietMoves(Board* b){
+    
+    
+    MoveList mv{};
+    b->getNonQuietMoves(&mv);
+    
+    int legal = 0;
+    
+    for(int i = 0; i < mv.getSize(); i++){
+        if(b->isLegal(mv.getMove(i))){
+            legal ++;
+        }
+    }
+    
+    return legal;
+    
+}
+
 void generator::generate(const string& outpath) {
     bb_init();
     search_init(8);
@@ -38,15 +56,15 @@ void generator::generate(const string& outpath) {
 
     int totalCount = 0;
 
-//    unsigned long seed = mix(clock(), time(NULL), getpid());
-    srand(0);
+    unsigned long seed = mix(clock(), time(NULL), getpid());
+    srand(seed);
 
     while (true) {
 //        search_clearHash();
         Board b {};
 
         for (int i = 0; i < max_ply; i++) {
-
+            
             // stop the search if:
             // A: the game is a draw
             // B: the eval is static eval is very large
@@ -67,11 +85,12 @@ void generator::generate(const string& outpath) {
             // in some mating positions, there might be no legal moves. we solve this by counting the amount of times we
             // run this function and stop if this is done too often.
             int  checks        = 0;
-            bool stopIteration = 0;
-            while (!b.isLegal(r)) {
+            bool stopIteration = false;
+            while (!b.isLegal(r) || (legalNonQuietMoves(&b) <= 1 && b.isInCheck(b.getActivePlayer()))) {
                 r = selectRandomMove(ml, king_walk_p);
                 if (checks++ > legalityCheckCounter) {
                     stopIteration = true;
+                    break;
                 }
             }
 
@@ -87,54 +106,35 @@ void generator::generate(const string& outpath) {
             if(i < min_ply){
                 continue;
             }
-
+    
             // for this position, run a qsearch to collect the pv
-            LINE pv;
-            collectAllQuietPositions(&b, &pv);
-
-            Board b2{};
-            std::cout << std::endl;
-            for(int i = 0; i < pv.cmove; i++){
-//                std::cout << toString(pv.argmove[i]) << std::endl;
-                if(!b2.isLegal(pv.argmove[i])){
-                    break;
-                }
-                b2.move(pv.argmove[i]);
+            std::vector<Board> leafs{};
+            collectAllQuietPositions(&b, &leafs);
+            
+            if(leafs.size() == 0){
+                (*outFile) << b.fen() << "\n";
+            }else{
+                (*outFile) << leafs[rand() % leafs.size()].fen() << "\n";
             }
-            (*outFile) << b2.fen() << "\n";
-//            if(pv.cmove == 4) exit(-1);
-            // iterate over each position and run a quick search
-//            for (Board* bs : leafs) {
-//
-//                double eval = evalPosition(bs);
-//                search_clearHash();
-//
-//                if (abs(eval) < adjudicate) {
-//                    (*outFile) << bs->fen() << ";" << eval << "\n";
-//                    totalCount++;
-//
-//                    if (totalCount % 100 == 0) {
-//                        std::cout << totalCount << std::endl;
-//                    }
-//                }
-//
-//                delete bs;
-//            }
+            
+            totalCount ++;
+            std::cout << totalCount << "  "  << leafs.size() << std::endl;
         }
     }
 }
 
 
-Score generator::collectAllQuietPositions(Board* b, LINE* pline, Score alpha, Score beta, Depth ply) {
+Score generator::collectAllQuietPositions(Board* b, std::vector<Board> *leafs, Score alpha, Score beta, Depth ply) {
 
 
     if (b->isDraw())
         return 0;
     
     double stand_pat = evaluator.evaluate(b) * (b->getActivePlayer() == WHITE ? 1:-1);
-
-    if (stand_pat >= beta)
+    
+    if (stand_pat >= beta){
         return beta;
+    }
     if (alpha < stand_pat)
         alpha = stand_pat;
 
@@ -146,9 +146,9 @@ Score generator::collectAllQuietPositions(Board* b, LINE* pline, Score alpha, Sc
 
     MoveOrderer orderer {};
     orderer.setMovesQSearch(&mv, b);
-
-    LINE line{};
-
+    
+    int legalMoves = 0;
+    
     // we loop over all moves to get those positions
     while(orderer.hasNext()) {
         // get the current move
@@ -161,16 +161,13 @@ Score generator::collectAllQuietPositions(Board* b, LINE* pline, Score alpha, Sc
         if (!b->isLegal(m))
             continue;
 
-
-//        for(int k = 0; k < ply; k++) std::cout << "  ";
-//        std::cout << toString(m) << std::endl;
-
-
+        legalMoves++;
+        
         // do the move
         b->move(m);
 
         // collect all quiet positions for this position
-        Score s = collectAllQuietPositions(b, &line, -beta, -alpha, ply + 1);
+        Score s = collectAllQuietPositions(b, leafs, -beta, -alpha, ply + 1);
 
         // undo the move
         b->undoMove();
@@ -178,15 +175,14 @@ Score generator::collectAllQuietPositions(Board* b, LINE* pline, Score alpha, Sc
         if (s >= beta)
             return beta;
         if (s > alpha){
-            pline->argmove[0] = m;
-            for(int k = 0; k < line.cmove; k++){
-                pline->argmove[k+1] = line.argmove[k];
-            }
-            pline->cmove = line.cmove + 1;
             alpha = s;
         }
-
     }
+    
+    if(legalMoves == 0){
+        leafs->emplace_back(b);
+    }
+    
     return alpha;
 }
 
