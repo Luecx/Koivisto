@@ -519,7 +519,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     SearchData* sd            = td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
-    Score       staticEval    = inCheck ? -MAX_MATE_SCORE+ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score       staticEval;
+    if (b->getPreviousMove()==0 && ply != 0){
+        //reuse static evaluation from previous ply incase of nullmove
+        staticEval = -sd->eval[1-b->getActivePlayer()][ply-1]+sd->evaluator.evaluateTempo(b)*2;
+    }else{
+        staticEval    = inCheck ? -MAX_MATE_SCORE+ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
     Score       originalAlpha = alpha;
     Score       highestScore  = -MAX_MATE_SCORE;
     Score       score         = -MAX_MATE_SCORE;
