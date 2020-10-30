@@ -5,7 +5,6 @@
 #include "Generator.h"
 #include <unistd.h> 
 
-TranspositionTable* generator::searchedPosition;
 std::ofstream*      generator::outFile;
 Evaluator           generator::evaluator {};
 
@@ -30,9 +29,8 @@ void generator::generate(const string& outpath) {
     eval_init();
     search_disable_infoStrings();
     outFile          = new std::ofstream(outpath, std::ios_base::app);
-    searchedPosition = new TranspositionTable(64);
 
-    int    min_ply              =  0;
+    int    min_ply              =  8;
     int    max_ply              = 500;
     int    adjudicate           = 1000;
     int    legalityCheckCounter = 10;
@@ -40,11 +38,11 @@ void generator::generate(const string& outpath) {
 
     int totalCount = 0;
 
-    unsigned long seed = mix(clock(), time(NULL), getpid());
-    srand(seed);
+//    unsigned long seed = mix(clock(), time(NULL), getpid());
+    srand(0);
 
     while (true) {
-        search_clearHash();
+//        search_clearHash();
         Board b {};
 
         for (int i = 0; i < max_ply; i++) {
@@ -85,96 +83,109 @@ void generator::generate(const string& outpath) {
             // do the move
             b.move(r);
 
-            // for this position, run a qsearch to collect all quiet positions
-            std::vector<Board*> leafs;
-            collectAllQuietPositions(&b, leafs);
-            
-            // std::cout << "collected " << leafs.size() << " positions" << std::endl;
-
-            // iterate over each position and run a quick search
-            for (Board* bs : leafs) {
-
-                double eval = evalPosition(bs);
-                search_clearHash();
-
-                if (abs(eval) < adjudicate) {
-                    (*outFile) << bs->fen() << ";" << eval << "\n";
-                    totalCount++;
-
-                    if (totalCount % 100 == 0) {
-                        std::cout << totalCount << std::endl;
-                    }
-                }
-                
-                delete bs;
+            // only start at min_ply
+            if(i < min_ply){
+                continue;
             }
+
+            // for this position, run a qsearch to collect the pv
+            LINE pv;
+            collectAllQuietPositions(&b, &pv);
+
+            Board b2{};
+            std::cout << std::endl;
+            for(int i = 0; i < pv.cmove; i++){
+//                std::cout << toString(pv.argmove[i]) << std::endl;
+                if(!b2.isLegal(pv.argmove[i])){
+                    break;
+                }
+                b2.move(pv.argmove[i]);
+            }
+            (*outFile) << b2.fen() << "\n";
+//            if(pv.cmove == 4) exit(-1);
+            // iterate over each position and run a quick search
+//            for (Board* bs : leafs) {
+//
+//                double eval = evalPosition(bs);
+//                search_clearHash();
+//
+//                if (abs(eval) < adjudicate) {
+//                    (*outFile) << bs->fen() << ";" << eval << "\n";
+//                    totalCount++;
+//
+//                    if (totalCount % 100 == 0) {
+//                        std::cout << totalCount << std::endl;
+//                    }
+//                }
+//
+//                delete bs;
+//            }
         }
     }
 }
-Score generator::collectAllQuietPositions(Board* b, std::vector<Board*>& leafs, Score alpha, Score beta) {
 
-    // if its a draw (3-fold), return.
+
+Score generator::collectAllQuietPositions(Board* b, LINE* pline, Score alpha, Score beta, Depth ply) {
+
+
     if (b->isDraw())
         return 0;
     
-    double stand_pat = evaluator.evaluate(b);
+    double stand_pat = evaluator.evaluate(b) * (b->getActivePlayer() == WHITE ? 1:-1);
 
     if (stand_pat >= beta)
         return beta;
     if (alpha < stand_pat)
         alpha = stand_pat;
 
-    // create a movelist which contains
+    // create a movelist which contains all non quiet moves
     MoveList mv {};
 
     // collect all non quiet moves (not regarding checks)
     b->getNonQuietMoves(&mv);
 
-    // if there are no non quiet moves, consider this position quiet and return
-    if (mv.getSize() == 0) {
-
-        // we are at a leaf.
-
-        if (searchedPosition->get(b->zobrist()).zobrist != 0)
-            return alpha;
-
-        searchedPosition->put(b->zobrist(), 0, 0, PV_NODE, 0);
-        leafs.push_back(new Board(b));
-        return alpha;
-    }
-
     MoveOrderer orderer {};
     orderer.setMovesQSearch(&mv, b);
 
-    // we loop over all moves to get those positions
-    for (int i = 0; i < mv.getSize(); i++) {
+    LINE line{};
 
-        
-        
+    // we loop over all moves to get those positions
+    while(orderer.hasNext()) {
         // get the current move
         Move m = orderer.next();
-    
-    
+
         if(b->staticExchangeEvaluation(m) < 0)
             continue;
-        
+
         // dont do illegal moves
         if (!b->isLegal(m))
             continue;
+
+
+//        for(int k = 0; k < ply; k++) std::cout << "  ";
+//        std::cout << toString(m) << std::endl;
+
 
         // do the move
         b->move(m);
 
         // collect all quiet positions for this position
-        Score s = collectAllQuietPositions(b, leafs);
-
-        if (s > beta)
-            return beta;
-        if (s > alpha)
-            alpha = s;
+        Score s = collectAllQuietPositions(b, &line, -beta, -alpha, ply + 1);
 
         // undo the move
         b->undoMove();
+
+        if (s >= beta)
+            return beta;
+        if (s > alpha){
+            pline->argmove[0] = m;
+            for(int k = 0; k < line.cmove; k++){
+                pline->argmove[k+1] = line.argmove[k];
+            }
+            pline->cmove = line.cmove + 1;
+            alpha = s;
+        }
+
     }
     return alpha;
 }
@@ -201,15 +212,16 @@ Move generator::selectRandomMove(MoveList& moveList, double king_walk_p) {
             kingMoves.add(m);
         }
     }
-    
     // if there are no king moves or a random value in between 0 and 1 is larger than king_walk_p,
     // select randomly from all moves
     if (kingMoves.getSize() == 0 || static_cast<double>(rand()) / RAND_MAX > king_walk_p) {
-        return moveList.getMove(static_cast<int>(static_cast<double>(rand()) / RAND_MAX * moveList.getSize()));
+        int index = rand() % moveList.getSize();
+        return moveList.getMove(index);
     }
     // select a move from the king moves
     else {
-        return kingMoves.getMove(static_cast<int>(static_cast<double>(rand()) / RAND_MAX * kingMoves.getSize()));
+        int index = rand() % kingMoves.getSize();
+        return kingMoves.getMove(index);
     }
 }
 

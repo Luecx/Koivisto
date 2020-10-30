@@ -58,7 +58,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     mode         = TOURNAMENT;
 
     double phase = (18
-                    - bitCount(board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP]
+                       - bitCount(board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP]
                                | board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT]
                                | board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK])
                     - 3 * bitCount(board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN]))

@@ -135,9 +135,9 @@ void printMoveBits(Move move, bool bitInfo = true);
 class MoveList {
 
     private:
-    move::Move      moves[256];
-    move::MoveScore scores[256];
-    int             size;
+    move::Move      moves[256]{};
+    move::MoveScore scores[256]{};
+    int             size = 0;
 
     public:
     MoveList();
