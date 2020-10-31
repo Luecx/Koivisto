@@ -57,34 +57,13 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double phase = (18
-                    - bitCount(board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP]
-                               | board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT]
-                               | board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK])
-                    - 3 * bitCount(board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN]))
-                   / 18.0;
-
-    if (phase > 1)
-        phase = 1;
-
-    double division = movesToGo - 30 + 50 * phase;
-    division        = 40;
+    double division = 45;
 
     timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
                                                   : (int(black / division) + blackInc) - 10;
 
-    int difference = board->getActivePlayer() == WHITE ? (white - black) : (black - white);
-    difference     = 0;
-
-    timeToUse += int(difference / division);
-    upperTimeBound = timeToUse * 3;
-
-    if (upperTimeBound > (board->getActivePlayer() == WHITE ? white / 10 : black / 10)) {
-        upperTimeBound = (board->getActivePlayer() == WHITE ? white / 10 : black / 10);
-    }
-
-    if (timeToUse > upperTimeBound)
-        timeToUse = upperTimeBound / 3;
+    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / 30) + whiteInc) - 10
+                                                  : (int(black / 30) + blackInc) - 10;
 
     startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
@@ -118,10 +97,6 @@ void TimeManager::updatePV(Move move, Score score, Depth depth) {
     scoreHistory[historyCount] = score;
     depthHistory[historyCount] = depth;
 
-    // compute the safety to stop the search
-    if (historyCount > 0)
-        computeSafetyToStop();
-
     historyCount++;
 }
 
@@ -129,58 +104,31 @@ void TimeManager::stopSearch() { forceStop = true; }
 
 bool TimeManager::isTimeLeft() {
 
-    //    return true;
-
     int elapsed = elapsedTime();
 
-    //    std::cout << elapsed << " | " << forceStop << " | " << isSafeToStop << " | " << timeToUse << " | "<<
-    //    upperTimeBound << " | " <<std::endl;
-
-    // stop the search if requested and its safe
-    if (forceStop && isSafeToStop)
+    // stop the search if requested
+    if (forceStop)
         return false;
-
-    // if we have safe time left, continue searching
-    if (elapsed < timeToUse)
-        return true;
 
     // if we are above the maximum allowed time, stop
     if (elapsed >= upperTimeBound)
         return false;
 
-    // dont stop the search if its not safe
-    if (!isSafeToStop)
-        return true;
-
-    return false;
+    return true;
 }
 
-void TimeManager::computeSafetyToStop() {
-    // check if the pv didnt change but the score dropped heavily
-    if (moveHistory[historyCount] == moveHistory[historyCount - 1]
-        && scoreHistory[historyCount] < scoreHistory[historyCount - 1] - 60) {
-        isSafeToStop = false;
-        return;
-    }
+bool TimeManager::rootTimeLeft(){
+    int elapsed = elapsedTime();
+    
+    // stop the search if requested
+    if (forceStop)
+        return false;
 
-    // if the pv changed multiple times during this iteration, search deeper.
-    Depth depth   = depthHistory[historyCount];
-    int   index   = historyCount - 1;
-    int   changes = 0;
-    while (index >= 0) {
-        if (depthHistory[index] != depth)
-            break;
+    // if we are above the maximum allowed time at root, stop
+    if (elapsed >= timeToUse)
+        return false;
 
-        changes++;
-
-        index--;
-    }
-
-    if (changes >= 1) {
-        isSafeToStop = false;
-    } else {
-        isSafeToStop = true;
-    }
+    return true;
 }
 
 TimeMode TimeManager::getMode() const { return mode; }
