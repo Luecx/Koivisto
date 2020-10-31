@@ -42,6 +42,8 @@ class Evaluator {
 
     bb::Score evaluate(Board* b);
 
+    bb::Score evaluateTempo(Board* b);
+
     /**
      * returns the phase of the last calculation
      * @return

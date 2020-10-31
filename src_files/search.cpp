@@ -104,6 +104,8 @@ bool hasOnlyPawns(Board* board, Color color) {
  */
 bool isTimeLeft() { return search_timeManager->isTimeLeft(); }
 
+bool rootTimeLeft() { return search_timeManager->rootTimeLeft(); }
+
 /**
  * used to change the hash size
  * @param hashSize
@@ -425,7 +427,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score alpha = s-window;
             Score beta = s+window;
             
-            while (isTimeLeft()){
+            while (rootTimeLeft()){
                 s = pvSearch(b, alpha, beta, d, 0, td, 0);
                 
                 window += window;
@@ -443,7 +445,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (threadId == 0)printInfoString(b, d, s);
         
         // if the search finished due to timeout, we also need to stop here
-        if (!isTimeLeft())
+        if (!rootTimeLeft())
             break;
     }
         
@@ -492,7 +494,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     td->nodes++;
     
-    if (!isTimeLeft()) {
+    if (depth > 10 && !isTimeLeft()) {
         return beta;
     }
     
@@ -519,7 +521,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     SearchData* sd            = td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
-    Score       staticEval    = inCheck ? -MAX_MATE_SCORE+ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score       staticEval;
+    if (b->getPreviousMove()==0 && ply != 0){
+        //reuse static evaluation from previous ply incase of nullmove
+        staticEval = -sd->eval[1-b->getActivePlayer()][ply-1]+sd->evaluator.evaluateTempo(b)*2;
+    }else{
+        staticEval    = inCheck ? -MAX_MATE_SCORE+ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
     Score       originalAlpha = alpha;
     Score       highestScore  = -MAX_MATE_SCORE;
     Score       score         = -MAX_MATE_SCORE;
@@ -849,11 +857,13 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     }
     
     bool  inCheck   = b->isInCheck(b->getActivePlayer());
-    Score stand_pat = -MAX_MATE_SCORE + ply;
-    if (!inCheck) {
-        stand_pat = sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    Score stand_pat;
+    if (b->getPreviousMove()==0 && ply != 0){
+        //reuse static evaluation from previous ply incase of nullmove
+        stand_pat = -sd->eval[1-b->getActivePlayer()][ply-1]+sd->evaluator.evaluateTempo(b)*2;
+    }else{
+        stand_pat    = inCheck ? -MAX_MATE_SCORE+ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
-    
     if (en.zobrist == zobrist) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
