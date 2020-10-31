@@ -104,6 +104,8 @@ bool hasOnlyPawns(Board* board, Color color) {
  */
 bool isTimeLeft() { return search_timeManager->isTimeLeft(); }
 
+bool rootTimeLeft() { return search_timeManager->rootTimeLeft(); }
+
 /**
  * used to change the hash size
  * @param hashSize
@@ -425,7 +427,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score alpha = s-window;
             Score beta = s+window;
             
-            while (isTimeLeft()){
+            while (rootTimeLeft()){
                 s = pvSearch(b, alpha, beta, d, 0, td, 0);
                 
                 window += window;
@@ -443,7 +445,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (threadId == 0)printInfoString(b, d, s);
         
         // if the search finished due to timeout, we also need to stop here
-        if (!isTimeLeft())
+        if (!rootTimeLeft())
             break;
     }
         

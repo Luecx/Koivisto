@@ -42,7 +42,6 @@ class TimeManager {
     /**
      * updates isSafeToStop
      */
-    void computeSafetyToStop();
 
     public:
     TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board);
@@ -76,6 +75,8 @@ class TimeManager {
      * @return
      */
     bool isTimeLeft();
+
+    bool rootTimeLeft();
     
     /**
      * returns the timemode
