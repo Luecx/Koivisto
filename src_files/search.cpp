@@ -494,7 +494,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     td->nodes++;
     
-    if (!isTimeLeft()) {
+    if (depth > 10 && !isTimeLeft()) {
         return beta;
     }
     
