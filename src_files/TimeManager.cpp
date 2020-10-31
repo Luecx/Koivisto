@@ -57,7 +57,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double division = 45;
+    double division = 55;
 
     timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
                                                   : (int(black / division) + blackInc) - 10;
