@@ -57,13 +57,13 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double division = 55;
+    double division = 35;
 
     timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
                                                   : (int(black / division) + blackInc) - 10;
 
-    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / 30) + whiteInc) - 10
-                                                  : (int(black / 30) + blackInc) - 10;
+    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / 25) + whiteInc) - 10
+                                                  : (int(black / 25) + blackInc) - 10;
 
     startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
