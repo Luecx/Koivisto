@@ -1,6 +1,21 @@
-//
-// Created by finne on 5/15/2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #ifndef CHESSCOMPUTER_UTIL_H
 #define CHESSCOMPUTER_UTIL_H
@@ -15,16 +30,37 @@
 
 constexpr char const* ws_t = " \t\n\r\f\v";
 
-// trim from end of string (right)
+/**
+ * trim from end of string (right)
+ * @param s
+ * @param t
+ * @return
+ */
 std::string& rtrim(std::string& s, const char* t = ws_t);
 
-// trim from beginning of string (left)
+/**
+ * trim from beginning of string (left)
+ * @param s
+ * @param t
+ * @return
+ */
 std::string& ltrim(std::string& s, const char* t = ws_t);
 
-// trim from both ends of string (right then left)
+/**
+ * trim from both ends of string (right then left)
+ * @param s
+ * @param t
+ * @return
+ */
 std::string& trim(std::string& s, const char* t = ws_t);
 
-// prints a loading bar
+/**
+ * returns a loading bar as a string. Usually used together with '\r'.
+ * @param count
+ * @param max
+ * @param msg
+ * @return
+ */
 std::string loadingBar(int count, int max, std::string msg);
 
 /**
@@ -34,11 +70,16 @@ std::string loadingBar(int count, int max, std::string msg);
  * @param replaceStr
  * @return
  */
-std::string& findAndReplaceAll(std::string& data, std::string toSearch,
-                               std::string replaceStr);
+std::string& findAndReplaceAll(std::string& data, std::string toSearch, std::string replaceStr);
 
-std::vector<std::string>& splitString(const std::string&        txt,
-                                      std::vector<std::string>& strs, char ch);
+/**
+ * splits the string into subparts at the specified char.
+ * @param txt
+ * @param strs
+ * @param ch
+ * @return
+ */
+std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch);
 
 // static void printArray(float* data, int count){
 //    int blocks = count / 64 + (count % 64 != 0 ? 1:0);
@@ -108,8 +149,16 @@ std::vector<std::string>& splitString(const std::string&        txt,
 //    }
 //}
 
+/**
+ * starts the time measurement.
+ * Note that this Tool is not used during search but rather for internal profilings and debugging.
+ */
 void startMeasure();
 
+/**
+ * stops the time measurement and returns the elapsed milliseconds.
+ * @return
+ */
 int stopMeasure();
 
 #endif    // CHESSCOMPUTER_UTIL_H

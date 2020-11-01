@@ -1,6 +1,21 @@
-//
-// Created by finne on 5/18/2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #include "TranspositionTable.h"
 
@@ -57,7 +72,7 @@ void TranspositionTable::setSize(U64 mb) {
 }
 
 /**
- * clears the content
+ * clears the content and sets all entries to 0.
  */
 void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_size); }
 
@@ -129,6 +144,10 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
     return false;
 }
 
+/**
+ * Increments the age of the transposition table.
+ * To avoid overflowing as only 8 bits are used, we wrap at 255 and go back to 0.
+ */
 void TranspositionTable::incrementAge() {
     TranspositionTable::m_currentAge++;
     if (TranspositionTable::m_currentAge == 255) {

@@ -1,6 +1,21 @@
-//
-// Created by finne on 5/31/2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #include "uci.h"
 
@@ -11,18 +26,21 @@
 #include <thread>
 
 #ifndef MINOR_VERSION
-#  define MINOR_VERSION 0
+#define MINOR_VERSION 0
 #endif
 #ifndef MAJOR_VERSION
-#  define MAJOR_VERSION 0
+#define MAJOR_VERSION 0
 #endif
-
-
 
 TimeManager* timeManager;
 Board*       board;
 std::thread* searchThread = nullptr;
 
+/**
+ * the Main loop for received inputs from the user. Prints information about the engine (version, authors)
+ * and continues reading the lines until 'quit' is parsed which will shut down the engine and deallocate arrays.
+ * @param bench
+ */
 void uci_loop(bool bench) {
 
     bb_init();
@@ -55,6 +73,11 @@ void uci_loop(bool bench) {
     }
 }
 
+/**
+ * Parses the uci command: uci
+ * Displays engine version and the authors.
+ * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive further commands.
+ */
 void uci_uci() {
     std::cout << "id name Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
     std::cout << "id author K. Kahre, F. Eggers, E. Bruno" << std::endl;
@@ -65,6 +88,13 @@ void uci_uci() {
     std::cout << "uciok" << std::endl;
 }
 
+/**
+ * assuming the input to the engine has been split by spaces into the given vector, this function
+ * retrieves the entry after the given key. e.g. [a, 10, b 20, 300] with key='b' will return 20 as a string.
+ * @param vec
+ * @param key
+ * @return
+ */
 std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
     int index = 0;
     for (std::string s : vec) {
@@ -76,6 +106,10 @@ std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
     return "";
 }
 
+/**
+ * stops and deallocates the running thread. This can be used to abruptly stop the search although this usage
+ * will not display uci info strings. On the other hand, once the search is finished, this function will be called.
+ */
 void uci_endThread() {
     if (searchThread != nullptr) {
         delete searchThread;
@@ -85,22 +119,34 @@ void uci_endThread() {
     }
 }
 
+/**
+ * this function will invoke the search with a given max depth and a time manager.
+ * If no depth has been specified, it will be set to the maximum depth and the time manager will handle
+ * all stop-management.
+ *
+ * @param maxDepth
+ * @param p_timeManager
+ */
 void uci_searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
     Move m = bestMove(board, maxDepth, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
     uci_endThread();
 }
 
+/**
+ * processes a single command.
+ */
 void uci_processCommand(std::string str) {
 
+    // we trim all white spaces on both sides first
     str = trim(str);
 
+    // next we need to split the input by spaces.
     std::vector<std::string> split {};
     splitString(str, split, ' ');
 
-    /**
-     * used for input debugging to check what information has been given to the engine.
-     */
+    // it is possible to output all uci inputs to the engine to a file. Useful for debugging as many
+    // clients to not display the uci commands they sent to the engine themself.
     if (false) {
         ofstream myfile;
         myfile.open("input.debug", fstream::app);
@@ -193,6 +239,14 @@ void uci_processCommand(std::string str) {
     }
 }
 
+/**
+ * parses the uci command: go perft [depth].
+ * It is also possible to specify the hash usage like: go perft 6 hash.
+ * A hash size of 128 will be used which cannot be adjusted.
+ *
+ * @param depth
+ * @param hash
+ */
 void uci_go_perft(int depth, bool hash) {
 
     perft_init(hash);
@@ -206,6 +260,18 @@ void uci_go_perft(int depth, bool hash) {
     perft_cleanUp();
 }
 
+/**
+ * parses the uci command: go match wtime [wtime] btime [btime] winc [winc] binc [binc] ...
+ * This function is the main starting point for the search if real games are played.
+ * If movestogo has not been given, it hash already been adjusted to a fixed value of 40 above.
+ * The depth is usually set to the maximum depth (128)
+ * @param wtime
+ * @param btime
+ * @param winc
+ * @param binc
+ * @param movesToGo
+ * @param depth
+ */
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth) {
 
     if (searchThread != nullptr) {
@@ -218,6 +284,11 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int d
     searchThread->detach();
 }
 
+/**
+ * parses the uci command: go depth [depth].
+ * It does a search on the current position until the specified depth has been reached.
+ * @param depth
+ */
 void uci_go_depth(int depth) {
 
     if (searchThread != nullptr) {
@@ -230,11 +301,22 @@ void uci_go_depth(int depth) {
     searchThread->detach();
 }
 
+/**
+ * parsed the uci command: go nodes [nodecount]
+ * Not yet implemented
+ * @param nodes
+ */
 void uci_go_nodes(int nodes) {
     // TODO implement node limit
     std::cout << "go nodes " << nodes << " not supported" << std::endl;
 }
 
+/**
+ * parses the uci command: go movetime [movetime].
+ * It does a search on the current position until the specified movetime has been reached.
+ * The search will not extend the time, even if critical positions are analysed.
+ * @param depth
+ */
 void uci_go_time(int movetime) {
     if (searchThread != nullptr) {
         return;
@@ -246,16 +328,38 @@ void uci_go_time(int movetime) {
     searchThread->detach();
 }
 
+/**
+ * parses the uci command: go infinite
+ * It does a search on the current position until night and dawn have passed.
+ */
 void uci_go_infinite() { uci_go_depth(MAX_PLY); }
 
+/**
+ * parsed the uci command: go mate [mate_in_ply]
+ * Not yet implemented
+ * @param nodes
+ */
 void uci_go_mate(int depth) {
 
     // TODO implement mate search
     std::cout << "go mate " << depth << " not supported" << std::endl;
 }
 
+/**
+ * parses the uci command: stop
+ * stops the current search. This will usually print a last info string and the best move.
+ */
 void uci_stop() { search_stop(); }
 
+/**
+ * parses the uci command: setoption name [name] value [value]
+ * Sets internal search options.
+ * - SyzygyPath
+ * - Threads
+ * - Hash
+ * @param name
+ * @param value
+ */
 void uci_set_option(std::string& name, std::string& value) {
     if (name == "Hash") {
         search_setHashSize(stoi(value));
@@ -289,17 +393,33 @@ void uci_set_option(std::string& name, std::string& value) {
     }
 }
 
+/**
+ * parses the uci command: isready
+ * The engine is supposed to return readyok after checking that its ready to receive further commands.
+ */
 void uci_isReady() {
     // TODO check if its running
 
     std::cout << "readyok" << std::endl;
 }
 
+/**
+ * parses the non-uci command: debug [true, false]
+ * it is possible to enable debugging soon.
+ * @param mode
+ */
 void uci_debug(bool mode) {
     // TODO enable debug
     std::cout << "debug=" << mode << std::endl;
 }
 
+/**
+ * parses the uci command: position fen [fen] moves [m1, m2,...]
+ * If the fen is not specified, the start position will be used which can also be invoked using 'startpos' instead of
+ * fen ...
+ * @param fen
+ * @param moves
+ */
 void uci_position_fen(std::string fen, std::string moves) {
     if (board != nullptr)
         delete board;
@@ -382,10 +502,20 @@ void uci_position_fen(std::string fen, std::string moves) {
     }
 }
 
+/**
+ * parses the uci command: position fen [fen] moves [m1, m2,...]
+ * If the fen is not specified, the start position will be used which can also be invoked using 'startpos' instead of
+ * fen ...
+ * @param fen
+ * @param moves
+ */
 void uci_position_startpos(std::string moves) {
     uci_position_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves);
 }
 
+/**
+ * cleans up all allocated data
+ */
 void uci_quit() {
 
     delete board;
@@ -395,6 +525,9 @@ void uci_quit() {
     search_cleanUp();
 }
 
+/**
+ * performs a bench
+ */
 void uci_bench() {
 
     // positions from Ethereal
