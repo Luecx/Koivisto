@@ -190,16 +190,15 @@ void main_tune_features() {
 #include "eun/generation/Generator.h"
 
 int main(int argc, char* argv[]) {
-
-//    generator::generate("test.gen");
-    generator::evaluatePositions("test.gen", "test.eval");
-//    if (argc == 1) {
-//        uci_loop(false);
-//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-//        uci_loop(true);
-//    } else if (argc > 2 && strcmp(argv[1], "gen") == 0){
-//        generator::generate(std::string(argv[2]));
-//    }
+   if (argc == 1) {
+       uci_loop(false);
+   } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+       uci_loop(true);
+   } else if (argc > 2 && strcmp(argv[1], "gen") == 0) {
+       generator::generate(std::string(argv[2]));
+   } else if (argc > 3 && strcmp(argv[1], "scorefens") == 0) {
+       generator::evaluatePositions(std::string(argv[2]), std::string(argv[3]));
+   }
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
