@@ -1,6 +1,21 @@
-//
-// Created by finne on 6/8/2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #ifndef KOIVISTO_VERIFICATION_H
 #define KOIVISTO_VERIFICATION_H
@@ -8,22 +23,33 @@
 #include "Board.h"
 #include "Move.h"
 
-void verifySEECase(std::string fen, Move m, Score s){
-    Board *b = new Board(fen);
-    
+/**
+ * verifies the given static-exchange evaluation case. requires a fen and a move and compares the see output with the
+ * expected output
+ * @param fen
+ * @param m
+ * @param s
+ */
+void verifySEECase(std::string fen, Move m, Score s) {
+    Board* b = new Board(fen);
+
     Score see = b->staticExchangeEvaluation(m);
-    
-    if(see != s){
-        std::cerr << "problem in: " << fen <<  " result=" << see << " expected: " << s << std::endl;
+
+    if (see != s) {
+        std::cerr << "problem in: " << fen << " result=" << see << " expected: " << s << std::endl;
     }
-    
+
     delete b;
 }
 
-void verifySEE(){
-    
-    //100,325,325,500,1000,10000
-    
+/**
+ * verifies a list of see testing positions. Used for debugging the SEE code.
+ * Promoting positions have been removed for now
+ */
+void verifySEE() {
+
+    // 100,325,325,500,1000,10000
+
     // clang-format off
     verifySEECase("4R3/2r3p1/5bk1/1p1r3p/p2PR1P1/P1BK1P2/1P6/8 b - -", genMove(H5,G4,CAPTURE, BLACK_PAWN, WHITE_PAWN), 0);
     verifySEECase("4R3/2r3p1/5bk1/1p1r1p1p/p2PR1P1/P1BK1P2/1P6/8 b - -", genMove(H5,G4,CAPTURE, BLACK_PAWN, WHITE_PAWN), 0);
@@ -50,11 +76,8 @@ void verifySEE(){
     verifySEECase("8/pp6/2pkp3/4bp2/2R3b1/2P5/PP4B1/1K6 w - -", genMove(E5, C3, CAPTURE, BLACK_BISHOP, WHITE_PAWN), 100-325);
     verifySEECase("4q3/1p1pr1k1/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - -", genMove(E6, E4, CAPTURE, BLACK_ROOK, WHITE_PAWN), 100-500);
     verifySEECase("4q3/1p1pr1kb/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - -", genMove(H7, E4, CAPTURE, BLACK_BISHOP, WHITE_PAWN), 100);
-    
+
     // clang-format on
 }
 
-
-
-
-#endif //KOIVISTO_VERIFICATION_H
+#endif    // KOIVISTO_VERIFICATION_H

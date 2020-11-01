@@ -1,12 +1,30 @@
 
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
+
 #include "Bitboard.h"
 #include "Board.h"
 #include "Move.h"
 #include "MoveOrderer.h"
 #include "Tuning.h"
 #include "Verification.h"
-#include "uci.h"
 #include "gradients.h"
+#include "uci.h"
 
 #include <iomanip>
 
@@ -156,24 +174,24 @@ void main_tune_features() {
 
 int main(int argc, char* argv[]) {
 
-         if (argc == 1) {
-                uci_loop(false);
-            } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-                uci_loop(true);
-        }
+    //    if (argc == 1) {
+    //        uci_loop(false);
+    //    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+    //        uci_loop(true);
+    //    }
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-//    bb_init();
-//    eval_init();
-//    tuning::loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
-//    for(int i = 0; i < 100; i++){
-//
-//        std::cout << tuning::tune_mobility_gradients(tuning::boards, tuning::results, tuning::dataCount, 3.1) << std::endl;
-//    }
-    
+    bb_init();
+    eval_init();
+    tuning::loadPositionFile("../resources/tuningsets/tuningset_clear2.epd", 15000000);
+    for (int i = 0; i < 1000; i++) {
+        std::cout << tuning::tune_mobility_gradients(tuning::boards, tuning::results, tuning::dataCount, 3.1)
+                  << std::endl;
+    }
+
     //     for(int i = 0; i < 10; i++)
     //     tuning::evalSpeed();
     //     bb_cleanUp();

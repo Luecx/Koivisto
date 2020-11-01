@@ -125,7 +125,7 @@ double tune_mobility_gradients(Board** boards, double* target, int count, double
     static std::string names[6]{
         "",
         "EvalScore       mobilityKnight[9]",
-        "EvalScore       mobilityBishop[15]",
+        "EvalScore       mobilityBishop[14]",
         "EvalScore       mobilityRook[15]",
         "EvalScore       mobilityQueen[28]",
         "",

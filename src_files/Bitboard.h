@@ -1,7 +1,22 @@
-//
-// Created by finne on 26.08.2019.
-//
 
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
+ 
 #ifndef CHESSCOMPUTER_BITMAP_H
 #define CHESSCOMPUTER_BITMAP_H
 
@@ -677,21 +692,54 @@ inline U64 lsbIsolation(U64 number) { return number & -number; }
  */
 inline U64 lsbReset(U64 number) {
     return number & (number - 1);
-    ;
 }
 
+/**
+ * prints the given bitboard as a bitmap to the standard output stream
+ * @param bb
+ */
 void printBitmap(U64 bb);
 
+/**
+ * initialises the zobrist keys to random values
+ */
 void generateZobristKeys();
 
+/**
+ * this is mainly used for generating the entries for the fancy magic bitboard move generation.
+ * It populates the bits of a mask by using an index.
+ * @param mask
+ * @param index
+ * @return
+ */
 U64 populateMask(U64 mask, U64 index);
 
+/**
+ * Generates all attackable squares by a rook from the given square considering the occupied squares.
+ * Assumes that the occupied squares can be captured.
+ * @param sq
+ * @param occupied
+ * @return
+ */
 U64 generateRookAttack(Square sq, U64 occupied);
 
+/**
+ * Generates all attackable squares by a bishop from the given square considering the occupied squares.
+ * Assumes that the occupied squares can be captured.
+ * @param sq
+ * @param occupied
+ * @return
+ */
 U64 generateBishopAttack(Square sq, U64 occupied);
 
+/**
+ * initiates the entries for fancy magic bitboard and zobrist hash values.
+ */
 void bb_init();
 
+/**
+ * deletes allocated arrays
+ */
 void bb_cleanUp();
 
 U64 randU64();
@@ -716,8 +764,6 @@ inline U64 getHash(Piece piece, Square sq) { return all_hashes[piece][sq]; }
 inline U64 lookUpRookAttack(Square index, U64 occupied) {
     return ROOK_ATTACKS[index]
     [static_cast<int>((occupied & rookMasks[index]) * rookMagics[index] >> (rookShifts[index]))];
-    
-    //    return generateRookAttack(index, occupied);
 }
 
 /**
@@ -739,7 +785,6 @@ inline U64 lookUpRookXRayAttack(Square index, U64 occupied, U64 opponent) {
 inline U64 lookUpBishopAttack(Square index, U64 occupied) {
     return BISHOP_ATTACKS[index][static_cast<int>((occupied & bishopMasks[index]) * bishopMagics[index]
         >> (bishopShifts[index]))];
-    //    return generateBishopAttack(index, occupied);
 }
 
 /**
@@ -821,7 +866,6 @@ inline int chebyshevDistance(Square sq1, Square sq2) {
  * @param r2
  * @return
  */
-
 inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) { return max(abs(r2 - r1), abs(f2 - f1)); }
 
 /**

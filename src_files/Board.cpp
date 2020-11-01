@@ -1,58 +1,82 @@
-//
-// Created by finne on 5/14/2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #include "Board.h"
 
 using namespace bb;
 
+/**
+ * The default constructor uses a fen-representation of the board. if nothing is specified, the starting position
+ * will be used. This might crash if the given fen is illegal in its structure. e.g. not all rows/columns specified.
+ * @param fen
+ */
 Board::Board(std::string fen) {
 
+    // first we set all piece occupancies to zero.
     for (int i = 0; i < 12; i++) {
         m_pieces[i] = 0;
     }
 
+    // also unset the occupancy for both teams
     m_teamOccupied[WHITE] = 0;
     m_teamOccupied[BLACK] = 0;
 
+    // set the total occupancy to zero
     m_occupied = 0;
 
-    m_activePlayer = 0;
+    // assume white is the active player
+    m_activePlayer = WHITE;
 
+    // we use default values of -1 for the piece table for each square if no piece is on the square
     for (int i = 0; i < 64; i++) {
         m_pieceBoard[i] = -1;
     }
 
+    // we need to push a default board status.
     BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0};
     this->m_boardStatusHistory.push_back(boardStatus);
 
-    //#########################################################################################################
-    //#-------------------------------- F E N - P A R S I N G ------------------------------------------------#
-    //#########################################################################################################
-
-    //<editor-fold desc="splitting/trimming string">
+    // using some string utilties defined in Util.h, we split the fen into parts.
     std::vector<std::string> split {};
     std::string              str {fen};
     str = trim(str);
     findAndReplaceAll(str, "  ", " ");
     splitString(str, split, ' ');
-    //</editor-fold>
 
-    //<editor-fold desc="parsing m_pieces">
+    // first we parse the pieces on the board.
     File x {0};
     Rank y {7};
     for (char c : split[0]) {
 
+        // we continue to the next rank and reset the file
         if (c == '/') {
             x = 0;
             y--;
             continue;
         }
 
+        // if we need to skip a few squares, we do this here
         if (c < '9') {
             x += (c - '0');
             continue;
         } else {
+
             int offset = (c >= 'a') ? 6 : 0;
 
             Square sq = squareIndex(y, x);
@@ -69,18 +93,16 @@ Board::Board(std::string fen) {
             x++;
         }
     }
-    //</editor-fold>
 
-    //<editor-fold desc="parsing active player">
+    // if the fen is large enough, we parse the color next.
     if (split.size() >= 2 && split[1].length() == 1) {
         if (split[1].at(0) != 'w') {
             changeActivePlayer();
-            getBoardStatus()->zobrist^=ZOBRIST_WHITE_BLACK_SWAP;
+            getBoardStatus()->zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
         }
     }
-    //</editor-fold>
 
-    //<editor-fold desc="parsing castling">
+    // if the fen is large enough, we parse the castling rights next.
     if (split.size() >= 3) {
 
         for (int i = 0; i < 4; i++) {
@@ -108,56 +130,65 @@ Board::Board(std::string fen) {
             }
         }
     }
-    //</editor-fold>
 
-    //<editor-fold desc="parsing en passant">
+    // the last thing we consider is e.p. square.
     if (split.size() >= 4) {
         if (split[3].at(0) != '-') {
             Square square = squareIndex(split[3]);
             setEnPassantSquare(square);
         }
     }
-    //</editor-fold>
+
+    // note that we do not read information about move counts. This is usually not required for playing games.
 }
 
+/**
+ * Beside using the FEN for a position, one can also copy directly for another board object.
+ * Copies the entire history as well as all relevant fields.
+ * @param board
+ */
 Board::Board(Board* board) {
-    for (int i = 0; i < 12; i++) {
-        m_pieces[i] = 0;
-    }
 
-    m_occupied = 0;
-
-    m_activePlayer = 0;
-
-    for (int i = 0; i < 64; i++) {
-        m_pieceBoard[i] = -1;
-    }
-
+    // we need to copy occupancy bitboards for the teams
     m_teamOccupied[WHITE] = board->getTeamOccupied()[WHITE];
     m_teamOccupied[BLACK] = board->getTeamOccupied()[BLACK];
 
+    // we need to copy occupancy bitboards for each piece
     for (int n = 0; n < 12; n++) {
         m_pieces[n] = board->m_pieces[n];
     }
 
-    m_occupied     = *board->getOccupied();
+    // we need to copy occupancy bitboards for all pieces
+    m_occupied = *board->getOccupied();
+
+    // we also need to copy the active player
     m_activePlayer = board->getActivePlayer();
 
+    // copying the piece board for each square
     for (int i = 0; i < 64; i++) {
         m_pieceBoard[i] = board->m_pieceBoard[i];
     }
 
+    // next we copy the entire history of the board.
     for (int n = 0; n < static_cast<int>(board->m_boardStatusHistory.size()); n++) {
         m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
     }
 }
 
+/**
+ * For the sake of completeness, we provide a destructor which might be filled in the future.
+ */
 Board::~Board() {}
 
+/**
+ * Returns a FEN-representation of the board object which can be used for other engines, and debugging.
+ */
 std::string Board::fen() {
 
     std::stringstream ss;
 
+    // we do it in the same way we read a fen.
+    // first, we write the pieces
     for (Rank n = 7; n >= 0; n--) {
         int counting = 0;
         for (File i = 0; i < 8; i++) {
@@ -181,9 +212,12 @@ std::string Board::fen() {
             ss << "/";
     }
 
+    // adding the active player (w for white, b for black) padded by spaces.
     ss << " ";
-    ss << ((getActivePlayer() == 0) ? "w" : "b");
+    ss << ((getActivePlayer() == WHITE) ? "w" : "b");
     ss << " ";
+
+    // its relevant to add a '-' if no castling rights exist
     bool anyCastling = false;
     if (getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)) {
         anyCastling = true;
@@ -201,10 +235,11 @@ std::string Board::fen() {
         anyCastling = true;
         ss << "k";
     }
+    // if not castling rights exist, add a '-' in order to be able to read the e.p. square.
     if (anyCastling == false) {
         ss << "-";
     }
-
+    // similar to castling rights, we need to add a '-' if there is no e.p. square.
     if (getEnPassantSquare() >= 0) {
         ss << " ";
         ss << SQUARE_IDENTIFIER[getEnPassantSquare()];
@@ -212,59 +247,109 @@ std::string Board::fen() {
         ss << " -";
     }
 
+    // we also add the fifty move counter and the move counter to the fen (note that we dont parse those)
     ss << " " << getBoardStatus()->fiftyMoveCounter;
     ss << " " << getBoardStatus()->moveCounter;
 
     return ss.str();
 }
 
+/**
+ * Returns the zobrist key for the current board.
+ * The zobrist-key is stored within the meta information of the board.
+ */
 U64 Board::zobrist() { return getBoardStatus()->zobrist; }
 
+/**
+ * Returns true if the given player is in check by the opponent.
+ */
 bool Board::isInCheck(Color player) {
+    // we do this by casting rays from the king position and checking if an opponent piece is on those rays
+    // which could attack the given ray.
     if (player == WHITE) {
         return isUnderAttack(bitscanForward(m_pieces[WHITE_KING]), BLACK);
     } else {
-
         return isUnderAttack(bitscanForward(m_pieces[BLACK_KING]), WHITE);
     }
 }
 
+/**
+ * Returns true if the board is a draw by either the 50-move rule or a threefold repetition.
+ * Stalemates are not considering here as they require dynamic knowledge about the position
+ * which is only given during the search.
+ * @return
+ */
 bool Board::isDraw() { return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 2; }
 
+/**
+ * returns the piece which occupies the board at the given index
+ * @param sq
+ * @return
+ */
 Piece Board::getPiece(Square sq) { return m_pieceBoard[sq]; }
 
+/**
+ * Sets the piece on the given square.
+ * Deals with zobrist-keys.
+ * @param sq
+ * @param piece
+ */
 void Board::setPiece(Square sq, Piece piece) {
 
+    // first we set the piece on the piece board
     m_pieceBoard[sq] = piece;
 
+    // we need the square as a bitboard for the occupancy bitboards
     U64 sqBB = (ONE << sq);
 
+    // settings the occupancy for the team, the piece and the total occupancy.
     m_pieces[piece] |= sqBB;
     m_teamOccupied[piece / 6] |= sqBB;
     m_occupied |= sqBB;
 
+    // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(piece, sq);
 }
 
+/**
+ * Unsets the piece on the given square.
+ * Deals with zobrist-keys.
+ * @param sq
+ */
 void Board::unsetPiece(Square sq) {
 
+    // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);
 
+    // similar to setPiece() we need the square as a bitboard for upccancy bitboards.
+    // as we need to remove bits from the occupancy bitboards, we use the inverse.
     U64 sqBB = ~(ONE << sq);
+
+    // actually removing bits from the occupancy bitboards.
     m_pieces[p] &= sqBB;
     m_teamOccupied[p / 6] &= sqBB;
     m_occupied &= sqBB;
 
+    // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(p, sq);
 
+    // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
 }
 
+/**
+ * Replaces the piece on the given square with the given new piece.
+ * Deals with zobrist-keys.
+ * @param sq
+ * @param piece
+ */
 void Board::replacePiece(Square sq, Piece piece) {
+    // we need to know first which piece will be replaced on the given square.
     Piece p = getPiece(sq);
 
+    // similar to setPiece() we need the square as a bitboard for upccancy bitboards.
     U64 sqBB = (ONE << sq);
 
     m_pieces[p] &= ~sqBB;                 // unset
@@ -272,19 +357,30 @@ void Board::replacePiece(Square sq, Piece piece) {
     m_teamOccupied[p / 6] &= ~sqBB;       // unset
     m_teamOccupied[piece / 6] |= sqBB;    // set
 
+    // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
 
+    // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
 }
 
+/**
+ * changes the active player. This does not deal with the zobrist key so this function
+ * should usually not be used.
+ */
 void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
 
+/**
+ * Does a move. This function will crash if the move is not okay. (illegal moves are ok).
+ * Computes repetition counters as well as updating the zobrist key.
+ * @param m
+ */
 void Board::move(Move m) {
     BoardStatus* previousStatus = getBoardStatus();
-    BoardStatus newBoardStatus = {previousStatus->zobrist,            // zobrist will be changed later
-                                  0ULL,                               // reset en passant. might be set later
-                                  previousStatus->metaInformation,    // copy meta. might be changed
+    BoardStatus  newBoardStatus = {previousStatus->zobrist,           // zobrist will be changed later
+                                  0ULL,                              // reset en passant. might be set later
+                                  previousStatus->castlingRights,    // copy meta. might be changed
                                   previousStatus->fiftyMoveCounter
                                       + 1,    // increment fifty move counter. might be reset
                                   1ULL,       // set rep to 1 (no rep)
@@ -301,19 +397,19 @@ void Board::move(Move m) {
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
-        
-        if(getPiece(sqTo) % 6 == ROOK){
+
+        if (getPiece(sqTo) % 6 == ROOK) {
             if (color == BLACK) {
                 if (sqTo == A1) {
-                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_WHITE_QUEENSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_QUEENSIDE_CASTLING));
                 } else if (sqTo == H1) {
-                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_WHITE_KINGSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_KINGSIDE_CASTLING));
                 }
             } else {
                 if (sqTo == A8) {
-                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_BLACK_QUEENSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_BLACK_QUEENSIDE_CASTLING));
                 } else if (sqTo == H8) {
-                    newBoardStatus.metaInformation &= ~(ONE << (STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
                 }
             }
         }
@@ -366,8 +462,8 @@ void Board::move(Move m) {
     } else if (pFrom % 6 == KING) {
 
         // revoke castling rights if king moves
-        newBoardStatus.metaInformation &= ~(ONE << (color * 2));
-        newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+        newBoardStatus.castlingRights &= ~(ONE << (color * 2));
+        newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
 
         // we handle this case seperately so we return after this finished.
         m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
@@ -399,22 +495,17 @@ void Board::move(Move m) {
     else if (pFrom % 6 == ROOK) {
         if (color == WHITE) {
             if (sqFrom == A1) {
-                newBoardStatus.metaInformation &= ~(ONE << (color * 2));
+                newBoardStatus.castlingRights &= ~(ONE << (color * 2));
             } else if (sqFrom == H1) {
-                newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+                newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
             }
         } else {
             if (sqFrom == A8) {
-                newBoardStatus.metaInformation &= ~(ONE << (color * 2));
+                newBoardStatus.castlingRights &= ~(ONE << (color * 2));
             } else if (sqFrom == H8) {
-                newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
+                newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
             }
         }
-        //        if (f == 0) {
-        //            newBoardStatus.metaInformation &= ~(ONE << (color * 2));
-        //        } else {
-        //            newBoardStatus.metaInformation &= ~(ONE << (color * 2 + 1));
-        //        }
     }
 
     m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
@@ -432,6 +523,9 @@ void Board::move(Move m) {
     this->computeNewRepetition();
 }
 
+/**
+ * undoes the last move. Assumes the last move has not been a null move.
+ */
 void Board::undoMove() {
 
     Move m = getBoardStatus()->move;
@@ -469,12 +563,15 @@ void Board::undoMove() {
     m_boardStatusHistory.pop_back();
 }
 
+/**
+ * does a null move.
+ */
 void Board::move_null() {
     BoardStatus* previousStatus = getBoardStatus();
     BoardStatus  newBoardStatus = {
         previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
         0ULL,
-        previousStatus->metaInformation,
+        previousStatus->castlingRights,
         previousStatus->fiftyMoveCounter + 1,
         1ULL,
         previousStatus->moveCounter + getActivePlayer(),
@@ -485,12 +582,19 @@ void Board::move_null() {
     changeActivePlayer();
 }
 
+/**
+ * undoes a null move. Assumes that the previous move has been a null move.
+ */
 void Board::undoMove_null() {
 
     m_boardStatusHistory.pop_back();
     changeActivePlayer();
 }
 
+/**
+ * returns all moves. This is pseudo legal so they need to be checked for legality.
+ * @param moves
+ */
 void Board::getPseudoLegalMoves(MoveList* moves) {
 
     U64 attackableSquares;
@@ -797,6 +901,10 @@ void Board::getPseudoLegalMoves(MoveList* moves) {
     }
 }
 
+/**
+ * returns all non quiet-moves. This is pseudo legal so they need to be checked for legality.
+ * This contains captures and promotions. We do not consider moves which give checks here.
+ */
 void Board::getNonQuietMoves(MoveList* moves) {
     U64 opponents;
 
@@ -1024,6 +1132,10 @@ void Board::getNonQuietMoves(MoveList* moves) {
     }
 }
 
+/**
+ * returns the Move which lead to the current position.
+ * @return
+ */
 Move Board::getPreviousMove() {
     if (m_boardStatusHistory.empty())
         return 0;
@@ -1099,6 +1211,12 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) {
     return 0;    // empty set
 }
 
+/**
+ * returns the static exchange evaluation for the given move.
+ * this does not consider promotions during captures.
+ * @param m
+ * @return
+ */
 Score Board::staticExchangeEvaluation(Move m) {
 
 #ifdef SEE_CACHE_SIZE
@@ -1137,7 +1255,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         (fixed | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
 
     if (isCapture(m))
-        gain[d] = vals[capturedPiece % 6];
+        gain[d] = see_piece_vals[capturedPiece % 6];
     else {
         gain[d] = 0;
     }
@@ -1146,7 +1264,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         d++;
         attacker = 1 - attacker;
 
-        gain[d] = vals[capturingPiece % 6] - gain[d - 1];
+        gain[d] = see_piece_vals[capturingPiece % 6] - gain[d - 1];
 
         if (-gain[d - 1] < 0 && gain[d] < 0)
             break;    // pruning does not influence the result
@@ -1435,7 +1553,7 @@ bool Board::isLegal(Move m) {
  * @param index
  * @return
  */
-bool Board::getCastlingChance(Square index) { return getBit(getBoardStatus()->metaInformation, index); }
+bool Board::getCastlingChance(Square index) { return getBit(getBoardStatus()->castlingRights, index); }
 
 /**
  * enables/disables castling.
@@ -1443,12 +1561,16 @@ bool Board::getCastlingChance(Square index) { return getBit(getBoardStatus()->me
  */
 void Board::setCastlingChance(Square index, bool val) {
     if (val) {
-        setBit(getBoardStatus()->metaInformation, index);
+        setBit(getBoardStatus()->castlingRights, index);
     } else {
-        unsetBit(getBoardStatus()->metaInformation, index);
+        unsetBit(getBoardStatus()->castlingRights, index);
     }
 }
 
+/**
+ * this sets the e.p. square to the given square. Negative squares are not allowed.
+ * @param square
+ */
 void Board::setEnPassantSquare(Square square) {
     if (square < 0)
         getBoardStatus()->enPassantTarget = 0;
@@ -1456,6 +1578,10 @@ void Board::setEnPassantSquare(Square square) {
         getBoardStatus()->enPassantTarget = (ONE << square);
 }
 
+/**
+ * for each move, we need to compute the current repetition counter.
+ * as this is only used internally, there is no need to make this public.
+ */
 void Board::computeNewRepetition() {
     int maxChecks = getBoardStatus()->fiftyMoveCounter;
 
@@ -1468,10 +1594,23 @@ void Board::computeNewRepetition() {
     }
 }
 
+/**
+ * Returns the amount this position has occurred before.
+ * @return
+ */
 int Board::getCurrentRepetitionCount() { return getBoardStatus()->repetitionCounter; }
 
+/**
+ * returns the 50-move counter which is used for draw detection.
+ * @return
+ */
 int Board::getCurrent50MoveRuleCount() { return getBoardStatus()->fiftyMoveCounter / 2; }
 
+/*
+ * returns the square to which e.p. is possible.
+ * if e.p. is not possible, -1 is returned.
+ * @return
+ */
 Square Board::getEnPassantSquare() {
     U64 ePT = getBoardStatus()->enPassantTarget;
     if (ePT == 0) {
@@ -1484,12 +1623,21 @@ Square Board::getEnPassantSquare() {
     return pos;
 }
 
-Board Board::copy() { return Board(); }
-
+/**
+ * returns the active player which has to do the next move.
+ * @return
+ */
 Color Board::getActivePlayer() { return m_activePlayer; }
 
+/**
+ * returns a pointer to the board status which is used internally.
+ * @return
+ */
 BoardStatus* Board::getBoardStatus() { return &m_boardStatusHistory.back(); }
 
+/**
+ * writes the board object to the given stream
+ */
 std::ostream& operator<<(std::ostream& os, Board& board) {
 
     os << "zobrist key              " << board.zobrist() << "\n";
@@ -1522,14 +1670,39 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
     return os;
 }
 
+/**
+ * returns a pointer to a bitboard which highlights all occupied squares by all pieces on the board
+ * @return
+ */
 U64* Board::getOccupied() { return &m_occupied; }
 
+/**
+ * returns an array (pointer to the first element) which contains a bitboard for each piece on the board (12)
+ * @return
+ */
 const U64* Board::getPieces() const { return m_pieces; }
 
+/**
+ * returns an array (pointer to the first element) which contains a bitboard for both teams.
+ * @return
+ */
 const U64* Board::getTeamOccupied() const { return m_teamOccupied; }
 
+/**
+ * does the same as getPieces() although this only returns a single bitboard for the given piece type.
+ * @param color
+ * @param piece
+ * @return
+ */
 U64 Board::getPieces(Color color, Piece piece) { return m_pieces[color * 6 + piece]; }
 
+/**
+ * returns a bitboard of all pinned pieces of the given color.
+ * It furthermore writes the pinning pieces into the given pinners bitboard.
+ * @param color
+ * @param pinners
+ * @return
+ */
 U64 Board::getPinnedPieces(Color color, U64& pinners) {
     U64 pinned = 0;
 

@@ -1,30 +1,51 @@
-//
-// Created by finne on 7/11/2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #include "TimeManager.h"
 
 #include "Board.h"
 
-auto startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+auto startTime =
+    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
 /**
- * for exact timings
+ * We use this constructor if the movetime has been specified.
+ * This means that we do not want to extend the time in critical positions and want to stop the search exactly after
+ * movetime milliseconds.
  */
 TimeManager::TimeManager(int moveTime) {
     isSafeToStop = true;
     ignorePV     = true;
     forceStop    = false;
-    
+
     timeToUse      = moveTime;
     upperTimeBound = moveTime;
     mode           = MOVETIME;
-    
-    startTime      = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+
+    startTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count();
 }
 
 /**
- * for depth, infinite search etc.
+ * If the depth is specified, we use this constructor.
+ * No constraints about time are made and the search wont be stopped by the time manager.
  */
 TimeManager::TimeManager() {
     isSafeToStop = true;
@@ -35,11 +56,16 @@ TimeManager::TimeManager() {
     upperTimeBound = 1 << 30;
     mode           = DEPTH;
 
-    startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    startTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count();
 }
 
 /**
- * for timecontrol
+ * If a real game is being played, this is used.
+ * It computes the time which should be used an an upper bound which is always larger then the time which is the target
+ * time. The search loop will continue until timeToUse has been reached, yet the pv search wont stop until the upper
+ * time bound is reached.
  * @param white
  * @param black
  * @param whiteInc
@@ -57,46 +83,36 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double phase = (18
-                    - bitCount(board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP]
-                               | board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT]
-                               | board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK])
-                    - 3 * bitCount(board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN]))
-                   / 18.0;
-
-    if (phase > 1)
-        phase = 1;
-
-    double division = movesToGo - 30 + 50 * phase;
-    division        = 40;
+    double division = 35;
 
     timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
                                                   : (int(black / division) + blackInc) - 10;
 
-    int difference = board->getActivePlayer() == WHITE ? (white - black) : (black - white);
-    difference     = 0;
+    upperTimeBound =
+        board->getActivePlayer() == WHITE ? (int(white / 25) + whiteInc) - 10 : (int(black / 25) + blackInc) - 10;
 
-    timeToUse += int(difference / division);
-    upperTimeBound = timeToUse * 3;
-
-    if (upperTimeBound > (board->getActivePlayer() == WHITE ? white / 10 : black / 10)) {
-        upperTimeBound = (board->getActivePlayer() == WHITE ? white / 10 : black / 10);
-    }
-
-    if (timeToUse > upperTimeBound)
-        timeToUse = upperTimeBound / 3;
-
-    startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    startTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count();
 }
 
+/**
+ * returns the elapsed time since the starttime has been set.
+ * @return
+ */
 int TimeManager::elapsedTime() {
-    auto                       end  = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-    auto                       diff = end - startTime;
+    auto end =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    auto diff = end - startTime;
 
     return diff;
     // std::cout << "measurement finished! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
+/**
+ * a destructor for the sake of completeness.
+ */
 TimeManager::~TimeManager() {
 
     if (ignorePV)
@@ -107,6 +123,13 @@ TimeManager::~TimeManager() {
     delete[] depthHistory;
 }
 
+/**
+ * when the pv is updated during the search, this is called. Could be used to consider time extensions but is not used
+ * at this point.
+ * @param move
+ * @param score
+ * @param depth
+ */
 void TimeManager::updatePV(Move move, Score score, Depth depth) {
 
     // dont keep track of pv changes if timing doesnt matter
@@ -118,69 +141,58 @@ void TimeManager::updatePV(Move move, Score score, Depth depth) {
     scoreHistory[historyCount] = score;
     depthHistory[historyCount] = depth;
 
-    // compute the safety to stop the search
-    if (historyCount > 0)
-        computeSafetyToStop();
-
     historyCount++;
 }
 
+/**
+ * stops the search. Next time isTimeLeft() is called, false will be returned so that the search finishes as soon as
+ * possible.
+ */
 void TimeManager::stopSearch() { forceStop = true; }
 
+/**
+ * returns true if there is enough time left. This is used by the principal variation search.
+ */
 bool TimeManager::isTimeLeft() {
-
-    //    return true;
 
     int elapsed = elapsedTime();
 
-    //    std::cout << elapsed << " | " << forceStop << " | " << isSafeToStop << " | " << timeToUse << " | "<<
-    //    upperTimeBound << " | " <<std::endl;
-
-    // stop the search if requested and its safe
-    if (forceStop && isSafeToStop)
+    // stop the search if requested
+    if (forceStop)
         return false;
-
-    // if we have safe time left, continue searching
-    if (elapsed < timeToUse)
-        return true;
 
     // if we are above the maximum allowed time, stop
     if (elapsed >= upperTimeBound)
         return false;
 
-    // dont stop the search if its not safe
-    if (!isSafeToStop)
-        return true;
-
-    return false;
+    return true;
 }
 
-void TimeManager::computeSafetyToStop() {
-    // check if the pv didnt change but the score dropped heavily
-    if (moveHistory[historyCount] == moveHistory[historyCount - 1]
-        && scoreHistory[historyCount] < scoreHistory[historyCount - 1] - 60) {
-        isSafeToStop = false;
-        return;
-    }
+/**
+ * returns true if there is enough root time. root time is used to increase the depth in between iterative deepening
+ * iterations. It ensures that the search will mostly finish its iteration.
+ * @return
+ */
+bool TimeManager::rootTimeLeft() {
+    int elapsed = elapsedTime();
 
-    // if the pv changed multiple times during this iteration, search deeper.
-    Depth depth   = depthHistory[historyCount];
-    int   index   = historyCount - 1;
-    int   changes = 0;
-    while (index >= 0) {
-        if (depthHistory[index] != depth)
-            break;
+    // stop the search if requested
+    if (forceStop)
+        return false;
 
-        changes++;
+    // if we are above the maximum allowed time at root, stop
+    if (elapsed >= timeToUse)
+        return false;
 
-        index--;
-    }
-
-    if (changes >= 1) {
-        isSafeToStop = false;
-    } else {
-        isSafeToStop = true;
-    }
+    return true;
 }
 
+/**
+ * returns the move of the time manager.
+ * Its either,
+ *   - DEPTH
+ *   - MOVETIME
+ *   - TOURNAMENT
+ * @return
+ */
 TimeMode TimeManager::getMode() const { return mode; }
