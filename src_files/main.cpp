@@ -64,7 +64,7 @@ void main_tune_pst_bb(Piece piece) {
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[2], 64, lr) << std::endl;
+        /*std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[2], 64, lr) << std::endl;
         std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[3], 64, lr) << std::endl;
 
         std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[4], 64, lr) << std::endl;
@@ -74,9 +74,11 @@ void main_tune_pst_bb(Piece piece) {
         std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[7], 64, lr) << std::endl;
 
         std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[8], 64, lr) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[9], 64, lr) << std::endl;
+        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[9], 64, lr) << std::endl;*/
+        
+        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[10], 64, lr) << std::endl;
 
-        for (Square s = 0; s < 64; s++) {
+        /*for (Square s = 0; s < 64; s++) {
             std::cout << "M(" << setw(5) << MgScore(psqt[2][s]) << "," << setw(5) << EgScore(psqt[2][s]) << "), ";
             if ((i + 1) % 8 == 0)
                 std::cout << std::endl;
@@ -122,10 +124,17 @@ void main_tune_pst_bb(Piece piece) {
             std::cout << "M(" << setw(5) << MgScore(psqt[9][s]) << "," << setw(5) << EgScore(psqt[9][s]) << "), ";
             if ((i + 1) % 8 == 0)
                 std::cout << std::endl;
+        }*/
+        std::cout << std::endl;
+
+        for (Square s = 0; s < 64; s++) {
+            std::cout << "M(" << setw(5) << MgScore(psqt[10][s]) << "," << setw(5) << EgScore(psqt[10][s]) << "), ";
+            if ((i + 1) % 8 == 0)
+                std::cout << std::endl;
         }
         std::cout << std::endl;
 
-        if (i % 3 == 0 && lr > 1) {
+        if (i % 4 == 0 && lr > 1) {
             lr /= 2;
             std::cout << "Lr Dropped to " << lr;
             std::cout << std::endl;
@@ -207,7 +216,7 @@ int main(int argc, char* argv[]) {
     //     tuning::evalSpeed();
     //     bb_cleanUp();
 
-    // main_tune_pst_bb(PAWN);
+     //main_tune_pst_bb(PAWN);
     //    eval_init();
     //    main_tune_features();
     // main_tune_pst();
