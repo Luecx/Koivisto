@@ -23,13 +23,11 @@ typedef struct LINE {
 }   LINE;
 
 
-Move selectRandomMove(MoveList& moveList, double king_walk_p);
 
-Score evalPosition(Board* b);
-
-Score collectAllQuietPositions(Board* b,  std::vector<Board> *leafs, Score alpha=-MAX_MATE_SCORE, Score beta=MAX_MATE_SCORE, Depth ply=0);
 
 [[noreturn]] void generate(const std::string& outpath);
+
+void evaluatePositions(const string& inpath, const string& outpath);
 
 }    // namespace generator
 
