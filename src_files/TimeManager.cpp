@@ -89,7 +89,9 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
                                                   : (int(black / division) + blackInc) - 10;
 
     upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / division*0.7) + whiteInc) - 10 : (int(black / division*0.7) + blackInc) - 10;
+        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 10 : (int(black / (division*0.7)) + blackInc) - 10;
+
+    std::cout << timeToUse << "|" << upperTimeBound;
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
