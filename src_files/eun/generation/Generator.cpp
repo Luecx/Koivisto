@@ -155,6 +155,7 @@ Move selectRandomMove(MoveList& moveList, double king_walk_p) {
 // gets the evaluation for the position
 Score evalPosition(Board* b) {
     TimeManager manager {};
+    search_clearHash();
     bestMove(b, 8, &manager);
     SearchOverview ov = search_overview();
     return ov.score;
@@ -162,7 +163,7 @@ Score evalPosition(Board* b) {
 
 void generator::generate(const string& outpath) {
     bb_init();
-    search_init(8);
+    search_init(1);
     eval_init();
     search_disable_infoStrings();
     outFile = new std::ofstream(outpath, std::ios_base::app);
@@ -179,15 +180,14 @@ void generator::generate(const string& outpath) {
     srand(seed);
 
     while (true) {
-        //        search_clearHash();
         Board b {};
-
+        Score evalScore = 0;
         for (int i = 0; i < max_ply; i++) {
 
             // stop the search if:
             // A: the game is a draw
             // B: the eval is static eval is very large
-            if (b.isDraw() || abs(evaluator.evaluate(&b)) > adjudicate) {
+            if (b.isDraw() || abs(evaluator.evaluate(&b)) > adjudicate || abs(evalScore) > adjudicate) {
                 break;
             }
 
@@ -229,11 +229,18 @@ void generator::generate(const string& outpath) {
             // for this position, run a qsearch to collect the pv
             std::vector<Board> leafs {};
             collectAllQuietPositions(&b, &leafs, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0);
-
+            
+            
+            evalScore =  evalPosition(&b);
+            
+            if(abs(evalScore) > adjudicate){
+                break;
+            }
+            
             if (leafs.size() == 0) {
-                (*outFile) << b.fen() << "\n";
+                (*outFile) << b.fen() << ";" << evalScore << "\n";
             } else {
-                (*outFile) << leafs[rand() % leafs.size()].fen() << "\n";
+                (*outFile) << leafs[rand() % leafs.size()].fen() << ";" << evalScore << "\n";
             }
 
             totalCount++;
