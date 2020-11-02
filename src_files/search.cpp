@@ -563,7 +563,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock too often for speed
     // reasons so we only apply this when the depth is larger than 10.
-    if (depth > 10 && !isTimeLeft()) {
+    if (depth > 6 && !isTimeLeft()) {
         return beta;
     }
 
