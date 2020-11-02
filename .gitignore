@@ -33,3 +33,7 @@ threadScaling.png
 ThreadScalingScript.py
 
 bin/
+
+data/
+
+n_pos
