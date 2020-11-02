@@ -85,11 +85,11 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
 
     double division = movesToGo;
 
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
-                                                  : (int(black / division) + blackInc) - 10;
+    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 50
+                                                  : (int(black / division) + blackInc) - 50;
 
     upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 10 : (int(black / (division*0.7)) + blackInc) - 10;
+        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 50 : (int(black / (division*0.7)) + blackInc) - 50;
 
     std::cout << timeToUse << "|" << upperTimeBound;
 
