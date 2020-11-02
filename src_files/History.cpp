@@ -23,7 +23,7 @@
 /*
  * Increment the history score of a move. Used when a cutoff occurs.
  */
-void SearchData::addHistoryScore(Move m, Depth depth, MoveList* mv, bool side) {
+void SearchData::addHistoryScore(Move m, Depth depth, MoveList* mv, bool side, int quiets) {
     if (depth > 20)
         return;
     Move m2;
@@ -31,7 +31,7 @@ void SearchData::addHistoryScore(Move m, Depth depth, MoveList* mv, bool side) {
         m2 = mv->getMove(i);
         if (sameMove(m, m2)) {
             history[side][getSquareFrom(m)][getSquareTo(m)] +=
-                (depth * depth + 5 * depth)
+                (depth * depth + 5 * depth) * quiets
                 - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
 
             // we can return at this point because all moves searched are in front of this move
@@ -51,7 +51,7 @@ MoveScore SearchData::getHistoryMoveScore(Move m, bool side) {
     return ms;
 }
 
-void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv) {
+void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv,  int quiets) {
     if (depth > 20)
         return;
     Move m2;
@@ -68,7 +68,7 @@ void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, 
 
         if (sameMove(m, m2)) {
             cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
-                (depth * depth + 5 * depth)
+                (depth * depth + 5 * depth) * quiets
                 - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]
                       / MAX_HISTORY_SCORE;
             // we can return at this point because all moves searched are in front of this move

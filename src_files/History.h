@@ -44,7 +44,7 @@ struct SearchData {
 
     virtual ~SearchData();
 
-    void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
+    void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side, int quiets);
 
     MoveScore getHistoryMoveScore(Move m, bool side);
 
@@ -56,7 +56,7 @@ struct SearchData {
 
     bool isImproving(Score eval, Color color, Depth ply);
 
-    void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv);
+    void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv,  int quiets);
 
     MoveScore getCounterMoveHistoryScore(Move previous, Move m);
 };

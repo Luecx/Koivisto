@@ -763,10 +763,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-
+        if (!isCapture(m) && !isPromotion && !givesCheck) {
+            quiets++;
+        }
         if (!pv && ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             if (!isCapture(m) && !isPromotion && !givesCheck) {
-                quiets++;
                 // **************************************************************************************************
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
@@ -894,9 +895,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // also set this move as a killer move into the history
                 sd->setKiller(m, ply, b->getActivePlayer());
                 // if the move is not a capture, we also update counter move history tables and history scores.
-                if (!isCapture(m) && legalMoves>0) {
-                    sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
-                    sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv);
+                if (!isCapture(m)) {
+                    sd->addHistoryScore(m, depth, mv, b->getActivePlayer(), quiets);
+                    sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv, quiets);
                 }
             }
             return beta;
