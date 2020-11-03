@@ -895,9 +895,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // also set this move as a killer move into the history
                 sd->setKiller(m, ply, b->getActivePlayer());
                 // if the move is not a capture, we also update counter move history tables and history scores.
-                if (!isCapture(m)) {
-                    sd->addHistoryScore(m, depth, mv, b->getActivePlayer(), quiets);
-                    sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv, quiets);
+                if (!isCapture(m) && !isPromotion && !givesCheck) {
+                    sd->addHistoryScore(m, depth, mv, b->getActivePlayer(), quiets-1);
+                    sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv, quiets-1);
                 }
             }
             return beta;
