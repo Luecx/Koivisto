@@ -70,7 +70,7 @@ void           search_enable_infoStrings();
 void           search_disable_infoStrings();
 
 Move  bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId = 0);
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd, Move skipMove);
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd, Move skipMove, bool isCutNode);
 Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd);
 
 #endif    // KOIVISTO_SEARCH_H

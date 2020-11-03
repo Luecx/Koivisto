@@ -485,14 +485,14 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
-            s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
+            s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, false);
         } else {
             Score window = 10;
             Score alpha  = s - window;
             Score beta   = s + window;
 
             while (rootTimeLeft()) {
-                s = pvSearch(b, alpha, beta, d, 0, td, 0);
+                s = pvSearch(b, alpha, beta, d, 0, td, 0, false);
 
                 window += window;
                 if (window > 500)
@@ -556,7 +556,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove) {
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, bool isCutNode) {
 
     // increment the node counter for the current thread
     td->nodes++;
@@ -700,7 +700,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
 
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, td, 0, !isCutNode);
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -800,11 +800,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // singular extensions:
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
-            && b->getActivePlayer() != sd->sideToReduce && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
+            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, isCutNode);
             if (score < betaCut)
                 extension++;
             b->getPseudoLegalMoves(mv);
@@ -813,22 +813,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             m = moveOrderer.next();
         }
 
-        // *********************************************************************************************************
-        // kk reductions:
-        // we reduce more/less depending on which side we are currently looking at.
-        // *********************************************************************************************************
-        if (ply == 0) {
-            sd->sideToReduce = b->getActivePlayer();
-            if (legalMoves == 0)
-                sd->sideToReduce = !b->getActivePlayer();
-        }
 
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
         // furthermore no queen promotions are reduced
-        Depth lmr = (legalMoves == 0 || depth <= 2 || isCapture(m) && staticExchangeEval >= 0
-                     || isPromotion && (promotionPiece(m) % 6 == QUEEN))
+        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCutNode && (isCapture(m) && staticExchangeEval >= 0
+                     || isPromotion && (promotionPiece(m) % 6 == QUEEN))))
                         ? 0
                         : lmrReductions[depth][legalMoves];
 
@@ -839,12 +830,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
             lmr = lmr - history / 256;
             lmr += !isImproving;
-            if (sd->sideToReduce != b->getActivePlayer()) {
-                lmr = lmr + 1;
-            }
+            lmr += isCutNode;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
+            if (staticExchangeEval<0) lmr++;
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
@@ -860,15 +850,15 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0, (pv ? false : !isCutNode));
         } else {
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, true);
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                                  0, !isCutNode);    // re-search
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                                  0, false);    // re-search
         }
 
         // undo the move
