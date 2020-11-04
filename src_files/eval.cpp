@@ -480,14 +480,6 @@ bb::Score Evaluator::evaluate(Board* b) {
     if (phase < 0)
         phase = 0;
 
-    // values to scale early/lategame weights
-    float earlyWeightScalar = (1 - phase);
-    float lateWeightScalar  = (phase);
-
-    // the pst are multiples of 100
-    float earlyPSTScalar = earlyWeightScalar / 100;
-    float latePSTScalar  = lateWeightScalar / 100;
-
     int wkingSafety_attPiecesCount = 0;
     int wkingSafety_valueOfAttacks = 0;
 
@@ -669,9 +661,9 @@ bb::Score Evaluator::evaluate(Board* b) {
 
         evalScore -= fast_bishop_psqt[BLACK][psqtKingsideIndex][square];
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
+        
         featureScore -= BISHOP_PAWN_SAME_SQUARE
                         * bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
-
         featureScore -= BISHOP_FIANCHETTO
                         * (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                            && blackPawns & (ONE << G6 | ONE << G5));
