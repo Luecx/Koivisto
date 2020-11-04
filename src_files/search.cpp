@@ -800,7 +800,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // singular extensions:
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE && isCutNode
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
@@ -812,7 +812,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             m = moveOrderer.next();
         }
-
 
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
