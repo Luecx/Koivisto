@@ -764,7 +764,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
 
-        if (!pv && ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
+        if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             if (!isCapture(m) && !isPromotion && !givesCheck) {
                 quiets++;
                 // **************************************************************************************************
