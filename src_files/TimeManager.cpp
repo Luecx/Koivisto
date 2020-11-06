@@ -17,8 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+#include <algorithm>
 #include "TimeManager.h"
-
 #include "Board.h"
 
 auto startTime =
@@ -85,11 +85,14 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
 
     double division = movesToGo;
 
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 50
-                                                  : (int(black / division) + blackInc) - 50;
+    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
+                                                  : (int(black / division) + blackInc) - 25;
 
     upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 50 : (int(black / (division*0.7)) + blackInc) - 50;
+        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 25 : (int(black / (division*0.7)) + blackInc) - 25;
+
+    timeToUse = std::min(timeToUse, WHITE ? white - 25 : black - 25);
+    upperTimeBound = std::min(upperTimeBound, WHITE ? white - 25 : black - 25);
 
     std::cout << timeToUse << "|" << upperTimeBound;
 
