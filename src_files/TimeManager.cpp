@@ -17,8 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+#include <algorithm>
 #include "TimeManager.h"
-
 #include "Board.h"
 
 auto startTime =
@@ -83,13 +83,18 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double division = 35;
+    double division = movesToGo+1;
 
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 10
-                                                  : (int(black / division) + blackInc) - 10;
+    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
+                                                  : (int(black / division) + blackInc) - 25;
 
     upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / 25) + whiteInc) - 10 : (int(black / 25) + blackInc) - 10;
+        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 25 : (int(black / (division*0.7)) + blackInc) - 25;
+
+    timeToUse = std::min(timeToUse, WHITE ? white - 25 : black - 25);
+    upperTimeBound = std::min(upperTimeBound, WHITE ? white - 100 : black - 25);
+
+    std::cout << timeToUse << "|" << upperTimeBound;
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
