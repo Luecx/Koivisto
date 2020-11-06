@@ -83,16 +83,16 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double division = movesToGo;
+    double division = movesToGo+1;
 
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 100
-                                                  : (int(black / division) + blackInc) - 100;
+    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
+                                                  : (int(black / division) + blackInc) - 25;
 
     upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 100 : (int(black / (division*0.7)) + blackInc) - 100;
+        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 25 : (int(black / (division*0.7)) + blackInc) - 25;
 
-    timeToUse = std::min(timeToUse, WHITE ? white - 100 : black - 100);
-    upperTimeBound = std::min(upperTimeBound, WHITE ? white - 100 : black - 100);
+    timeToUse = std::min(timeToUse, WHITE ? white - 25 : black - 25);
+    upperTimeBound = std::min(upperTimeBound, WHITE ? white - 100 : black - 25);
 
     std::cout << timeToUse << "|" << upperTimeBound;
 
