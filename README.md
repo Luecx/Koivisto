@@ -1,5 +1,10 @@
 # Koivisto UCI
 
+<h1 align="center">
+ <img src="https://image.prntscr.com/image/bo9NE9KfRFGPIa_oGP-Q7Q.png" />
+</h1>
+
+
 Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and Eugenio Bruno.
 
 ### Supported UCI settings:

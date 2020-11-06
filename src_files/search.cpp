@@ -764,7 +764,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
 
-        if (!pv && ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
+        if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             if (!isCapture(m) && !isPromotion && !givesCheck) {
                 quiets++;
                 // **************************************************************************************************
@@ -800,7 +800,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // singular extensions:
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
-            && b->getActivePlayer() != sd->sideToReduce && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
