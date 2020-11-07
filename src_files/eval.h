@@ -43,6 +43,7 @@ extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
 extern float*     phaseValues;
 
+bool hasMatingMaterial(Board* b, bool side);
 
 void eval_init();
 

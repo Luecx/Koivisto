@@ -334,14 +334,14 @@ void tuning::displayTunedValues() {
                                         "psqt_rook_opposite_side_castle",
                                         "psqt_queen_same_side_castle",
                                         "psqt_queen_opposite_side_castle",
-                                        "psqt_king_same_side_castle"};
+                                        "psqt_king"};
     for(int i = 0; i < 11; i++){
-        std::cout << "EvalScore " << psqt_names[i] << "[64] = {" << std::endl;
+        std::cout << "EvalScore " << psqt_names[i] << "[64] = {" << right << std::endl;
         for(Square s = 0; s < 64; s++){
             if(s % 8 == 0){
                 std::cout << "    ";
             }
-            std::cout << "M(" << setw(4) << MgScore(psqt[i][s]) << "," << setw(4) << EgScore(psqt[i][s]) << ", ";
+            std::cout << "M(" << setw(4) << MgScore(psqt[i][s]) << "," << setw(4) << EgScore(psqt[i][s]) << "), ";
             if(s % 8 == 7){
                 std::cout << std::endl;
             }

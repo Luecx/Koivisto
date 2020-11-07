@@ -1,13 +1,12 @@
 
 #include "eval.h"
 
-
 #ifdef TUNE
 
 namespace tuning {
 
 // phase - psqt_index - square
-float pawn_to_queen_psqt_gradients[2][11][64] {};
+float psqt_gradients[2][11][64] {};
 
 void collectGradients_psqt(Board* board, float evalGrad, float phase) {
     // target: incrementing psqt_gradients for the given board using the evaluation gradient
@@ -35,10 +34,10 @@ void collectGradients_psqt(Board* board, float evalGrad, float phase) {
                 Rank relativeRank = c == WHITE ? rankIndex(s) : 7 - rankIndex(s);
                 File relativeFile = c == WHITE ? (wKSide ? fileIndex(s) : 7 - fileIndex(s))
                                                : (bKSide ? fileIndex(s) : 7 - fileIndex(s));
-
-                pawn_to_queen_psqt_gradients[0][psqt_index][squareIndex(relativeRank, relativeFile)] +=
+    
+                psqt_gradients[0][psqt_index][squareIndex(relativeRank, relativeFile)] +=
                     (c == WHITE ? (1 - phase) : -(1 - phase)) * evalGrad;
-                pawn_to_queen_psqt_gradients[1][psqt_index][squareIndex(relativeRank, relativeFile)] +=
+                psqt_gradients[1][psqt_index][squareIndex(relativeRank, relativeFile)] +=
                     (c == WHITE ? (phase) : -(phase)) * evalGrad;
 
                 k = lsbReset(k);
@@ -55,14 +54,10 @@ void collectGradients_psqt(Board* board, float evalGrad, float phase) {
         while (k) {
             Square s = bitscanForward(k);
 
-            // computing relative ranks/files
-            Rank relativeRank = c == WHITE ? rankIndex(s) : 7 - rankIndex(s);
-            File relativeFile = fileIndex(s);
-
             // we use index 10 as the first 10 are used by pawns to queens.
-            pawn_to_queen_psqt_gradients[0][10][squareIndex(relativeRank, relativeFile)] +=
+            psqt_gradients[0][10][pst_index_white_s(s)] +=
                 (c == WHITE ? (1 - phase) : -(1 - phase)) * evalGrad;
-            pawn_to_queen_psqt_gradients[1][10][squareIndex(relativeRank, relativeFile)] +=
+            psqt_gradients[1][10][pst_index_black_s(s)] +=
                 (c == WHITE ? (phase) : -(phase)) * evalGrad;
 
             k = lsbReset(k);
@@ -70,61 +65,72 @@ void collectGradients_psqt(Board* board, float evalGrad, float phase) {
     }
 }
 
-void updateGradients(){
-    for (int i = 0; i < 11; i++){
-        for(Square s = 0; s < 64; s++){
-            EvalScore change = M(pawn_to_queen_psqt_gradients[0][i][s] > 0 ? -1 : 1,
-                                 pawn_to_queen_psqt_gradients[1][i][s] > 0 ? -1 : 1);
+void updateGradients() {
+    for (int i = 0; i < 10; i++) {
+        for (Square s = 0; s < 64; s++) {
+
+            float midGrad = psqt_gradients[0][i][s];
+            float endGrad = psqt_gradients[1][i][s];
+
+            EvalScore change = M(
+                midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0,
+                endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
             psqt[i][s] += change;
         }
     }
-    
+
     eval_init();
 }
 
-void clearGradients(){
-    for(int i = 0; i < 11; i++){
-        for(int s = 0; s < 64; s++){
-            pawn_to_queen_psqt_gradients[0][11][64] = 0;
-            pawn_to_queen_psqt_gradients[1][11][64] = 0;
+void clearGradients() {
+    for (int i = 0; i < 11; i++) {
+        for (int s = 0; s < 64; s++) {
+            psqt_gradients[0][i][s] = 0;
+            psqt_gradients[1][i][s] = 0;
         }
     }
 }
 
-void collectGradients(std::vector<TrainingEntry> &entries, double K){
-    
-    Evaluator evaluator{};
-    
-    for(TrainingEntry& en:entries){
+void collectGradients(std::vector<TrainingEntry>& entries, double K) {
+
+    Evaluator evaluator {};
+
+    for (TrainingEntry& en : entries) {
         
-        //we need the phase to compute gradients for early and late phase
-        float phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(en.board.getPieces()[WHITE_PAWN] | en.board.getPieces()[BLACK_PAWN])
-                 - phaseValues[1] * bitCount(en.board.getPieces()[WHITE_KNIGHT] | en.board.getPieces()[BLACK_KNIGHT])
-                 - phaseValues[2] * bitCount(en.board.getPieces()[WHITE_BISHOP] | en.board.getPieces()[BLACK_BISHOP])
-                 - phaseValues[3] * bitCount(en.board.getPieces()[WHITE_ROOK] | en.board.getPieces()[BLACK_ROOK])
-                 - phaseValues[4] * bitCount(en.board.getPieces()[WHITE_QUEEN] | en.board.getPieces()[BLACK_QUEEN]))
-                / 24.0f;
+        bool matingMaterial = hasMatingMaterial(&en.board, en.board.getActivePlayer());
+        
+        // we need the phase to compute gradients for early and late phase
+        float phase =
+            (24.0f + phaseValues[5]
+             - phaseValues[0] * bitCount(en.board.getPieces()[WHITE_PAWN] | en.board.getPieces()[BLACK_PAWN])
+             - phaseValues[1] * bitCount(en.board.getPieces()[WHITE_KNIGHT] | en.board.getPieces()[BLACK_KNIGHT])
+             - phaseValues[2] * bitCount(en.board.getPieces()[WHITE_BISHOP] | en.board.getPieces()[BLACK_BISHOP])
+             - phaseValues[3] * bitCount(en.board.getPieces()[WHITE_ROOK] | en.board.getPieces()[BLACK_ROOK])
+             - phaseValues[4] * bitCount(en.board.getPieces()[WHITE_QUEEN] | en.board.getPieces()[BLACK_QUEEN]))
+            / 24.0f;
         if (phase > 1)
             phase = 1;
         if (phase < 0)
             phase = 0;
-    
-        
+
         // compute the gradient of the loss function with respect to the output
         Score  q_i      = evaluator.evaluate(&en.board);
         double expected = en.target;
-    
+
         double sig       = sigmoid(q_i, K);
         double sigPrime  = sigmoidPrime(q_i, K);
         double lossPrime = -2 * (expected - sig);
-    
-        collectGradients_psqt(&en.board, lossPrime * sigPrime, phase);
         
+        if(matingMaterial){
+            lossPrime /= 10;
+        }
+        
+        collectGradients_psqt(&en.board, lossPrime * sigPrime, phase);
     }
-    
+
 }
 
-void optimiseGradients(double K){
+void optimiseGradients(double K) {
     clearGradients();
     collectGradients(training_entries, K);
     updateGradients();
