@@ -508,13 +508,15 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
                     break;
                 }
             }
+            if (rootTimeLeft()){
+                td->bestDepth = d;
+                td->bestScore = s;
+            }         
         }
 
         if (threadId == 0)
             printInfoString(b, d, s);
-
-        td->bestDepth = d;
-        td->bestScore = s;
+        
 
         // if the search finished due to timeout, we also need to stop here
         if (!rootTimeLeft())
