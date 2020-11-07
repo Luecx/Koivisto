@@ -41,6 +41,8 @@ extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
 extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
+extern float*     phaseValues;
+
 
 void eval_init();
 
@@ -53,7 +55,7 @@ class Evaluator {
     EvalScore computePinnedPieces(Board* b);
 
     EvalScore computeHangingPieces(Board* b);
-
+    
     bb::Score evaluate(Board* b);
 
     bb::Score evaluateTempo(Board* b);

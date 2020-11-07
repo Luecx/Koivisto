@@ -16,7 +16,7 @@
  *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
  *                                                                                                  *
  ****************************************************************************************************/
- 
+
 #include "Bitboard.h"
 #include "Board.h"
 #include "Move.h"
@@ -204,26 +204,42 @@ void main_tune_features() {
     bb_cleanUp();
 }
 
+#include "gradients.h"
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+    //    if (argc == 1) {
+    //        uci_loop(true);
+    //    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+    //        uci_loop(true);
+    //    }
+
+    //    bb_init();
+    //    eval_init();
+    //
+    //    Board board{"k7/8/8/8/8/4P3/8/K7 w - - 0 1"};
+    //    Evaluator* evaluator = new Evaluator();
+    //    std::cout << evaluator->evaluate(&board) << std::endl;
+    //    tuning::gradients_psqt(&board, 1, 1);
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    //        bb_init();
-    //    eval_init();
-    //    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
-    //    std::cout << tuning::computeError(new Evaluator(), 3);
-    //     for(int i = 0; i < 10; i++)
-    //     tuning::evalSpeed();
-    //     bb_cleanUp();
+    bb_init();
+    eval_init();
+    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
+    for(int i = 0; i < 10; i++){
+        tuning::optimiseGradients(3);
+        std::cout << tuning::computeError(new Evaluator(), 3)<< std::endl;
+    }
+//    tuning::displayTunedValues();
+    
+    
+    //        std::cout << tuning::computeError(new Evaluator(), 3);
+    //         for(int i = 0; i < 10; i++)
+    //         tuning::evalSpeed();
+    //         bb_cleanUp();
 
     // main_tune_pst_bb(PAWN);
     //    eval_init();

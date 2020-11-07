@@ -23,31 +23,14 @@
 
 #include <iomanip>
 
+#ifdef TUNE
+
 using namespace std;
+using namespace tuning;
 
-int dataCount;
+std::vector<TrainingEntry> tuning::training_entries {};
 
-Board** boards;
-double* results;
-
-double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
-
-double sigmoidPrime(double s, double K) {
-    double ex = exp(-s * K / 400);
-    return (K * ex) / (400 * (ex + 1) * (ex + 1));
-}
-
-int probabiltyToCentipawnAdvantage(double prob) { return (int) (400 * log10(prob / (1 - prob))); }
-
-double centipawnAdvantageToProbability(int centipawns) {
-    return (double) 1 / (1 + pow(10, -(double) centipawns / 400));
-}
-
-void tuning::loadPositionFile(std::string path, int count, int start) {
-
-    clearLoadedData();
-    results = new double[count];
-    boards  = new Board*[count];
+void tuning::loadPositionFile(const std::string& path, int count, int start) {
 
     fstream newfile;
     newfile.open(path, ios::in);
@@ -78,15 +61,17 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
             res = findAndReplaceAll(res, ";", "");
             res = trim(res);
 
+            TrainingEntry new_entry {Board {fen}, 0};
+
             // parsing the result to a usable value:
             // assuming that the result is given as : a-b
             if (res.find('-') != string::npos) {
                 if (res == "1/2-1/2") {
-                    results[posCount] = 0.5;
+                    new_entry.target = 0.5;
                 } else if (res == "1-0") {
-                    results[posCount] = 1;
+                    new_entry.target = 1;
                 } else if (res == "0-1") {
-                    results[posCount] = 0;
+                    new_entry.target = 0;
                 } else {
                     continue;
                 }
@@ -95,13 +80,12 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
             else {
                 try {
                     double actualResult = stod(res);
-                    results[posCount]   = actualResult;
+                    new_entry.target    = actualResult;
                 } catch (std::invalid_argument& e) { continue; }
             }
-            Board* b = new Board(fen);
-
-            boards[posCount] = b;
-
+            
+            training_entries.push_back(new_entry);
+            
             lineCount++;
             posCount++;
 
@@ -115,289 +99,50 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
         }
 
         std::cout << std::endl;
-
-        dataCount = posCount;
-
         newfile.close();
     }
 }
 
-void tuning::findWorstPositions(Evaluator* evaluator, double K, int count) {
-    double max = 2;
-
-    for (int i = 0; i < count; i++) {
-        int    indexOfHighest = 0;
-        double highestScore   = 0;
-
-        for (int n = 0; n < dataCount; n++) {
-            Score  q_i      = evaluator->evaluate(boards[n]);
-            double expected = results[n];
-            double sig      = sigmoid(q_i, K);
-
-            double difference = abs(expected - sig);
-
-            if (difference > highestScore && difference < max) {
-                highestScore   = difference;
-                indexOfHighest = n;
-            }
-        }
-
-        max = highestScore;
-
-        std::cout << boards[indexOfHighest]->fen() << " " << evaluator->evaluate(boards[indexOfHighest]) << " "
-                  << results[indexOfHighest] << std::endl;
-    }
-}
-
-void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
-
-    auto addToTable = [](double* table, double* count, U64 bitboard, double factor, Color color) {
-        while (bitboard) {
-            Square s = bitscanForward(bitboard);
-
-            int index = color == WHITE ? s : (squareIndex(7 - rankIndex(s), fileIndex(s)));
-
-            table[index] += factor;
-            count[index]++;
-            bitboard = lsbReset(bitboard);
-        }
-    };
-
-    auto printTable = [](double* table) {
-        std::cout << " +--------+--------+--------+--------+--------+--------+--------+--------+\n";
-
-        for (Rank r = 7; r >= 0; r--) {
-
-            std::cout << " |        |        |        |        |        |        |        |        |\n";
-            for (File f = 0; f <= 7; ++f) {
-                Square sq = bb::squareIndex(r, f);
-
-                std::cout << std::fixed << std::setprecision(1);
-                std::cout << " | " << std::setw(6) << table[sq];
-            }
-
-            std::cout << " |\n |        |        |        |        |        |        |        |        |\n";
-            std::cout << " +--------+--------+--------+--------+--------+--------+--------+--------+\n";
-        }
-    };
-
-    auto trimTable = [](double* table, double* count) {
-        double max = 0;
-        double min = 0;
-
-        for (int i = 0; i < 64; i++) {
-            table[i] /= count[i];
-        }
-
-        for (int i = 0; i < 64; i++) {
-            if (table[i] > max)
-                max = table[i];
-            if (table[i] < min)
-                min = table[i];
-        }
-        for (int i = 0; i < 64; i++) {
-            //            table[i] -= min;
-            table[i] /= ((max - min) / 100);
-        }
-    };
-
-    if (earlyAndLate && asymmetric) {
-        double* earlyWhite = new double[64] {0};
-        double* lateWhite  = new double[64] {0};
-        double* earlyBlack = new double[64] {0};
-        double* lateBlack  = new double[64] {0};
-
-        double* earlyWhiteCount = new double[64] {0};
-        double* lateWhiteCount  = new double[64] {0};
-        double* earlyBlackCount = new double[64] {0};
-        double* lateBlackCount  = new double[64] {0};
-
-        for (int i = 0; i < dataCount; i++) {
-
-            // dont look at equal positions
-            if (results[i] == 0.5)
-                continue;
-
-            Board* b = boards[i];
-
-            // calculate the phase
-            double phase =
-                (18
-                 - bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP] | b->getPieces()[WHITE_KNIGHT]
-                            | b->getPieces()[BLACK_KNIGHT] | b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-                 - 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
-                / 18.0;
-
-            Color winner      = results[i] > 0.5 ? WHITE : BLACK;
-            int   whiteFactor = winner == WHITE ? 1 : -1;
-            //            double earlyChange = phase < 0.3 ? 1:0;
-            //            double lateChange = phase > 0.8 ? 1:0;
-
-            double earlyChange = 1 - phase;
-            double lateChange  = phase;
-
-            //            std::cout << *b << std::endl;
-            //            std::cout << phase << std::endl;
-
-            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
-            addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
-            addToTable(earlyBlack, earlyBlackCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * earlyChange, WHITE);
-            addToTable(lateBlack, lateBlackCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * lateChange, WHITE);
-        }
-
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(earlyWhiteCount[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(lateWhiteCount[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(earlyBlack[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(lateBlack[i]) << ",";
-        }
-        std::cout << std::endl;
-
-        trimTable(earlyWhite, earlyWhiteCount);
-        trimTable(lateWhite, lateWhiteCount);
-        trimTable(earlyBlack, earlyBlackCount);
-        trimTable(lateBlack, lateBlackCount);
-
-        printTable(earlyWhite);
-        printTable(lateWhite);
-        printTable(earlyBlack);
-        printTable(lateBlack);
-
-        delete[] earlyWhite;
-        delete[] lateWhite;
-        delete[] earlyBlack;
-        delete[] lateBlack;
-
-        delete[] earlyWhiteCount;
-        delete[] lateWhiteCount;
-        delete[] earlyBlackCount;
-        delete[] lateBlackCount;
-    }
-
-    if (earlyAndLate && !asymmetric) {
-        double* earlyWhite = new double[64] {0};
-        double* lateWhite  = new double[64] {0};
-
-        double* earlyWhiteCount = new double[64] {0};
-        double* lateWhiteCount  = new double[64] {0};
-
-        for (int i = 0; i < dataCount; i++) {
-
-            // dont look at equal positions
-            if (results[i] == 0.5)
-                continue;
-
-            Board* b = boards[i];
-
-            // calculate the phase
-            double phase =
-                (18
-                 - bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP] | b->getPieces()[WHITE_KNIGHT]
-                            | b->getPieces()[BLACK_KNIGHT] | b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-                 - 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
-                / 18.0;
-
-            Color winner      = results[i] > 0.5 ? WHITE : BLACK;
-            int   whiteFactor = winner == WHITE ? 1 : -1;
-            //            double earlyChange = phase < 0.3 ? 1:0;
-            //            double lateChange = phase > 0.8 ? 1:0;
-
-            double earlyChange = 1 - phase;
-            double lateChange  = phase;
-
-            //            std::cout << *b << std::endl;
-            //            std::cout << phase << std::endl;
-
-            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
-            addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
-            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * earlyChange, BLACK);
-            addToTable(lateWhite, lateWhiteCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * lateChange, BLACK);
-        }
-
-        trimTable(earlyWhite, earlyWhiteCount);
-        trimTable(lateWhite, lateWhiteCount);
-
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(earlyWhite[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(lateWhite[i]) << ",";
-        }
-        std::cout << std::endl;
-
-        printTable(earlyWhite);
-        printTable(lateWhite);
-
-        delete[] earlyWhite;
-        delete[] lateWhite;
-
-        delete[] earlyWhiteCount;
-        delete[] lateWhiteCount;
-    }
-}
-
-void tuning::clearLoadedData() {
-    if (boards != nullptr) {
-
-        for (int i = 0; i < dataCount; i++) {
-            delete boards[i];
-        }
-
-        delete[] boards;
-        delete[] results;
-    }
-}
-
-double tuning::optimiseGD(Evaluator* evaluator, double K, double learningRate) {
-    int paramCount = evaluator->paramCount();
-
-    auto* earlyGrads   = new double[paramCount] {0};
-    auto* lateGrads    = new double[paramCount] {0};
-    auto* gradCounters = new int[paramCount] {0};
-
-    double score = 0;
-
-    for (int i = 0; i < dataCount; i++) {
-        Score  q_i      = evaluator->evaluate(boards[i]);
-        double expected = results[i];
-
-        double sig       = sigmoid(q_i, K);
-        double sigPrime  = sigmoidPrime(q_i, K);
-        double lossPrime = -2 * (expected - sig);
-
-        float* features = evaluator->getFeatures();
-        float  phase    = evaluator->getPhase();
-
-        for (int p = 0; p < paramCount; p++) {
-            earlyGrads[p] += features[p] * (1 - phase) * sigPrime * lossPrime;
-            lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
-
-            if (features[p] != 0) {
-                gradCounters[p] += 1;
-            }
-        }
-
-        score += (expected - sig) * (expected - sig);
-    }
-
-    for (int p = 0; p < paramCount; p++) {
-
-        evaluator->getEarlyGameParams()[p] -= earlyGrads[p] * learningRate / -min(-1, -gradCounters[p]);
-        evaluator->getLateGameParams()[p] -= lateGrads[p] * learningRate / -min(-1, -gradCounters[p]);
-    }
-
-    return score / dataCount;
-}
+//double tuning::optimiseGD(Evaluator* evaluator, double K, double learningRate) {
+//    int paramCount = evaluator->paramCount();
+//
+//    auto* earlyGrads   = new double[paramCount] {0};
+//    auto* lateGrads    = new double[paramCount] {0};
+//    auto* gradCounters = new int[paramCount] {0};
+//
+//    double score = 0;
+//
+//    for (int i = 0; i < dataCount; i++) {
+//        Score  q_i      = evaluator->evaluate(boards[i]);
+//        double expected = results[i];
+//
+//        double sig       = sigmoid(q_i, K);
+//        double sigPrime  = sigmoidPrime(q_i, K);
+//        double lossPrime = -2 * (expected - sig);
+//
+//        float* features = evaluator->getFeatures();
+//        float  phase    = evaluator->getPhase();
+//
+//        for (int p = 0; p < paramCount; p++) {
+//            earlyGrads[p] += features[p] * (1 - phase) * sigPrime * lossPrime;
+//            lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
+//
+//            if (features[p] != 0) {
+//                gradCounters[p] += 1;
+//            }
+//        }
+//
+//        score += (expected - sig) * (expected - sig);
+//    }
+//
+//    for (int p = 0; p < paramCount; p++) {
+//
+//        evaluator->getEarlyGameParams()[p] -= earlyGrads[p] * learningRate / -min(-1, -gradCounters[p]);
+//        evaluator->getLateGameParams()[p] -= lateGrads[p] * learningRate / -min(-1, -gradCounters[p]);
+//    }
+//
+//    return score / dataCount;
+//}
 
 double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, int paramCount, float lr) {
 
@@ -426,49 +171,48 @@ double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, i
     return computeError(evaluator, K);
 }
 
-double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr){
+double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr) {
     double er;
-    
-    for(int p = 0; p < count; p++){
-        
+
+    for (int p = 0; p < count; p++) {
+
         std::cout << "\r  param: " << p << std::flush;
-        
+
         er = computeError(evaluator, K);
-//        std::cout << er << std::endl;
-        evalScore[p] += M(+lr,0);
+        //        std::cout << er << std::endl;
+        evalScore[p] += M(+lr, 0);
         eval_init();
-//        showScore(M(+lr,0));
-        
+        //        showScore(M(+lr,0));
+
         double upper = computeError(evaluator, K);
-//        std::cout << upper << std::endl;
-        if(upper >= er){
-            evalScore[p] += M(-2*lr,0);
+        //        std::cout << upper << std::endl;
+        if (upper >= er) {
+            evalScore[p] += M(-2 * lr, 0);
             eval_init();
-//            showScore(evalScore[p]);
-            
+            //            showScore(evalScore[p]);
+
             double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                evalScore[p] += M(+lr,0);
-//                showScore(evalScore[p]);
+
+            if (lower >= er) {
+                evalScore[p] += M(+lr, 0);
+                //                showScore(evalScore[p]);
                 eval_init();
             }
         }
-        
-        
+
         er = computeError(evaluator, K);
-        evalScore[p] += M(0,+lr);
+        evalScore[p] += M(0, +lr);
         eval_init();
-        
+
         upper = computeError(evaluator, K);
-        if(upper >= er){
-            evalScore[p] += M(0,-2*lr);
+        if (upper >= er) {
+            evalScore[p] += M(0, -2 * lr);
             eval_init();
-            
+
             double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                evalScore[p] += M(0,+lr);
+
+            if (lower >= er) {
+                evalScore[p] += M(0, +lr);
                 eval_init();
             }
         }
@@ -476,44 +220,44 @@ double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* ev
     std::cout << std::endl;
     return er;
 }
+
 double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore, int count, int lr) {
     double er;
-    
-    for(int p = 0; p < count; p++){
-        
+
+    for (int p = 0; p < count; p++) {
+
         std::cout << "\r  param: " << p << std::flush;
-        
+
         er = computeError(evaluator, K);
-        *evalScore[p] += M(+lr,0);
+        *evalScore[p] += M(+lr, 0);
         eval_init();
-        
+
         double upper = computeError(evaluator, K);
-        if(upper >= er){
-            *evalScore[p] += M(-2*lr,0);
+        if (upper >= er) {
+            *evalScore[p] += M(-2 * lr, 0);
             eval_init();
-            
+
             double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                *evalScore[p] += M(+lr,0);
+
+            if (lower >= er) {
+                *evalScore[p] += M(+lr, 0);
                 eval_init();
             }
         }
-        
-        
+
         er = computeError(evaluator, K);
-        *evalScore[p] += M(0,+lr);
+        *evalScore[p] += M(0, +lr);
         eval_init();
-        
+
         upper = computeError(evaluator, K);
-        if(upper >= er){
-            *evalScore[p] += M(0,-2*lr);
+        if (upper >= er) {
+            *evalScore[p] += M(0, -2 * lr);
             eval_init();
-            
+
             double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                *evalScore[p] += M(0,+lr);
+
+            if (lower >= er) {
+                *evalScore[p] += M(0, +lr);
                 eval_init();
             }
         }
@@ -521,131 +265,13 @@ double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** e
     std::cout << std::endl;
     return er;
 }
-
-double tuning::optimiseAdaGrad(Evaluator* evaluator, double K, double learningRate, int iterations) {
-    int paramCount = evaluator->paramCount();
-
-    double score = 0;
-
-    auto* earlyGradsSquaredSum = new double[paramCount] {0};
-    auto* lateGradsSquaredSum  = new double[paramCount] {0};
-
-    auto* earlyGrads   = new double[paramCount] {0};
-    auto* lateGrads    = new double[paramCount] {0};
-    auto* gradCounters = new int[paramCount] {0};
-
-    for (int iter = 0; iter < iterations; iter++) {
-
-        score = 0;
-
-        for (int i = 0; i < dataCount; i++) {
-            Score  q_i      = evaluator->evaluate(boards[i]);
-            double expected = results[i];
-
-            double sig       = sigmoid(q_i, K);
-            double sigPrime  = sigmoidPrime(q_i, K);
-            double lossPrime = -2 * (expected - sig);
-
-            float* features = evaluator->getFeatures();
-            float  phase    = evaluator->getPhase();
-
-            for (int p = 0; p < paramCount; p++) {
-                earlyGrads[p] += features[p] * (1 - phase) * sigPrime * lossPrime;
-                lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
-
-                if (features[p] != 0) {
-                    gradCounters[p] += 1;
-                }
-            }
-
-            score += (expected - sig) * (expected - sig);
-        }
-
-        for (int p = 0; p < paramCount; p++) {
-
-            double earlyAdjust = sqrt(earlyGradsSquaredSum[p]);
-            double lateAdjust  = sqrt(lateGradsSquaredSum[p]);
-
-            if (earlyAdjust == 0)
-                earlyAdjust = 1;
-            if (lateAdjust == 0)
-                lateAdjust = 1;
-
-            evaluator->getEarlyGameParams()[p] -= earlyGrads[p] * learningRate / earlyAdjust / dataCount;
-            evaluator->getLateGameParams()[p] -= lateGrads[p] * learningRate / lateAdjust / dataCount;
-
-            earlyGradsSquaredSum[p] += earlyGrads[p] * earlyGrads[p];
-            lateGradsSquaredSum[p] += lateGrads[p] * lateGrads[p];
-        }
-
-        std::cout << "--------------------------------------------------- [" << iter
-                  << "] ----------------------------------------------" << std::endl;
-        std::cout << "loss=" << score / dataCount << std::endl;
-
-        for (int k = 0; k < evaluator->paramCount(); k++) {
-            std::cout << std::setw(14) << evaluator->getEarlyGameParams()[k] << ",";
-        }
-        std::cout << std::endl;
-        for (int k = 0; k < evaluator->paramCount(); k++) {
-            std::cout << std::setw(14) << evaluator->getLateGameParams()[k] << ",";
-        }
-        std::cout << std::endl;
-    }
-
-    delete[] earlyGrads;
-    delete[] lateGrads;
-
-    delete[] earlyGradsSquaredSum;
-    delete[] lateGradsSquaredSum;
-
-    delete[] gradCounters;
-
-    return score / dataCount;
-}
-
-#ifdef TUNE_PST
-double tuning::optimisePST(Evaluator* evaluator, double K, double learningRate) {
-    int paramCount = evaluator->paramCount();
-
-    auto* mg_pst_grads = new double[64] {};
-    auto* eg_pst_grads = new double[64] {};
-
-    double score = 0;
-
-    for (int i = 0; i < dataCount; i++) {
-        Score  q_i      = evaluator->evaluate(boards[i]);
-        double expected = results[i];
-
-        double sig       = sigmoid(q_i, K);
-        double sigPrime  = sigmoidPrime(q_i, K);
-        double lossPrime = -2 * (expected - sig);
-
-        float* features = evaluator->getFeatures();
-        double phase    = evaluator->getPhase();
-
-        for (int i = 0; i < 64; i++) {
-            mg_pst_grads[i] += evaluator->getTunablePST_MG_grad()[i] * (1 - phase) * sigPrime * lossPrime;
-            eg_pst_grads[i] += evaluator->getTunablePST_EG_grad()[i] * phase * sigPrime * lossPrime;
-        }
-
-        score += (expected - sig) * (expected - sig);
-    }
-
-    for (int i = 0; i < 64; i++) {
-        evaluator->getTunablePST_MG()[i] -= mg_pst_grads[i] * learningRate / dataCount;
-        evaluator->getTunablePST_EG()[i] -= eg_pst_grads[i] * learningRate / dataCount;
-    }
-
-    return score / dataCount;
-}
-#endif
 
 double tuning::computeError(Evaluator* evaluator, double K) {
     double score = 0;
-    for (int i = 0; i < dataCount; i++) {
-
-        Score  q_i      = evaluator->evaluate(boards[i]);
-        double expected = results[i];
+    for (TrainingEntry& entry : training_entries) {
+        
+        Score  q_i      = evaluator->evaluate(&entry.board);
+        double expected = entry.target;
 
         double sig = sigmoid(q_i, K);
 
@@ -653,7 +279,7 @@ double tuning::computeError(Evaluator* evaluator, double K) {
 
         score += (expected - sig) * (expected - sig);
     }
-    return score / dataCount;
+    return score / training_entries.size();
 }
 
 double tuning::computeK(Evaluator* evaluator, double initK, double rate, double deviation) {
@@ -685,11 +311,44 @@ void tuning::evalSpeed() {
 
     startMeasure();
     U64 sum = 0;
-    for (int i = 0; i < dataCount; i++) {
-        sum += evaluator.evaluate(boards[i]);
+
+    for (TrainingEntry& en : training_entries) {
+        sum += evaluator.evaluate(&en.board);
     }
 
     int ms = stopMeasure();
-    std::cout << ms << "ms for " << dataCount << " positions = " << (1000 * dataCount / ms) / 1e6 << "Mnps"
+    std::cout << ms << "ms for " << training_entries.size()
+              << " positions = " << (1000 * training_entries.size() / ms) / 1e6 << "Mnps"
               << " Checksum = " << sum << std::endl;
 }
+
+void tuning::displayTunedValues() {
+
+    const static string psqt_names[] = {"psqt_pawn_same_side_castle",
+                                        "psqt_pawn_opposite_side_castle",
+                                        "psqt_knight_same_side_castle",
+                                        "psqt_knight_opposite_side_castle",
+                                        "psqt_bishop_same_side_castle",
+                                        "psqt_bishop_opposite_side_castle",
+                                        "psqt_rook_same_side_castle",
+                                        "psqt_rook_opposite_side_castle",
+                                        "psqt_queen_same_side_castle",
+                                        "psqt_queen_opposite_side_castle",
+                                        "psqt_king_same_side_castle"};
+    for(int i = 0; i < 11; i++){
+        std::cout << "EvalScore " << psqt_names[i] << "[64] = {" << std::endl;
+        for(Square s = 0; s < 64; s++){
+            if(s % 8 == 0){
+                std::cout << "    ";
+            }
+            std::cout << "M(" << setw(4) << MgScore(psqt[i][s]) << "," << setw(4) << EgScore(psqt[i][s]) << ", ";
+            if(s % 8 == 7){
+                std::cout << std::endl;
+            }
+        }
+        std::cout << "};" << std::endl;
+        std::cout << std::endl;
+    }
+}
+
+#endif
