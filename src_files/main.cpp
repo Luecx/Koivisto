@@ -229,11 +229,20 @@ int main(int argc, char* argv[]) {
     bb_init();
     eval_init();
     tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
-    for(int i = 0; i < 10; i++){
+    double error = 1;
+    for(int i = 0; i < 20; i++){
         tuning::optimiseGradients(3);
-        std::cout << tuning::computeError(new Evaluator(), 3)<< std::endl;
+        double thisError;
+        thisError = tuning::computeError(new Evaluator(), 3);
+        std::cout     << "it = " << setw(5) << (i+1);
+        std::cout     << "    error = " << left << setw(10) <<thisError;
+        if(i > 0){
+            std::cout << "    dE = " << setw(10) <<thisError - error;
+        }
+        std::cout << std::endl;
+        error = thisError;
     }
-//    tuning::displayTunedValues();
+    tuning::displayTunedValues();
     
     
     //        std::cout << tuning::computeError(new Evaluator(), 3);

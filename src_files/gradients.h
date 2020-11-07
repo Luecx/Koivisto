@@ -9,7 +9,7 @@ namespace tuning {
 // phase - psqt_index - square
 float pawn_to_queen_psqt_gradients[2][11][64] {};
 
-void gradients_psqt(Board* board, float evalGrad, float phase) {
+void collectGradients_psqt(Board* board, float evalGrad, float phase) {
     // target: incrementing psqt_gradients for the given board using the evaluation gradient
     // which is the same as the derivative of the evaluation output with respect to the loss
 
@@ -70,7 +70,7 @@ void gradients_psqt(Board* board, float evalGrad, float phase) {
     }
 }
 
-void update_psqt(){
+void updateGradients(){
     for (int i = 0; i < 11; i++){
         for(Square s = 0; s < 64; s++){
             EvalScore change = M(pawn_to_queen_psqt_gradients[0][i][s] > 0 ? -1 : 1,
@@ -80,6 +80,15 @@ void update_psqt(){
     }
     
     eval_init();
+}
+
+void clearGradients(){
+    for(int i = 0; i < 11; i++){
+        for(int s = 0; s < 64; s++){
+            pawn_to_queen_psqt_gradients[0][11][64] = 0;
+            pawn_to_queen_psqt_gradients[1][11][64] = 0;
+        }
+    }
 }
 
 void collectGradients(std::vector<TrainingEntry> &entries, double K){
@@ -108,20 +117,16 @@ void collectGradients(std::vector<TrainingEntry> &entries, double K){
         double sig       = sigmoid(q_i, K);
         double sigPrime  = sigmoidPrime(q_i, K);
         double lossPrime = -2 * (expected - sig);
-        
-        gradients_psqt(&en.board, lossPrime * sigPrime, phase);
+    
+        collectGradients_psqt(&en.board, lossPrime * sigPrime, phase);
         
     }
     
 }
 
-void updateGradients(){
-    update_psqt();
-}
-
 void optimiseGradients(double K){
+    clearGradients();
     collectGradients(training_entries, K);
-    
     updateGradients();
 }
 
