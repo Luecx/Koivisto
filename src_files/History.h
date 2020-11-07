@@ -29,7 +29,6 @@ using namespace move;
 
 struct SearchData {
 
-    Move bestMove = 0;
 
     MoveList** moves;
     Evaluator  evaluator {};
@@ -69,6 +68,9 @@ struct ThreadData {
     U64 nodes    = 0;
     int seldepth = 0;
     int tbhits   = 0;
+    Move bestMove = 0;
+    Depth bestDepth = 0;
+    Score bestScore = 0;
 
     SearchData* searchData;
 

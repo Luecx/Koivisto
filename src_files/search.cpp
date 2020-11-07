@@ -464,6 +464,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             tds[i]->tbhits   = 0;
             tds[i]->nodes    = 0;
             tds[i]->seldepth = 0;
+            tds[i]->bestMove = 0;
+            tds[i]->bestDepth = 0;
+            tds[i]->bestScore = 0;
         }
 
         // we will call this function for the other threads which will skip this part and jump straight to the part
@@ -510,6 +513,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (threadId == 0)
             printInfoString(b, d, s);
 
+        td->bestDepth = d;
+        td->bestScore = s;
+
         // if the search finished due to timeout, we also need to stop here
         if (!rootTimeLeft())
             break;
@@ -526,7 +532,16 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         runningThreads.clear();
 
         // retrieve the best move from the search
-        Move best = sd->bestMove;
+        Score bestThreadScore = td->bestScore;
+        Depth bestThreadDepth = td->bestDepth;
+        Move best = td->bestMove;
+        for (int i = 1; i < threadCount; threadCount++){
+            if (tds[i]->bestDepth>bestThreadDepth||(tds[i]->bestDepth==bestThreadDepth && tds[i]->bestScore > bestThreadScore)){
+                bestThreadScore = tds[i]->bestScore;
+                bestThreadDepth = tds[i]->bestDepth;
+                best = tds[i]->bestMove;
+            }
+        }
 
         delete sd;
 
@@ -535,7 +550,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         overview.depth = d;
         overview.score = s;
         overview.time  = timeManager->elapsedTime();
-        overview.move  = best;
+        overview.move  = best;        
 
         // return the best move if its the main thread
         return best;
@@ -878,11 +893,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && isTimeLeft() && td->threadID == 0) {
+            if (ply == 0 && isTimeLeft()) {
                 // Store bestMove for bestMove
-                sd->bestMove = m;
+                td->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
+                if (td->threadID == 0){
+                    search_timeManager->updatePV(m, score, depth);
+                }
             }
         }
 
