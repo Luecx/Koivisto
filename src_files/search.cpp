@@ -537,7 +537,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         Score bestThreadScore = td->bestScore;
         Depth bestThreadDepth = td->bestDepth;
         Move best = td->bestMove;
-        for (int i = 1; i < threadCount; threadCount++){
+        for (int i = 1; i < threadCount; i++){
             if (tds[i]->bestDepth>bestThreadDepth||(tds[i]->bestDepth==bestThreadDepth && tds[i]->bestScore > bestThreadScore)){
                 bestThreadScore = tds[i]->bestScore;
                 bestThreadDepth = tds[i]->bestDepth;
