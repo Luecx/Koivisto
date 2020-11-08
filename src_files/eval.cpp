@@ -214,23 +214,23 @@ EvalScore* evfeatures[] {
     &PAWN_BACKWARD,
     &PAWN_OPEN,
     &PAWN_BLOCKED,                  // 8
-
+    
     &KNIGHT_OUTPOST,
     &KNIGHT_DISTANCE_ENEMY_KING,    // 10
-
+    
     &ROOK_OPEN_FILE,
     &ROOK_HALF_OPEN_FILE,
     &ROOK_KING_LINE,                // 13
-
+    
     &BISHOP_DOUBLED,
     &BISHOP_PAWN_SAME_SQUARE,
     &BISHOP_FIANCHETTO,             // 16
-
+    
     &QUEEN_DISTANCE_ENEMY_KING,     // 17
-
+    
     &KING_CLOSE_OPPONENT,
     &KING_PAWN_SHIELD,              // 19
-
+    
     &CASTLING_RIGHTS,               // 20
 };
 
@@ -269,6 +269,7 @@ EvalScore fast_bishop_psqt[2][4][64];
 EvalScore fast_rook_psqt[2][4][64];
 EvalScore fast_queen_psqt[2][4][64];
 EvalScore fast_king_psqt[2][64];
+
 
 void eval_init() {
     for (int i = 0; i < 64; i++) {
@@ -946,3 +947,4 @@ float* Evaluator::getPSQT(Piece piece, bool early) {
     }
     return nullptr;
 }
+
