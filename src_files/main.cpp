@@ -228,6 +228,9 @@ int main(int argc, char* argv[]) {
 
     bb_init();
     eval_init();
+//    tuning::displayTunedValues();
+//    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 10000000);
+
     tuning::loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
     tuning::loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     tuning::loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
@@ -253,11 +256,12 @@ int main(int argc, char* argv[]) {
             }
             std::cerr << std::endl;
         }
-        
+
         if (i % 100 == 99){
             tuning::displayTunedValues();
+            K = tuning::computeK(new Evaluator(), 3,100, 1e-7);
         }
-        
+
         error = thisError;
     }
     

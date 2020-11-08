@@ -34,6 +34,9 @@ typedef int32_t EvalScore;
 #define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
 #define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
 
+
+
+extern EvalScore  passer_rank_n[16];
 extern EvalScore* psqt[11];
 extern EvalScore  pieceScores[6];
 extern EvalScore* evfeatures[];

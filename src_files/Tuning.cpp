@@ -297,8 +297,6 @@ double tuning::computeK(Evaluator* evaluator, double initK, double rate, double 
 
         std::cout << "K:" << K << " Error: " << (Epdk + Emdk) / 2 << " dev: " << abs(dEdK) << std::endl;
 
-        // System.out.format("K: %-2.6f  Error: %-2.6f  dE/dK: %-1.2E\n", K,errorMultithreaded(evaluator, K,
-        // pool),dEdK);
         K -= dEdK * rate;
     }
 
@@ -322,8 +320,10 @@ void tuning::evalSpeed() {
               << " Checksum = " << sum << std::endl;
 }
 
-void tuning::displayTunedValues() {
 
+
+void tuning::displayTunedValues() {
+    
     const static string psqt_names[] = {"psqt_pawn_same_side_castle",
                                         "psqt_pawn_opposite_side_castle",
                                         "psqt_knight_same_side_castle",
@@ -336,6 +336,27 @@ void tuning::displayTunedValues() {
                                         "psqt_queen_opposite_side_castle",
                                         "psqt_king"};
     const static string mob_names[] = { "","mobilityKnight", "mobilityBishop", "mobilityRook", "mobilityQueen"};
+    const static string feat_names[]    = {"SIDE_TO_MOVE",
+                                        "PAWN_STRUCTURE",
+                                        "PAWN_PASSED",
+                                        "PAWN_ISOLATED",
+                                        "PAWN_DOUBLED",
+                                        "PAWN_DOUBLED_AND_ISOLATED",
+                                        "PAWN_BACKWARD",
+                                        "PAWN_OPEN",
+                                        "PAWN_BLOCKED",
+                                        "KNIGHT_OUTPOST",
+                                        "KNIGHT_DISTANCE_ENEMY_KING",
+                                        "ROOK_OPEN_FILE",
+                                        "ROOK_HALF_OPEN_FILE",
+                                        "ROOK_KING_LINE",
+                                        "BISHOP_DOUBLED",
+                                        "BISHOP_PAWN_SAME_SQUARE",
+                                        "BISHOP_FIANCHETTO",
+                                        "QUEEN_DISTANCE_ENEMY_KING",
+                                        "KING_CLOSE_OPPONENT",
+                                        "KING_PAWN_SHIELD",
+                                        "CASTLING_RIGHTS"};
     
     for(int i = 0; i < 11; i++){
         std::cout << "EvalScore " << psqt_names[i] << "[64] = {" << right << std::endl;
@@ -366,6 +387,54 @@ void tuning::displayTunedValues() {
         std::cout << "};" << std::endl;
         std::cout << std::endl;
     }
+    
+    // hanging eval
+    std::cout << "EvalScore hangingEval[5] {" << std::endl << "    ";
+    for(int i = 0; i < 5; i++){
+        std::cout << "M(" << setw(5) << MgScore(hangingEval[i]) << "," << setw(5) << EgScore(hangingEval[i]) << "), ";
+        if(i % 5 == 4){
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    
+    // pinned eval
+    std::cout << "EvalScore pinnedEval[15] {" << std::endl;
+    for(int i = 0; i < 15; i++){
+        if(i % 5 == 0){
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << MgScore(pinnedEval[i]) << "," << setw(5) << EgScore(pinnedEval[i]) << "), ";
+        if(i % 5 == 4){
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    
+    
+    // passer eval
+    std::cout << "EvalScore passer_rank_n[16] {" << std::endl;
+    for(int i = 0; i < 16; i++){
+        if(i % 8 == 0){
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << MgScore(passer_rank_n[i]) << "," << setw(5) << EgScore(passer_rank_n[i]) << "), ";
+        if(i % 8 == 7){
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+
+    // features
+    for (int i = 0; i < 21; i++) {
+        std::cout << "EvalScore " << setw(30) << left << feat_names[i] << right << "= M(" << setw(5) << MgScore(*evfeatures[i])
+                  << "," <<setw(5) << EgScore(*evfeatures[i]) << ");" << std::endl;
+    }
+    std::cout << left;
+
     
     
 }

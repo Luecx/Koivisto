@@ -883,6 +883,25 @@ inline int manhattanDistance(Square sq1, Square sq2) {
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
 
+/**
+ * checks if the given square is an outpost given the color and a bitboard of the opponent pawns
+ */
+inline bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
+    U64 sq = ONE << s;
+    
+    if (c == WHITE) {
+        if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+            return true;
+        }
+    } else {
+        if (((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 }    // namespace bb
 
 #endif    // CHESSCOMPUTER_BITMAP_H
