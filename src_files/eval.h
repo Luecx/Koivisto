@@ -42,11 +42,14 @@ extern EvalScore  pieceScores[6];
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
+extern EvalScore  kingSafetyTable[100];
 extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
 extern float*     phaseValues;
 
 bool hasMatingMaterial(Board* b, bool side);
+
+void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 void eval_init();
 
@@ -64,44 +67,8 @@ class Evaluator {
 
     bb::Score evaluateTempo(Board* b);
 
-    /**
-     * returns the phase of the last calculation
-     * @return
-     */
     float getPhase();
-
-    /**
-     * returns a list of features of the last calculation
-     * @return
-     */
-    float* getFeatures();
-
-    /**
-     * returns a list of early game parameters
-     * @return
-     */
-    float* getEarlyGameParams();
-
-    /**
-     * returns a list of late game parameters
-     */
-    float* getLateGameParams();
-
-    float* getPSQT(Piece piece, bool early);
-
-    /**
-     * returns the amount of tunable parameters
-     */
-    int paramCount();
-
-    float* getPhaseValues();
-
-#ifdef TUNE_PST
-    float* getTunablePST_MG();
-    float* getTunablePST_EG();
-    float* getTunablePST_MG_grad();
-    float* getTunablePST_EG_grad();
-#endif
+    
 };
 
 void printEvaluation(Board* b);

@@ -31,37 +31,6 @@ using namespace std;
 using namespace bb;
 using namespace move;
 
-void main_tune_features_bb() {
-    bb_init();
-    Evaluator* evaluator = new Evaluator();
-
-    using namespace tuning;
-
-    loadPositionFile("resources/other/quiet-labeled.epd", 1e7);
-    auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
-
-    // tune Phase specificly
-    float* params     = evaluator->getPhaseValues();
-    int    paramCount = 16;
-
-    for (int i = 0; i < 5000; i++) {
-
-        std::cout << "--------------------------------------------------- [" << i
-                  << "] ----------------------------------------------" << std::endl;
-
-        std::cout << std::setprecision(8) << tuning::optimiseBlackBox(evaluator, K, params, paramCount, 0.3)
-                  << std::endl;
-
-        for (int e = 0; e < paramCount; e++) {
-            std::cout << std::setw(14) << evaluator->getPhaseValues()[e] << ",";
-        }
-
-        std::cout << std::endl;
-    }
-
-    delete evaluator;
-    bb_cleanUp();
-}
 
 void main_tune_pst_bb(Piece piece) {
     eval_init();
@@ -207,7 +176,9 @@ void main_tune_features() {
 #include "gradients.h"
 
 int main(int argc, char* argv[]) {
-
+    
+    
+    
     //    if (argc == 1) {
     //        uci_loop(true);
     //    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
@@ -228,19 +199,16 @@ int main(int argc, char* argv[]) {
 
     bb_init();
     eval_init();
-//    tuning::displayTunedValues();
-//    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 10000000);
 
     tuning::loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
     tuning::loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     tuning::loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
     double error = 1;
-    double K = tuning::computeK(new Evaluator(), 3,100, 1e-7);
-    for(int i = 0; i < 1000; i++){
-        tuning::optimiseGradients(K);
-        double thisError;
-        thisError = tuning::computeError(new Evaluator(), K);
-
+    double K = tuning::computeK(new Evaluator(), 2.47175,100, 1e-7);
+//    double K = 2.47175;
+    for(int i = 0; i < 10000; i++){
+        double thisError = tuning::optimiseGradients(K, 1);
+        
         if(thisError < error){
             std::cout     << setprecision(7) << "it = " << setw(5) << right << (i+1);
             std::cout     << "    error = " << left << setw(10) <<thisError;
@@ -259,22 +227,13 @@ int main(int argc, char* argv[]) {
 
         if (i % 100 == 99){
             tuning::displayTunedValues();
-            K = tuning::computeK(new Evaluator(), 3,100, 1e-7);
+//            K = tuning::computeK(new Evaluator(), 3,100, 1e-7);
         }
 
         error = thisError;
     }
     
-    //        std::cout << tuning::computeError(new Evaluator(), 3);
-    //         for(int i = 0; i < 10; i++)
-    //         tuning::evalSpeed();
-    //         bb_cleanUp();
-
-    // main_tune_pst_bb(PAWN);
-    //    eval_init();
-    //    main_tune_features();
-    // main_tune_pst();
-    // main_tune_features_bb();
+  
 
     return 0;
 }

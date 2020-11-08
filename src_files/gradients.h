@@ -3,6 +3,8 @@
 
 #ifdef TUNE
 
+#define CHANGE(midGrad, endGrad, lr) M(midGrad > 0 ? -lr : midGrad < 0 ? lr : 0, endGrad > 0 ? -lr : endGrad < 0 ? lr : 0)
+
 namespace tuning {
 
 // phase - psqt_index - square
@@ -17,8 +19,8 @@ float pinned_gradients[2][15] {};
 float feature_gradients[2][23] {};
 // phase - index
 float passer_gradients[2][16] {};
-
-
+// phase - index
+float kingSafety_gradients[2][100] {};
 
 void collectGradients_psqt(Board* board, float evalGrad, float phase) {
     // target: incrementing psqt_gradients for the given board using the evaluation gradient
@@ -504,8 +506,76 @@ void collectGradients_passers(Board* board, float evalGrad, float phase){
         k = lsbReset(k);
     }
 }
+void collectGradients_kingSafety(Board* board, float evalGrad, float phase){
+    int wkingSafety_attPiecesCount = 0;
+    int wkingSafety_valueOfAttacks = 0;
+    
+    int bkingSafety_attPiecesCount = 0;
+    int bkingSafety_valueOfAttacks = 0;
+    
+    Square whiteKingSquare = bitscanForward(board->getPieces(WHITE, KING));
+    Square blackKingSquare = bitscanForward(board->getPieces(BLACK, KING));
+    
+    U64 occupied = *board->getOccupied();
+    
+    U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
+    U64 blackKingZone = KING_ATTACKS[blackKingSquare];
+    
+    static const int safetyWeights[5] = {0,2,2,3,4};
+    
+    for (Piece p = KNIGHT; p <= QUEEN; p++) {
+        
+        U64 w = board->getPieces(WHITE, p);
+        U64 b = board->getPieces(BLACK, p);
+        
+        while (w) {
+            Square s = bitscanForward(w);
+            
+            U64 attacks = ZERO;
+            switch (p) {
+                case KNIGHT: attacks = KNIGHT_ATTACKS[s]; break;
+                case BISHOP: attacks = lookUpBishopAttack(s, occupied); break;
+                case ROOK: attacks = lookUpRookAttack(s, occupied); break;
+                case QUEEN: attacks = lookUpBishopAttack(s, occupied) | lookUpRookAttack(s, occupied); break;
+            }
+    
+            addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, safetyWeights[p]);
+    
+            w = lsbReset(w);
+        }
+        while (b) {
+            Square s = bitscanForward(b);
+            
+            U64 attacks = ZERO;
+            switch (p) {
+                case KNIGHT: attacks = KNIGHT_ATTACKS[s]; break;
+                case BISHOP: attacks = lookUpBishopAttack(s, occupied); break;
+                case ROOK: attacks = lookUpRookAttack(s, occupied); break;
+                case QUEEN: attacks = lookUpBishopAttack(s, occupied) | lookUpRookAttack(s, occupied); break;
+            }
+            addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks,  safetyWeights[p]);
+           
+            b = lsbReset(b);
+        }
+    }
+    
+//    std::cerr << wkingSafety_valueOfAttacks << "   " << bkingSafety_valueOfAttacks << std::endl;
+//    std::cerr << kingSafety_gradients[0][wkingSafety_valueOfAttacks] << std::endl;
+//    std::cerr << kingSafety_gradients[1][wkingSafety_valueOfAttacks] << std::endl;
+    
+    kingSafety_gradients[0][wkingSafety_valueOfAttacks] -= (1-phase) * evalGrad;
+    kingSafety_gradients[1][wkingSafety_valueOfAttacks] -= (  phase) * evalGrad;
+//    std::cerr << kingSafety_gradients[0][wkingSafety_valueOfAttacks] << std::endl;
+//    std::cerr << kingSafety_gradients[1][wkingSafety_valueOfAttacks] << std::endl;
+    
+    kingSafety_gradients[0][bkingSafety_valueOfAttacks] += (1-phase) * evalGrad;
+    kingSafety_gradients[1][bkingSafety_valueOfAttacks] += (  phase) * evalGrad;
+//    std::cerr << kingSafety_gradients[0][bkingSafety_valueOfAttacks] << std::endl;
+//    std::cerr << kingSafety_gradients[1][bkingSafety_valueOfAttacks] << std::endl;
+}
 
-void updateGradients() {
+
+void updateGradients(int lr=1) {
     // psqt
     for (int i = 0; i < 11; i++) {
         for (Square s = 0; s < 64; s++) {
@@ -513,7 +583,7 @@ void updateGradients() {
             float midGrad = psqt_gradients[0][i][s];
             float endGrad = psqt_gradients[1][i][s];
 
-            EvalScore change = M(midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0, endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+            EvalScore change = CHANGE(midGrad, endGrad, lr);
             psqt[i][s] += change;
         }
     }
@@ -525,7 +595,7 @@ void updateGradients() {
             float midGrad = mob_gradients[0][i][s];
             float endGrad = mob_gradients[1][i][s];
 
-            EvalScore change = M(midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0, endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+            EvalScore change= CHANGE(midGrad, endGrad, lr);
             mobilities[i][s] += change;
         }
     }
@@ -534,7 +604,7 @@ void updateGradients() {
     for (int i = 0; i < 15; i++){
         float midGrad = pinned_gradients[0][i];
         float endGrad = pinned_gradients[1][i];
-        EvalScore change = M(midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0, endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
         pinnedEval[i] += change;
     }
 
@@ -542,7 +612,7 @@ void updateGradients() {
     for (int i = 0; i < 5; i++){
         float midGrad = hanging_gradients[0][i];
         float endGrad = hanging_gradients[1][i];
-        EvalScore change = M(midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0, endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
         hangingEval[i] += change;
     }
     
@@ -550,7 +620,7 @@ void updateGradients() {
     for(int i = 0; i < 21; i++){
         float midGrad = feature_gradients[0][i];
         float endGrad = feature_gradients[1][i];
-        EvalScore change = M(midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0, endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
         *evfeatures[i] += change;
         
     }
@@ -559,9 +629,16 @@ void updateGradients() {
     for(int i = 0; i < 16; i++){
         float midGrad = passer_gradients[0][i];
         float endGrad = passer_gradients[1][i];
-        EvalScore change = M(midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0, endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
         passer_rank_n[i] += change;
-        
+    }
+    
+    // king safety
+    for(int i = 0; i < 100; i++){
+        float midGrad = kingSafety_gradients[0][i];
+        float endGrad = kingSafety_gradients[1][i];
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
+        kingSafetyTable[i] += change;
     }
     
     eval_init();
@@ -601,12 +678,19 @@ void clearGradients() {
         passer_gradients[0][i] = 0;
         passer_gradients[1][i] = 0;
     }
+    
+    for (int i = 0; i < 100; i++) {
+        kingSafety_gradients[0][i] = 0;
+        kingSafety_gradients[1][i] = 0;
+    }
 }
 
-void collectGradients(std::vector<TrainingEntry>& entries, double K) {
+double collectGradients(std::vector<TrainingEntry>& entries, double K) {
 
     Evaluator evaluator {};
-
+    
+    double error = 0;
+    
     for (TrainingEntry& en : entries) {
 
         bool matingMaterial = hasMatingMaterial(&en.board, en.board.getActivePlayer());
@@ -627,12 +711,15 @@ void collectGradients(std::vector<TrainingEntry>& entries, double K) {
 
         // compute the gradient of the loss function with respect to the output
         Score  q_i      = evaluator.evaluate(&en.board);
+        
         double expected = en.target;
 
         double sig       = sigmoid(q_i, K);
         double sigPrime  = sigmoidPrime(q_i, K);
         double lossPrime = -2 * (expected - sig);
-
+        
+        error += (expected - sig) * (expected - sig);
+        
         if (matingMaterial) {
             lossPrime /= 10;
         }
@@ -643,13 +730,18 @@ void collectGradients(std::vector<TrainingEntry>& entries, double K) {
         collectGradients_hanging(&en.board, lossPrime * sigPrime, phase);
         collectGradients_features(&en.board, lossPrime * sigPrime, phase);
         collectGradients_passers(&en.board, lossPrime * sigPrime, phase);
+        collectGradients_kingSafety(&en.board, lossPrime * sigPrime, phase);
     }
+    
+    error /= entries.size();
+    return error;
 }
 
-void optimiseGradients(double K) {
+double optimiseGradients(double K, int lr=1) {
     clearGradients();
-    collectGradients(training_entries, K);
-    updateGradients();
+    double error = collectGradients(training_entries, K);
+    updateGradients(lr);
+    return error;
 }
 
 }    // namespace tuning

@@ -436,7 +436,20 @@ void tuning::displayTunedValues() {
     std::cout << left;
 
     
-    
+    // king safety
+    std::cout << "EvalScore kingSafetyTable[100] {" << std::endl;
+    for (int i = 0; i < 100; i++) {
+        if (i % 8 == 0) {
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << right << MgScore(kingSafetyTable[i]) << "," << setw(5)
+                  << EgScore(kingSafetyTable[i]) << "), ";
+        if (i % 8 == 7) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
 }
 
 #endif
