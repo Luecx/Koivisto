@@ -7,6 +7,8 @@ namespace tuning {
 
 // phase - psqt_index - square
 float psqt_gradients[2][11][64] {};
+// phase - piece - seen squares (28 at max for queens)
+float  mob_gradients[2][6 ][28] {};
 
 void collectGradients_psqt(Board* board, float evalGrad, float phase) {
     // target: incrementing psqt_gradients for the given board using the evaluation gradient
@@ -64,6 +66,62 @@ void collectGradients_psqt(Board* board, float evalGrad, float phase) {
         }
     }
 }
+void collectGradients_mobility(Board* board, float evalGrad, float phase){
+    U64 whiteTeam  = board->getTeamOccupied()[WHITE];
+    U64 blackTeam  = board->getTeamOccupied()[BLACK];
+    U64 whitePawns = board->getPieces()[WHITE_PAWN];
+    U64 blackPawns = board->getPieces()[BLACK_PAWN];
+    U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
+    U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+    
+    U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnCover);
+    U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnCover);
+    
+    U64 occupied = *board->getOccupied();
+    
+    for(Piece p = KNIGHT; p <= QUEEN; p++){
+        
+        U64 w = board->getPieces(WHITE, p);
+        U64 b = board->getPieces(BLACK, p);
+        
+        while(w){
+            Square s = bitscanForward(w);
+
+            U64 attacks = ZERO;
+            switch (p) {
+                case KNIGHT: attacks = KNIGHT_ATTACKS[s]; break;
+                case BISHOP: attacks = lookUpBishopAttack(s,occupied); break;
+                case ROOK  : attacks = lookUpRookAttack  (s,occupied); break;
+                case QUEEN : attacks = lookUpBishopAttack(s,occupied) | lookUpRookAttack  (s,occupied); break;
+            }
+            attacks &= mobilitySquaresWhite;
+    
+            mob_gradients[0][p][bitCount(attacks)] += evalGrad * (1-phase);
+            mob_gradients[1][p][bitCount(attacks)] += evalGrad * (  phase);
+            
+            w = lsbReset(w);
+        }
+        while(b){
+            Square s = bitscanForward(b);
+    
+            U64 attacks = ZERO;
+            switch (p) {
+                case KNIGHT: attacks = KNIGHT_ATTACKS[s]; break;
+                case BISHOP: attacks = lookUpBishopAttack(s,occupied); break;
+                case ROOK  : attacks = lookUpRookAttack  (s,occupied); break;
+                case QUEEN : attacks = lookUpBishopAttack(s,occupied) | lookUpRookAttack  (s,occupied); break;
+            }
+            attacks &= mobilitySquaresBlack;
+    
+            mob_gradients[0][p][bitCount(attacks)] -= evalGrad * (1-phase);
+            mob_gradients[1][p][bitCount(attacks)] -= evalGrad * (  phase);
+            
+            b = lsbReset(b);
+        }
+        
+    }
+    
+}
 
 void updateGradients() {
     for (int i = 0; i < 10; i++) {
@@ -78,7 +136,20 @@ void updateGradients() {
             psqt[i][s] += change;
         }
     }
+    
+    for (int i = PAWN; i <= QUEEN; i++) {
+        for (Square s = 0; s < mobEntryCount[i]; s++) {
 
+            float midGrad = mob_gradients[0][i][s];
+            float endGrad = mob_gradients[1][i][s];
+
+            EvalScore change = M(
+                midGrad > 0 ? -1 : midGrad < 0 ? 1 : 0,
+                endGrad > 0 ? -1 : endGrad < 0 ? 1 : 0);
+            mobilities[i][s] += change;
+        }
+    }
+    
     eval_init();
 }
 
@@ -89,6 +160,14 @@ void clearGradients() {
             psqt_gradients[1][i][s] = 0;
         }
     }
+    
+    for (int i = 0; i < 6; i++) {
+        for (int s = 0; s < 28; s++) {
+            mob_gradients[0][i][s] = 0;
+            mob_gradients[1][i][s] = 0;
+        }
+    }
+    
 }
 
 void collectGradients(std::vector<TrainingEntry>& entries, double K) {
@@ -126,6 +205,7 @@ void collectGradients(std::vector<TrainingEntry>& entries, double K) {
         }
         
         collectGradients_psqt(&en.board, lossPrime * sigPrime, phase);
+        collectGradients_mobility(&en.board, lossPrime * sigPrime, phase);
     }
 
 }

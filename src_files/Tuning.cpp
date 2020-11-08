@@ -335,6 +335,8 @@ void tuning::displayTunedValues() {
                                         "psqt_queen_same_side_castle",
                                         "psqt_queen_opposite_side_castle",
                                         "psqt_king"};
+    const static string mob_names[] = { "","mobilityKnight", "mobilityBishop", "mobilityRook", "mobilityQueen"};
+    
     for(int i = 0; i < 11; i++){
         std::cout << "EvalScore " << psqt_names[i] << "[64] = {" << right << std::endl;
         for(Square s = 0; s < 64; s++){
@@ -349,6 +351,23 @@ void tuning::displayTunedValues() {
         std::cout << "};" << std::endl;
         std::cout << std::endl;
     }
+    
+    for(Piece p = KNIGHT; p <= QUEEN; p++){
+        std::cout << "EvalScore " << mob_names[p] << "[" << mobEntryCount[p] <<"] = {" << right << std::endl;
+        for(Square s = 0; s < mobEntryCount[p]; s++){
+            if(s % 8 == 0){
+                std::cout << "    ";
+            }
+            std::cout << "M(" << setw(5) << MgScore(mobilities[p][s]) << "," << setw(5) << EgScore(mobilities[p][s]) << "), ";
+            if(s % 8 == 7){
+                std::cout << std::endl;
+            }
+        }
+        std::cout << "};" << std::endl;
+        std::cout << std::endl;
+    }
+    
+    
 }
 
 #endif

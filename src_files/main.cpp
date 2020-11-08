@@ -228,12 +228,15 @@ int main(int argc, char* argv[]) {
 
     bb_init();
     eval_init();
-    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
+    tuning::loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+    tuning::loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    tuning::loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
     double error = 1;
-    for(int i = 0; i < 40; i++){
-        tuning::optimiseGradients(3);
+    double K = tuning::computeK(new Evaluator(), 3,100, 1e-7);
+    for(int i = 0; i < 1000; i++){
+        tuning::optimiseGradients(K);
         double thisError;
-        thisError = tuning::computeError(new Evaluator(), 3);
+        thisError = tuning::computeError(new Evaluator(), K);
 
         if(thisError < error){
             std::cout     << setprecision(7) << "it = " << setw(5) << right << (i+1);
@@ -250,11 +253,13 @@ int main(int argc, char* argv[]) {
             }
             std::cerr << std::endl;
         }
-       
+        
+        if (i % 100 == 99){
+            tuning::displayTunedValues();
+        }
+        
         error = thisError;
     }
-    tuning::displayTunedValues();
-    
     
     //        std::cout << tuning::computeError(new Evaluator(), 3);
     //         for(int i = 0; i < 10; i++)
