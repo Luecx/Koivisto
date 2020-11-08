@@ -37,7 +37,7 @@ void main_tune_features_bb() {
 
     using namespace tuning;
 
-    loadPositionFile("resources/other/quiet-labeled.epd", 1e7);
+    loadPositionFile("resources/other/quiet-labeled2.epd", 1e7);
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
     // tune Phase specificly
@@ -161,7 +161,7 @@ void main_tune_features() {
 
     using namespace tuning;
 
-    loadPositionFile("../resources/other/quiet-labeled.epd", 1e6);
+    loadPositionFile("../resources/other/quiet-labeled2.epd", 1e7);
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
 
     for (int i = 0; i < 5000; i++) {
@@ -169,24 +169,24 @@ void main_tune_features() {
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, evfeatures, 20, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
-
+        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
+        std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
+        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
+        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
+/*
         for (Square s = 0; s < 6; s++) {
             std::cout << "M(" << setw(5) << MgScore(pieceScores[s]) << "," << setw(5) << EgScore(pieceScores[s])
                       << "), ";
             std::cout << std::endl;
-        }
+        }*/
         std::cout << std::endl;
-        for (Square s = 0; s < 20; s++) {
+        for (Square s = 0; s < 23; s++) {
             std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s])
                       << "), ";
             std::cout << std::endl;
         }
         std::cout << std::endl;
-
+/*
         for (Square s = 0; s < 15; s++) {
             std::cout << "M(" << setw(5) << MgScore(pinnedEval[s]) << "," << setw(5) << EgScore(pinnedEval[s]) << "), ";
             std::cout << std::endl;
@@ -197,7 +197,7 @@ void main_tune_features() {
                       << "), ";
             std::cout << std::endl;
         }
-        std::cout << std::endl;
+        std::cout << std::endl;'/'*/
     }
 
     delete evaluator;
@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
 
     // main_tune_pst_bb(PAWN);
     //    eval_init();
-    //    main_tune_features();
+    //main_tune_features();
     // main_tune_pst();
     // main_tune_features_bb();
 

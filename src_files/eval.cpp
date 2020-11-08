@@ -199,6 +199,9 @@ EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    6,  -25);
 EvalScore KING_CLOSE_OPPONENT           = M(  -15,   49);
 EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
+EvalScore PAWN_PASSED_DISTANCE_O_KING   = M(   -3,   -4);
+EvalScore PAWN_PASSED_DISTANCE_E_KING   = M(    2,    4);
+
 
 EvalScore pieceScores[6] = {
     M(90, 104), M(463, 326), M(474, 288), M(577, 594), M(1359, 1121), M(0, 0),
@@ -213,25 +216,29 @@ EvalScore* evfeatures[] {
     &PAWN_DOUBLED_AND_ISOLATED,
     &PAWN_BACKWARD,
     &PAWN_OPEN,
-    &PAWN_BLOCKED,                  // 8
+    &PAWN_BLOCKED,                  // 9
     
     &KNIGHT_OUTPOST,
-    &KNIGHT_DISTANCE_ENEMY_KING,    // 10
+    &KNIGHT_DISTANCE_ENEMY_KING,    // 11
     
     &ROOK_OPEN_FILE,
     &ROOK_HALF_OPEN_FILE,
-    &ROOK_KING_LINE,                // 13
+    &ROOK_KING_LINE,                // 14
     
     &BISHOP_DOUBLED,
     &BISHOP_PAWN_SAME_SQUARE,
-    &BISHOP_FIANCHETTO,             // 16
+    &BISHOP_FIANCHETTO,             // 17
     
-    &QUEEN_DISTANCE_ENEMY_KING,     // 17
+    &QUEEN_DISTANCE_ENEMY_KING,     // 18
     
     &KING_CLOSE_OPPONENT,
-    &KING_PAWN_SHIELD,              // 19
+    &KING_PAWN_SHIELD,              // 20
     
-    &CASTLING_RIGHTS,               // 20
+    &CASTLING_RIGHTS,               // 21
+
+    &PAWN_PASSED_DISTANCE_O_KING,  
+    &PAWN_PASSED_DISTANCE_E_KING, // 22
+
 };
 
 
@@ -478,13 +485,6 @@ bb::Score Evaluator::evaluate(Board* b) {
     if (phase < 0)
         phase = 0;
 
-    // values to scale early/lategame weights
-    float earlyWeightScalar = (1 - phase);
-    float lateWeightScalar  = (phase);
-
-    // the pst are multiples of 100
-    float earlyPSTScalar = earlyWeightScalar / 100;
-    float latePSTScalar  = lateWeightScalar / 100;
 
     int wkingSafety_attPiecesCount = 0;
     int wkingSafety_valueOfAttacks = 0;
@@ -534,6 +534,10 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore += fast_pawn_psqt[WHITE][psqtKingsideIndex][square];
+        if (whitePassers & ONE<<square){
+            featureScore += PAWN_PASSED_DISTANCE_O_KING * manhattanDistance(square, whiteKingSquare);
+            featureScore += PAWN_PASSED_DISTANCE_E_KING * manhattanDistance(square, blackKingSquare);
+        }
         k = lsbReset(k);
     }
 
@@ -541,6 +545,10 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore -= fast_pawn_psqt[BLACK][psqtKingsideIndex][square];
+        if (blackPassers & ONE<<square){ 
+            featureScore -= PAWN_PASSED_DISTANCE_O_KING * manhattanDistance(square, blackKingSquare);
+            featureScore -= PAWN_PASSED_DISTANCE_E_KING * manhattanDistance(square, whiteKingSquare);
+        }
         k = lsbReset(k);
     }
     k = whitePassers;
