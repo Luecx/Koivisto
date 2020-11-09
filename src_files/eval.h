@@ -66,39 +66,6 @@ class Evaluator {
      * @return
      */
     float getPhase();
-
-    /**
-     * returns a list of features of the last calculation
-     * @return
-     */
-    float* getFeatures();
-
-    /**
-     * returns a list of early game parameters
-     * @return
-     */
-    float* getEarlyGameParams();
-
-    /**
-     * returns a list of late game parameters
-     */
-    float* getLateGameParams();
-
-    float* getPSQT(Piece piece, bool early);
-
-    /**
-     * returns the amount of tunable parameters
-     */
-    int paramCount();
-
-    float* getPhaseValues();
-
-#ifdef TUNE_PST
-    float* getTunablePST_MG();
-    float* getTunablePST_EG();
-    float* getTunablePST_MG_grad();
-    float* getTunablePST_EG_grad();
-#endif
 };
 
 void printEvaluation(Board* b);
