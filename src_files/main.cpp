@@ -173,10 +173,18 @@ void main_tune_features() {
         //std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
         //std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
         //std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, &bishop_pawn_same_color_table_o[0], 8, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, &bishop_pawn_same_color_table_e[0], 8, 1) << std::endl;
-
+        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, &bishop_pawn_same_color_table_o[0], 8, 1) << std::endl;
+        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, &bishop_pawn_same_color_table_e[0], 8, 1) << std::endl;
+        /*std::cout << tuning::optimisePSTBlackBox(evaluator, K, &king_defenders_count[0], 8, 1) << std::endl;
+        
         for (Square s = 0; s < 8; s++) {
+            std::cout << "M(" << setw(5) << MgScore(king_defenders_count[s]) << "," << setw(5) << EgScore(king_defenders_count[s])
+                      << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;*/
+
+        /*for (Square s = 0; s < 8; s++) {
             std::cout << "M(" << setw(5) << MgScore(bishop_pawn_same_color_table_o[s]) << "," << setw(5) << EgScore(bishop_pawn_same_color_table_o[s])
                       << "), ";
             std::cout << std::endl;
@@ -188,7 +196,7 @@ void main_tune_features() {
                       << "), ";
             std::cout << std::endl;
         }
-        std::cout << std::endl;
+        std::cout << std::endl;*/
         /*for (Square s = 0; s < 23; s++) {
             std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s])
                       << "), ";
