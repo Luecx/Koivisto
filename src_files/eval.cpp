@@ -199,7 +199,8 @@ EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    4,  -27);
 EvalScore KING_CLOSE_OPPONENT           = M(   -9,   49);
 EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
-
+EvalScore BISHOP_PAWN_SAME_SQUARE_O     = M(   -4,   -3);
+EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
@@ -250,6 +251,9 @@ EvalScore* evfeatures[] {
     &KING_PAWN_SHIELD,              // 19
     
     &CASTLING_RIGHTS,               // 20
+
+    &BISHOP_PAWN_SAME_SQUARE_O,
+    &BISHOP_PIECE_SAME_SQUARE_E, //23
 };
 
 
@@ -660,6 +664,10 @@ bb::Score Evaluator::evaluate(Board* b) {
 
         featureScore += BISHOP_PAWN_SAME_SQUARE
                         * bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+        featureScore += BISHOP_PAWN_SAME_SQUARE_O 
+                        * bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+        featureScore += BISHOP_PIECE_SAME_SQUARE_E 
+                        * bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
         featureScore += BISHOP_FIANCHETTO
                         * (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                            && whitePawns & (ONE << G3 | ONE << G4));
@@ -681,7 +689,10 @@ bb::Score Evaluator::evaluate(Board* b) {
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
         featureScore -= BISHOP_PAWN_SAME_SQUARE
                         * bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
-
+        featureScore -= BISHOP_PAWN_SAME_SQUARE_O 
+                        * bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+        featureScore -= BISHOP_PIECE_SAME_SQUARE_E 
+                        * bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
         featureScore -= BISHOP_FIANCHETTO
                         * (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                            && blackPawns & (ONE << G6 | ONE << G5));
