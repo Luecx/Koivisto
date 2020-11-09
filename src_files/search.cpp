@@ -849,8 +849,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = depth - 2;
             }
         }
-        if (legalMoves == 0 && depth == 10) std::cout << "New thing" << std::endl;
-        if (depth == 10 && !isCapture(m)) std::cout << (int)lmr << std::endl;
         // doing the move
         b->move(m);
 
