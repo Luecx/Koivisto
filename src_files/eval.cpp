@@ -178,6 +178,22 @@ EvalScore passer_rank_n[16] {
     M(    0,    0), M(    1,    2), M(  -44,  -49), M(  -45,  -11), M(  -29,  -14), M(   35,   -7), M(   91, -143), M(    0,    0),
 };
 
+EvalScore bishop_pawn_same_color_table_o[8]{M(    0,   18), 
+M(   -2,   19), 
+M(   -5,    7), 
+M(  -10,    0), 
+M(  -13,  -12), 
+M(  -19,  -29), 
+M(  -25,  -32), 
+M(  -27,  -34),};
+EvalScore bishop_pawn_same_color_table_e[8]{M(    0,   18), 
+M(   -2,   19), 
+M(   -5,    7), 
+M(  -10,    0), 
+M(  -13,  -12), 
+M(  -19,  -29), 
+M(  -25,  -32), 
+M(  -27,  -34), };
 EvalScore SIDE_TO_MOVE                  = M(   10,   16);
 EvalScore PAWN_STRUCTURE                = M(    9,   12);
 EvalScore PAWN_PASSED                   = M(    6,   44);
@@ -193,13 +209,12 @@ EvalScore ROOK_OPEN_FILE                = M(   34,   -6);
 EvalScore ROOK_HALF_OPEN_FILE           = M(   -2,   -4);
 EvalScore ROOK_KING_LINE                = M(   20,    8);
 EvalScore BISHOP_DOUBLED                = M(   40,   55);
-EvalScore BISHOP_PAWN_SAME_SQUARE       = M(   -5,    5);
 EvalScore BISHOP_FIANCHETTO             = M(   -3,    9);
 EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    4,  -27);
 EvalScore KING_CLOSE_OPPONENT           = M(   -9,   49);
 EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
-
+EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
@@ -241,7 +256,6 @@ EvalScore* evfeatures[] {
     &ROOK_KING_LINE,                // 13
     
     &BISHOP_DOUBLED,
-    &BISHOP_PAWN_SAME_SQUARE,
     &BISHOP_FIANCHETTO,             // 16
     
     &QUEEN_DISTANCE_ENEMY_KING,     // 17
@@ -250,6 +264,8 @@ EvalScore* evfeatures[] {
     &KING_PAWN_SHIELD,              // 19
     
     &CASTLING_RIGHTS,               // 20
+
+    &BISHOP_PIECE_SAME_SQUARE_E, //23
 };
 
 
@@ -642,8 +658,10 @@ bb::Score Evaluator::evaluate(Board* b) {
         evalScore += fast_bishop_psqt[WHITE][psqtKingsideIndex][square];
         mobScore += mobilityBishop[bitCount(attacks & mobilitySquaresWhite)];
 
-        featureScore += BISHOP_PAWN_SAME_SQUARE
-                        * bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+        featureScore += bishop_pawn_same_color_table_e[bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
+        featureScore += bishop_pawn_same_color_table_o[bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
+        featureScore += BISHOP_PIECE_SAME_SQUARE_E 
+                        * bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
         featureScore += BISHOP_FIANCHETTO
                         * (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                            && whitePawns & (ONE << G3 | ONE << G4));
@@ -663,9 +681,10 @@ bb::Score Evaluator::evaluate(Board* b) {
 
         evalScore -= fast_bishop_psqt[BLACK][psqtKingsideIndex][square];
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
-        featureScore -= BISHOP_PAWN_SAME_SQUARE
-                        * bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
-
+        featureScore -= bishop_pawn_same_color_table_e[bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
+        featureScore -= bishop_pawn_same_color_table_o[bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
+        featureScore -= BISHOP_PIECE_SAME_SQUARE_E 
+                        * bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
         featureScore -= BISHOP_FIANCHETTO
                         * (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                            && blackPawns & (ONE << G6 | ONE << G5));
