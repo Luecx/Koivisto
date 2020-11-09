@@ -412,8 +412,8 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     k = board->getPieces()[WHITE_QUEEN];
     while (k) {
         square  = bitscanForward(k);
-        feature_gradients[0][17] += evalGradMid * manhattanDistance(square, blackKingSquare);
-        feature_gradients[1][17] += evalGradEnd * manhattanDistance(square, blackKingSquare);
+        feature_gradients[0][18] += evalGradMid * manhattanDistance(square, blackKingSquare);
+        feature_gradients[1][18] += evalGradEnd * manhattanDistance(square, blackKingSquare);
         k = lsbReset(k);
     }
     
@@ -421,8 +421,8 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square  = bitscanForward(k);
         
-        feature_gradients[0][17]  -= evalGradMid * manhattanDistance(square, whiteKingSquare);
-        feature_gradients[1][17]  -= evalGradEnd * manhattanDistance(square, whiteKingSquare);
+        feature_gradients[0][18]  -= evalGradMid * manhattanDistance(square, whiteKingSquare);
+        feature_gradients[1][18]  -= evalGradEnd * manhattanDistance(square, whiteKingSquare);
         
         k = lsbReset(k);
     }
@@ -435,11 +435,11 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square = bitscanForward(k);
     
-        feature_gradients[0][19] += evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
-        feature_gradients[1][19] += evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[0][20] += evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[1][20] += evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
         
-        feature_gradients[0][18] += evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
-        feature_gradients[1][18] += evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[0][19] += evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[1][19] += evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
         
 //        featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
 //        featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
@@ -451,21 +451,21 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square = bitscanForward(k);
     
-        feature_gradients[0][19] -= evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
-        feature_gradients[1][19] -= evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[0][20] -= evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[1][20] -= evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
     
-        feature_gradients[0][18] -= evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
-        feature_gradients[1][18] -= evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[0][19] -= evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[1][19] -= evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
         
         k = lsbReset(k);
     }
     
-    feature_gradients[0][20] += evalGradMid*(
+    feature_gradients[0][21] += evalGradMid*(
         + board->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
         + board->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
         - board->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
         - board->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
-    feature_gradients[1][20] += evalGradEnd*(
+    feature_gradients[1][21] += evalGradEnd*(
         + board->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
         + board->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
         - board->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
@@ -558,20 +558,12 @@ void collectGradients_kingSafety(Board* board, float evalGrad, float phase){
             b = lsbReset(b);
         }
     }
-    
-//    std::cerr << wkingSafety_valueOfAttacks << "   " << bkingSafety_valueOfAttacks << std::endl;
-//    std::cerr << kingSafety_gradients[0][wkingSafety_valueOfAttacks] << std::endl;
-//    std::cerr << kingSafety_gradients[1][wkingSafety_valueOfAttacks] << std::endl;
-    
+ 
     kingSafety_gradients[0][wkingSafety_valueOfAttacks] -= (1-phase) * evalGrad;
     kingSafety_gradients[1][wkingSafety_valueOfAttacks] -= (  phase) * evalGrad;
-//    std::cerr << kingSafety_gradients[0][wkingSafety_valueOfAttacks] << std::endl;
-//    std::cerr << kingSafety_gradients[1][wkingSafety_valueOfAttacks] << std::endl;
     
     kingSafety_gradients[0][bkingSafety_valueOfAttacks] += (1-phase) * evalGrad;
     kingSafety_gradients[1][bkingSafety_valueOfAttacks] += (  phase) * evalGrad;
-//    std::cerr << kingSafety_gradients[0][bkingSafety_valueOfAttacks] << std::endl;
-//    std::cerr << kingSafety_gradients[1][bkingSafety_valueOfAttacks] << std::endl;
 }
 
 
@@ -617,7 +609,7 @@ void updateGradients(int lr=1) {
     }
     
     // features
-    for(int i = 0; i < 21; i++){
+    for(int i = 0; i < 22; i++){
         float midGrad = feature_gradients[0][i];
         float endGrad = feature_gradients[1][i];
         EvalScore change = CHANGE(midGrad, endGrad, lr);
