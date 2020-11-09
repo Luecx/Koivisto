@@ -44,6 +44,7 @@ extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
 extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
+extern float opposite_color_bishops;
 
 void eval_init();
 

@@ -216,6 +216,8 @@ EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 
+float opposite_color_bishops = 0.48;
+
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
     M(   14,   -2), M(   34,  -18), M(   68,  -14), M(   78,  -16), M(   36,    8), M(   96,  -14), M(  122,    2), M(  120,   -6),
@@ -836,6 +838,8 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
+    if (phase>0.9 && (bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])==2) && bitCount(WHITE_SQUARES&(b->getPieces()[WHITE_BISHOP]|b->getPieces()[BLACK_BISHOP])) == 1)res *= opposite_color_bishops; 
+
     return res;
 }
 
