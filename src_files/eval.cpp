@@ -216,7 +216,7 @@ EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 
-float opposite_color_bishops = 0.48;
+float opposite_color_bishops = 0.75;
 
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
