@@ -24,6 +24,7 @@
 #include "Tuning.h"
 #include "Verification.h"
 #include "uci.h"
+#include "gradients.h"
 
 #include <iomanip>
 
@@ -90,10 +91,42 @@ void main_tune_features() {
     bb_cleanUp();
 }
 
-
 int main(int argc, char* argv[]) {
-    
 
+    bb_init();
+    eval_init();
+
+    tuning::loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
+//    tuning::loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+//    tuning::loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+    double error = 1;
+//    double K     = tuning::computeK(new Evaluator(), 2.47175, 100, 1e-7);
+    double K = 2.46448;
+    for (int i = 0; i < 1000; i++) {
+        double thisError = tuning::optimiseGradients(K, 1);
+
+        if (thisError < error) {
+            std::cout << setprecision(7) << "it = " << setw(5) << right << (i + 1);
+            std::cout << "    error = " << left << setw(10) << thisError;
+            if (i > 0) {
+                std::cout << "    dE = " << setw(10) << thisError - error;
+            }
+            std::cout << std::endl;
+        } else {
+            std::cerr << setprecision(7) << "it = " << setw(5) << right << (i + 1);
+            std::cerr << "    error = " << left << setw(10) << thisError;
+            if (i > 0) {
+                std::cerr << "    dE = " << setw(10) << thisError - error;
+            }
+            std::cerr << std::endl;
+        }
+
+        if (i % 100 == 99) {
+            tuning::displayTunedValues();
+        }
+
+        error = thisError;
+    }
 
     return 0;
 }

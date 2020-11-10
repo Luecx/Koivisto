@@ -103,282 +103,6 @@ void tuning::loadPositionFile(const std::string& path, int count, int start) {
     }
 }
 
-void tuning::findWorstPositions(Evaluator* evaluator, double K, int count) {
-    double max = 2;
-
-    for (int i = 0; i < count; i++) {
-        int    indexOfHighest = 0;
-        double highestScore   = 0;
-
-        for (int n = 0; n < dataCount; n++) {
-            Score  q_i      = evaluator->evaluate(boards[n]);
-            double expected = results[n];
-            double sig      = sigmoid(q_i, K);
-
-            double difference = abs(expected - sig);
-
-            if (difference > highestScore && difference < max) {
-                highestScore   = difference;
-                indexOfHighest = n;
-            }
-        }
-
-        max = highestScore;
-
-        std::cout << boards[indexOfHighest]->fen() << " " << evaluator->evaluate(boards[indexOfHighest]) << " "
-                  << results[indexOfHighest] << std::endl;
-    }
-}
-
-void tuning::generateHeatMap(Piece piece, bool earlyAndLate, bool asymmetric) {
-
-    auto addToTable = [](double* table, double* count, U64 bitboard, double factor, Color color) {
-        while (bitboard) {
-            Square s = bitscanForward(bitboard);
-
-            int index = color == WHITE ? s : (squareIndex(7 - rankIndex(s), fileIndex(s)));
-
-            table[index] += factor;
-            count[index]++;
-            bitboard = lsbReset(bitboard);
-        }
-    };
-
-    auto printTable = [](double* table) {
-        std::cout << " +--------+--------+--------+--------+--------+--------+--------+--------+\n";
-
-        for (Rank r = 7; r >= 0; r--) {
-
-            std::cout << " |        |        |        |        |        |        |        |        |\n";
-            for (File f = 0; f <= 7; ++f) {
-                Square sq = bb::squareIndex(r, f);
-
-                std::cout << std::fixed << std::setprecision(1);
-                std::cout << " | " << std::setw(6) << table[sq];
-            }
-
-            std::cout << " |\n |        |        |        |        |        |        |        |        |\n";
-            std::cout << " +--------+--------+--------+--------+--------+--------+--------+--------+\n";
-        }
-    };
-
-    auto trimTable = [](double* table, double* count) {
-        double max = 0;
-        double min = 0;
-
-        for (int i = 0; i < 64; i++) {
-            table[i] /= count[i];
-        }
-
-        for (int i = 0; i < 64; i++) {
-            if (table[i] > max)
-                max = table[i];
-            if (table[i] < min)
-                min = table[i];
-        }
-        for (int i = 0; i < 64; i++) {
-            //            table[i] -= min;
-            table[i] /= ((max - min) / 100);
-        }
-    };
-
-    if (earlyAndLate && asymmetric) {
-        double* earlyWhite = new double[64] {0};
-        double* lateWhite  = new double[64] {0};
-        double* earlyBlack = new double[64] {0};
-        double* lateBlack  = new double[64] {0};
-
-        double* earlyWhiteCount = new double[64] {0};
-        double* lateWhiteCount  = new double[64] {0};
-        double* earlyBlackCount = new double[64] {0};
-        double* lateBlackCount  = new double[64] {0};
-
-        for (int i = 0; i < dataCount; i++) {
-
-            // dont look at equal positions
-            if (results[i] == 0.5)
-                continue;
-
-            Board* b = boards[i];
-
-            // calculate the phase
-            double phase =
-                (18
-                 - bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP] | b->getPieces()[WHITE_KNIGHT]
-                            | b->getPieces()[BLACK_KNIGHT] | b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-                 - 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
-                / 18.0;
-
-            Color winner      = results[i] > 0.5 ? WHITE : BLACK;
-            int   whiteFactor = winner == WHITE ? 1 : -1;
-            //            double earlyChange = phase < 0.3 ? 1:0;
-            //            double lateChange = phase > 0.8 ? 1:0;
-
-            double earlyChange = 1 - phase;
-            double lateChange  = phase;
-
-            //            std::cout << *b << std::endl;
-            //            std::cout << phase << std::endl;
-
-            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
-            addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
-            addToTable(earlyBlack, earlyBlackCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * earlyChange, WHITE);
-            addToTable(lateBlack, lateBlackCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * lateChange, WHITE);
-        }
-
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(earlyWhiteCount[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(lateWhiteCount[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(earlyBlack[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(lateBlack[i]) << ",";
-        }
-        std::cout << std::endl;
-
-        trimTable(earlyWhite, earlyWhiteCount);
-        trimTable(lateWhite, lateWhiteCount);
-        trimTable(earlyBlack, earlyBlackCount);
-        trimTable(lateBlack, lateBlackCount);
-
-        printTable(earlyWhite);
-        printTable(lateWhite);
-        printTable(earlyBlack);
-        printTable(lateBlack);
-
-        delete[] earlyWhite;
-        delete[] lateWhite;
-        delete[] earlyBlack;
-        delete[] lateBlack;
-
-        delete[] earlyWhiteCount;
-        delete[] lateWhiteCount;
-        delete[] earlyBlackCount;
-        delete[] lateBlackCount;
-    }
-
-    if (earlyAndLate && !asymmetric) {
-        double* earlyWhite = new double[64] {0};
-        double* lateWhite  = new double[64] {0};
-
-        double* earlyWhiteCount = new double[64] {0};
-        double* lateWhiteCount  = new double[64] {0};
-
-        for (int i = 0; i < dataCount; i++) {
-
-            // dont look at equal positions
-            if (results[i] == 0.5)
-                continue;
-
-            Board* b = boards[i];
-
-            // calculate the phase
-            double phase =
-                (18
-                 - bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP] | b->getPieces()[WHITE_KNIGHT]
-                            | b->getPieces()[BLACK_KNIGHT] | b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-                 - 3 * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
-                / 18.0;
-
-            Color winner      = results[i] > 0.5 ? WHITE : BLACK;
-            int   whiteFactor = winner == WHITE ? 1 : -1;
-            //            double earlyChange = phase < 0.3 ? 1:0;
-            //            double lateChange = phase > 0.8 ? 1:0;
-
-            double earlyChange = 1 - phase;
-            double lateChange  = phase;
-
-            //            std::cout << *b << std::endl;
-            //            std::cout << phase << std::endl;
-
-            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[piece % 6], whiteFactor * earlyChange, WHITE);
-            addToTable(lateWhite, lateWhiteCount, b->getPieces()[piece % 6], whiteFactor * lateChange, WHITE);
-            addToTable(earlyWhite, earlyWhiteCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * earlyChange, BLACK);
-            addToTable(lateWhite, lateWhiteCount, b->getPieces()[(piece % 6) + 6], -whiteFactor * lateChange, BLACK);
-        }
-
-        trimTable(earlyWhite, earlyWhiteCount);
-        trimTable(lateWhite, lateWhiteCount);
-
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(earlyWhite[i]) << ",";
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 64; i++) {
-            std::cout << int(lateWhite[i]) << ",";
-        }
-        std::cout << std::endl;
-
-        printTable(earlyWhite);
-        printTable(lateWhite);
-
-        delete[] earlyWhite;
-        delete[] lateWhite;
-
-        delete[] earlyWhiteCount;
-        delete[] lateWhiteCount;
-    }
-}
-
-void tuning::clearLoadedData() {
-    if (boards != nullptr) {
-
-        for (int i = 0; i < dataCount; i++) {
-            delete boards[i];
-        }
-
-        delete[] boards;
-        delete[] results;
-    }
-}
-
-double tuning::optimiseGD(Evaluator* evaluator, double K, double learningRate) {
-    int paramCount = evaluator->paramCount();
-
-    auto* earlyGrads   = new double[paramCount] {0};
-    auto* lateGrads    = new double[paramCount] {0};
-    auto* gradCounters = new int[paramCount] {0};
-
-    double score = 0;
-
-    for (int i = 0; i < dataCount; i++) {
-        Score  q_i      = evaluator->evaluate(boards[i]);
-        double expected = results[i];
-
-        double sig       = sigmoid(q_i, K);
-        double sigPrime  = sigmoidPrime(q_i, K);
-        double lossPrime = -2 * (expected - sig);
-
-        float* features = evaluator->getFeatures();
-        float  phase    = evaluator->getPhase();
-
-        for (int p = 0; p < paramCount; p++) {
-            earlyGrads[p] += features[p] * (1 - phase) * sigPrime * lossPrime;
-            lateGrads[p] += features[p] * phase * sigPrime * lossPrime;
-
-            if (features[p] != 0) {
-                gradCounters[p] += 1;
-            }
-        }
-
-        score += (expected - sig) * (expected - sig);
-    }
-
-    for (int p = 0; p < paramCount; p++) {
-
-        evaluator->getEarlyGameParams()[p] -= earlyGrads[p] * learningRate / -min(-1, -gradCounters[p]);
-        evaluator->getLateGameParams()[p] -= lateGrads[p] * learningRate / -min(-1, -gradCounters[p]);
-    }
-
-    return score / dataCount;
-}
 
 double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, int paramCount, float lr) {
 
@@ -665,7 +389,7 @@ void tuning::displayTunedValues() {
     std::cout << std::endl;
 
     // features
-    for (int i = 0; i < 22; i++) {
+    for (int i = 0; i < 21; i++) {
         std::cout << "EvalScore " << setw(30) << left << feat_names[i] << right << "= M(" << setw(5) << MgScore(*evfeatures[i])
                   << "," <<setw(5) << EgScore(*evfeatures[i]) << ");" << std::endl;
     }
@@ -685,6 +409,36 @@ void tuning::displayTunedValues() {
         }
     }
     std::cout << "};" << std::endl;
+    
+    // bishop pawn same color table
+    std::cout << "EvalScore bishop_pawn_same_color_table_o[9] {" << std::endl;
+    for (int i = 0; i < 9; i++) {
+        if (i % 5 == 0) {
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << right << MgScore(bishop_pawn_same_color_table_o[i]) << "," << setw(5)
+                  << EgScore(bishop_pawn_same_color_table_o[i]) << "), ";
+        if (i % 5 == 4) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    std::cout << "EvalScore bishop_pawn_same_color_table_e[9] {" << std::endl;
+    for (int i = 0; i < 9; i++) {
+        if (i % 5 == 0) {
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << right << MgScore(bishop_pawn_same_color_table_e[i]) << "," << setw(5)
+                  << EgScore(bishop_pawn_same_color_table_e[i]) << "), ";
+        if (i % 5 == 4) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    
+    
+    
     std::cout << std::endl;
 }
 

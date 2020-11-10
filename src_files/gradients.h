@@ -348,16 +348,16 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square  = bitscanForward(k);
         
-        feature_gradients[0][17] += bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
-        feature_gradients[1][17] += bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
+        feature_gradients[0][16] += bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
+        feature_gradients[1][16] += bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
     
-        feature_gradients[0][16] += (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
+        feature_gradients[0][15] += (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                                        && whitePawns & (ONE << G3 | ONE << G4)) * evalGradMid;
-        feature_gradients[1][16] += (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
+        feature_gradients[1][15] += (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                                        && whitePawns & (ONE << G3 | ONE << G4)) * evalGradEnd;
-        feature_gradients[0][16] += (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
+        feature_gradients[0][15] += (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
                                      && whitePawns & (ONE << B3 | ONE << B4)) * evalGradMid;
-        feature_gradients[1][16] += (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
+        feature_gradients[1][15] += (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
                                      && whitePawns & (ONE << B3 | ONE << B4)) * evalGradEnd;
         k = lsbReset(k);
     }
@@ -366,22 +366,22 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square  = bitscanForward(k);
        
-        feature_gradients[0][17] -= bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
-        feature_gradients[1][17] -= bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
+        feature_gradients[0][16] -= bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
+        feature_gradients[1][16] -= bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
     
-        feature_gradients[0][16] -= (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
+        feature_gradients[0][15] -= (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                                      && blackPawns & (ONE << G6 | ONE << G5)) * evalGradMid;
-        feature_gradients[1][16] -= (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
+        feature_gradients[1][15] -= (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                                      && blackPawns & (ONE << G6 | ONE << G5)) * evalGradEnd;
-        feature_gradients[0][16] -= (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
+        feature_gradients[0][15] -= (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
                                      && blackPawns & (ONE << B6 | ONE << B5)) * evalGradMid;
-        feature_gradients[1][16] -= (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
+        feature_gradients[1][15] -= (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
                                      && blackPawns & (ONE << B6 | ONE << B5)) * evalGradEnd;
         k = lsbReset(k);
     }
-    feature_gradients[0][15] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
+    feature_gradients[0][14] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
                                  - (bitCount(board->getPieces()[BLACK_BISHOP]) == 2)) * evalGradMid;
-    feature_gradients[1][15] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
+    feature_gradients[1][14] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
                                  - (bitCount(board->getPieces()[BLACK_BISHOP]) == 2)) * evalGradEnd;
     
     /**********************************************************************************
@@ -415,8 +415,8 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     k = board->getPieces()[WHITE_QUEEN];
     while (k) {
         square  = bitscanForward(k);
-        feature_gradients[0][18] += evalGradMid * manhattanDistance(square, blackKingSquare);
-        feature_gradients[1][18] += evalGradEnd * manhattanDistance(square, blackKingSquare);
+        feature_gradients[0][17] += evalGradMid * manhattanDistance(square, blackKingSquare);
+        feature_gradients[1][17] += evalGradEnd * manhattanDistance(square, blackKingSquare);
         k = lsbReset(k);
     }
     
@@ -424,8 +424,8 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square  = bitscanForward(k);
         
-        feature_gradients[0][18]  -= evalGradMid * manhattanDistance(square, whiteKingSquare);
-        feature_gradients[1][18]  -= evalGradEnd * manhattanDistance(square, whiteKingSquare);
+        feature_gradients[0][17]  -= evalGradMid * manhattanDistance(square, whiteKingSquare);
+        feature_gradients[1][17]  -= evalGradEnd * manhattanDistance(square, whiteKingSquare);
         
         k = lsbReset(k);
     }
@@ -438,11 +438,11 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square = bitscanForward(k);
     
-        feature_gradients[0][20] += evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
-        feature_gradients[1][20] += evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[0][19] += evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[1][19] += evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
         
-        feature_gradients[0][19] += evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
-        feature_gradients[1][19] += evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[0][18] += evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[1][18] += evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
 
         
         k = lsbReset(k);
@@ -452,21 +452,21 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square = bitscanForward(k);
     
-        feature_gradients[0][20] -= evalGradMid * bitCount(KING_ATTACKS[square] & blackPawns);
-        feature_gradients[1][20] -= evalGradEnd * bitCount(KING_ATTACKS[square] & blackPawns);
+        feature_gradients[0][19] -= evalGradMid * bitCount(KING_ATTACKS[square] & blackPawns);
+        feature_gradients[1][19] -= evalGradEnd * bitCount(KING_ATTACKS[square] & blackPawns);
     
-        feature_gradients[0][19] -= evalGradMid * bitCount(KING_ATTACKS[square] & whiteTeam);
-        feature_gradients[1][19] -= evalGradEnd * bitCount(KING_ATTACKS[square] & whiteTeam);
+        feature_gradients[0][18] -= evalGradMid * bitCount(KING_ATTACKS[square] & whiteTeam);
+        feature_gradients[1][18] -= evalGradEnd * bitCount(KING_ATTACKS[square] & whiteTeam);
         
         k = lsbReset(k);
     }
     
-    feature_gradients[0][21] += evalGradMid*(
+    feature_gradients[0][20] += evalGradMid*(
         + board->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
         + board->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
         - board->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
         - board->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
-    feature_gradients[1][21] += evalGradEnd*(
+    feature_gradients[1][20] += evalGradEnd*(
         + board->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
         + board->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
         - board->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
@@ -591,12 +591,11 @@ void collectGradients_bishopPawnColorTable(Board* board, float evalGrad, float p
     while (k) {
         square  = bitscanForward(k);
     
-        bishop_pawn_same_color_gradients[0][0][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (1-phase);
-        bishop_pawn_same_color_gradients[1][0][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (  phase);
-    
-    
-        bishop_pawn_same_color_gradients[0][1][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (1-phase);
-        bishop_pawn_same_color_gradients[1][1][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (  phase);
+        bishop_pawn_same_color_gradients[0][0][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] -= evalGrad * (1-phase);
+        bishop_pawn_same_color_gradients[1][0][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] -= evalGrad * (  phase);
+        
+        bishop_pawn_same_color_gradients[0][1][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] -= evalGrad * (1-phase);
+        bishop_pawn_same_color_gradients[1][1][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] -= evalGrad * (  phase);
         
         k = lsbReset(k);
     }
@@ -644,7 +643,7 @@ void updateGradients(int lr=1) {
     }
     
     // features
-    for(int i = 0; i < 22; i++){
+    for(int i = 0; i < 21; i++){
         float midGrad = feature_gradients[0][i];
         float endGrad = feature_gradients[1][i];
         EvalScore change = CHANGE(midGrad, endGrad, lr);
@@ -666,6 +665,28 @@ void updateGradients(int lr=1) {
         float endGrad = kingSafety_gradients[1][i];
         EvalScore change = CHANGE(midGrad, endGrad, lr);
         kingSafetyTable[i] += change;
+    }
+    
+    // bishop piece color tables
+    for(int i = 0; i < 100; i++){
+        float midGrad = kingSafety_gradients[0][i];
+        float endGrad = kingSafety_gradients[1][i];
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
+        kingSafetyTable[i] += change;
+    }
+    
+    for (int i = 0; i < 9; i++) {
+        
+        float midGrad = bishop_pawn_same_color_gradients[0][0][i];
+        float endGrad = bishop_pawn_same_color_gradients[1][0][i];
+        EvalScore change = CHANGE(midGrad, endGrad, lr);
+        bishop_pawn_same_color_table_o[i] += change;
+        
+        midGrad = bishop_pawn_same_color_gradients[0][1][i];
+        endGrad = bishop_pawn_same_color_gradients[1][1][i];
+        change = CHANGE(midGrad, endGrad, lr);
+        bishop_pawn_same_color_table_e[i] += change;
+        
     }
     
     eval_init();
@@ -706,9 +727,11 @@ void clearGradients() {
         passer_gradients[1][i] = 0;
     }
     
-    for (int i = 0; i < 100; i++) {
-        kingSafety_gradients[0][i] = 0;
-        kingSafety_gradients[1][i] = 0;
+    for (int i = 0; i < 9; i++) {
+        bishop_pawn_same_color_gradients[0][0][i] = 0;
+        bishop_pawn_same_color_gradients[1][0][i] = 0;
+        bishop_pawn_same_color_gradients[0][1][i] = 0;
+        bishop_pawn_same_color_gradients[1][1][i] = 0;
     }
 }
 
@@ -758,6 +781,7 @@ double collectGradients(std::vector<TrainingEntry>& entries, double K) {
         collectGradients_features(&en.board, lossPrime * sigPrime, phase);
         collectGradients_passers(&en.board, lossPrime * sigPrime, phase);
         collectGradients_kingSafety(&en.board, lossPrime * sigPrime, phase);
+        collectGradients_bishopPawnColorTable(&en.board, lossPrime * sigPrime, phase);
     }
     
     error /= entries.size();
