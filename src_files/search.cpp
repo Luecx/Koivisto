@@ -514,7 +514,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         }
 
 
-        if (d>highestReached){
+        if (d>highestReached && isTimeLeft()){
             highestReached = d;
             bestThread = threadId;
             rootTimeLeft();
@@ -891,7 +891,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && isTimeLeft() && td->threadID == 0) {
+            if (ply == 0 && isTimeLeft()) {
                 // Store bestMove for bestMove
                 td->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
