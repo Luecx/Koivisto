@@ -587,8 +587,8 @@ void tuning::displayTunedValues() {
                                         "ROOK_HALF_OPEN_FILE",
                                         "ROOK_KING_LINE",
                                         "BISHOP_DOUBLED",
-                                        "BISHOP_PAWN_SAME_SQUARE",
                                         "BISHOP_FIANCHETTO",
+                                        "BISHOP_PIECE_SAME_SQUARE_E",
                                         "QUEEN_DISTANCE_ENEMY_KING",
                                         "KING_CLOSE_OPPONENT",
                                         "KING_PAWN_SHIELD",
@@ -665,7 +665,7 @@ void tuning::displayTunedValues() {
     std::cout << std::endl;
 
     // features
-    for (int i = 0; i < 21; i++) {
+    for (int i = 0; i < 22; i++) {
         std::cout << "EvalScore " << setw(30) << left << feat_names[i] << right << "= M(" << setw(5) << MgScore(*evfeatures[i])
                   << "," <<setw(5) << EgScore(*evfeatures[i]) << ");" << std::endl;
     }

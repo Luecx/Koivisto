@@ -1,5 +1,6 @@
 
 #include "eval.h"
+#include "Tuning.h"
 
 #ifdef TUNE
 
@@ -21,6 +22,8 @@ float feature_gradients[2][23] {};
 float passer_gradients[2][16] {};
 // phase - index
 float kingSafety_gradients[2][100] {};
+// phase - tableNumber (0 = ..._o, 1 = ..._e) - index
+float bishop_pawn_same_color_gradients[2][2][9] {};
 
 void collectGradients_psqt(Board* board, float evalGrad, float phase) {
     // target: incrementing psqt_gradients for the given board using the evaluation gradient
@@ -344,9 +347,9 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     k = board->getPieces()[WHITE_BISHOP];
     while (k) {
         square  = bitscanForward(k);
-    
-        feature_gradients[0][15] += bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
-        feature_gradients[1][15] += bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
+        
+        feature_gradients[0][17] += bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
+        feature_gradients[1][17] += bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
     
         feature_gradients[0][16] += (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                                        && whitePawns & (ONE << G3 | ONE << G4)) * evalGradMid;
@@ -362,9 +365,9 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     k = board->getPieces()[BLACK_BISHOP];
     while (k) {
         square  = bitscanForward(k);
-    
-        feature_gradients[0][15] -= bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
-        feature_gradients[1][15] -= bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
+       
+        feature_gradients[0][17] -= bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradMid;
+        feature_gradients[1][17] -= bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES)) * evalGradEnd;
     
         feature_gradients[0][16] -= (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                                      && blackPawns & (ONE << G6 | ONE << G5)) * evalGradMid;
@@ -376,9 +379,9 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
                                      && blackPawns & (ONE << B6 | ONE << B5)) * evalGradEnd;
         k = lsbReset(k);
     }
-    feature_gradients[0][14] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
+    feature_gradients[0][15] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
                                  - (bitCount(board->getPieces()[BLACK_BISHOP]) == 2)) * evalGradMid;
-    feature_gradients[1][14] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
+    feature_gradients[1][15] += (+ (bitCount(board->getPieces()[WHITE_BISHOP]) == 2)
                                  - (bitCount(board->getPieces()[BLACK_BISHOP]) == 2)) * evalGradEnd;
     
     /**********************************************************************************
@@ -440,9 +443,7 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
         
         feature_gradients[0][19] += evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
         feature_gradients[1][19] += evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
-        
-//        featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
-//        featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
+
         
         k = lsbReset(k);
     }
@@ -451,11 +452,11 @@ void collectGradients_features(Board* board, float evalGrad, float phase) {
     while (k) {
         square = bitscanForward(k);
     
-        feature_gradients[0][20] -= evalGradMid * bitCount(KING_ATTACKS[square] & blackTeam);
-        feature_gradients[1][20] -= evalGradEnd * bitCount(KING_ATTACKS[square] & blackTeam);
+        feature_gradients[0][20] -= evalGradMid * bitCount(KING_ATTACKS[square] & blackPawns);
+        feature_gradients[1][20] -= evalGradEnd * bitCount(KING_ATTACKS[square] & blackPawns);
     
-        feature_gradients[0][19] -= evalGradMid * bitCount(KING_ATTACKS[square] & whitePawns);
-        feature_gradients[1][19] -= evalGradEnd * bitCount(KING_ATTACKS[square] & whitePawns);
+        feature_gradients[0][19] -= evalGradMid * bitCount(KING_ATTACKS[square] & whiteTeam);
+        feature_gradients[1][19] -= evalGradEnd * bitCount(KING_ATTACKS[square] & whiteTeam);
         
         k = lsbReset(k);
     }
@@ -565,7 +566,41 @@ void collectGradients_kingSafety(Board* board, float evalGrad, float phase){
     kingSafety_gradients[0][bkingSafety_valueOfAttacks] += (1-phase) * evalGrad;
     kingSafety_gradients[1][bkingSafety_valueOfAttacks] += (  phase) * evalGrad;
 }
-
+void collectGradients_bishopPawnColorTable(Board* board, float evalGrad, float phase){
+    
+    U64 k;
+    Square square;
+    
+    U64 whitePawns     = board->getPieces()[WHITE_PAWN];
+    U64 blackPawns     = board->getPieces()[BLACK_PAWN];
+    
+    k = board->getPieces()[WHITE_BISHOP];
+    while (k) {
+        square  = bitscanForward(k);
+        
+        bishop_pawn_same_color_gradients[0][0][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (1-phase);
+        bishop_pawn_same_color_gradients[1][0][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (  phase);
+        
+        bishop_pawn_same_color_gradients[0][1][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (1-phase);
+        bishop_pawn_same_color_gradients[1][1][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (  phase);
+        
+        k = lsbReset(k);
+    }
+    
+    k = board->getPieces()[BLACK_BISHOP];
+    while (k) {
+        square  = bitscanForward(k);
+    
+        bishop_pawn_same_color_gradients[0][0][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (1-phase);
+        bishop_pawn_same_color_gradients[1][0][bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (  phase);
+    
+    
+        bishop_pawn_same_color_gradients[0][1][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (1-phase);
+        bishop_pawn_same_color_gradients[1][1][bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += evalGrad * (  phase);
+        
+        k = lsbReset(k);
+    }
+}
 
 void updateGradients(int lr=1) {
     // psqt

@@ -93,47 +93,7 @@ void main_tune_features() {
 
 int main(int argc, char* argv[]) {
     
-    
-    
-    //    if (argc == 1) {
-    //        uci_loop(true);
-    //    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-    //        uci_loop(true);
-    //    }
 
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
-
-    /**********************************************************************************
-     *                                  T U N I N G                                   *
-     **********************************************************************************/
-
-    //        bb_init();
-    //    eval_init();
-    //    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
-    //    std::cout << tuning::computeError(new Evaluator(), 3);
-    //     for(int i = 0; i < 10; i++)
-    //     tuning::evalSpeed();
-    //     bb_cleanUp();
-
-    // main_tune_pst_bb(PAWN);
-    //    eval_init();
-    //main_tune_features();
-    // main_tune_pst();
-    // main_tune_features_bb();
-
-        if (i % 100 == 99){
-            tuning::displayTunedValues();
-//            K = tuning::computeK(new Evaluator(), 3,100, 1e-7);
-        }
-
-        error = thisError;
-    }
-    
-  
 
     return 0;
 }
