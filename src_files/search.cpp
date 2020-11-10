@@ -32,6 +32,9 @@ int                      threadCount = 1;
 bool                     useTB       = false;
 bool                     printInfo   = true;
 
+Depth highestReached;
+int bestThread;
+
 SearchOverview overview;
 
 int lmrReductions[256][256];
@@ -442,6 +445,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     // if the main thread calls this function, we need to generate the search data for all the threads first
     if (threadId == 0) {
 
+        highestReached = 0;
+        bestThread = 0;
+
         // if there is a dtz move available, do not start any threads or search at all. just do the dtz move
         Move dtzMove = getDTZMove(b);
         if (dtzMove != 0)
@@ -507,7 +513,12 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             }
         }
 
-        if (threadId == 0) rootTimeLeft();
+
+        if (d>highestReached){
+            highestReached = d;
+            bestThread = threadId;
+            rootTimeLeft();
+        }
 
         if (threadId == 0)
             printInfoString(b, d, s);
@@ -528,7 +539,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         runningThreads.clear();
 
         // retrieve the best move from the search
-        Move best = sd->bestMove;
+        Move best = tds[bestThread]->bestMove;
 
         delete sd;
 
@@ -882,7 +893,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             bestMove     = m;
             if (ply == 0 && isTimeLeft() && td->threadID == 0) {
                 // Store bestMove for bestMove
-                sd->bestMove = m;
+                td->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
                 search_timeManager->updatePV(m, score, depth);
             }
