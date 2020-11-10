@@ -186,8 +186,10 @@ bool TimeManager::rootTimeLeft() {
         return false;
 
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse)
+    if (elapsed >= timeToUse){
+        forceStop = true;
         return false;
+    }
 
     return true;
 }
