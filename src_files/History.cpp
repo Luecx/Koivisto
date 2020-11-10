@@ -113,10 +113,10 @@ void SearchData::setHistoricEval(Score ev, Color color, Depth ply) { eval[color]
  * Is improving
  */
 bool SearchData::isImproving(Score ev, Color color, Depth ply) {
-    if (ply > 2) {
+    if (ply >= 2) {
         return (ev > eval[color][ply - 2]);
     } else {
-        return false;
+        return true;
     }
 }
 
