@@ -31,98 +31,6 @@ using namespace std;
 using namespace bb;
 using namespace move;
 
-
-void main_tune_pst_bb(Piece piece) {
-    eval_init();
-    bb_init();
-    Evaluator* evaluator = new Evaluator();
-
-    using namespace tuning;
-
-    loadPositionFile("../resources/other/tuningset_clear2.epd", 2500000);
-
-    eval_init();
-    auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-7);
-
-    int lr = 200;
-
-    for (int i = 1; i < 5000; i++) {
-
-        std::cout << "--------------------------------------------------- [" << i
-                  << "] ----------------------------------------------" << std::endl;
-
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[2], 64, lr) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[3], 64, lr) << std::endl;
-
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[4], 64, lr) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[5], 64, lr) << std::endl;
-
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[6], 64, lr) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[7], 64, lr) << std::endl;
-
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[8], 64, lr) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(evaluator, K, psqt[9], 64, lr) << std::endl;
-
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[2][s]) << "," << setw(5) << EgScore(psqt[2][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[3][s]) << "," << setw(5) << EgScore(psqt[3][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[4][s]) << "," << setw(5) << EgScore(psqt[4][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[5][s]) << "," << setw(5) << EgScore(psqt[5][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[6][s]) << "," << setw(5) << EgScore(psqt[6][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[7][s]) << "," << setw(5) << EgScore(psqt[7][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[8][s]) << "," << setw(5) << EgScore(psqt[8][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        for (Square s = 0; s < 64; s++) {
-            std::cout << "M(" << setw(5) << MgScore(psqt[9][s]) << "," << setw(5) << EgScore(psqt[9][s]) << "), ";
-            if ((i + 1) % 8 == 0)
-                std::cout << std::endl;
-        }
-        std::cout << std::endl;
-
-        if (i % 3 == 0 && lr > 1) {
-            lr /= 2;
-            std::cout << "Lr Dropped to " << lr;
-            std::cout << std::endl;
-        }
-    }
-
-    delete evaluator;
-    bb_cleanUp();
-}
-
 void main_tune_features() {
     eval_init();
     bb_init();
@@ -138,23 +46,23 @@ void main_tune_features() {
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
-        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
-        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
-        //std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
         std::cout << tuning::optimisePSTBlackBox(evaluator, K, &bishop_pawn_same_color_table_o[0], 8, 1) << std::endl;
         std::cout << tuning::optimisePSTBlackBox(evaluator, K, &bishop_pawn_same_color_table_e[0], 8, 1) << std::endl;
 
         for (Square s = 0; s < 8; s++) {
-            std::cout << "M(" << setw(5) << MgScore(bishop_pawn_same_color_table_o[s]) << "," << setw(5) << EgScore(bishop_pawn_same_color_table_o[s])
-                      << "), ";
+            std::cout << "M(" << setw(5) << MgScore(bishop_pawn_same_color_table_o[s]) << "," << setw(5)
+                      << EgScore(bishop_pawn_same_color_table_o[s]) << "), ";
             std::cout << std::endl;
         }
         std::cout << std::endl;
 
         for (Square s = 0; s < 8; s++) {
-            std::cout << "M(" << setw(5) << MgScore(bishop_pawn_same_color_table_e[s]) << "," << setw(5) << EgScore(bishop_pawn_same_color_table_e[s])
-                      << "), ";
+            std::cout << "M(" << setw(5) << MgScore(bishop_pawn_same_color_table_e[s]) << "," << setw(5)
+                      << EgScore(bishop_pawn_same_color_table_e[s]) << "), ";
             std::cout << std::endl;
         }
         std::cout << std::endl;
@@ -182,7 +90,6 @@ void main_tune_features() {
     bb_cleanUp();
 }
 
-#include "gradients.h"
 
 int main(int argc, char* argv[]) {
     
@@ -204,33 +111,19 @@ int main(int argc, char* argv[]) {
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    bb_init();
-    eval_init();
+    //        bb_init();
+    //    eval_init();
+    //    tuning::loadPositionFile("../resources/other/quiet-labeled.epd", 1000000);
+    //    std::cout << tuning::computeError(new Evaluator(), 3);
+    //     for(int i = 0; i < 10; i++)
+    //     tuning::evalSpeed();
+    //     bb_cleanUp();
 
-    tuning::loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
-    tuning::loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
-    tuning::loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-    double error = 1;
-    double K = tuning::computeK(new Evaluator(), 2.47175,100, 1e-7);
-//    double K = 2.47175;
-    for(int i = 0; i < 10000; i++){
-        double thisError = tuning::optimiseGradients(K, 1);
-        
-        if(thisError < error){
-            std::cout     << setprecision(7) << "it = " << setw(5) << right << (i+1);
-            std::cout     << "    error = " << left << setw(10) <<thisError;
-            if(i > 0){
-                std::cout << "    dE = " << setw(10) << thisError - error;
-            }
-            std::cout << std::endl;
-        }else{
-            std::cerr     << setprecision(7) << "it = " << setw(5) << right << (i+1);
-            std::cerr     << "    error = " << left << setw(10) <<thisError;
-            if(i > 0){
-                std::cerr << "    dE = " << setw(10) << thisError - error;
-            }
-            std::cerr << std::endl;
-        }
+    // main_tune_pst_bb(PAWN);
+    //    eval_init();
+    //main_tune_features();
+    // main_tune_pst();
+    // main_tune_features_bb();
 
         if (i % 100 == 99){
             tuning::displayTunedValues();

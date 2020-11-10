@@ -56,12 +56,6 @@ inline double sigmoidPrime(double s, double K) {
 void loadPositionFile(const std::string &path, int count, int start = 0);
 
 /**
- * uses the loaded data to optimise the evaluator
- * @param evaluator
- */
-double optimiseGD(Evaluator* evaluator, double K, double learningRate);
-
-/**
  * does blackbox tuning on the given data. This is usually very inefficient.
  * @param evaluator
  * @param K
@@ -77,7 +71,6 @@ double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore
  * computes the error of the evaluator on the given set
  */
 double computeError(Evaluator* evaluator, double K);
-
 
 /**
  * computes the K value

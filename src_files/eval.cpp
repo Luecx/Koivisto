@@ -188,6 +188,7 @@ EvalScore bishop_pawn_same_color_table_o[8]{
     M(  -25,  -32),
     M(  -27,  -34),
 };
+
 EvalScore bishop_pawn_same_color_table_e[8]{
     M(    0,   18),
     M(   -2,   19),
@@ -261,7 +262,7 @@ EvalScore* evfeatures[] {
     &ROOK_KING_LINE,                // 13
     
     &BISHOP_DOUBLED,
-    &BISHOP_FIANCHETTO,             // 16
+    &BISHOP_FIANCHETTO,
     &BISHOP_PIECE_SAME_SQUARE_E,    // 17
     
     &QUEEN_DISTANCE_ENEMY_KING,     // 18
@@ -271,6 +272,7 @@ EvalScore* evfeatures[] {
     
     &CASTLING_RIGHTS,               // 21
 
+    &BISHOP_PIECE_SAME_SQUARE_E, //23
 };
 
 
@@ -487,15 +489,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         phase = 1;
     if (phase < 0)
         phase = 0;
-
-    // values to scale early/lategame weights
-    float earlyWeightScalar = (1 - phase);
-    float lateWeightScalar  = (phase);
-
-    // the pst are multiples of 100
-    float earlyPSTScalar = earlyWeightScalar / 100;
-    float latePSTScalar  = lateWeightScalar / 100;
-
+    
     int wkingSafety_attPiecesCount = 0;
     int wkingSafety_valueOfAttacks = 0;
 
@@ -799,8 +793,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    EvalScore hangingEval = computeHangingPieces(b);
-    EvalScore pinnedEval  = computePinnedPieces(b);
+    EvalScore hangingEvalScore = computeHangingPieces(b);
+    EvalScore pinnedEvalScore  = computePinnedPieces(b);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
    
@@ -813,7 +807,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     // clang-format on
     featureScore += SIDE_TO_MOVE * (b->getActivePlayer() == WHITE ? 1 : -1);
 
-    EvalScore totalScore = evalScore + pinnedEval + hangingEval + featureScore + mobScore;
+    EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore;
 
     res += MgScore(totalScore) * (1 - phase) + EgScore(totalScore) * (phase);
 
@@ -830,128 +824,27 @@ void printEvaluation(Board* board) {
     Score     score = ev.evaluate(board);
     float     phase = ev.getPhase();
 
-    stringstream ss {};
-
-    // String format = "%-30s | %-20s | %-20s %n";
-
-    ss << std::setw(40) << std::left << "feature"
-       << " | " << std::setw(20) << std::right << "difference"
-       << " | " << std::setw(20) << "early weight"
-       << " | " << std::setw(20) << "late weight"
-       << " | " << std::setw(20) << "tapered weight"
-       << " | " << std::setw(20) << "sum"
-       << "\n";
-
-    ss << "-----------------------------------------+----------------------+"
-          "----------------------+----------------------+"
-          "----------------------+----------------------+\n";
-    ss << std::setw(40) << std::left << "PHASE"
-       << " | " << std::setw(20) << std::right << ""
-       << " | " << std::setw(20) << "0"
-       << " | " << std::setw(20) << "1"
-       << " | " << std::setw(20) << phase << " | " << std::setw(20) << phase << " | \n";
-
-    ss << "-----------------------------------------+----------------------+"
-          "----------------------+----------------------+"
-          "----------------------+----------------------+\n";
-
-    string names[] {
-        "INDEX_PAWN_VALUE",
-        "INDEX_PAWN_PSQT",
-        "INDEX_PAWN_STRUCTURE",
-        "INDEX_PAWN_PASSED",
-        "INDEX_PAWN_ISOLATED",
-        "INDEX_PAWN_DOUBLED",
-        "INDEX_PAWN_DOUBLED_AND_ISOLATED",
-        "INDEX_PAWN_BACKWARD",
-        "INDEX_PAWN_OPEN",
-
-        "INDEX_KNIGHT_VALUE",
-        "INDEX_KNIGHT_PSQT",
-        "INDEX_KNIGHT_MOBILITY",
-        "INDEX_KNIGHT_OUTPOST",
-
-        "INDEX_BISHOP_VALUE",
-        "INDEX_BISHOP_PSQT",
-        "INDEX_BISHOP_MOBILITY",
-        "INDEX_BISHOP_DOUBLED",
-        "INDEX_BISHOP_PAWN_SAME_SQUARE",
-        "INDEX_BISHOP_FIANCHETTO",
-
-        "INDEX_ROOK_VALUE",
-        "INDEX_ROOK_PSQT",
-        "INDEX_ROOK_MOBILITY",
-        "INDEX_ROOK_OPEN_FILE",
-        "INDEX_ROOK_HALF_OPEN_FILE",
-        "INDEX_ROOK_KING_LINE",
-
-        "INDEX_QUEEN_VALUE",
-        "INDEX_QUEEN_PSQT",
-        "INDEX_QUEEN_MOBILITY",
-
-        "INDEX_KING_SAFETY",
-        "INDEX_KING_PSQT",
-        "INDEX_KING_CLOSE_OPPONENT",
-        "INDEX_KING_PAWN_SHIELD",
-
-        "INDEX_KNIGHT_DISTANCE_ENEMY_KING",
-        "INDEX_QUEEN_DISTANCE_ENEMY_KING",
-
-        "INDEX_PINNED_PAWN_BY_BISHOP",
-        "INDEX_PINNED_PAWN_BY_ROOK",
-        "INDEX_PINNED_PAWN_BY_QUEEN",
-        "INDEX_PINNED_KNIGHT_BY_BISHOP",
-        "INDEX_PINNED_KNIGHT_BY_ROOK",
-        "INDEX_PINNED_KNIGHT_BY_QUEEN",
-        "INDEX_PINNED_BISHOP_BY_BISHOP",
-        "INDEX_PINNED_BISHOP_BY_ROOK",
-        "INDEX_PINNED_BISHOP_BY_QUEEN",
-        "INDEX_PINNED_ROOK_BY_BISHOP",
-        "INDEX_PINNED_ROOK_BY_ROOK",
-        "INDEX_PINNED_ROOK_BY_QUEEN",
-        "INDEX_PINNED_QUEEN_BY_BISHOP",
-        "INDEX_PINNED_QUEEN_BY_ROOK",
-        "INDEX_PINNED_QUEEN_BY_QUEEN",
-
-        "INDEX_PAWN_HANGING",
-        "INDEX_KNIGHT_HANGING",
-        "INDEX_BISHOP_HANGING",
-        "INDEX_ROOK_HANGING",
-        "INDEX_QUEEN_HANGING",
-
-        // ignore this and place new values before here
-        "-",
-        "-",
-        "-",
-        "-",
-    };
-
-//    for (int i = 0; i < unusedVariable; i++) {
-//
-//        ss << std::setw(40) << std::left << names[i] << " | " << std::setw(20) << std::right << ev.getFeatures()[i]
-//           << " | " << std::setw(20) << ev.getEarlyGameParams()[i] << " | " << std::setw(20)
-//           << ev.getLateGameParams()[i] << " | " << std::setw(20)
-//           << ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase << " | " << std::setw(20)
-//           << (ev.getEarlyGameParams()[i] * (1 - phase) + ev.getLateGameParams()[i] * phase) * ev.getFeatures()[i]
-//           << " | \n";
-//    }
-    ss << "-----------------------------------------+----------------------+"
-          "----------------------+----------------------+"
-          "----------------------+----------------------+\n";
-
-    ss << std::setw(40) << std::left << "TOTAL"
-       << " | " << std::setw(20) << std::right << ""
-       << " | " << std::setw(20) << ""
-       << " | " << std::setw(20) << ""
-       << " | " << std::setw(20) << ""
-       << " | " << std::setw(20) << score << " | \n";
-
-    ss << "-----------------------------------------+----------------------+"
-          "----------------------+----------------------+"
-          "----------------------+----------------------+\n";
-
-    std::cout << ss.str() << std::endl;
+    std::cout <<
+        setw(15) << right << "evaluation: " << left << setw(8) << score <<
+        setw(15) << right << "phase: "      << left << setprecision(3) << setw(8) << phase << std::endl;
 }
 
 float Evaluator::getPhase() { return phase; }
+
+
+float* Evaluator::getLateGameParams() { return nullptr; }
+
+int Evaluator::paramCount() { return 0; }
+
+float* Evaluator::getPSQT(Piece piece, bool early) {
+    switch (piece) {
+        //         case PAWN: return early ? psqt_pawn : psqt_pawn_endgame;
+        //        case KNIGHT: return early ? psqt_knight : psqt_knight_endgame;
+        //        case BISHOP: return early ? psqt_bishop : psqt_bishop_endgame;
+        //        case ROOK: return early ? psqt_rook : psqt_rook_endgame;
+        //        case QUEEN: return early ? psqt_queen : psqt_queen_endgame;
+        //        case KING: return early ? psqt_king : psqt_king_endgame;
+    }
+    return nullptr;
+}
 
