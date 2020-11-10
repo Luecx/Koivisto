@@ -524,7 +524,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             printInfoString(b, d, s);
 
         // if the search finished due to timeout, we also need to stop here
-        if (!isTimeLeft)
+        if (!isTimeLeft())
             break;
     }
 
