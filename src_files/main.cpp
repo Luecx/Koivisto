@@ -39,14 +39,14 @@ void main_tune_search() {
 
     using namespace tuning;
 
-    loadPositionFile("../resources/other/quiet-labeled2.epd", 2500);
+    loadPositionFile("../resources/other/quiet-labeled2.epd", 5000);
     auto K = tuning::computeK(evaluator, 2.86681, 200, 1e-6);
 
 
     double error = tuning::computeErrorSearch(K);
 
 
-    int lr = 10;
+    int lr = 3;
 
 
     for (int i = 0; i < 5000; i++) {
@@ -54,25 +54,19 @@ void main_tune_search() {
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-        threadCount = 2;
-        std::cout << tuning::optimiseBlackBoxSearch(K, &LMR_DIV, 1, lr, &error) << std::endl;
-        search_init(16);
-        threadCount = 2;
-        std::cout << tuning::optimiseBlackBoxSearch(K, &FUTILITY_MARGIN, 1, lr, &error) << std::endl;
-        search_init(16);
-        threadCount = 2;
+        std::cout << tuning::optimiseBlackBoxSearch(K, &LMR_BONUS, 1, lr, &error) << std::endl;
+        /*std::cout << tuning::optimiseBlackBoxSearch(K, &FUTILITY_MARGIN, 1, lr, &error) << std::endl;
         std::cout << tuning::optimiseBlackBoxSearch(K, &RAZOR_MARGIN, 1, lr, &error) << std::endl;
-        search_init(16);
+        search_init(16);*/
 
-
-        std::cout << LMR_DIV;
+        std::cout << LMR_BONUS;
+        std::cout << std::endl;
+        /*std::cout << LMR_DIV;
         std::cout << std::endl;
         std::cout << FUTILITY_MARGIN;
         std::cout << std::endl;
         std::cout << RAZOR_MARGIN;
-        std::cout << std::endl;
-
-        if ((i%3)==2 && lr>1) lr = lr/2;
+        std::cout << std::endl;*/
 
     }
 
@@ -141,11 +135,11 @@ void main_tune_features() {
 
 int main(int argc, char* argv[]) {
 
-    /*if (argc == 1) {
+    if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
-    }*/
+    }
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
@@ -159,7 +153,7 @@ int main(int argc, char* argv[]) {
     //     tuning::evalSpeed();
     //     bb_cleanUp();
 
-    main_tune_search();
+    //main_tune_search();
     // main_tune_pst_bb(PAWN);
     //    eval_init();
     // main_tune_features();

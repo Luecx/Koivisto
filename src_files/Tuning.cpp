@@ -164,8 +164,8 @@ double tuning::computeErrorSearch(double K) {
     double score = 0;
     for (int i = 0; i < dataCount; i++) {
     
-        TimeManager* timeManager = new TimeManager(100);
-        Score  q_i = bestMove(boards[i], 40, timeManager , 0, TUNING);
+        TimeManager* timeManager = new TimeManager(40);
+        Score  q_i = bestMove(boards[i], 256, timeManager , 0, TUNING);
         double expected = results[i];
 
         double sig = sigmoid(q_i, K);
@@ -178,14 +178,16 @@ double tuning::computeErrorSearch(double K) {
 }
 
 double tuning::optimiseBlackBoxSearch(double K, int* params, int paramCount, int lr, double* er) {
-
+        
+    search_init(16);
+    threadCount = 2;
 
     for (int p = 0; p < paramCount; p++) {
 
         std::cout << "\r  param: " << p << std::flush;
 
-
         params[p] += lr;
+        search_init(16);
         double erUpper = computeErrorSearch(K);
 
         if (erUpper < *er){
@@ -194,6 +196,7 @@ double tuning::optimiseBlackBoxSearch(double K, int* params, int paramCount, int
         }
 
         params[p] -= 2 * lr;
+        search_init(16);
         double erLower = computeErrorSearch(K);
 
         if (erLower < *er){
