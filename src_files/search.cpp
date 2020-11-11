@@ -839,6 +839,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
             lmr = lmr - history / 256;
             lmr += !isImproving;
+            lmr -= pv;
             if (sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
