@@ -647,11 +647,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
 
-    if (hashMove && en.type == CUT_NODE && en.score>alpha-10){
+    if (hashMove && en.type == CUT_NODE && *lastLmr && en.score>alpha-10){
         *lastLmr--;
         depth++;
     }
-
     // **************************************************************************************************************
     // tablebase probing:
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
