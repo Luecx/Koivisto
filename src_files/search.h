@@ -46,6 +46,7 @@ extern int LMR_DIV;
 extern int LMR_BONUS;
 
 
+
 #define MAX_THREADS 32
 #define SEARCHING 0
 #define TUNING 1
