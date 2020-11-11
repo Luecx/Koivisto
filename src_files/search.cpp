@@ -49,7 +49,7 @@ void initLmr() {
 
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = (0.5 + log(d) * log(m)) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
@@ -839,6 +839,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
             lmr = lmr - history / 256;
             lmr += !isImproving;
+            lmr -= pv;
             if (sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }

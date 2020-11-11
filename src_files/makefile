@@ -6,7 +6,7 @@ LIBS    = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER  = bin/
 ROOT    = ../
 NAME    = Koivisto
-MINOR   = 0
+MINOR   = 1
 MAJOR   = 4
 EXE     = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 ifeq ($(OS),Windows_NT)
@@ -30,7 +30,6 @@ AVX2FLAGS   = -msse -msse3 -mpopcnt -mavx2 -msse4.1 -mssse3 -msse2
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
 openbench:
-	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
 
 native:
