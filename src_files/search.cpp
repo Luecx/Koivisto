@@ -647,13 +647,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
 
-    if (hashMove && en.type == CUT_NODE && *lastLmr>=1){
+    if (hashMove && en.type == CUT_NODE && en.score>alpha-10){
         *lastLmr--;
         depth++;
-    }
-    if (hashMove && en.type == ALL_NODE && *lastLmr>=1){
-        *lastLmr++;
-        depth--;
     }
 
     // **************************************************************************************************************
