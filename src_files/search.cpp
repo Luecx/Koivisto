@@ -437,7 +437,7 @@ SearchOverview search_overview() { return overview; }
  * @param b
  * @return
  */
-Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
+Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId, bool MODE) {
 
     // if the main thread calls this function, we need to generate the search data for all the threads first
     if (threadId == 0) {
@@ -469,7 +469,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         // we will call this function for the other threads which will skip this part and jump straight to the part
         // below
         for (int n = 1; n < threadCount; n++) {
-            runningThreads.push_back(std::thread(bestMove, new Board(b), maxDepth, timeManager, n));
+            runningThreads.push_back(std::thread(bestMove, new Board(b), maxDepth, timeManager, n, MODE));
         }
     }
 
@@ -507,7 +507,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             }
         }
 
-        if (threadId == 0)
+        if (threadId == 0 && MODE==SEARCHING)
             printInfoString(b, d, s);
 
         // if the search finished due to timeout, we also need to stop here
@@ -538,7 +538,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         overview.move  = best;
 
         // return the best move if its the main thread
-        return best;
+        if (MODE == SEARCHING)
+            return best;
+        return s;
     }
 
     delete sd;

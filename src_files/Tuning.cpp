@@ -21,6 +21,10 @@
 
 #include "Bitboard.h"
 
+#include "TimeManager.h"
+
+#include "search.h"
+
 #include <iomanip>
 
 using namespace std;
@@ -36,6 +40,7 @@ double sigmoidPrime(double s, double K) {
     double ex = exp(-s * K / 400);
     return (K * ex) / (400 * (ex + 1) * (ex + 1));
 }
+
 
 void tuning::loadPositionFile(std::string path, int count, int start) {
 
@@ -153,6 +158,54 @@ double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, i
     std::cout << std::endl;
 
     return computeError(evaluator, K);
+}
+
+double tuning::computeErrorSearch(double K) {
+    double score = 0;
+    for (int i = 0; i < dataCount; i++) {
+    
+        TimeManager* timeManager = new TimeManager(100);
+        Score  q_i = bestMove(boards[i], 40, timeManager , 0, TUNING);
+        double expected = results[i];
+
+        double sig = sigmoid(q_i, K);
+
+        //        std::cout << sig << std::endl;
+
+        score += (expected - sig) * (expected - sig);
+    }
+    return score / dataCount;
+}
+
+double tuning::optimiseBlackBoxSearch(double K, int* params, int paramCount, int lr, double* er) {
+
+
+    for (int p = 0; p < paramCount; p++) {
+
+        std::cout << "\r  param: " << p << std::flush;
+
+
+        params[p] += lr;
+        double erUpper = computeErrorSearch(K);
+
+        if (erUpper < *er){
+            *er = erUpper;
+            continue;
+        }
+
+        params[p] -= 2 * lr;
+        double erLower = computeErrorSearch(K);
+
+        if (erLower < *er){
+            continue;
+            *er = erLower;
+        }
+
+        params[p] += lr;
+    }
+    std::cout << std::endl;
+
+    return *er;
 }
 
 double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr){

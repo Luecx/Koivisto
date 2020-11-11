@@ -49,7 +49,11 @@ void clearLoadedData();
  * @param K
  * @return
  */
+double computeErrorSearch(double K);
+
 double optimiseBlackBox(Evaluator* evaluator, double K, float* params, int paramCount, float lr);
+
+double optimiseBlackBoxSearch(double K, int* params, int paramCount, int lr, double* error);
 
 double optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr);
 

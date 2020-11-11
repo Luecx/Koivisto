@@ -44,7 +44,10 @@ extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
 
+
 #define MAX_THREADS 32
+#define SEARCHING 0
+#define TUNING 1
 
 /**
  * used to store information about a search
@@ -69,7 +72,7 @@ SearchOverview search_overview();            // used to get information about th
 void           search_enable_infoStrings();
 void           search_disable_infoStrings();
 
-Move  bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId = 0);
+Move  bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId = 0, bool mode = SEARCHING);
 Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd, Move skipMove);
 Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd);
 

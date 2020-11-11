@@ -122,7 +122,7 @@ void uci_endThread() {
  * @param p_timeManager
  */
 void uci_searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
-    Move m = bestMove(board, maxDepth, p_timeManager);
+    Move m = bestMove(board, maxDepth, p_timeManager, 0, SEARCHING);
     std::cout << "bestmove " << toString(m) << std::endl;
     uci_endThread();
 }
@@ -539,7 +539,7 @@ void uci_bench() {
         Board b(Benchmarks[i]);
 
         TimeManager manager;
-        bestMove(&b, 13, &manager, 0);
+        bestMove(&b, 13, &manager, 0, SEARCHING);
         SearchOverview overview = search_overview();
 
         nodes += overview.nodes;
