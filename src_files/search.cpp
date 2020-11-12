@@ -51,7 +51,7 @@ void initLmr() {
 
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1+log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
@@ -829,20 +829,21 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
         // furthermore no queen promotions are reduced
-        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr = 0;
+        
+        if (legalMoves == 0 || depth <= 2 || isCapture(m)
                      || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
-                        ? 0
-                        : lmrReductions[depth][legalMoves];
-
-        // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
-        if (lmr) {
+        {
+            lmr = 0;
+            if (depth > 2 && isCapture(m) && staticExchangeEval<0) lmr++;
+        } else {
+            lmr = lmrReductions[depth][legalMoves];
             int history = sd->getHistoryMoveScore(m, b->getActivePlayer()) - 512;
             if (ply > 0)
                 history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
             lmr = lmr - history / 256;
             lmr += !isImproving;
             lmr -= pv;
-            if (depth>highestDepth/2) lmr++;
             if (sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
