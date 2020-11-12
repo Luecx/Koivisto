@@ -32,6 +32,8 @@ int                      threadCount = 1;
 bool                     useTB       = false;
 bool                     printInfo   = true;
 
+Depth highestDepth;
+
 SearchOverview overview;
 
 int lmrReductions[256][256];
@@ -483,7 +485,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     Depth d = 1;
     Score s = 0;
     for (d = 1; d <= maxDepth; d++) {
-
+        highestDepth = d;
         if (d < 6) {
             s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
         } else {
@@ -840,6 +842,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - history / 256;
             lmr += !isImproving;
             lmr -= pv;
+            if (depth>highestDepth/2) lmr++;
             if (sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
