@@ -22,26 +22,14 @@
 #include "Bitboard.h"
 
 #include <iomanip>
+#include <thread>
 
 using namespace std;
+using namespace tuning;
 
-int dataCount;
+std::vector<TrainingEntry> tuning::training_entries {};
 
-Board** boards;
-double* results;
-
-double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
-
-double sigmoidPrime(double s, double K) {
-    double ex = exp(-s * K / 400);
-    return (K * ex) / (400 * (ex + 1) * (ex + 1));
-}
-
-void tuning::loadPositionFile(std::string path, int count, int start) {
-
-    clearLoadedData();
-    results = new double[count];
-    boards  = new Board*[count];
+void tuning::loadPositionFile(const std::string& path, int count, int start) {
 
     fstream newfile;
     newfile.open(path, ios::in);
@@ -72,15 +60,17 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
             res = findAndReplaceAll(res, ";", "");
             res = trim(res);
 
+            TrainingEntry new_entry {Board {fen}, 0};
+
             // parsing the result to a usable value:
             // assuming that the result is given as : a-b
             if (res.find('-') != string::npos) {
                 if (res == "1/2-1/2") {
-                    results[posCount] = 0.5;
+                    new_entry.target = 0.5;
                 } else if (res == "1-0") {
-                    results[posCount] = 1;
+                    new_entry.target = 1;
                 } else if (res == "0-1") {
-                    results[posCount] = 0;
+                    new_entry.target = 0;
                 } else {
                     continue;
                 }
@@ -89,12 +79,11 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
             else {
                 try {
                     double actualResult = stod(res);
-                    results[posCount]   = actualResult;
+                    new_entry.target    = actualResult;
                 } catch (std::invalid_argument& e) { continue; }
             }
-            Board* b = new Board(fen);
 
-            boards[posCount] = b;
+            training_entries.push_back(new_entry);
 
             lineCount++;
             posCount++;
@@ -109,41 +98,26 @@ void tuning::loadPositionFile(std::string path, int count, int start) {
         }
 
         std::cout << std::endl;
-
-        dataCount = posCount;
-
         newfile.close();
     }
 }
 
-void tuning::clearLoadedData() {
-    if (boards != nullptr) {
-
-        for (int i = 0; i < dataCount; i++) {
-            delete boards[i];
-        }
-
-        delete[] boards;
-        delete[] results;
-    }
-}
-
-double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, int paramCount, float lr) {
+double tuning::optimiseBlackBox(double K, float* params, int paramCount, float lr, int threads) {
 
     for (int p = 0; p < paramCount; p++) {
 
         std::cout << "\r  param: " << p << std::flush;
 
-        double er = computeError(evaluator, K);
+        double er = computeError(K, threads);
 
         params[p] += lr;
-        double erUpper = computeError(evaluator, K);
+        double erUpper = computeError(K, threads);
 
         if (erUpper < er)
             continue;
 
         params[p] -= 2 * lr;
-        double erLower = computeError(evaluator, K);
+        double erLower = computeError(K, threads);
 
         if (erLower < er)
             continue;
@@ -152,52 +126,51 @@ double tuning::optimiseBlackBox(Evaluator* evaluator, double K, float* params, i
     }
     std::cout << std::endl;
 
-    return computeError(evaluator, K);
+    return computeError(K, threads);
 }
 
-double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* evalScore, int count, int lr){
+double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int lr, int threads) {
     double er;
-    
-    for(int p = 0; p < count; p++){
-        
+
+    for (int p = 0; p < count; p++) {
+
         std::cout << "\r  param: " << p << std::flush;
-        
-        er = computeError(evaluator, K);
-//        std::cout << er << std::endl;
-        evalScore[p] += M(+lr,0);
+
+        er = computeError(K, threads);
+        //        std::cout << er << std::endl;
+        evalScore[p] += M(+lr, 0);
         eval_init();
-//        showScore(M(+lr,0));
-        
-        double upper = computeError(evaluator, K);
-//        std::cout << upper << std::endl;
-        if(upper >= er){
-            evalScore[p] += M(-2*lr,0);
+        //        showScore(M(+lr,0));
+
+        double upper = computeError(K, threads);
+        //        std::cout << upper << std::endl;
+        if (upper >= er) {
+            evalScore[p] += M(-2 * lr, 0);
             eval_init();
-//            showScore(evalScore[p]);
-            
-            double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                evalScore[p] += M(+lr,0);
-//                showScore(evalScore[p]);
+            //            showScore(evalScore[p]);
+
+            double lower = computeError(K, threads);
+
+            if (lower >= er) {
+                evalScore[p] += M(+lr, 0);
+                //                showScore(evalScore[p]);
                 eval_init();
             }
         }
-        
-        
-        er = computeError(evaluator, K);
-        evalScore[p] += M(0,+lr);
+
+        er = computeError(K, threads);
+        evalScore[p] += M(0, +lr);
         eval_init();
-        
-        upper = computeError(evaluator, K);
-        if(upper >= er){
-            evalScore[p] += M(0,-2*lr);
+
+        upper = computeError(K, threads);
+        if (upper >= er) {
+            evalScore[p] += M(0, -2 * lr);
             eval_init();
-            
-            double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                evalScore[p] += M(0,+lr);
+
+            double lower = computeError(K, threads);
+
+            if (lower >= er) {
+                evalScore[p] += M(0, +lr);
                 eval_init();
             }
         }
@@ -206,44 +179,43 @@ double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore* ev
     return er;
 }
 
-double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** evalScore, int count, int lr) {
+double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int lr, int threads) {
     double er;
-    
-    for(int p = 0; p < count; p++){
-        
+
+    for (int p = 0; p < count; p++) {
+
         std::cout << "\r  param: " << p << std::flush;
-        
-        er = computeError(evaluator, K);
-        *evalScore[p] += M(+lr,0);
+
+        er = computeError(K, threads);
+        *evalScore[p] += M(+lr, 0);
         eval_init();
-        
-        double upper = computeError(evaluator, K);
-        if(upper >= er){
-            *evalScore[p] += M(-2*lr,0);
+
+        double upper = computeError(K, threads);
+        if (upper >= er) {
+            *evalScore[p] += M(-2 * lr, 0);
             eval_init();
-            
-            double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                *evalScore[p] += M(+lr,0);
+
+            double lower = computeError(K, threads);
+
+            if (lower >= er) {
+                *evalScore[p] += M(+lr, 0);
                 eval_init();
             }
         }
-        
-        
-        er = computeError(evaluator, K);
-        *evalScore[p] += M(0,+lr);
+
+        er = computeError(K, threads);
+        *evalScore[p] += M(0, +lr);
         eval_init();
-        
-        upper = computeError(evaluator, K);
-        if(upper >= er){
-            *evalScore[p] += M(0,-2*lr);
+
+        upper = computeError(K, threads);
+        if (upper >= er) {
+            *evalScore[p] += M(0, -2 * lr);
             eval_init();
-            
-            double lower = computeError(evaluator, K);
-            
-            if(lower >= er){
-                *evalScore[p] += M(0,+lr);
+
+            double lower = computeError(K, threads);
+
+            if (lower >= er) {
+                *evalScore[p] += M(0, +lr);
                 eval_init();
             }
         }
@@ -252,23 +224,47 @@ double tuning::optimisePSTBlackBox(Evaluator* evaluator, double K, EvalScore** e
     return er;
 }
 
-double tuning::computeError(Evaluator* evaluator, double K) {
+double tuning::computeError(double K, int threads) {
     double score = 0;
-    for (int i = 0; i < dataCount; i++) {
 
-        Score  q_i      = evaluator->evaluate(boards[i]);
-        double expected = results[i];
+    auto eval_part = [](int threadId, int threads, double K, double* resultTarget) {
+        int start = training_entries.size() * threadId / threads;
+        int end   = training_entries.size() * (threadId + 1) / threads;
 
-        double sig = sigmoid(q_i, K);
+        double    score;
+        Evaluator evaluator {};
+        for (int i = start; i < end; i++) {
 
-        //        std::cout << sig << std::endl;
+            Score  q_i      = evaluator.evaluate(&training_entries[i].board);
+            double expected = training_entries[i].target;
 
-        score += (expected - sig) * (expected - sig);
+            double sig = sigmoid(q_i, K);
+
+            score += (expected - sig) * (expected - sig);
+        }
+        resultTarget[threadId] = score;
+    };
+
+    double                    resultTargets[threads];
+    double*                   resultPointer = &resultTargets[0];
+    std::vector<std::thread*> runningThreads {};
+    for (int i = 0; i < threads; i++) {
+        std::thread* t1 = new std::thread(eval_part, i, threads, K, resultPointer);
+        runningThreads.push_back(t1);
     }
-    return score / dataCount;
+    for (int i = 0; i < threads; i++) {
+        if (runningThreads[i]->joinable()) {
+            runningThreads[i]->join();
+        }
+    }
+    for (int i = 0; i < threads; i++) {
+        score += resultPointer[i];
+    }
+
+    return score / training_entries.size();
 }
 
-double tuning::computeK(Evaluator* evaluator, double initK, double rate, double deviation) {
+double tuning::computeK(double initK, double rate, double deviation, int threads) {
 
     double K    = initK;
     double dK   = 0.01;
@@ -276,15 +272,13 @@ double tuning::computeK(Evaluator* evaluator, double initK, double rate, double 
 
     while (abs(dEdK) > deviation) {
 
-        double Epdk = computeError(evaluator, K + dK);
-        double Emdk = computeError(evaluator, K - dK);
+        double Epdk = computeError(K + dK, threads);
+        double Emdk = computeError(K - dK, threads);
 
         dEdK = (Epdk - Emdk) / (2 * dK);
 
         std::cout << "K:" << K << " Error: " << (Epdk + Emdk) / 2 << " dev: " << abs(dEdK) << std::endl;
 
-        // System.out.format("K: %-2.6f  Error: %-2.6f  dE/dK: %-1.2E\n", K,errorMultithreaded(evaluator, K,
-        // pool),dEdK);
         K -= dEdK * rate;
     }
 
@@ -297,11 +291,12 @@ void tuning::evalSpeed() {
 
     startMeasure();
     U64 sum = 0;
-    for (int i = 0; i < dataCount; i++) {
-        sum += evaluator.evaluate(boards[i]);
+    for (int i = 0; i < training_entries.size(); i++) {
+        sum += evaluator.evaluate(&training_entries[i].board);
     }
 
     int ms = stopMeasure();
-    std::cout << ms << "ms for " << dataCount << " positions = " << (1000 * dataCount / ms) / 1e6 << "Mnps"
+    std::cout << ms << "ms for " << training_entries.size()
+              << " positions = " << (1000 * training_entries.size() / ms) / 1e6 << "Mnps"
               << " Checksum = " << sum << std::endl;
 }
