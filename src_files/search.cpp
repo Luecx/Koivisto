@@ -824,10 +824,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
 
         // *********************************************************************************************************
-        // kk reductions:
-        // we reduce more/less depending on which side we are currently looking at.
+        // kk reductions transformed into essentially cutnode stuff
         // *********************************************************************************************************
-        if (ply == 0) {
+        if (pv) {
             sd->sideToReduce = b->getActivePlayer();
             if (legalMoves == 0)
                 sd->sideToReduce = !b->getActivePlayer();
@@ -875,7 +874,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
-            if (ply == 0) sd->sideToReduce = b->getActivePlayer();
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
