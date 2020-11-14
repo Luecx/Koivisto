@@ -763,9 +763,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
+        bool quiet = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
-            if (!isCapture(m) && !isPromotion && !givesCheck) {
+
+           Depth moveDepth = depth-lmrReductions[depth][legalMoves];
+
+            if (quiet) {
                 quiets++;
                 // **************************************************************************************************
                 // late move pruning:
@@ -779,11 +783,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             // ******************************************************************************************************
             // static exchange evaluation pruning (see pruning):
-            // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
+            // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
             // consider this quiet move as well.
             // ******************************************************************************************************
-            if (depth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
-                && b->staticExchangeEvaluation(m) <= -100 * depth)
+            if (moveDepth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
+                && b->staticExchangeEvaluation(m) <= (-100 * moveDepth))
                 continue;
         }
 
