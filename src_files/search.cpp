@@ -757,8 +757,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             continue;
 
         // if the move is the move we want to skip, skip this move (used for extensions)
-        if (sameMove(m, skipMove))
+        if (sameMove(m, skipMove)){
+            mv->skipMove(legalMoves);
             continue;
+        }
 
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);

@@ -196,6 +196,14 @@ void MoveList::swap(int i1, int i2) {
 }
 
 /**
+ * Ignore move in history stats
+ */
+void MoveList::skipMove(int i) {
+    setType(moves[i], CAPTURE);
+    return;
+}
+
+/**
  * returns the move stored at the given index
  * @param index
  * @return

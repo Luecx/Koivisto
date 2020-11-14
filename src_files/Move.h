@@ -168,6 +168,8 @@ class MoveList {
 
     void clear();
 
+    void skipMove(int index);
+
     void add(move::Move move);
 
     void scoreMove(int index, MoveScore score);
