@@ -27,6 +27,7 @@
 void TranspositionTable::init(U64 MB) {
 
     U64 bytes      = MB * 1024 * 1024;
+    bytes *= 8;
     U64 maxEntries = bytes / sizeof(Entry);
 
     // size must be a power of 2!
