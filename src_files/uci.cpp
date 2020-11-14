@@ -45,7 +45,6 @@ void uci_loop(bool bench) {
         uci_bench();
 
         search_cleanUp();
-        bb_cleanUp();
     } else {
         std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
                   << std::endl;
@@ -515,7 +514,6 @@ void uci_quit() {
     delete board;
     board = nullptr;
 
-    bb_cleanUp();
     search_cleanUp();
 }
 

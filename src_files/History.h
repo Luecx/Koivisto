@@ -29,34 +29,16 @@ using namespace move;
 
 struct SearchData {
 
-    Move bestMove = 0;
-
-    MoveList** moves;
-    Evaluator  evaluator {};
-
     int   captureHistory[2][64][64] = {0};
     int   history[2][64][64]        = {0};    // history table (from-to)
-    int   cmh[6][64][2][6][64]      = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    Move  killer[2][MAX_PLY]        = {0};
-    Score eval[2][MAX_PLY]          = {0};
+    int   cmh[6][64][2][6][64] = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
+    Move  killer[2][MAX_PLY]   = {0};
+    Score eval[2][MAX_PLY]     = {0};
     bool  sideToReduce;
-
-
-    SearchData();
-
-    virtual ~SearchData();
 
     void updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous);
 
     int getHistories(Move m, bool side, Move previous);
-
-    void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
-
-    MoveScore getHistoryMoveScore(Move m, bool side);
-
-    void addCaptureHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
-
-    MoveScore getCaptureHistoryMoveScore(Move m, bool side);
 
     void setKiller(Move move, Depth ply, Color color);
 
@@ -65,10 +47,6 @@ struct SearchData {
     void setHistoricEval(Score eval, Color color, Depth ply);
 
     bool isImproving(Score eval, Color color, Depth ply);
-
-    void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv);
-
-    MoveScore getCounterMoveHistoryScore(Move previous, Move m);
 };
 
 /**
@@ -80,8 +58,13 @@ struct ThreadData {
     int seldepth = 0;
     int tbhits   = 0;
 
+    MoveList  moves[MAX_INTERNAL_PLY] {};
+    Move      bestMove = 0;
+    Evaluator evaluator {};
+
     SearchData* searchData;
 
+    ThreadData();
     ThreadData(int threadId);
 };
 

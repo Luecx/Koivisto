@@ -50,9 +50,9 @@ class TimeManager {
     bool forceStop;
 
     int    historyCount;
-    Move*  moveHistory;
-    Score* scoreHistory;
-    Depth* depthHistory;
+    Move   moveHistory[MAX_INTERNAL_PLY];
+    Score  scoreHistory[MAX_INTERNAL_PLY];
+    Depth  depthHistory[MAX_INTERNAL_PLY];
 
     /**
      * updates isSafeToStop
@@ -64,8 +64,6 @@ class TimeManager {
     TimeManager();
 
     TimeManager(int moveTime);
-
-    virtual ~TimeManager();
 
     /**
      * returns the time elapsed since the constructor call

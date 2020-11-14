@@ -37,7 +37,7 @@ SearchOverview overview;
 int lmrReductions[256][256];
 
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
-ThreadData** tds = new ThreadData*[MAX_THREADS];
+ThreadData tds[MAX_THREADS]{};
 
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
@@ -68,7 +68,7 @@ int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
 U64 totalNodes() {
     U64 tn = 0;
     for (int i = 0; i < threadCount; i++) {
-        tn += tds[i]->nodes;
+        tn += tds[i].nodes;
     }
     return tn;
 }
@@ -80,7 +80,7 @@ U64 totalNodes() {
 int selDepth() {
     int maxSd = 0;
     for (int i = 0; i < threadCount; i++) {
-        maxSd = tds[i]->seldepth > maxSd ? tds[i]->seldepth : maxSd;
+        maxSd = tds[i].seldepth > maxSd ? tds[i].seldepth : maxSd;
     }
     return maxSd;
 }
@@ -92,7 +92,7 @@ int selDepth() {
 int tbHits() {
     int th = 0;
     for (int i = 0; i < threadCount; i++) {
-        th += tds[i]->tbhits;
+        th += tds[i].tbhits;
     }
     return th;
 }
@@ -163,7 +163,7 @@ void search_init(int hashSize) {
     initLmr();
 
     for (int i = 0; i < MAX_THREADS; i++) {
-        tds[i] = new ThreadData(i);
+        tds[i].threadID = i;
     }
 }
 
@@ -173,10 +173,6 @@ void search_init(int hashSize) {
 void search_cleanUp() {
     delete table;
     table = nullptr;
-
-    for (int i = 0; i < MAX_THREADS; i++) {
-        delete tds[i];
-    }
 }
 
 /**
@@ -438,7 +434,7 @@ SearchOverview search_overview() { return overview; }
  * @return
  */
 Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
-
+    
     // if the main thread calls this function, we need to generate the search data for all the threads first
     if (threadId == 0) {
 
@@ -460,10 +456,10 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         // for each thread, we will generate a new search data object
         for (int i = 0; i < threadCount; i++) {
             // reseting the thread data
-            tds[i]->threadID = i;
-            tds[i]->tbhits   = 0;
-            tds[i]->nodes    = 0;
-            tds[i]->seldepth = 0;
+            tds[i].threadID = i;
+            tds[i].tbhits   = 0;
+            tds[i].nodes    = 0;
+            tds[i].seldepth = 0;
         }
 
         // we will call this function for the other threads which will skip this part and jump straight to the part
@@ -474,7 +470,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     }
 
     // the thread id starts at 0 for the first thread
-    ThreadData* td = tds[threadId];
+    ThreadData* td = &tds[threadId];
 
     SearchData* sd = new SearchData();
     td->searchData = sd;
@@ -526,7 +522,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         runningThreads.clear();
 
         // retrieve the best move from the search
-        Move best = sd->bestMove;
+        Move best = td->bestMove;
 
         delete sd;
 
@@ -604,10 +600,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
         // reuse static evaluation from previous ply in case of nullmove
-        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + td->evaluator.evaluateTempo(b) * 2;
     } else {
         staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : td->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -733,7 +729,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     }
 
     // we reuse movelists for memory reasons.
-    MoveList* mv = sd->moves[ply];
+    MoveList* mv = &td->moves[ply];
 
     // store all the moves inside the movelist
     b->getPseudoLegalMoves(mv);
@@ -786,8 +782,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             // ******************************************************************************************************
             // static exchange evaluation pruning (see pruning):
-            // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
-            // consider this quiet move as well.
+            // if the depth we are going to search the move at is small enough and the static exchange evaluation for
+            // the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
@@ -886,7 +882,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             bestMove     = m;
             if (ply == 0 && isTimeLeft() && td->threadID == 0) {
                 // Store bestMove for bestMove
-                sd->bestMove = m;
+                td->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
                 search_timeManager->updatePV(m, score, depth);
             }
@@ -993,10 +989,10 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     Score stand_pat;
     if (b->getPreviousMove() == 0 && ply != 0) {
         // reuse static evaluation from previous ply incase of nullmove
-        stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + td->evaluator.evaluateTempo(b) * 2;
     } else {
         stand_pat =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : td->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.
@@ -1021,7 +1017,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     // moves that give check are not considered non-quiet in
     // getNonQuietMoves() although they are not quiet.
     //
-    MoveList* mv = sd->moves[ply];
+    MoveList* mv = &td->moves[ply];
     b->getNonQuietMoves(mv);
 
     // create a moveorderer to sort the moves during the search

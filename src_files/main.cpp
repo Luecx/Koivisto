@@ -89,7 +89,6 @@ void main_tune_features() {
     }
 
     delete evaluator;
-    bb_cleanUp();
 }
 
 int main(int argc, char* argv[]) {

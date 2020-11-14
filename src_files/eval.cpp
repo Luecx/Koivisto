@@ -281,7 +281,7 @@ EvalScore* evfeatures[] {
 
 int mobEntryCount[6] {0, 9, 14, 15, 28, 0};
 
-float* phaseValues = new float[6] {
+float phaseValues[6] {
     0, 1, 1, 2, 4, 0,
 };
 

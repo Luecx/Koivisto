@@ -405,15 +405,13 @@ constexpr U64 KNIGHT_ATTACKS[] {
     0x2000204000000000L, 0x0004020000000000L, 0x0008050000000000L, 0x00110a0000000000L, 0x0022140000000000L,
     0x0044280000000000L, 0x0088500000000000L, 0x0010a00000000000L, 0x0020400000000000L};
 
-extern U64** ROOK_ATTACKS;
-extern U64** BISHOP_ATTACKS;
+extern U64 ROOK_ATTACKS  [64][4096];
+extern U64 BISHOP_ATTACKS[64][1024];
 
-extern U64** all_hashes;
+extern U64 all_hashes[12][64];
 
-extern U64** inBetweenSquares;
+extern U64 inBetweenSquares[64][64];
 
-// extern U64 **ROOK_ATTACKS;
-// extern U64 **BISHOP_ATTACKS;
 
 template<class T> inline T abs(const T a) {
     if (a < 0)
@@ -736,11 +734,6 @@ U64 generateBishopAttack(Square sq, U64 occupied);
  * initiates the entries for fancy magic bitboard and zobrist hash values.
  */
 void bb_init();
-
-/**
- * deletes allocated arrays
- */
-void bb_cleanUp();
 
 U64 randU64();
 

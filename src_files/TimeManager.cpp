@@ -74,9 +74,7 @@ TimeManager::TimeManager() {
  * @param board
  */
 TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) {
-    moveHistory  = new Move[256];
-    scoreHistory = new Score[256];
-    depthHistory = new Depth[256];
+
     historyCount = 0;
     isSafeToStop = true;
     ignorePV     = false;
@@ -115,18 +113,6 @@ int TimeManager::elapsedTime() {
     // std::cout << "measurement finished! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
-/**
- * a destructor for the sake of completeness.
- */
-TimeManager::~TimeManager() {
-
-    if (ignorePV)
-        return;
-
-    delete[] moveHistory;
-    delete[] scoreHistory;
-    delete[] depthHistory;
-}
 
 /**
  * when the pv is updated during the search, this is called. Could be used to consider time extensions but is not used
