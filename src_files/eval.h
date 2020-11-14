@@ -34,8 +34,8 @@ typedef int32_t EvalScore;
 #define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
 #define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
 
-extern EvalScore bishop_pawn_same_color_table_o[8];
-extern EvalScore bishop_pawn_same_color_table_e[8];
+extern EvalScore bishop_pawn_same_color_table_o[9];
+extern EvalScore bishop_pawn_same_color_table_e[9];
 
 extern EvalScore* psqt[11];
 extern EvalScore  pieceScores[6];

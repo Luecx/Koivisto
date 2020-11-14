@@ -178,26 +178,28 @@ EvalScore passer_rank_n[16] {
     M(    0,    0), M(    1,    2), M(  -44,  -49), M(  -45,  -11), M(  -29,  -14), M(   35,   -7), M(   91, -143), M(    0,    0),
 };
 
-EvalScore bishop_pawn_same_color_table_o[8]{
-    M(    0,   18),
-    M(   -2,   19),
-    M(   -5,    7),
-    M(  -10,    0),
-    M(  -13,  -12),
-    M(  -19,  -29),
-    M(  -25,  -32),
-    M(  -27,  -34),
+EvalScore bishop_pawn_same_color_table_o[9]{
+    M(    2,   11),
+    M(   -4,   14),
+    M(   -4,    4),
+    M(   -9,   -4),
+    M(  -13,  -14),
+    M(  -18,  -30),
+    M(  -25,  -42),
+    M(  -30,  -51),
+    M(  -44,  -71),
 };
 
-EvalScore bishop_pawn_same_color_table_e[8]{
-    M(    0,   18),
-    M(   -2,   19),
-    M(   -5,    7),
-    M(  -10,    0),
-    M(  -13,  -12),
-    M(  -19,  -29),
-    M(  -25,  -32),
-    M(  -27,  -34),
+EvalScore bishop_pawn_same_color_table_e[9]{
+    M(   11,    5),
+    M(   -3,   11),
+    M(   -7,    6),
+    M(  -13,    3),
+    M(  -16,   -3),
+    M(  -19,  -17),
+    M(  -25,  -23),
+    M(  -26,  -22),
+    M(  -33,  -21),
 };
 
 EvalScore SIDE_TO_MOVE                  = M(   10,   16);
