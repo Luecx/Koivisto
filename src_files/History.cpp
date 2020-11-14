@@ -51,6 +51,37 @@ MoveScore SearchData::getHistoryMoveScore(Move m, bool side) {
     return ms;
 }
 
+/*
+ * Increment the history score of a move. Used when a cutoff occurs.
+ */
+void SearchData::addCaptureHistoryScore(Move m, Depth depth, MoveList* mv, bool side) {
+    if (depth > 20)
+        return;
+    Move m2;
+    for (int i = 0; i < mv->getSize(); i++) {
+        m2 = mv->getMove(i);
+        if (sameMove(m, m2)) {
+            captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
+                (depth * depth + 5 * depth)
+                - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+
+            // we can return at this point because all moves searched are in front of this move
+            return;
+        } else if (isCapture(m2)) {
+            captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
+                -(depth * depth + 5 * depth)
+                - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+        }
+    }
+    return;
+};
+
+MoveScore SearchData::getCaptureHistoryMoveScore(Move m, bool side) {
+    int       score = captureHistory[side][getSquareFrom(m)][getSquareTo(m)] + MAX_HISTORY_SCORE;
+    MoveScore ms    = score;
+    return ms;
+}
+
 void SearchData::addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv) {
     if (depth > 20)
         return;

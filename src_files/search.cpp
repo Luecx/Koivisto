@@ -838,7 +838,14 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
-            int history = sd->getHistoryMoveScore(m, b->getActivePlayer()) - 512;
+            int history = 0;
+            if (!isCapture(m)){
+                history = sd->getHistoryMoveScore(m, b->getActivePlayer()) - 512;
+                if (ply > 0)
+                    history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
+            } else {
+                history = sd->getCaptureHistoryMoveScore(m, b->getActivePlayer()) - 512;
+            }
             if (ply > 0)
                 history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
             lmr = lmr - history / 256;
@@ -902,6 +909,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 if (!isCapture(m)) {
                     sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
                     sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv);
+                } else {
+                    sd->addCaptureHistoryScore(m, depth, mv, b->getActivePlayer());
                 }
             }
             return beta;
