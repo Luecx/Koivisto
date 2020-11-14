@@ -60,9 +60,9 @@ void loadPositionFile(const std::string& path, int count, int start = 0);
  */
 double optimiseBlackBox(double K, float* params, int paramCount, float lr, int threads = 1);
 
-double optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int lr, int threads = 1);
+double optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int iterations = 100, int lr = 1, int threads = 1);
 
-double optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int lr, int threads = 1);
+double optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int iterations = 100, int lr = 1, int threads = 1);
 
 /**
  * computes the error of the evaluator on the given set
@@ -83,6 +83,8 @@ double computeK(double initK, double rate, double deviation, int threads = 1);
  * computes the average time for evaluation
  */
 void evalSpeed();
+
+void displayTunedValues();
 
 }    // namespace tuning
 

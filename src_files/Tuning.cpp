@@ -129,98 +129,211 @@ double tuning::optimiseBlackBox(double K, float* params, int paramCount, float l
     return computeError(K, threads);
 }
 
-double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int lr, int threads) {
+double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int iterations, int lr, int threads) {
+
+    // if a value doesnt change a lot, we wont recompute it every time
+    // we need to keep track of how many iterations it should change and since how many it didnt change.
+    // assume a maximum size of 1024
+    int noChangeBound[2][1024] {};
+    int noChangeCount[2][1024] {};
+
+    // keep track of the error for the entire time
     double er;
 
-    for (int p = 0; p < count; p++) {
+    // iterate over all iterations
+    for (int it = 0; it < iterations; it++) {
 
-        std::cout << "\r  param: " << p << std::flush;
+        int skipped   = 0;
+        int changed   = 0;
+        int unchanged = 0;
 
-        er = computeError(K, threads);
-        //        std::cout << er << std::endl;
-        evalScore[p] += M(+lr, 0);
-        eval_init();
-        //        showScore(M(+lr,0));
+        for (int param = 0; param < count; param++) {
 
-        double upper = computeError(K, threads);
-        //        std::cout << upper << std::endl;
-        if (upper >= er) {
-            evalScore[p] += M(-2 * lr, 0);
-            eval_init();
-            //            showScore(evalScore[p]);
+            for (int phase = 0; phase < 2; phase++) {
+                // std::cout << phase << " " << param << " " << noChangeCount[phase][param] << " " <<
+                // noChangeBound[phase][param] << std::endl;
 
-            double lower = computeError(K, threads);
+                // if we should skip this value, increment the noChangeCount for this variable
+                if (noChangeCount[phase][param] < noChangeBound[phase][param]) {
+                    noChangeCount[phase][param]++;
+                    skipped++;
+                    continue;
+                }
 
-            if (lower >= er) {
-                evalScore[p] += M(+lr, 0);
-                //                showScore(evalScore[p]);
+                // check if we adjust the Midgame value or Endgame value
+                EvalScore changer = M(lr, 0);
+                if (phase == 1) {
+                    changer = M(0, lr);
+                }
+
+                // keep track if the variable improved in this iteration
+                bool improved = false;
+
+                // compute the initial error
+                er = computeError(K, threads);
+
+                // adjust the param up a little
+                evalScore[param] += changer;
                 eval_init();
+
+                // compute the error after changing the value
+                double upper = computeError(K, threads);
+
+                // if the error did go up or stay the same, check the opposite direction
+                // for this, we need to subtract the change twice
+                if (upper >= er) {
+                    evalScore[param] -= 2 * changer;
+                    eval_init();
+
+                    // compute the error after lowering the variable
+                    double lower = computeError(K, threads);
+
+                    // if we didnt improve either, reset the variable back to the initial state
+                    if (lower >= er) {
+                        evalScore[param] += changer;
+                        eval_init();
+                        improved = false;
+                    } else {
+                        improved = true;
+                        er       = lower;
+                    }
+                } else {
+                    improved = true;
+                    er       = upper;
+                }
+
+                // if we got here, it means that this iteration has not been skipped
+                // reset the amount of skipped iterations
+                noChangeCount[phase][param] = 0;
+                // check if we improved, if not,  and increment the amount
+                // of iterations this variable should be skipped until recomputing it
+                if (!improved) {
+                    if (noChangeBound[phase][param] < 1) {
+                        noChangeBound[phase][param] = 1;
+                    }
+                    noChangeBound[phase][param] *= 2;
+                    // dont skip more than 10 iterations ever
+                    if (noChangeBound[phase][param] > 10) {
+                        noChangeBound[phase][param] = 10;
+                    }
+                    unchanged++;
+                } else {
+                    noChangeBound[phase][param] = 0;
+                    changed++;
+                }
             }
         }
-
-        er = computeError(K, threads);
-        evalScore[p] += M(0, +lr);
-        eval_init();
-
-        upper = computeError(K, threads);
-        if (upper >= er) {
-            evalScore[p] += M(0, -2 * lr);
-            eval_init();
-
-            double lower = computeError(K, threads);
-
-            if (lower >= er) {
-                evalScore[p] += M(0, +lr);
-                eval_init();
-            }
-        }
+        std::cout << "iteration: "      << right                        << setw(3)  << it
+                  << "    error: "      << left     << setprecision(8)  << setw(12) << er
+                  << "    skipped: "    << right                        << setw(3)  << skipped   << "/" << count * 2
+                  << "    changed: "    << right                        << setw(3)  << changed   << "/" << count * 2
+                  << "    unchanged: "  << right                        << setw(3)  << unchanged << "/" << count * 2
+                  << std::endl;
     }
-    std::cout << std::endl;
     return er;
 }
 
-double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int lr, int threads) {
+double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int iterations, int lr, int threads) {
+    // if a value doesnt change a lot, we wont recompute it every time
+    // we need to keep track of how many iterations it should change and since how many it didnt change.
+    // assume a maximum size of 1024
+    int noChangeBound[2][1024] {};
+    int noChangeCount[2][1024] {};
+    
+    // keep track of the error for the entire time
     double er;
-
-    for (int p = 0; p < count; p++) {
-
-        std::cout << "\r  param: " << p << std::flush;
-
-        er = computeError(K, threads);
-        *evalScore[p] += M(+lr, 0);
-        eval_init();
-
-        double upper = computeError(K, threads);
-        if (upper >= er) {
-            *evalScore[p] += M(-2 * lr, 0);
-            eval_init();
-
-            double lower = computeError(K, threads);
-
-            if (lower >= er) {
-                *evalScore[p] += M(+lr, 0);
+    
+    // iterate over all iterations
+    for (int it = 0; it < iterations; it++) {
+        
+        int skipped   = 0;
+        int changed   = 0;
+        int unchanged = 0;
+        
+        for (int param = 0; param < count; param++) {
+            
+            
+            for (int phase = 0; phase < 2; phase++) {
+                // std::cout << phase << " " << param << " " << noChangeCount[phase][param] << " " <<
+                // noChangeBound[phase][param] << std::endl;
+                
+                // if we should skip this value, increment the noChangeCount for this variable
+                if (noChangeCount[phase][param] < noChangeBound[phase][param]) {
+                    noChangeCount[phase][param]++;
+                    skipped++;
+                    continue;
+                }
+                
+                // check if we adjust the Midgame value or Endgame value
+                EvalScore changer = M(lr, 0);
+                if (phase == 1) {
+                    changer = M(0, lr);
+                }
+                
+                // keep track if the variable improved in this iteration
+                bool improved = false;
+                
+                // compute the initial error
+                er = computeError(K, threads);
+                
+                // adjust the param up a little
+                *evalScore[param] += changer;
                 eval_init();
+                
+                // compute the error after changing the value
+                double upper = computeError(K, threads);
+                
+                // if the error did go up or stay the same, check the opposite direction
+                // for this, we need to subtract the change twice
+                if (upper >= er) {
+                    *evalScore[param] -= 2 * changer;
+                    eval_init();
+                    
+                    // compute the error after lowering the variable
+                    double lower = computeError(K, threads);
+                    
+                    // if we didnt improve either, reset the variable back to the initial state
+                    if (lower >= er) {
+                        *evalScore[param] += changer;
+                        eval_init();
+                        improved = false;
+                    } else {
+                        improved = true;
+                        er       = lower;
+                    }
+                } else {
+                    improved = true;
+                    er       = upper;
+                }
+                
+                // if we got here, it means that this iteration has not been skipped
+                // reset the amount of skipped iterations
+                noChangeCount[phase][param] = 0;
+                // check if we improved, if not,  and increment the amount
+                // of iterations this variable should be skipped until recomputing it
+                if (!improved) {
+                    if (noChangeBound[phase][param] < 1) {
+                        noChangeBound[phase][param] = 1;
+                    }
+                    noChangeBound[phase][param] *= 2;
+                    // dont skip more than 10 iterations ever
+                    if (noChangeBound[phase][param] > 10) {
+                        noChangeBound[phase][param] = 10;
+                    }
+                    unchanged++;
+                } else {
+                    noChangeBound[phase][param] = 0;
+                    changed++;
+                }
             }
         }
-
-        er = computeError(K, threads);
-        *evalScore[p] += M(0, +lr);
-        eval_init();
-
-        upper = computeError(K, threads);
-        if (upper >= er) {
-            *evalScore[p] += M(0, -2 * lr);
-            eval_init();
-
-            double lower = computeError(K, threads);
-
-            if (lower >= er) {
-                *evalScore[p] += M(0, +lr);
-                eval_init();
-            }
-        }
+        std::cout << "iteration: "      << right                        << setw(3)  << it
+                  << "    error: "      << left     << setprecision(8)  << setw(12) << er
+                  << "    skipped: "    << right                        << setw(3)  << skipped   << "/" << count * 2
+                  << "    changed: "    << right                        << setw(3)  << changed   << "/" << count * 2
+                  << "    unchanged: "  << right                        << setw(3)  << unchanged << "/" << count * 2
+                  << std::endl;
     }
-    std::cout << std::endl;
     return er;
 }
 
@@ -299,4 +412,164 @@ void tuning::evalSpeed() {
     std::cout << ms << "ms for " << training_entries.size()
               << " positions = " << (1000 * training_entries.size() / ms) / 1e6 << "Mnps"
               << " Checksum = " << sum << std::endl;
+}
+
+void tuning::displayTunedValues() {
+    
+    const static string psqt_names[] = {"psqt_pawn_same_side_castle",
+                                        "psqt_pawn_opposite_side_castle",
+                                        "psqt_knight_same_side_castle",
+                                        "psqt_knight_opposite_side_castle",
+                                        "psqt_bishop_same_side_castle",
+                                        "psqt_bishop_opposite_side_castle",
+                                        "psqt_rook_same_side_castle",
+                                        "psqt_rook_opposite_side_castle",
+                                        "psqt_queen_same_side_castle",
+                                        "psqt_queen_opposite_side_castle",
+                                        "psqt_king"};
+    const static string mob_names[] = { "","mobilityKnight", "mobilityBishop", "mobilityRook", "mobilityQueen"};
+    const static string feat_names[]    = {"SIDE_TO_MOVE",
+                                           "PAWN_STRUCTURE",
+                                           "PAWN_PASSED",
+                                           "PAWN_ISOLATED",
+                                           "PAWN_DOUBLED",
+                                           "PAWN_DOUBLED_AND_ISOLATED",
+                                           "PAWN_BACKWARD",
+                                           "PAWN_OPEN",
+                                           "PAWN_BLOCKED",
+                                           "KNIGHT_OUTPOST",
+                                           "KNIGHT_DISTANCE_ENEMY_KING",
+                                           "ROOK_OPEN_FILE",
+                                           "ROOK_HALF_OPEN_FILE",
+                                           "ROOK_KING_LINE",
+                                           "BISHOP_DOUBLED",
+                                           "BISHOP_FIANCHETTO",
+                                           "BISHOP_PIECE_SAME_SQUARE_E",
+                                           "QUEEN_DISTANCE_ENEMY_KING",
+                                           "KING_CLOSE_OPPONENT",
+                                           "KING_PAWN_SHIELD",
+                                           "CASTLING_RIGHTS"};
+    
+    for(int i = 0; i < 11; i++){
+        std::cout << "EvalScore " << psqt_names[i] << "[64] = {" << right << std::endl;
+        for(Square s = 0; s < 64; s++){
+            if(s % 8 == 0){
+                std::cout << "    ";
+            }
+            std::cout << "M(" << setw(4) << MgScore(psqt[i][s]) << "," << setw(4) << EgScore(psqt[i][s]) << "), ";
+            if(s % 8 == 7){
+                std::cout << std::endl;
+            }
+        }
+        std::cout << "};" << std::endl;
+        std::cout << std::endl;
+    }
+    
+    for(Piece p = KNIGHT; p <= QUEEN; p++){
+        std::cout << "EvalScore " << mob_names[p] << "[" << mobEntryCount[p] <<"] = {" << right << std::endl;
+        for(Square s = 0; s < mobEntryCount[p]; s++){
+            if(s % 8 == 0){
+                std::cout << "    ";
+            }
+            std::cout << "M(" << setw(5) << MgScore(mobilities[p][s]) << "," << setw(5) << EgScore(mobilities[p][s]) << "), ";
+            if(s % 8 == 7){
+                std::cout << std::endl;
+            }
+        }
+        std::cout << "};" << std::endl;
+        std::cout << std::endl;
+    }
+    
+    // hanging eval
+    std::cout << "EvalScore hangingEval[5] {" << std::endl << "    ";
+    for(int i = 0; i < 5; i++){
+        std::cout << "M(" << setw(5) << MgScore(hangingEval[i]) << "," << setw(5) << EgScore(hangingEval[i]) << "), ";
+        if(i % 5 == 4){
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    
+    // pinned eval
+    std::cout << "EvalScore pinnedEval[15] {" << std::endl;
+    for(int i = 0; i < 15; i++){
+        if(i % 5 == 0){
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << MgScore(pinnedEval[i]) << "," << setw(5) << EgScore(pinnedEval[i]) << "), ";
+        if(i % 5 == 4){
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    
+    
+    // passer eval
+    std::cout << "EvalScore passer_rank_n[16] {" << std::endl;
+    for(int i = 0; i < 16; i++){
+        if(i % 8 == 0){
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << MgScore(passer_rank_n[i]) << "," << setw(5) << EgScore(passer_rank_n[i]) << "), ";
+        if(i % 8 == 7){
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    
+    // features
+    for (int i = 0; i < 21; i++) {
+        std::cout << "EvalScore " << setw(30) << left << feat_names[i] << right << "= M(" << setw(5) << MgScore(*evfeatures[i])
+                  << "," <<setw(5) << EgScore(*evfeatures[i]) << ");" << std::endl;
+    }
+    std::cout << left;
+    
+    
+    // king safety
+    std::cout << "EvalScore kingSafetyTable[100] {" << std::endl;
+    for (int i = 0; i < 100; i++) {
+        if (i % 8 == 0) {
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << right << MgScore(kingSafetyTable[i]) << "," << setw(5)
+                  << EgScore(kingSafetyTable[i]) << "), ";
+        if (i % 8 == 7) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    
+    // bishop pawn same color table
+    std::cout << "EvalScore bishop_pawn_same_color_table_o[9] {" << std::endl;
+    for (int i = 0; i < 9; i++) {
+        if (i % 5 == 0) {
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << right << MgScore(bishop_pawn_same_color_table_o[i]) << "," << setw(5)
+                  << EgScore(bishop_pawn_same_color_table_o[i]) << "), ";
+        if (i % 5 == 4) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    std::cout << std::endl;
+    std::cout << "EvalScore bishop_pawn_same_color_table_e[9] {" << std::endl;
+    for (int i = 0; i < 9; i++) {
+        if (i % 5 == 0) {
+            std::cout << "    ";
+        }
+        std::cout << "M(" << setw(5) << right << MgScore(bishop_pawn_same_color_table_e[i]) << "," << setw(5)
+                  << EgScore(bishop_pawn_same_color_table_e[i]) << "), ";
+        if (i % 5 == 4) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << "};" << std::endl;
+    
+    
+    
+    std::cout << std::endl;
 }
