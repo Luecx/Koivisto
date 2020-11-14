@@ -433,51 +433,66 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
     return res;
 }
 
-EvalScore Evaluator::computePinnedPieces(Board* b) {
+EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
+    
+    
+    EvalScore result = 0;
+    
+    Color us = color;
+    Color them = 1 - color;
+    
+    // figure out where the opponent has pieces
+    U64 opponentOcc = b->getTeamOccupied()[them];
+    U64      ourOcc = b->getTeamOccupied()[us];
+    
+    // get the pieces which can pin our king
+    U64 bishops = b->getPieces(them, BISHOP);
+    U64   rooks = b->getPieces(them, ROOK);
+    U64  queens = b->getPieces(them, QUEEN);
+    
+    // get the king positions
+    Square kingSq = bitscanForward(b->getPieces(us, KING));
+    
+    // get the potential pinners for rook/bishop attacks
+    U64 rookAttacks   = lookUpRookAttack  (kingSq, opponentOcc) & (rooks   | queens);
+    U64 bishopAttacks = lookUpBishopAttack(kingSq, opponentOcc) & (bishops | queens);
+    
+    // get all pinners (either rook or bishop attackers)
+    U64 potentialPinners = (rookAttacks | bishopAttacks);
+    
+    while(potentialPinners){
 
-    EvalScore res = M(0, 0);
+        Square pinnerSquare = bitscanForward(potentialPinners);
 
-    Square square;
-    Square wkingSq = bitscanForward(b->getPieces(WHITE, KING));
-    U64    pinner  = lookUpRookXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE])
-                 & (b->getPieces(BLACK, ROOK) | b->getPieces(BLACK, QUEEN));
-    while (pinner) {
-        square             = bitscanForward(pinner);
-        Square pinnedPlace = bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
-        res += pinnedEval[3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(square) % 6 - BISHOP)];
+        // get all the squares in between the king and the potential pinner
+        U64 inBetween = inBetweenSquares[kingSq][pinnerSquare];
 
-        pinner = lsbReset(pinner);
+        // if there is exactly one of our pieces in the way, consider it pinned. Otherwise, continue
+        U64 potentialPinned = ourOcc & inBetween;
+        if (potentialPinned == 0 || lsbIsolation(potentialPinned) != potentialPinned){
+            potentialPinners = lsbReset(potentialPinners);
+            continue;
+        }
+
+        // extract the pinner pieces and the piece that pins
+        Piece pinnedPiece = b->getPiece(bitscanForward(potentialPinned));
+        Piece pinnerPiece = b->getPiece(pinnerSquare) - BISHOP;
+
+        // normalise the values (black pieces will be made to white pieces)
+        if(us == WHITE){
+            pinnerPiece -= 6;
+        }else{
+            pinnedPiece -= 6;
+        }
+
+        // add to the result indexing using pinnedPiece for which there are 5 different pieces and the pinner
+        result += pinnedEval[pinnedPiece * 3 + pinnerPiece];
+        
+        // reset the lsb
+        potentialPinners = lsbReset(potentialPinners);
     }
-
-    pinner = lookUpBishopXRayAttack(wkingSq, *b->getOccupied(), b->getTeamOccupied()[WHITE])
-             & (b->getPieces(BLACK, BISHOP) | b->getPieces(BLACK, QUEEN));
-    while (pinner) {
-        square             = bitscanForward(pinner);
-        Square pinnedPlace = bitscanForward(inBetweenSquares[wkingSq][square] & b->getTeamOccupied()[WHITE]);
-
-        res += pinnedEval[3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(square) % 6 - BISHOP)];
-        pinner = lsbReset(pinner);
-    }
-
-    Square bkingSq = bitscanForward(b->getPieces(BLACK, KING));
-    pinner         = lookUpRookXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK])
-             & (b->getPieces(WHITE, ROOK) | b->getPieces(WHITE, QUEEN));
-    while (pinner) {
-        square             = bitscanForward(pinner);
-        Square pinnedPlace = bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
-        res -= pinnedEval[3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(square) % 6 - BISHOP)];
-        pinner = lsbReset(pinner);
-    }
-    pinner = lookUpBishopXRayAttack(bkingSq, *b->getOccupied(), b->getTeamOccupied()[BLACK])
-             & (b->getPieces(WHITE, BISHOP) | b->getPieces(WHITE, QUEEN));
-    while (pinner) {
-        square             = bitscanForward(pinner);
-        Square pinnedPlace = bitscanForward(inBetweenSquares[bkingSq][square] & b->getTeamOccupied()[BLACK]);
-
-        res -= pinnedEval[3 * (b->getPiece(pinnedPlace) % 6) + (b->getPiece(square) % 6 - BISHOP)];
-        pinner = lsbReset(pinner);
-    }
-    return res;
+    
+    return result;
 }
 
 /**
@@ -818,7 +833,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     }
 
     EvalScore hangingEvalScore = computeHangingPieces(b);
-    EvalScore pinnedEvalScore  = computePinnedPieces(b);
+    EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
    

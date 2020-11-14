@@ -53,7 +53,7 @@ class Evaluator {
 
     float phase;
 
-    EvalScore computePinnedPieces(Board* b);
+    EvalScore computePinnedPieces(Board* b, Color color);
 
     EvalScore computeHangingPieces(Board* b);
 
