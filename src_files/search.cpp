@@ -839,16 +839,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            if (!isCapture(m)){
-                history = sd->getHistoryMoveScore(m, b->getActivePlayer()) - 512;
-                if (ply > 0)
-                    history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
-            } else {
-                history = sd->getCaptureHistoryMoveScore(m, b->getActivePlayer()) - 512;
-            }
-            if (ply > 0)
-                history += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
-            lmr = lmr - history / 256;
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
             lmr -= pv;
             if (sd->sideToReduce != b->getActivePlayer()) {
@@ -906,12 +897,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // also set this move as a killer move into the history
                 sd->setKiller(m, ply, b->getActivePlayer());
                 // if the move is not a capture, we also update counter move history tables and history scores.
-                if (!isCapture(m)) {
-                    sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
-                    sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv);
-                } else {
-                    sd->addCaptureHistoryScore(m, depth, mv, b->getActivePlayer());
-                }
+                
+                sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+                
             }
             return beta;
         }
