@@ -893,9 +893,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // beta -cutoff
         if (score >= beta) {
-            if (!skipMove) {
-                // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
                 // also set this move as a killer move into the history
                 sd->setKiller(m, ply, b->getActivePlayer());
                 // if the move is not a capture, we also update counter move history tables and history scores.
@@ -903,6 +900,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     sd->addHistoryScore(m, depth, mv, b->getActivePlayer());
                     sd->addCounterMoveHistoryScore(b->getPreviousMove(), m, depth, mv);
                 }
+            if (!skipMove) {
+                // put the beta cutoff into the perft_tt
+                table->put(zobrist, score, m, CUT_NODE, depth);
             }
             return beta;
         }
