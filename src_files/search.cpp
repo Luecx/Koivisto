@@ -378,12 +378,12 @@ Move getDTZMove(Board* board) {
     Square sqTo   = TB_GET_TO(result);
 
     // we generate all pseudo legal moves and check for equality between the moves to make sure the bits are correct.
-    MoveList* mv = new MoveList();
-    board->getPseudoLegalMoves(mv);
+    MoveList mv {};
+    board->getPseudoLegalMoves(&mv);
 
-    for (int i = 0; i < mv->getSize(); i++) {
+    for (int i = 0; i < mv.getSize(); i++) {
         // get the current move from the movelist
-        Move m = mv->getMove(i);
+        Move m = mv.getMove(i);
 
         // check if its the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
