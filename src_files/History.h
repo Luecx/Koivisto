@@ -34,19 +34,29 @@ struct SearchData {
     MoveList** moves;
     Evaluator  evaluator {};
 
-    int   history[2][64][64]   = {0};    // history table (from-to)
-    int   cmh[6][64][2][6][64] = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    Move  killer[2][MAX_PLY]   = {0};
-    Score eval[2][MAX_PLY]     = {0};
+    int   captureHistory[2][64][64] = {0};
+    int   history[2][64][64]        = {0};    // history table (from-to)
+    int   cmh[6][64][2][6][64]      = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
+    Move  killer[2][MAX_PLY]        = {0};
+    Score eval[2][MAX_PLY]          = {0};
     bool  sideToReduce;
+
 
     SearchData();
 
     virtual ~SearchData();
 
+    void updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous);
+
+    int getHistories(Move m, bool side, Move previous);
+
     void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
 
     MoveScore getHistoryMoveScore(Move m, bool side);
+
+    void addCaptureHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
+
+    MoveScore getCaptureHistoryMoveScore(Move m, bool side);
 
     void setKiller(Move move, Depth ply, Color color);
 
