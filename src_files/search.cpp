@@ -805,7 +805,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (ply > 0)
             h += sd->getCounterMoveHistoryScore(b->getPreviousMove(), m) - 512;
 
-        if (!extension && !isCapture(m) && !givesCheck && !isPromotion && 
+        if (!extension && depth < 8 && !isCapture(m) && !givesCheck && !isPromotion && 
             !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && en.type == CUT_NODE && h<0) 
