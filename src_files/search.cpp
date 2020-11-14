@@ -482,12 +482,13 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     // start the basic search on all threads
     Depth d = 1;
     Score s = 0;
+    Score lastScore = 0;
+    int window = 10;
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
             s = pvSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
         } else {
-            Score window = 10;
             Score alpha  = s - window;
             Score beta   = s + window;
 
@@ -505,7 +506,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
                     break;
                 }
             }
-        }
+        }       
+        window = std::max(std::min(abs(lastScore-s), 10), 3);
+        lastScore = s;
 
         if (threadId == 0)
             printInfoString(b, d, s);
@@ -872,6 +875,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
+            if (ply == 0) sd->sideToReduce = b->getActivePlayer();
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
