@@ -151,8 +151,7 @@ bool rootTimeLeft() { return search_timeManager->rootTimeLeft(); }
  * @param hashSize
  */
 void search_setHashSize(int hashSize) {
-    delete table;
-    table = new TranspositionTable(hashSize);
+    table->setSize(hashSize);
 }
 
 /**
@@ -812,8 +811,15 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
-            if (score < betaCut)
+            if (score < betaCut) {
                 extension++;
+            } else if (score >= beta){
+                return score;
+            } else if (en.score >= beta) {
+                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m);
+                if (score>=beta) 
+                    return score;
+            }
             b->getPseudoLegalMoves(mv);
             moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
 
@@ -897,13 +903,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (!skipMove) {
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
-                // also set this move as a killer move into the history
-                sd->setKiller(m, ply, b->getActivePlayer());
-                // if the move is not a capture, we also update counter move history tables and history scores.
-                
-                sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
-                
             }
+            // also set this move as a killer move into the history
+            sd->setKiller(m, ply, b->getActivePlayer());
+            // if the move is not a capture, we also update counter move history tables and history scores.
+                
+            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+                
             return beta;
         }
 
