@@ -49,7 +49,7 @@ void initLmr() {
 
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 0.5+log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 0.6+log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
