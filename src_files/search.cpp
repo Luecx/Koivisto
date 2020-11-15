@@ -712,7 +712,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
     // **********************************************************************************************************
-    if (depth >= 4 && !hashMove && !skipMove)
+    if (depth >= 4 && !hashMove)
         depth--;
 
     // **********************************************************************************************************
@@ -814,10 +814,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
                 extension++;
-            } else if (score>=beta){
+            } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
-                score     = pvSearch(b, beta - 1, beta, depth >> 1, ply, td, m);
+                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m);
                 if (score>=beta) 
                     return score;
             }
