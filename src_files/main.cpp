@@ -95,7 +95,7 @@ void main_tune_features() {
 int main(int argc, char* argv[]) {
 
     if (argc == 1) {
-        uci_loop(true);
+        uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     }
