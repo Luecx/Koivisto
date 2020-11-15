@@ -151,8 +151,7 @@ bool rootTimeLeft() { return search_timeManager->rootTimeLeft(); }
  * @param hashSize
  */
 void search_setHashSize(int hashSize) {
-    delete table;
-    table = new TranspositionTable(hashSize);
+    table->setSize(hashSize);
 }
 
 /**
