@@ -764,12 +764,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool isPromotion = move::isPromotion(m);
         bool quiet = !isCapture(m) && !isPromotion && !givesCheck;
 
+        quiets += quiet;
+
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
            Depth moveDepth = depth-lmrReductions[depth][legalMoves];
 
             if (quiet) {
-                quiets++;
                 // **************************************************************************************************
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
