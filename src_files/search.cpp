@@ -896,7 +896,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             bestMove     = m;
             if (ply == 0 && isTimeLeft()) {
                 // Store bestMove for bestMove
-                sd->bestMove = m;
+                td->bestMove = m;
                                  
                 // the time manager needs to be updated to know if its safe to stop the search
                 if (td->threadID == 0)
