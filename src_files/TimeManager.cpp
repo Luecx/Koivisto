@@ -94,8 +94,6 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     timeToUse = std::min(timeToUse, WHITE ? white - 25 : black - 25);
     upperTimeBound = std::min(upperTimeBound, WHITE ? white - 100 : black - 25);
 
-    std::cout << timeToUse << "|" << upperTimeBound;
-
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
             .count();
