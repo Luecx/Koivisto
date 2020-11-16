@@ -59,7 +59,7 @@ class TimeManager {
      */
 
     public:
-    TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board);
+    TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, int threads, Board* board);
 
     TimeManager();
 

@@ -272,7 +272,7 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int d
         return;
     }
 
-    timeManager = new TimeManager(wtime, btime, winc, binc, movesToGo, board);
+    timeManager = new TimeManager(wtime, btime, winc, binc, movesToGo, threadCount, board);
 
     searchThread = new std::thread(uci_searchAndPrint, depth, timeManager);
     searchThread->detach();

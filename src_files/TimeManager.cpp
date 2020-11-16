@@ -17,9 +17,11 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include <algorithm>
 #include "TimeManager.h"
+
 #include "Board.h"
+
+#include <algorithm>
 
 auto startTime =
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -73,7 +75,7 @@ TimeManager::TimeManager() {
  * @param movesToGo
  * @param board
  */
-TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) {
+TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, int threads, Board* board) {
     moveHistory  = new Move[256];
     scoreHistory = new Score[256];
     depthHistory = new Depth[256];
@@ -83,17 +85,16 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     forceStop    = false;
     mode         = TOURNAMENT;
 
-    double division = movesToGo+1;
+    double division = movesToGo + 1;
+    int    buffer   = 25 + 15 * (threads - 1);
 
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
-                                                  : (int(black / division) + blackInc) - 25;
+    timeToUse      = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
+                                                       : (int(black / division) + blackInc) - 25;
+    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / (division * 0.7)) + whiteInc) - buffer
+                                                       : (int(black / (division * 0.7)) + blackInc) - buffer;
 
-    upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 25 : (int(black / (division*0.7)) + blackInc) - 25;
-
-    timeToUse = std::min(timeToUse, WHITE ? white - 25 : black - 25);
-    upperTimeBound = std::min(upperTimeBound, WHITE ? white - 100 : black - 25);
-
+    timeToUse      = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 25 : black - 25);
+    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 25 : black - 25);
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
             .count();

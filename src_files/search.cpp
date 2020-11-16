@@ -926,7 +926,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // if we are inside a tournament game and at the root and there is only one legal move, no need to search at all.
     if (search_timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1) {
         search_timeManager->stopSearch();
-        return alpha;
+        //return alpha;
     }
 
     // if there are no legal moves, its either stalemate or checkmate.
