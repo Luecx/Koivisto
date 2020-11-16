@@ -213,6 +213,7 @@ EvalScore PAWN_OPEN                     = M(    9,   -5);
 EvalScore PAWN_BLOCKED                  = M(   -9,  -16);
 EvalScore KNIGHT_OUTPOST                = M(   25,   17);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -6,    1);
+EvalScore KNIGHT_DOUBLED                = M(    -9,    0);
 EvalScore ROOK_OPEN_FILE                = M(   34,   -6);
 EvalScore ROOK_HALF_OPEN_FILE           = M(   -2,   -4);
 EvalScore ROOK_KING_LINE                = M(   20,    8);
@@ -254,25 +255,26 @@ EvalScore* evfeatures[] {
     &PAWN_DOUBLED_AND_ISOLATED,
     &PAWN_BACKWARD,
     &PAWN_OPEN,
-    &PAWN_BLOCKED,                  // 8
+    &PAWN_BLOCKED,                 
     
     &KNIGHT_OUTPOST,
-    &KNIGHT_DISTANCE_ENEMY_KING,    // 10
+    &KNIGHT_DISTANCE_ENEMY_KING,   
+    &KNIGHT_DOUBLED,
     
     &ROOK_OPEN_FILE,
     &ROOK_HALF_OPEN_FILE,
-    &ROOK_KING_LINE,                // 13
+    &ROOK_KING_LINE,               
     
     &BISHOP_DOUBLED,
     &BISHOP_FIANCHETTO,
-    &BISHOP_PIECE_SAME_SQUARE_E,    // 17
+    &BISHOP_PIECE_SAME_SQUARE_E,   
     
-    &QUEEN_DISTANCE_ENEMY_KING,     // 18
+    &QUEEN_DISTANCE_ENEMY_KING,     
     
     &KING_CLOSE_OPPONENT,
-    &KING_PAWN_SHIELD,              // 20
+    &KING_PAWN_SHIELD,              
     
-    &CASTLING_RIGHTS,               // 21
+    &CASTLING_RIGHTS,               // 22
 
     
 };
@@ -642,6 +644,11 @@ bb::Score Evaluator::evaluate(Board* b) {
      */
     U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnCover);
     U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnCover);
+
+    featureScore += KNIGHT_DOUBLED * (
+        + (bitCount(b->getPieces()[WHITE_KNIGHT]) == 2)
+        - (bitCount(b->getPieces()[BLACK_KNIGHT]) == 2));
+
     // clang-format on
     /**********************************************************************************
      *                                  K N I G H T S                                 *
