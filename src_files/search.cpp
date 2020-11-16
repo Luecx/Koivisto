@@ -31,7 +31,7 @@ std::vector<std::thread> runningThreads;
 int                      threadCount = 1;
 bool                     useTB       = false;
 bool                     printInfo   = true;
-Move best;
+Move bestM;
 
 SearchOverview overview;
 
@@ -511,7 +511,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (threadId == 0)
             printInfoString(b, d, s);
 
-        if (isTimeLeft()) best = td->bestMove;
+        if (isTimeLeft()) bestM = td->bestMove;
 
         // if the search finished due to timeout, we also need to stop here
         if (!rootTimeLeft())
@@ -529,7 +529,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         runningThreads.clear();
 
         // retrieve the best move from the search
-        Move best = sd->bestMove;
+        Move best = bestM;
 
         delete sd;
 
