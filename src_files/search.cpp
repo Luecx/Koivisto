@@ -31,6 +31,7 @@ std::vector<std::thread> runningThreads;
 int                      threadCount = 1;
 bool                     useTB       = false;
 bool                     printInfo   = true;
+Move best;
 
 SearchOverview overview;
 
@@ -43,6 +44,7 @@ int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
+
 
 void initLmr() {
     int d, m;
@@ -490,7 +492,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score alpha  = s - window;
             Score beta   = s + window;
 
-            while (rootTimeLeft()) {
+            while (isTimeLeft()) {
                 s = pvSearch(b, alpha, beta, d, 0, td, 0);
 
                 window += window;
@@ -509,8 +511,10 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (threadId == 0)
             printInfoString(b, d, s);
 
+        best = td->bestMove;
+
         // if the search finished due to timeout, we also need to stop here
-        if (!rootTimeLeft())
+        if (threadId != 0 ? !isTimeLeft():!rootTimeLeft())
             break;
     }
 
@@ -890,11 +894,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && isTimeLeft() && td->threadID == 0) {
+            if (ply == 0 && isTimeLeft()) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
+                                 
                 // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
+                if (td->threadID == 0)
+                    search_timeManager->updatePV(m, score, depth);
             }
         }
 
@@ -907,7 +913,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // also set this move as a killer move into the history
             sd->setKiller(m, ply, b->getActivePlayer());
             // if the move is not a capture, we also update counter move history tables and history scores.
-                
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
                 
             return beta;

@@ -79,6 +79,7 @@ struct ThreadData {
     U64 nodes    = 0;
     int seldepth = 0;
     int tbhits   = 0;
+    Move bestMove;
 
     SearchData* searchData;
 
