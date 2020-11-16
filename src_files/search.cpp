@@ -514,7 +514,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (isTimeLeft()) best = td->bestMove;
 
         // if the search finished due to timeout, we also need to stop here
-        if (threadId != 0 ? !isTimeLeft():!rootTimeLeft())
+        if (!rootTimeLeft())
             break;
     }
 
