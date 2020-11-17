@@ -36,7 +36,7 @@ typedef int32_t EvalScore;
 
 extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
-
+extern EvalScore connected_pawns_table[8];
 extern EvalScore* psqt[11];
 extern EvalScore  pieceScores[6];
 extern EvalScore* evfeatures[];
