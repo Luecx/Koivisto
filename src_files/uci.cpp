@@ -207,6 +207,15 @@ void uci_processCommand(std::string str) {
         }
         if (str.find("LMR_DIV") != string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
+            initLmr();
+        }
+        if (str.find("LMR_BONUS") != string::npos) {
+            LMR_BONUS = stof(uci_getValue(split, "LMR_BONUS"));
+            initLmr();
+        }
+        if (str.find("HISTORY_CUTOFF") != string::npos) {
+            HISTORY_CUTOFF = stoi(uci_getValue(split, "HISTORY_CUTOFF"));
+            initLmr();
         }
     } else if (split.at(0) == "position") {
 

@@ -43,13 +43,15 @@ int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
+float LMR_BONUS      = 0.75;
+int HISTORY_CUTOFF   = 200;
 
 void initLmr() {
     int d, m;
 
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = LMR_BONUS+log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
@@ -778,7 +780,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < HISTORY_CUTOFF-30*(depth*depth)){
                     continue;
                 }
             }
