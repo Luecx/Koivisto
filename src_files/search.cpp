@@ -680,8 +680,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = qSearch(b, alpha, beta, ply, td);
-            if (score < beta)
+            if (score < beta) 
+            {
                 return score;
+            } else if (depth == 1)
+                return beta;
         }
         // **********************************************************************************************************
         // futlity pruning:
