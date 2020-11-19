@@ -797,7 +797,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Score staticExchangeEval = 0;
         if (isCapture(m)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
-            if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < -30*(depth*depth) && staticEval < 0){
+            if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < -30*(depth*depth) && staticExchangeEval < 0){
                 continue;
             }
         }
