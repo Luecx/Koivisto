@@ -45,7 +45,7 @@ extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
 extern float LMR_BONUS;
 extern int HISTORY_CUTOFF;
-
+extern int HISTORY_DIV;
 #define MAX_THREADS 32
 
 /**

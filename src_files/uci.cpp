@@ -217,6 +217,10 @@ void uci_processCommand(std::string str) {
             HISTORY_CUTOFF = stoi(uci_getValue(split, "HISTORY_CUTOFF"));
             initLmr();
         }
+        if (str.find("HISTORY_DIV") != string::npos) {
+            HISTORY_DIV  = stoi(uci_getValue(split, "HISTORY_DIV"));
+            initLmr();
+        }
     } else if (split.at(0) == "position") {
 
         auto fenPos  = str.find("fen");

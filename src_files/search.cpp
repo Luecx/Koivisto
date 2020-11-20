@@ -39,12 +39,13 @@ int lmrReductions[256][256];
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData** tds = new ThreadData*[MAX_THREADS];
 
-int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 92;
+int RAZOR_MARGIN     = 195;
+int FUTILITY_MARGIN  = 83;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 float LMR_BONUS      = 0.75;
-int HISTORY_CUTOFF   = 200;
+int HISTORY_CUTOFF   = 162;
+int HISTORY_DIV      = 325;
 
 void initLmr() {
     int d, m;
@@ -850,7 +851,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / HISTORY_DIV;
             lmr += !isImproving;
             lmr -= pv;
             if (sd->sideToReduce != b->getActivePlayer()) {
