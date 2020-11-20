@@ -78,7 +78,10 @@ int SearchData::getHistories(Move m, bool side, Move previous){
         Piece  movingPiece = getMovingPiece(m) % 6;
         Square squareTo    = getSquareTo(m);
 
-        return cmh[prevPiece][prevTo][color][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
+        if (previous){
+            return cmh[prevPiece][prevTo][color][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
+        }
+        return history[side][getSquareFrom(m)][getSquareTo(m)];
     }
 }
 
