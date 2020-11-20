@@ -94,11 +94,20 @@ void main_tune_features() {
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+//    if (argc == 1) {
+//        uci_loop(false);
+//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+//        uci_loop(true);
+//    }
+    bb_init();
+    
+    Board b{"2k5/2rn4/3p4/8/2Q5/3R2B1/8/3K4 w - - 0 1"};
+    std::cout << b.isPseudoLegal(genMove(F4, C7, CAPTURE, WHITE_QUEEN, BLACK_ROOK)) << std::endl;
+    std::cout << b.isPseudoLegal(genMove(G3, D6, CAPTURE, WHITE_BISHOP, BLACK_PAWN)) << std::endl;
+    std::cout << b.isPseudoLegal(genMove(D3, D7, CAPTURE, WHITE_ROOK, BLACK_KNIGHT)) << std::endl;
+    
+    bb_cleanUp();
+
 
     /**********************************************************************************
      *                                  T U N I N G                                   *

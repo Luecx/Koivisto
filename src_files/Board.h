@@ -178,7 +178,10 @@ class Board {
 
     // returns the active player
     Color getActivePlayer();
-
+    
+    // given a move, checks if the move is pseudo legal
+    bool isPseudoLegal(Move m);
+    
     // given a move object, does the move on the board. computes repetitions etc.
     void move(Move m);
 
