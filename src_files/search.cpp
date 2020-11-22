@@ -686,15 +686,18 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = qSearch(b, alpha, beta, ply, td);
-            if (score < beta)
+            if (score < beta) 
+            {
                 return score;
+            } else if (depth == 1)
+                return beta;
         }
         // **********************************************************************************************************
         // futlity pruning:
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 6 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
@@ -704,8 +707,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
