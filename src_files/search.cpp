@@ -976,16 +976,16 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     
     // extract information like search data (history tables), zobrist etc
     SearchData* sd         = td->searchData;
-    U64         zobrist    = b->zobrist();
-    Entry       en         = table->get(b->zobrist());
-    NodeType    ttNodeType = ALL_NODE;
+    //U64         zobrist    = b->zobrist();
+    //Entry       en         = table->get(b->zobrist());
+    //NodeType    ttNodeType = ALL_NODE;
     
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
     // position. As we have no information about the depth, we will allways use the perft_tt entry.
     // **************************************************************************************************************
-    if (en.zobrist == zobrist) {
+    /*if (en.zobrist == zobrist) {
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -997,7 +997,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
                 return en.score;
             }
         }
-    }
+    }*/
     
     // check if we are currently in check
     bool inCheck = b->isInCheck(b->getActivePlayer());
@@ -1014,14 +1014,14 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.
-    if (en.zobrist == zobrist) {
+    /*if (en.zobrist == zobrist) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type == ALL_NODE && stand_pat > en.score)) {
             
             stand_pat = en.score;
         }
-    }
+    }*/
     
     if (stand_pat >= beta)
         return beta;
@@ -1072,20 +1072,20 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             bestScore = score;
             bestMove  = m;
             if (score >= beta) {
-                ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, 0);
+                //ttNodeType = CUT_NODE;
+                //table->put(zobrist, bestScore, m, ttNodeType, 0);
                 return beta;
             }
             if (score > alpha) {
-                ttNodeType = PV_NODE;
+                //ttNodeType = PV_NODE;
                 alpha      = score;
             }
         }
     }
     
     // store the current position inside the transposition table
-    if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+    //if (bestMove)
+        //table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
     return alpha;
     
     //    return 0;
