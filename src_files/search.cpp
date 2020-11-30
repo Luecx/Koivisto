@@ -624,7 +624,14 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // position. First, we adjust the static evaluation and second, we might be able to return the tablebase score if
     // the depth of that entry is larger than our current depth.
     // **************************************************************************************************************
-    Entry en = table->get(zobrist);
+    Entry en;
+    en.depth = 0;
+    en.move = 6565;
+    en.score = 0;
+    en.type = 3;
+    en.zobrist = 5;
+    
+    /*= table->get(zobrist);
     
     if (en.zobrist == zobrist && !skipMove) {
         hashMove = en.move;
@@ -649,7 +656,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 }
             }
         }
-    }
+    }*/
     
     // **************************************************************************************************************
     // tablebase probing:
@@ -910,7 +917,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                //table->put(zobrist, score, m, CUT_NODE, depth);
             }
             // also set this move as a killer move into the history
             sd->setKiller(m, ply, b->getActivePlayer());
@@ -951,9 +958,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            //table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            //table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
         }
     }
     
