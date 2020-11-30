@@ -486,6 +486,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     // Also its relevant because if we stop the search even if the search has not finished, the board object
     // will have a random position from the tree. Using this would lead to an illegal/not existing pv
     Board* searchBoard = new Board{b};
+    Board* printBoard  = new Board{b};
     for (d = 1; d <= maxDepth; d++) {
         
         if (d < 6) {
@@ -512,7 +513,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         }
         
         if (threadId == 0){
-            printInfoString(b, d, s);
+            printInfoString(printBoard, d, s);
         }
         
         // if the search finished due to timeout, we also need to stop here
@@ -1061,7 +1062,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
         // **********************************************************************************************************
         if (!inCheck && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) < 0)
             continue;
-        
+            
         b->move(m);
         
         Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td);
