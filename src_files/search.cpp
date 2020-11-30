@@ -138,13 +138,13 @@ bool hasOnlyPawns(Board* board, Color color) {
  * checks if there is time left and the search should continue.
  * @return
  */
-bool isTimeLeft() { return search_timeManager->isTimeLeft(); }
+bool isTimeLeft() { return true; }
 
 /**
  * checks if there is root time left and the iterative deepening should continue.
  * @return
  */
-bool rootTimeLeft() { return search_timeManager->rootTimeLeft(); }
+bool rootTimeLeft() { return true; }
 
 /**
  * used to change the hash size
