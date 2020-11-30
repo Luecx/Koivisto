@@ -24,7 +24,6 @@
 #include "Board.h"
 #include "Move.h"
 
-#include <mutex>
 #include <ostream>
 #include <stdint.h>
 
@@ -73,13 +72,14 @@ class TranspositionTable {
 
     private:
     NodeAge m_currentAge;
-    Entry*  m_entries;
     U64     m_size;
-    U64     m_mask;
 
     void init(U64 MB);
 
     public:
+    
+    Entry*  m_entries;
+    U64     m_mask;
     TranspositionTable(U64 mb);
 
     TranspositionTable(const TranspositionTable& other) = delete;
