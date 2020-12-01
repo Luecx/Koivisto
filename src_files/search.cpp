@@ -861,7 +861,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr += !isImproving;
             lmr -= pv;
             if (sd->sideToReduce != b->getActivePlayer()) {
-                lmr = lmr + 1;
+                //lmr = lmr + 1;
             }
             if (lmr > MAX_PLY) {
                 lmr = 0;
