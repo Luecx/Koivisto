@@ -38,10 +38,10 @@ void main_tune_features() {
 
     using namespace tuning;
 
-    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
-    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
-    loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-    auto K = tuning::computeK(2.86681, 200, 1e-7, 16);
+    loadPositionFile("../resources/other/quiet-labeled2.epd", 10000000);
+    //loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    //loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+    auto K = tuning::computeK(2.86681, 200, 1e-6, 4);
 
     for (int i = 0; i < 5000; i++) {
 
@@ -49,13 +49,13 @@ void main_tune_features() {
                   << "] ----------------------------------------------" << std::endl;
 
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
-        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
+        std::cout << tuning::optimisePSTBlackBox(K, &evfeatures[0], 24, 1, 4) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(K, &bishop_pawn_same_color_table_o[0], 9, 1, 16) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(K, &bishop_pawn_same_color_table_e[0], 9, 1, 16) << std::endl;
+        //std::cout << tuning::optimisePSTBlackBox(K, &bishop_pawn_same_color_table_o[0], 9, 1, 16) << std::endl;
+        //std::cout << tuning::optimisePSTBlackBox(K, &bishop_pawn_same_color_table_e[0], 9, 1, 16) << std::endl;
 
-        for (Square s = 0; s < 9; s++) {
+        /*for (Square s = 0; s < 9; s++) {
             std::cout << "M(" << setw(5) << MgScore(bishop_pawn_same_color_table_o[s]) << "," << setw(5)
                       << EgScore(bishop_pawn_same_color_table_o[s]) << "), ";
             std::cout << std::endl;
@@ -67,14 +67,14 @@ void main_tune_features() {
                       << EgScore(bishop_pawn_same_color_table_e[s]) << "), ";
             std::cout << std::endl;
         }
-        std::cout << std::endl;
-        /*for (Square s = 0; s < 23; s++) {
+        std::cout << std::endl;*/
+        for (Square s = 0; s < 24; s++) {
             std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s])
                       << "), ";
             std::cout << std::endl;
         }
         std::cout << std::endl;
-*/
+
         /*for (Square s = 0; s < 15; s++) {
             std::cout << "M(" << setw(5) << MgScore(pinnedEval[s]) << "," << setw(5) << EgScore(pinnedEval[s]) << "), ";
             std::cout << std::endl;
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 
     // main_tune_pst_bb(PAWN);
     //    eval_init();
-//     main_tune_features();
+    //main_tune_features();
     // main_tune_pst();
     // main_tune_features_bb();
 
