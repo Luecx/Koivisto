@@ -1,3 +1,11 @@
+# Nitpick branch
+
+This is an experimental branch that will pull from master any strength improvements, while indepently adding extensive instrumentation, logging, tracing, fuzzing and debugging tools for the engine.
+
+The goal of this branch is to comprehensively improve the robustness of Koivisto,
+while keeping the master branch "clean" of excessive debugging and instrumentation code.
+
+
 # Koivisto UCI
 
 <h1 align="center">
