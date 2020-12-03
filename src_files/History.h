@@ -40,6 +40,7 @@ struct SearchData {
     Move  killer[2][MAX_PLY]        = {0};
     Score eval[2][MAX_PLY]          = {0};
     bool  sideToReduce;
+    bool reduce;
 
 
     SearchData();
