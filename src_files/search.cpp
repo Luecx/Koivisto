@@ -805,7 +805,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
-        if (isCapture(m)) {
+        if (isCapture(m) && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
         
