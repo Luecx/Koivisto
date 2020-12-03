@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "uci.h"
+#include "Nitpick.h"
 
 #include "syzygy/tbprobe.h"
 
@@ -36,7 +37,6 @@ std::thread* searchThread = nullptr;
  * @param bench
  */
 void uci_loop(bool bench) {
-
     bb_init();
     search_init(16);
     eval_init();
@@ -93,6 +93,7 @@ std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
     int index = 0;
     for (std::string s : vec) {
         if (s == key) {
+            nitpick_assert(vec.size() > index + 1, "uci_getValue called with key " << key << " but index " << index + 1 << " is out of range.");
             return vec.at(index + 1);
         }
         index++;
@@ -108,6 +109,8 @@ void uci_endThread() {
     if (searchThread != nullptr) {
         delete searchThread;
         searchThread = nullptr;
+
+        nitpick_assert(timeManager != nullptr, "about to delete timeManager in uci_endThread, but it is null.");
         delete timeManager;
         timeManager = nullptr;
     }
@@ -122,6 +125,8 @@ void uci_endThread() {
  * @param p_timeManager
  */
 void uci_searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
+    nitpick_assert(p_timeManager != nullptr, "uci_searchAndPrint called with a null p_timeManager.");
+
     Move m = bestMove(board, maxDepth, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
     uci_endThread();
@@ -227,6 +232,7 @@ void uci_processCommand(std::string str) {
             uci_position_startpos(moves);
         }
     } else if (split.at(0) == "print") {
+        nitpick_assert(board != nullptr, "Tried to print board, but it was null.");
         std::cout << *board << std::endl;
     } else if (split.at(0) == "eval") {
         printEvaluation(board);
@@ -272,8 +278,10 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int d
         return;
     }
 
+    nitpick_assert(timeManager == nullptr, "Overwriting timeManager! Leaking memory?");
     timeManager = new TimeManager(wtime, btime, winc, binc, movesToGo, board);
 
+    nitpick_assert(searchThread == nullptr, "Overwriting searchThread! Leaking memory?");
     searchThread = new std::thread(uci_searchAndPrint, depth, timeManager);
     searchThread->detach();
 }
