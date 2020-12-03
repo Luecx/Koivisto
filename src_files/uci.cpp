@@ -297,8 +297,10 @@ void uci_go_depth(int depth) {
         return;
     }
 
+    nitpick_assert(timeManager == nullptr, "Overwriting timeManager! Leaking memory?");
     timeManager = new TimeManager();
 
+    nitpick_assert(searchThread == nullptr, "Overwriting searchThread! Leaking memory?");
     searchThread = new std::thread(uci_searchAndPrint, depth, timeManager);
     searchThread->detach();
 }
@@ -324,8 +326,10 @@ void uci_go_time(int movetime) {
         return;
     }
 
+    nitpick_assert(timeManager == nullptr, "Overwriting timeManager! Leaking memory?");
     timeManager = new TimeManager(movetime);
 
+    nitpick_assert(searchThread == nullptr, "Overwriting searchThread! Leaking memory?");
     searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeManager);
     searchThread->detach();
 }
@@ -519,7 +523,7 @@ void uci_position_startpos(std::string moves) {
  * cleans up all allocated data
  */
 void uci_quit() {
-
+    nitpick_assert(board != nullptr, "Tried to delete board, but it was null.");
     delete board;
     board = nullptr;
 
