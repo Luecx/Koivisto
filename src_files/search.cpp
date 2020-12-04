@@ -843,7 +843,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (ply == 0) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce = false;
-            sd->sideToReduce = b->getActivePlayer();
             if (legalMoves == 0){
                 sd->reduce = true;
             }
