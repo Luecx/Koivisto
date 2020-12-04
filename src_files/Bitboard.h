@@ -543,9 +543,7 @@ inline U64 shiftNorthWest(U64 b) {
 inline U64 fillNorth(U64 b) {
     b |= (b << 8);
     b |= (b << 16);
-    b |= (b << 24);
     b |= (b << 32);
-    b |= (b << 40);
     return b;
 }
 
@@ -557,9 +555,7 @@ inline U64 fillNorth(U64 b) {
 inline U64 fillSouth(U64 b) {
     b |= (b >> 8);
     b |= (b >> 16);
-    b |= (b >> 24);
     b |= (b >> 32);
-    b |= (b >> 40);
     return b;
 }
 
