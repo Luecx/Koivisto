@@ -764,7 +764,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // dont search illegal moves
         if (!b->isLegal(m))
             continue;
-        
 
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))

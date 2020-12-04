@@ -1259,13 +1259,13 @@ Score Board::staticExchangeEvaluation(Move m) {
         pinners = lsbReset(sq);
     }
     Square blackKingSquare = bitscanForward(getPieces()[BLACK_KING]);
-    pinners = lookUpRookXRayAttack(blackKingSquare, m_occupied, m_teamOccupied[BLACK]) & ((getPieces()[WHITE_ROOK]|getPieces()[BLACK_QUEEN]) & ~sqBB);
+    pinners = lookUpRookXRayAttack(blackKingSquare, m_occupied, m_teamOccupied[BLACK]) & ((getPieces()[WHITE_ROOK]|getPieces()[WHITE_QUEEN]) & ~sqBB);
     while (pinners) {
         Square sq = bitscanForward(pinners);
         pinned |= inBetweenSquares[blackKingSquare][sq] & m_teamOccupied[BLACK];
         pinners = lsbReset(sq);
     }
-    pinners = lookUpRookXRayAttack(blackKingSquare, m_occupied, m_teamOccupied[BLACK]) & ((getPieces()[WHITE_BISHOP]|getPieces()[BLACK_QUEEN]) & ~sqBB);
+    pinners = lookUpRookXRayAttack(blackKingSquare, m_occupied, m_teamOccupied[BLACK]) & ((getPieces()[WHITE_BISHOP]|getPieces()[WHITE_QUEEN]) & ~sqBB);
     while (pinners) {
         Square sq  = bitscanForward(pinners);
         pinned |= inBetweenSquares[blackKingSquare][sq] & m_teamOccupied[BLACK];
