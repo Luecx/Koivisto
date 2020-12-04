@@ -1242,15 +1242,49 @@ Score Board::staticExchangeEvaluation(Move m) {
     U64   occ     = m_occupied;
 
     U64 sqBB = ONE << sqTo;
+
+    //Calculate pinned pieces, see: https://www.chessprogramming.org/Checks_and_Pinned_Pieces_(Bitboards)
+    Square whiteKingSquare = bitscanForward(getPieces()[WHITE_KING]);
+    U64 pinned = 0;
+    U64 pinners = lookUpRookXRayAttack(whiteKingSquare, m_occupied, m_teamOccupied[WHITE]) &((getPieces()[BLACK_ROOK]|getPieces()[BLACK_QUEEN]) & ~sqBB);
+    while (pinners) {
+        Square sq = bitscanForward(pinners);
+        pinned |= inBetweenSquares[whiteKingSquare][sq] & m_teamOccupied[WHITE];
+        pinners = lsbReset(sq);
+    }
+    pinners = lookUpRookXRayAttack(whiteKingSquare, m_occupied, m_teamOccupied[WHITE]) & ((getPieces()[BLACK_BISHOP]|getPieces()[BLACK_QUEEN]) & ~sqBB);
+    while (pinners) {
+        Square sq  = bitscanForward(pinners);
+        pinned = inBetweenSquares[whiteKingSquare][sq] & m_teamOccupied[WHITE];
+        pinners = lsbReset(sq);
+    }
+    Square blackKingSquare = bitscanForward(getPieces()[BLACK_KING]);
+    pinners = lookUpRookXRayAttack(blackKingSquare, m_occupied, m_teamOccupied[BLACK]) & ((getPieces()[WHITE_ROOK]|getPieces()[BLACK_QUEEN]) & ~sqBB);
+    while (pinners) {
+        Square sq = bitscanForward(pinners);
+        pinned |= inBetweenSquares[blackKingSquare][sq] & m_teamOccupied[BLACK];
+        pinners = lsbReset(sq);
+    }
+    pinners = lookUpRookXRayAttack(blackKingSquare, m_occupied, m_teamOccupied[BLACK]) & ((getPieces()[WHITE_BISHOP]|getPieces()[BLACK_QUEEN]) & ~sqBB);
+    while (pinners) {
+        Square sq  = bitscanForward(pinners);
+        pinned |= inBetweenSquares[blackKingSquare][sq] & m_teamOccupied[BLACK];
+        pinners = lsbReset(sq);
+    }
+
     U64 bishopsQueens, rooksQueens;
     rooksQueens = bishopsQueens = m_pieces[WHITE_QUEEN] | m_pieces[BLACK_QUEEN];
     rooksQueens |= m_pieces[WHITE_ROOK] | m_pieces[BLACK_ROOK];
     bishopsQueens |= m_pieces[WHITE_BISHOP] | m_pieces[BLACK_BISHOP];
 
+    rooksQueens &= ~pinned;
+
     U64 fixed = ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_pieces[BLACK_PAWN])
                 | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_pieces[WHITE_PAWN])
                 | (KNIGHT_ATTACKS[sqTo] & (m_pieces[WHITE_KNIGHT] | m_pieces[BLACK_KNIGHT]))
                 | (KING_ATTACKS[sqTo] & (m_pieces[WHITE_KING] | m_pieces[BLACK_KING]));
+
+    fixed &= ~pinned;
 
     // fixed is the attackset of attackers that cannot pin other m_pieces like
     // pawns, kings, knights
