@@ -687,7 +687,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // within pv nodes which means that alpha = beta - 1.
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply, td);
+            score = qSearch(b, alpha, beta, ply, td, true);
             if (score < beta) 
             {
                 return score;
@@ -974,7 +974,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
  * @param ply
  * @return
  */
-Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
+Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool reuse) {
     
     // increase the nodes for this thread
     td->nodes++;
@@ -1010,13 +1010,16 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     Score stand_pat;
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply incase of nullmove
-        stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        stand_pat =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    }
+
+    if (!reuse){
+        if (b->getPreviousMove() == 0 && ply != 0) {
+            // reuse static evaluation from previous ply incase of nullmove
+            stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        } else {
+            stand_pat = inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        }
+    } else 
+        stand_pat = sd->eval[b->getActivePlayer()][ply];
     
     //we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
