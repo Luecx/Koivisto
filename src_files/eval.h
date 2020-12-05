@@ -38,6 +38,7 @@ extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
 
 extern EvalScore* psqt[11];
+extern EvalScore  psqt_king_pawn[225];
 extern EvalScore  pieceScores[6];
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];

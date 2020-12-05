@@ -145,6 +145,8 @@ EvalScore psqt_king[64] = {
     M(  42, -74), M(  47, -39), M(  25, -20), M(  10, -32), M(  13, -40), M(  -7, -12), M(  56, -35), M(  65, -91),
 };
 
+EvalScore psqt_king_pawn[225] = {0};
+
 EvalScore mobilityKnight[9] = {
     M(   20,  -50), M(   35,    0), M(   41,   28), M(   47,   37), M(   54,   44), M(   59,   53), M(   65,   57), M(   74,   51),
     M(   83,   39), };
@@ -306,7 +308,7 @@ EvalScore fast_bishop_psqt[2][4][64];
 EvalScore fast_rook_psqt[2][4][64];
 EvalScore fast_queen_psqt[2][4][64];
 EvalScore fast_king_psqt[2][64];
-
+EvalScore fast_kingp_psqt[2][15][15];
 
 void eval_init() {
     for (int i = 0; i < 64; i++) {
@@ -359,6 +361,14 @@ void eval_init() {
 
         fast_king_psqt[WHITE][i] = psqt_king[pst_index_white_s(i)];
         fast_king_psqt[BLACK][i] = psqt_king[pst_index_black_s(i)];
+    }
+    int counter = 0;
+    for (int i = 0; i < 15; i++){
+        for (int e = 0; e < 15; e++) {
+            fast_kingp_psqt[0][i][e] = psqt_king_pawn[i*15+e];
+            fast_kingp_psqt[1][14-i][e] = psqt_king_pawn[i*15+e];
+            counter++;
+        }
     }
 }
 
@@ -578,6 +588,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore += fast_pawn_psqt[WHITE][psqtKingsideIndex][square];
+        evalScore += fast_kingp_psqt[WHITE][rankIndex(whiteKingSquare)-rankIndex(square)+7][fileIndex(whiteKingSquare)-fileIndex(square)+7];
         k = lsbReset(k);
     }
 
@@ -585,6 +596,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore -= fast_pawn_psqt[BLACK][psqtKingsideIndex][square];
+        evalScore -= fast_kingp_psqt[BLACK][rankIndex(blackKingSquare)-rankIndex(square)+7][fileIndex(blackKingSquare)-fileIndex(square)+7];
         k = lsbReset(k);
     }
     k = whitePassers;

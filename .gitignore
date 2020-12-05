@@ -33,3 +33,5 @@ threadScaling.png
 ThreadScalingScript.py
 
 bin/
+
+*.json
