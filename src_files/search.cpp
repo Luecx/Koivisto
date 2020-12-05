@@ -54,8 +54,8 @@ void initLmr() {
             lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
 
     for (d = 0; d<10; d++){
-        lmp[0][10] = 2+d*d/2;
-        lmp[1][10] = 2+(d+2)*(d+2)/2;
+        lmp[0][d] = 2+d*d/2;
+        lmp[1][d] = 2+(d+2)*(d+2)/2;
     }
 }
 
