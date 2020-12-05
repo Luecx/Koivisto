@@ -1,7 +1,7 @@
 _THIS    := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-_SRC     := $(_THIS)/src_files
-_BUILD   := $(_THIS)/_build
-_BIN     := $(_THIS)/bin
+_SRC     := $(_THIS)/
+_BUILD   := $(_THIS)/../_build
+_BIN     := $(_THIS)/../bin
 _MAKE    := $(MAKE) --no-print-directory -C $(_THIS)
 
 CC        = gcc
