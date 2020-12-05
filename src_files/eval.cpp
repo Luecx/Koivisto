@@ -145,6 +145,26 @@ EvalScore psqt_king[64] = {
     M(  42, -74), M(  47, -39), M(  25, -20), M(  10, -32), M(  13, -40), M(  -7, -12), M(  56, -35), M(  65, -91),
 };
 
+EvalScore psqt_king_pawn[225] = {
+    
+    M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+    M(  -39,   24), M(  -39,   15), M(  -36,   21), M(  -45,   24), M(    0,   -3), M(    3,  -18), M(  -66,   15), M(  -36,  -27), M(    3,  -12), M(    6,  -12), M(   -9,    3), M(  -15,   12), M(   -9,   24), M(  -12,   33), M(  -60,   72),
+    M(  -24,   15), M(  -12,   21), M(   -3,    9), M(   -3,    3), M(   -6,   -3), M(    6,  -15), M(    6,   -3), M(  -12,    6), M(    6,  -24), M(   -3,  -15), M(    3,  -12), M(   -3,    9), M(   -6,   15), M(   -6,   24), M(   -9,   18),
+    M(   -3,   -9), M(   -3,    9), M(   -3,    6), M(    0,    3), M(    0,   -6), M(    3,   -9), M(    3,  -12), M(    0,   -3), M(    3,  -18), M(   -3,   -9), M(    0,   -9), M(   -3,    3), M(    0,    6), M(    0,    6), M(   -3,    0),
+    M(   -3,    0), M(    0,    0), M(   -3,    3), M(    0,    0), M(   -3,    3), M(    3,   -3), M(    3,    0), M(    6,    0), M(    3,   -9), M(   -3,   -3), M(    0,   -3), M(   -3,    0), M(    0,    0), M(    0,   -3), M(    3,   -6),
+    M(    0,   -9), M(    0,    3), M(   -3,    0), M(    0,    3), M(   -6,    3), M(   -9,    6), M(    6,    6), M(    9,    9), M(   -6,    9), M(   -3,    6), M(    0,    0), M(    0,    0), M(   -3,    0), M(    0,    0), M(    9,  -12),
+    M(    0,   -6), M(    0,    0), M(    3,    0), M(    3,    0), M(    9,    0), M(    3,    3), M(   -3,   -9), M(    3,   -3), M(   -9,    0), M(    0,    3), M(    3,    0), M(   -3,    0), M(    0,    0), M(    0,   -3), M(    3,   -6),
+    M(    3,   -9), M(   -3,    3), M(    0,    0), M(    0,    3), M(    0,    3), M(    0,    6), M(   -3,   -3), M(    0,    0), M(    3,    0), M(   -6,    9), M(   -3,    3), M(   -9,    6), M(   -3,    3), M(   -3,    0), M(    6,   -9),
+    M(  -12,   -3), M(    6,    0), M(    0,    3), M(    0,    3), M(  -12,    9), M(   -9,    6), M(  -33,    3), M(  -30,   27), M(  -36,    0), M(   -9,    9), M(  -12,    9), M(    0,    3), M(   12,    0), M(   12,   -3), M(    3,   -9),
+    M(    3,    3), M(    9,   -6), M(   -9,    6), M(  -18,    6), M(  -30,   12), M(  -36,    6), M(  -33,    6), M(   -3,    0), M(  -30,    3), M(  -15,    3), M(  -36,   15), M(   -6,    6), M(   -3,    6), M(    6,    0), M(   -6,   -3),
+    M(   -9,    0), M(  -27,    9), M(    0,    3), M(  -21,    9), M(  -42,   12), M(  -42,    9), M(  -27,    3), M(   -3,    3), M(  -21,    0), M(  -18,    3), M(  -42,   15), M(  -15,   12), M(   -3,    3), M(   -6,    3), M(    0,   -9),
+    M(  -66,    0), M(   -3,    0), M(    6,    9), M(   -6,    6), M(  -36,   15), M(  -54,    9), M(  -42,    9), M(  -24,    9), M(  -36,    9), M(  -15,    0), M(    3,   15), M(  -18,    6), M(  -21,    3), M(   24,   -6), M(  -39,    3),
+    M(    0,   -9), M(   21,    6), M(  -12,    9), M(  -30,   15), M(  -51,    9), M(  -72,   21), M(  -18,    9), M(  -24,   12), M(  -78,   15), M(  -33,   15), M(   27,    3), M(  -21,    3), M(  -18,    0), M(  -15,    6), M(   12,  -30),
+    M(  -90,  -24), M(  -75,    3), M(    3,   18), M(   57,   15), M(  -18,   30), M(    6,   21), M(   12,    6), M(    9,   -9), M(  -39,  -15), M(  -39,  -12), M(    6,    3), M(   24,  -27), M(   81,  -21), M(   12,  -21), M( -141,  -27),
+    M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0),
+    
+};
+
 EvalScore mobilityKnight[9] = {
     M(   20,  -50), M(   35,    0), M(   41,   28), M(   47,   37), M(   54,   44), M(   59,   53), M(   65,   57), M(   74,   51),
     M(   83,   39), };
@@ -306,7 +326,7 @@ EvalScore fast_bishop_psqt[2][4][64];
 EvalScore fast_rook_psqt[2][4][64];
 EvalScore fast_queen_psqt[2][4][64];
 EvalScore fast_king_psqt[2][64];
-
+EvalScore fast_kingp_psqt[2][15][15];
 
 void eval_init() {
     for (int i = 0; i < 64; i++) {
@@ -359,6 +379,14 @@ void eval_init() {
 
         fast_king_psqt[WHITE][i] = psqt_king[pst_index_white_s(i)];
         fast_king_psqt[BLACK][i] = psqt_king[pst_index_black_s(i)];
+    }
+    int counter = 0;
+    for (int i = 0; i < 15; i++){
+        for (int e = 0; e < 15; e++) {
+            fast_kingp_psqt[0][i][e] = psqt_king_pawn[i*15+e];
+            fast_kingp_psqt[1][14-i][e] = psqt_king_pawn[i*15+e];
+            counter++;
+        }
     }
 }
 
@@ -578,6 +606,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore += fast_pawn_psqt[WHITE][psqtKingsideIndex][square];
+        evalScore += fast_kingp_psqt[WHITE][rankIndex(whiteKingSquare)-rankIndex(square)+7][fileIndex(whiteKingSquare)-fileIndex(square)+7];
         k = lsbReset(k);
     }
 
@@ -585,6 +614,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalScore -= fast_pawn_psqt[BLACK][psqtKingsideIndex][square];
+        evalScore -= fast_kingp_psqt[BLACK][rankIndex(blackKingSquare)-rankIndex(square)+7][fileIndex(blackKingSquare)-fileIndex(square)+7];
         k = lsbReset(k);
     }
     k = whitePassers;
