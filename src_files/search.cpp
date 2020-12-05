@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "search.h"
+#include "Nitpick.h"
 
 #include "History.h"
 #include "TimeManager.h"
@@ -45,6 +46,8 @@ int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
 void initLmr() {
+    nitpick_assert(lmrReductions != nullptr, "initLmr called but lmrReductions was null.");
+
     int d, m;
     
     for (d = 0; d < 256; d++)
@@ -67,7 +70,11 @@ int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
  */
 U64 totalNodes() {
     U64 tn = 0;
+    nitpick_assert(tds != nullptr, "totalNodes called, but tds was null.");
     for (int i = 0; i < threadCount; i++) {
+        nitpick_assert(tds[i] != nullptr, "totalNodes called, but tds[" << i << "] was null.");
+        nitpick_assert(tds[i]->nodes >= 0, "tds[" << i << "]->nodes was < 0 (" << tds[i]->nodes << ").");
+
         tn += tds[i]->nodes;
     }
     return tn;
@@ -805,7 +812,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
-        if (isCapture(m)) {
+        if (isCapture(m) && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
         
@@ -841,9 +848,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we reduce more/less depending on which side we are currently looking at.
         // *********************************************************************************************************
         if (ply == 0) {
-            sd->sideToReduce = b->getActivePlayer();
-            if (legalMoves == 0)
-                sd->sideToReduce = !b->getActivePlayer();
+            sd->sideToReduce = !b->getActivePlayer();
+            sd->reduce = false;
+            if (legalMoves == 0){
+                sd->reduce = true;
+            }
         }
         
         // compute the lmr based on the depth, the amount of legal moves etc.
@@ -861,7 +870,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
             lmr -= pv;
-            if (sd->sideToReduce != b->getActivePlayer()) {
+            if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
             if (lmr > MAX_PLY) {
@@ -885,6 +894,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
+            if (ply == 0) sd->reduce = true;
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
