@@ -49,7 +49,9 @@ add_executable(Koivisto
         src_files/eun/data/CompactInput.cpp
         src_files/eun/data/CompactInput.h
         src_files/eun/data/Weight.cpp
-        src_files/eun/data/Weight.h)
+        src_files/eun/data/Weight.h
+        src_files/material.cpp
+        src_files/material.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=14")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAJOR_VERSION=4")
