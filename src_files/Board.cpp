@@ -307,7 +307,9 @@ void Board::setPiece(Square sq, Piece piece) {
     m_pieces[piece] |= sqBB;
     m_teamOccupied[piece / 6] |= sqBB;
     m_occupied |= sqBB;
-
+    
+    material.setPiece(piece / 6, piece % 6, sq);
+    
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(piece, sq);
@@ -335,7 +337,9 @@ void Board::unsetPiece(Square sq) {
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(p, sq);
-
+    
+    material.unsetPiece(p / 6, p % 6, sq);
+    
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
 }
@@ -361,6 +365,9 @@ void Board::replacePiece(Square sq, Piece piece) {
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
+    
+    material.unsetPiece(    p / 6,     p % 6, sq);
+    material.  setPiece(piece / 6, piece % 6, sq);
 
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
@@ -1294,6 +1301,18 @@ Score Board::staticExchangeEvaluation(Move m) {
 }
 
 /**
+ * computes the material score for the current board and returns it.
+ * It computes the relations of the kings first
+ * @return
+ */
+EvalScore Board::getMaterial() {
+    bool   wKSide            = (fileIndex(bitscanForward(getPieces()[WHITE_KING])) > 3 ? 0 : 1);
+    bool   bKSide            = (fileIndex(bitscanForward(getPieces()[BLACK_KING])) > 3 ? 0 : 1);
+    Square psqtKingsideIndex = psqt_kingside_indexing(wKSide, bKSide);
+    return material.scores[psqtKingsideIndex];
+}
+
+/**
  * returns a bitboard with all squares highlighted which either attack or defend the given square
  * @param occupied
  * @param sq
@@ -1359,19 +1378,25 @@ bool Board::givesCheck(Move m) {
         opponentKing    = m_pieces[BLACK_KING];
         opponentKingPos = bitscanForward(opponentKing);
     }
-
+    
+    U64 occ = m_occupied;
+    
     // replace the moving piece with the piece to promote to if promotion to detect direct check
     if (isPromotion(m)) {
+        unsetBit(m_occupied, sqFrom);
         pFrom = promotionPiece(m);
     }
-
+    
     // direct check
     switch (pFrom % 6) {
         case QUEEN: {
-
+            
+            
             U64 att = lookUpBishopAttack(sqTo, m_occupied) | lookUpRookAttack(sqTo, m_occupied);
-
+//            printBitmap(m_occupied);
+//            printBitmap(att);
             if (att & opponentKing) {
+                m_occupied = occ;
                 return true;
             }
             break;
@@ -1379,6 +1404,7 @@ bool Board::givesCheck(Move m) {
         case BISHOP: {
             U64 att = lookUpBishopAttack(sqTo, m_occupied);
             if (att & opponentKing) {
+                m_occupied = occ;
                 return true;
             }
             break;
@@ -1386,6 +1412,7 @@ bool Board::givesCheck(Move m) {
         case ROOK: {
             U64 att = lookUpRookAttack(sqTo, m_occupied);
             if (att & opponentKing) {
+                m_occupied = occ;
                 return true;
             }
             break;
@@ -1393,6 +1420,7 @@ bool Board::givesCheck(Move m) {
         case KNIGHT: {
             U64 att = KNIGHT_ATTACKS[sqTo];
             if (att & opponentKing) {
+                m_occupied = occ;
                 return true;
             }
             break;
@@ -1402,10 +1430,12 @@ bool Board::givesCheck(Move m) {
 
             if (getActivePlayer() == WHITE) {
                 if (((shiftNorthEast(toBB) | shiftNorthWest(toBB)) & opponentKing) != 0) {
+                    m_occupied = occ;
                     return true;
                 }
             } else {
                 if (((shiftSouthEast(toBB) | shiftSouthWest(toBB)) & opponentKing) != 0) {
+                    m_occupied = occ;
                     return true;
                 }
             }
@@ -1414,7 +1444,6 @@ bool Board::givesCheck(Move m) {
     }
 
     // discovered check
-    U64 occ = m_occupied;
 
     unsetBit(m_occupied, sqFrom);
     setBit(m_occupied, sqTo);
@@ -1433,27 +1462,30 @@ bool Board::givesCheck(Move m) {
             m_occupied = occ;
             return true;
         }
-        m_occupied = occ;
     }
 
     // en passant
-    if (isEnPassant(m)) {
+    else if (isEnPassant(m)) {
+        
         if (getActivePlayer() == WHITE) {
             unsetBit(m_occupied, sqTo - 8);
+            unsetBit(m_occupied, sqFrom);
+            setBit(m_occupied, sqTo);
             if (isUnderAttack(opponentKingPos, WHITE)) {
                 m_occupied = occ;
                 return true;
             }
-            m_occupied = occ;
         } else {
             unsetBit(m_occupied, sqTo + 8);
+            unsetBit(m_occupied, sqFrom);
+            setBit(m_occupied, sqTo);
             if (isUnderAttack(opponentKingPos, BLACK)) {
                 m_occupied = occ;
                 return true;
             }
-            m_occupied = occ;
         }
     }
+    m_occupied = occ;
     return false;
 }
 

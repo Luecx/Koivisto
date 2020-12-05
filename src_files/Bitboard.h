@@ -35,6 +35,11 @@ namespace bb {
 
 #define mirrorSquare(s) squareIndex(7 - rankIndex(s), fileIndex(s))
 
+#define M(mg, eg)    ((EvalScore)((unsigned int) (eg) << 16) + (mg))
+#define MgScore(s)   ((Score)((uint16_t)((unsigned) ((s)))))
+#define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
+#define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
+
 typedef uint64_t U64;
 typedef int8_t   Square;
 typedef int8_t   Diagonal;
@@ -48,6 +53,7 @@ typedef uint8_t Color;
 
 typedef uint8_t Depth;
 typedef int16_t Score;
+typedef int32_t EvalScore;
 
 constexpr Depth ONE_PLY          = 1;
 constexpr Depth MAX_PLY          = 128;

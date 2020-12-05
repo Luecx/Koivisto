@@ -139,14 +139,14 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
         er = computeError(K, threads);
         //        std::cout << er << std::endl;
         evalScore[p] += M(+lr, 0);
-        eval_init();
+        psqt_init();
         //        showScore(M(+lr,0));
 
         double upper = computeError(K, threads);
         //        std::cout << upper << std::endl;
         if (upper >= er) {
             evalScore[p] += M(-2 * lr, 0);
-            eval_init();
+            psqt_init();
             //            showScore(evalScore[p]);
 
             double lower = computeError(K, threads);
@@ -154,24 +154,24 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
             if (lower >= er) {
                 evalScore[p] += M(+lr, 0);
                 //                showScore(evalScore[p]);
-                eval_init();
+                psqt_init();
             }
         }
 
         er = computeError(K, threads);
         evalScore[p] += M(0, +lr);
-        eval_init();
+        psqt_init();
 
         upper = computeError(K, threads);
         if (upper >= er) {
             evalScore[p] += M(0, -2 * lr);
-            eval_init();
+            psqt_init();
 
             double lower = computeError(K, threads);
 
             if (lower >= er) {
                 evalScore[p] += M(0, +lr);
-                eval_init();
+                psqt_init();
             }
         }
     }
@@ -188,35 +188,35 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
 
         er = computeError(K, threads);
         *evalScore[p] += M(+lr, 0);
-        eval_init();
+        psqt_init();
 
         double upper = computeError(K, threads);
         if (upper >= er) {
             *evalScore[p] += M(-2 * lr, 0);
-            eval_init();
+            psqt_init();
 
             double lower = computeError(K, threads);
 
             if (lower >= er) {
                 *evalScore[p] += M(+lr, 0);
-                eval_init();
+                psqt_init();
             }
         }
 
         er = computeError(K, threads);
         *evalScore[p] += M(0, +lr);
-        eval_init();
+        psqt_init();
 
         upper = computeError(K, threads);
         if (upper >= er) {
             *evalScore[p] += M(0, -2 * lr);
-            eval_init();
+            psqt_init();
 
             double lower = computeError(K, threads);
 
             if (lower >= er) {
                 *evalScore[p] += M(0, +lr);
-                eval_init();
+                psqt_init();
             }
         }
     }

@@ -22,6 +22,7 @@
 #include "Bitboard.h"
 #include "Move.h"
 #include "Util.h"
+#include "material.h"
 #include "vector"
 
 #include <ostream>
@@ -110,7 +111,9 @@ class Board {
     U64 m_teamOccupied[2];
     // furthermore we keep track of all the squares occupied. mainly used for move generation.
     U64 m_occupied;
-
+    // we also keep track of the material and update it efficiently
+    Material material{};
+    
     // for caching see entries, we allocate an array.
     // note that this might be very slow if a lot of board objects are requires (e.g. tuning).
     // thats when the cache should be disabled.
@@ -202,6 +205,9 @@ class Board {
 
     // computes the static exchange evaluation for a given move. used the cache if defined.
     Score staticExchangeEvaluation(Move m);
+    
+    EvalScore getMaterial();
+    // returns the material score
 
     // returns a bitboard of all squares which attack a specific square. mainly used for see.
     U64 attacksTo(U64 occupied, Square sq);
