@@ -38,10 +38,11 @@ void main_tune_features() {
 
     using namespace tuning;
 
-    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
-    //loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
-    //loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-    auto K = tuning::computeK(2.86681, 200, 1e-7, 16);
+//    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
+    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
 
     for (int i = 0; i < 1; i++) {
 
@@ -52,7 +53,7 @@ void main_tune_features() {
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
-        std::cout << tuning::optimisePSTBlackBox(K, &psqt_king_pawn[0], 225, 100, 3, 4) << std::endl;
+        std::cout << tuning::optimisePSTBlackBox(K, &psqt_king_pawn[0], 225, 100, 3, 24) << std::endl;
 
         for (int s = 0; s < 225; s++) {
             if (s%15 == 0) std::cout << std::endl;
@@ -87,11 +88,11 @@ void main_tune_features() {
 
 int main(int argc, char* argv[]) {
 
-    /*if (argc == 1) {
+    if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
-    }*/
+    }
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
@@ -99,7 +100,7 @@ int main(int argc, char* argv[]) {
 
     // main_tune_pst_bb(PAWN);
     //    eval_init();
-     main_tune_features();
+//     main_tune_features();
     // main_tune_pst();
     // main_tune_features_bb();
 
