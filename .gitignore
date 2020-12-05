@@ -33,3 +33,4 @@ threadScaling.png
 ThreadScalingScript.py
 
 bin/
+_build/
