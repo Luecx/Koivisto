@@ -35,6 +35,8 @@ bool                     printInfo   = true;
 SearchOverview overview;
 
 int lmrReductions[256][256];
+int lmp[2][10];
+
 
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData** tds = new ThreadData*[MAX_THREADS];
@@ -50,9 +52,12 @@ void initLmr() {
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
             lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
-}
 
-int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
+    for (d = 0; d<10; d++){
+        lmp[0][10] = 2+d*d/2;
+        lmp[1][10] = 2+(d+2)*(d+2)/2;
+    }
+}
 
 /**
  * =================================================================================
@@ -784,7 +789,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (depth <= 9 && quiets > lmp[isImproving][depth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
