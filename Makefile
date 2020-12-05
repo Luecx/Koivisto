@@ -122,8 +122,9 @@ $(_CXXOBJS): $(_BUILD)/%.o: $(_SRC)/%.cpp
 	-mkdir -p $(dir $@)
 	$(CXX) -c $(_CFLAGS) $(_CXXFLAGS) $< -o $@
 
+EXE ?= $(_EXE)
 $(_EXE): $(_OBJS) $(_BIN)
-	$(CXX) $(_CFLAGS) $(_CXXFLAGS) -o $(_EXE) $(_OBJS) $(_LDFLAGS)
+	$(CXX) $(_CFLAGS) $(_CXXFLAGS) -o $(EXE) $(_OBJS) $(_LDFLAGS)
 
 build: $(_EXE)
 
