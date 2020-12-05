@@ -174,6 +174,10 @@ Board::Board(Board* board) {
     for (int n = 0; n < static_cast<int>(board->m_boardStatusHistory.size()); n++) {
         m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
     }
+    
+    for(int i = 0; i < 4; i++){
+        material.scores[i] = board->material.scores[i];
+    }
 }
 
 /**
