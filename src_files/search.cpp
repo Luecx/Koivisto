@@ -721,7 +721,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the evaluation from a very shallow search after doing a capture is still above FUTILIT_MARGIN+BETA
         // we asume well get a cutoff anyway as the capture is likely good
         // **********************************************************************************************************
-        if (depth >= 5) {
+        if (depth >= 5 && !(hashMove && en.type == ALL_NODE && en.score < beta)) {
             // we reuse movelists for memory reasons.
             MoveList* mv = sd->moves[ply];
             b->getNonQuietMoves(mv);
@@ -736,6 +736,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 Move m = moveOrderer.next();
 
                 if (!b->isLegal(m))
+                    continue;
+
+                if ((getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) < 0)
                     continue;
 
                 b->move(m);
