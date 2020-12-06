@@ -82,7 +82,7 @@ struct ThreadData {
     int tbhits   = 0;
  
     SearchData* searchData;
-    char padding[1024 * 1024 * 16];
+    char padding[1024 * 128];
 
     ThreadData(int threadId);
 };
