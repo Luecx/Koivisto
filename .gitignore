@@ -34,3 +34,5 @@ ThreadScalingScript.py
 
 bin/
 _build/
+
+*.json
