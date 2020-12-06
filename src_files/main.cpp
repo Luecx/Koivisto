@@ -39,29 +39,54 @@ void main_tune_features() {
     using namespace tuning;
 
 //    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
-    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
-//    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
-//    loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
-
-    for (int i = 0; i < 1; i++) {
+    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+//    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
+    double K = 2.5;
+    
+    for (int i = 0; i < 100; i++) {
 
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
         
+            
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][0]),64,10,3,24);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,24);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,24);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]),225,10,3,24);
         
-        std::cout << tuning::computeError(3, 24)<< std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
         // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
 //        std::cout << tuning::optimisePSTBlackBox(K, &piece_square_table[0][0], 225, 100, 3, 24) << std::endl;
 //
-//        for (int s = 0; s < 225; s++) {
-//            if (s%15 == 0) std::cout << std::endl;
-//            std::cout << "M(" << setw(5) << MgScore(psqt_king_pawn[s]) << "," << setw(5)
-//                      << EgScore(psqt_king_pawn[s]) << "), ";
-//        }
+        for (int s = 0; s < 64; s++) {
+            if (s%8 == 0) std::cout << std::endl;
+            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][0][s]) << "," << setw(5)
+                      << EgScore(piece_square_table[0][0][s]) << "), ";
+           
+        }
+        std::cout << std::endl;
+        for (int s = 0; s < 64; s++) {
+            if (s%8 == 0) std::cout << std::endl;
+            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][1][s]) << "," << setw(5)
+                      << EgScore(piece_square_table[0][1][s]) << "), ";
+        }
+        std::cout << std::endl;
+        for (int s = 0; s < 225; s++) {
+            if (s%15 == 0) std::cout << std::endl;
+            std::cout << "M(" << setw(5) << MgScore(piece_our_king_square_table[0][s]) << "," << setw(5)
+                      << EgScore(piece_our_king_square_table[0][s]) << "), ";
+        }
+        std::cout << std::endl;
+        for (int s = 0; s < 225; s++) {
+            if (s%15 == 0) std::cout << std::endl;
+            std::cout << "M(" << setw(5) << MgScore(piece_opp_king_square_table[0][s]) << "," << setw(5)
+                      << EgScore(piece_opp_king_square_table[0][s]) << "), ";
+        }
+        std::cout << std::endl;
 //        std::cout << std::endl;
 
         /*for (Square s = 0; s < 23; s++) {
@@ -90,6 +115,14 @@ void main_tune_features() {
 
 int main(int argc, char* argv[]) {
     
+//    bb_init();
+//    psqt_init();
+//
+//    Board b{"8/4k3/8/3p4/8/2K2P2/8/8 w - - 0 1"};
+//    Evaluator evaluator{};
+//    std::cout << evaluator.evaluate(&b)<<std::endl;
+//    exit(-1);
+//
 //    bb_init();
 //    psqt_init();
 //

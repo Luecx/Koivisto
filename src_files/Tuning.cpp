@@ -150,9 +150,11 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
 
         // compute the initial error
         er = computeError(K, threads);
-
+        
         for (int param = 0; param < count; param++) {
-
+            
+            std::cout << "\r" << "param: " << param << std::flush;
+            
             for (int phase = 0; phase < 2; phase++) {
                 // std::cout << phase << " " << param << " " << noChangeCount[phase][param] << " " <<
                 // noChangeBound[phase][param] << std::endl;
