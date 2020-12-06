@@ -39,7 +39,7 @@ void uci_loop(bool bench) {
 
     bb_init();
     search_init(16);
-    eval_init();
+    psqt_init();
 
     if (bench) {
         uci_bench();

@@ -49,7 +49,7 @@ add_executable(Koivisto
         src_files/eun/data/CompactInput.cpp
         src_files/eun/data/CompactInput.h
         src_files/eun/data/Weight.cpp
-        src_files/eun/data/Weight.h)
+        src_files/eun/data/Weight.h src_files/psqt.cpp src_files/psqt.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAJOR_VERSION=4")

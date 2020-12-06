@@ -175,7 +175,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
 
                 // adjust the param up a little
                 evalScore[param] += changer;
-                eval_init();
+                psqt_init();
 
                 // compute the error after changing the value
                 double upper = computeError(K, threads);
@@ -184,7 +184,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
                 // for this, we need to subtract the change twice
                 if (upper >= er) {
                     evalScore[param] -= 2 * changer;
-                    eval_init();
+                    psqt_init();
 
                     // compute the error after lowering the variable
                     double lower = computeError(K, threads);
@@ -192,7 +192,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
                     // if we didnt improve either, reset the variable back to the initial state
                     if (lower >= er) {
                         evalScore[param] += changer;
-                        eval_init();
+                        psqt_init();
                         improved = false;
                     } else {
                         improved = true;
@@ -279,7 +279,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
                 
                 // adjust the param up a little
                 *evalScore[param] += changer;
-                eval_init();
+                psqt_init();
                 
                 // compute the error after changing the value
                 double upper = computeError(K, threads);
@@ -288,7 +288,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
                 // for this, we need to subtract the change twice
                 if (upper >= er) {
                     *evalScore[param] -= 2 * changer;
-                    eval_init();
+                    psqt_init();
                     
                     // compute the error after lowering the variable
                     double lower = computeError(K, threads);
@@ -296,7 +296,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
                     // if we didnt improve either, reset the variable back to the initial state
                     if (lower >= er) {
                         *evalScore[param] += changer;
-                        eval_init();
+                        psqt_init();
                         improved = false;
                     } else {
                         improved = true;
