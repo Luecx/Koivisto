@@ -247,9 +247,9 @@ void psqt_init() {
             // kings
             for(Square sq = 0; sq < 64; sq++){
                 piece_kk_square_tables[wKingSq][bKingSq][WHITE_KING][sq]
-                    = + piece_square_table[KING][!sameSideCastle][pst_index_white(sq, wKSide)];
+                    = + piece_square_table[KING][0][pst_index_white_s(sq)];
                 piece_kk_square_tables[wKingSq][bKingSq][BLACK_KING][sq]
-                    = - piece_square_table[KING][!sameSideCastle][pst_index_black(sq, bKSide)];
+                    = - piece_square_table[KING][0][pst_index_black_s(sq)];
             }
             
         }

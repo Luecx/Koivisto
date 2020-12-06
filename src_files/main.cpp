@@ -39,7 +39,8 @@ void main_tune_features() {
     using namespace tuning;
 
 //    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
-    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
+    std::cout << computeError(3) << std::endl;
     loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
 //    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
 //    bb_init();
 //    psqt_init();
 //
-//    Board b{"8/4k3/8/3p4/8/2K2P2/8/8 w - - 0 1"};
+//    Board b{"8/2n2k2/1q1r3p/p1b1pPP1/1RPQ1B2/3K1n2/4N2R/8 w - - 0 1"};
 //    Evaluator evaluator{};
 //    std::cout << evaluator.evaluate(&b)<<std::endl;
 //    exit(-1);
