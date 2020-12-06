@@ -716,32 +716,27 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
 
-                // **********************************************************************************************************
+        // **********************************************************************************************************
         // probability cut:
         // if the evaluation from a very shallow search after doing a capture is still above FUTILIT_MARGIN+BETA
         // we asume well get a cutoff anyway as the capture is likely good
         // **********************************************************************************************************
-        if (depth >= 5 && !(hashMove && en.type == ALL_NODE && en.score < beta)) {
+        Score betaCut = beta + FUTILITY_MARGIN;
+        if (depth >= 5 && !(hashMove && en.type == ALL_NODE && en.depth >= depth - 3 && en.score < betaCut)) {
             // we reuse movelists for memory reasons.
             MoveList* mv = sd->moves[ply];
             b->getNonQuietMoves(mv);
-            
+
             // create a moveorderer to sort the moves during the search
             MoveOrderer moveOrderer {};
             moveOrderer.setMovesQSearch(mv, b);
-            Score betaCut = beta + FUTILITY_MARGIN;
 
             for (int i = 0; i < mv->getSize(); i++) {
-                
+
                 Move m = moveOrderer.next();
 
                 if (!b->isLegal(m))
                     continue;
-
-
-                if ((getCapturedPiece(m) % 6) <= (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) <= 0)
-                    continue;
-                    
 
                 b->move(m);
 
@@ -756,6 +751,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     return score;
             }
         }
+
+
 
     }
     
