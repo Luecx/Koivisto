@@ -736,13 +736,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
                 if (!b->isLegal(m))
                     continue;
+                
+                if ((getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) < 0)
+                    continue;
 
                 b->move(m);
 
                 Score score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
 
                 if (score >= betaCut)
-                    score = -pvSearch(b, -betaCut, -betaCut+1, depth-4, ply+2, td, 0);
+                    score = -pvSearch(b, -betaCut, -betaCut+1, depth-4, ply+1, td, 0);
 
                 b->undoMove();
 
