@@ -729,13 +729,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // create a moveorderer to sort the moves during the search
             MoveOrderer moveOrderer {};
             moveOrderer.setMovesQSearch(mv, b);
-            Score betaCut = beta + 50;
+            Score betaCut = beta + FUTILITY_MARGIN;
 
             for (int i = 0; i < mv->getSize(); i++) {
 
                 Move m = moveOrderer.next();
 
                 if (!b->isLegal(m))
+                    continue;
+
+                if (!inCheck && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) < 0)
                     continue;
 
                 b->move(m);
