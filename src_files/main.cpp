@@ -34,17 +34,16 @@ using namespace move;
 void main_tune_features() {
     psqt_init();
     bb_init();
+    eval_init();
     Evaluator* evaluator = new Evaluator();
 
     using namespace tuning;
 
 //    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
-    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
-    std::cout << computeError(3) << std::endl;
+    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
     loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-//    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
-    double K = 2.5;
+    auto K = tuning::computeK(2.86681, 200, 1e-7, 16);
     
     for (int i = 0; i < 100; i++) {
 
@@ -52,17 +51,11 @@ void main_tune_features() {
                   << "] ----------------------------------------------" << std::endl;
         
             
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][0]),64,10,3,24);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,24);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,24);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]),225,10,3,24);
-        
-        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
-        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
-        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
-        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
-//        std::cout << tuning::optimisePSTBlackBox(K, &piece_square_table[0][0], 225, 100, 3, 24) << std::endl;
-//
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][0]),64,10,3,16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]),225,10,3,16);
+       
         for (int s = 0; s < 64; s++) {
             if (s%8 == 0) std::cout << std::endl;
             std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][0][s]) << "," << setw(5)
@@ -117,9 +110,10 @@ void main_tune_features() {
 int main(int argc, char* argv[]) {
     
 //    bb_init();
+//    eval_init();
 //    psqt_init();
 //
-//    Board b{"8/2n2k2/1q1r3p/p1b1pPP1/1RPQ1B2/3K1n2/4N2R/8 w - - 0 1"};
+//    Board b{"8/3k4/1p6/8/6K1/8/8/8 w - - 0 1"};
 //    Evaluator evaluator{};
 //    std::cout << evaluator.evaluate(&b)<<std::endl;
 //    exit(-1);

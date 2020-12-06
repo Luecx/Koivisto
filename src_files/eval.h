@@ -36,6 +36,8 @@ extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
 
 
+void eval_init();
+
 class Evaluator {
     public:
 

@@ -252,13 +252,15 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
         int skipped   = 0;
         int changed   = 0;
         int unchanged = 0;
+    
+    
+        // compute the initial error
+        er = computeError(K, threads);
         
         for (int param = 0; param < count; param++) {
             
             
             for (int phase = 0; phase < 2; phase++) {
-                // std::cout << phase << " " << param << " " << noChangeCount[phase][param] << " " <<
-                // noChangeBound[phase][param] << std::endl;
                 
                 // if we should skip this value, increment the noChangeCount for this variable
                 if (noChangeCount[phase][param] < noChangeBound[phase][param]) {
@@ -275,9 +277,6 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
                 
                 // keep track if the variable improved in this iteration
                 bool improved = false;
-                
-                // compute the initial error
-                er = computeError(K, threads);
                 
                 // adjust the param up a little
                 *evalScore[param] += changer;
@@ -342,7 +341,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
 
 double tuning::computeError(double K, int threads) {
     double score = 0;
-
+    
     auto eval_part = [](int threadId, int threads, double K, double* resultTarget) {
         int start = training_entries.size() * threadId / threads;
         int end   = training_entries.size() * (threadId + 1) / threads;
@@ -361,6 +360,9 @@ double tuning::computeError(double K, int threads) {
         resultTarget[threadId] = score;
     };
 
+
+//#pragma omp parallel for schedule(static, NN_BATCH_SIZE / 1) num_threads(1) reduction(+:lossSum)
+    
     double                    resultTargets[threads];
     double*                   resultPointer = &resultTargets[0];
     std::vector<std::thread*> runningThreads {};
@@ -376,7 +378,7 @@ double tuning::computeError(double K, int threads) {
     for (int i = 0; i < threads; i++) {
         score += resultPointer[i];
     }
-
+    
     return score / training_entries.size();
 }
 
