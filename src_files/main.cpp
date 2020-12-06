@@ -31,29 +31,31 @@ using namespace std;
 using namespace bb;
 using namespace move;
 
-//void main_tune_features() {
-//    psqt_init();
-//    bb_init();
-//    Evaluator* evaluator = new Evaluator();
-//
-//    using namespace tuning;
-//
-////    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
-//    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+void main_tune_features() {
+    psqt_init();
+    bb_init();
+    Evaluator* evaluator = new Evaluator();
+
+    using namespace tuning;
+
+//    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
+    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
 //    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
 //    loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-//    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
-//
-//    for (int i = 0; i < 1; i++) {
-//
-//        std::cout << "--------------------------------------------------- [" << i
-//                  << "] ----------------------------------------------" << std::endl;
-//
-//        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
-//        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
-//        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
-//        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
-//        std::cout << tuning::optimisePSTBlackBox(K, &psqt_king_pawn[0], 225, 100, 3, 24) << std::endl;
+    auto K = tuning::computeK(2.86681, 200, 1e-7, 24);
+
+    for (int i = 0; i < 1; i++) {
+
+        std::cout << "--------------------------------------------------- [" << i
+                  << "] ----------------------------------------------" << std::endl;
+        
+        
+        std::cout << tuning::computeError(3, 24)<< std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pieceScores, 6, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, &evfeatures[21], 2, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, pinnedEval, 15, 1) << std::endl;
+        // std::cout << tuning::optimisePSTBlackBox(evaluator, K, hangingEval, 5, 1) << std::endl;
+//        std::cout << tuning::optimisePSTBlackBox(K, &piece_square_table[0][0], 225, 100, 3, 24) << std::endl;
 //
 //        for (int s = 0; s < 225; s++) {
 //            if (s%15 == 0) std::cout << std::endl;
@@ -61,38 +63,39 @@ using namespace move;
 //                      << EgScore(psqt_king_pawn[s]) << "), ";
 //        }
 //        std::cout << std::endl;
-//
-//        /*for (Square s = 0; s < 23; s++) {
-//            std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s])
-//                      << "), ";
-//            std::cout << std::endl;
-//        }
-//        std::cout << std::endl;
-//*/
-//        /*for (Square s = 0; s < 15; s++) {
-//            std::cout << "M(" << setw(5) << MgScore(pinnedEval[s]) << "," << setw(5) << EgScore(pinnedEval[s]) << "), ";
-//            std::cout << std::endl;
-//        }
-//        std::cout << std::endl;
-//        for (Square s = 0; s < 5; s++) {
-//            std::cout << "M(" << setw(5) << MgScore(hangingEval[s]) << "," << setw(5) << EgScore(hangingEval[s])
-//                      << "), ";
-//            std::cout << std::endl;
-//        }
-//        std::cout << std::endl;*/
-//    }
-//
-//    delete evaluator;
-//    bb_cleanUp();
-//}
+
+        /*for (Square s = 0; s < 23; s++) {
+            std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s])
+                      << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+*/
+        /*for (Square s = 0; s < 15; s++) {
+            std::cout << "M(" << setw(5) << MgScore(pinnedEval[s]) << "," << setw(5) << EgScore(pinnedEval[s]) << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        for (Square s = 0; s < 5; s++) {
+            std::cout << "M(" << setw(5) << MgScore(hangingEval[s]) << "," << setw(5) << EgScore(hangingEval[s])
+                      << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;*/
+    }
+
+    delete evaluator;
+    bb_cleanUp();
+}
 
 int main(int argc, char* argv[]) {
-
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+    
+//    bb_init();
+//    psqt_init();
+//
+//    Board b{"1k6/8/3p4/8/8/3P4/8/K7 w - - 0 1"};
+//    Evaluator evaluator{};
+//    std::cout << evaluator.evaluate(&b)<<std::endl;
     
     /**********************************************************************************
      *                                  T U N I N G                                   *
@@ -100,7 +103,7 @@ int main(int argc, char* argv[]) {
 
     // main_tune_pst_bb(PAWN);
     //    psqt_init();
-//     main_tune_features();
+     main_tune_features();
     // main_tune_pst();
     // main_tune_features_bb();
 
