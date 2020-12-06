@@ -721,8 +721,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the evaluation from a very shallow search after doing a capture is still above FUTILIT_MARGIN+BETA
         // we asume well get a cutoff anyway as the capture is likely good
         // **********************************************************************************************************
-        Score betaCut = beta + FUTILITY_MARGIN;
-        if (depth >= 5 && !(hashMove && en.type == ALL_NODE && en.depth >= depth - 3 && en.score < betaCut)) {
+        if (depth >= 5) {
             // we reuse movelists for memory reasons.
             MoveList* mv = sd->moves[ply];
             b->getNonQuietMoves(mv);
@@ -730,6 +729,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // create a moveorderer to sort the moves during the search
             MoveOrderer moveOrderer {};
             moveOrderer.setMovesQSearch(mv, b);
+            Score betaCut = beta + 50;
 
             for (int i = 0; i < mv->getSize(); i++) {
 
@@ -740,7 +740,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
                 b->move(m);
 
-                Score score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
+                Score score = -pvSearch(b, -betaCut, -betaCut+1, 0, ply+1, td, 0);
 
                 if (score >= betaCut)
                     score = -pvSearch(b, -betaCut, -betaCut+1, depth-4, ply+1, td, 0);
@@ -751,10 +751,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     return score;
             }
         }
-
-
-
     }
+
     
     // **********************************************************************************************************
     // internal iterative deepening by Ed Schröder::
