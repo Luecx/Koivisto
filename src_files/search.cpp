@@ -852,7 +852,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
         // furthermore no queen promotions are reduced
-        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m))
                      || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
@@ -866,6 +866,14 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
+            if (lmr > MAX_PLY) {
+                lmr = 0;
+            }
+            if (lmr > depth - 2) {
+                lmr = depth - 2;
+            }
+        } else if (legalMoves > 0 && depth > 2 && staticExchangeEval < 0) {
+            lmr -= sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
