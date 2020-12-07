@@ -48,6 +48,7 @@ typedef uint8_t Color;
 
 typedef uint8_t Depth;
 typedef int16_t Score;
+typedef int32_t EvalScore;
 
 constexpr Depth ONE_PLY          = 1;
 constexpr Depth MAX_PLY          = 128;
