@@ -51,30 +51,30 @@ void main_tune_features() {
                   << "] ----------------------------------------------" << std::endl;
         
             
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][0]),64,10,3,16);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]),225,10,3,16);
+//        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][0]),64,10,3,16);
+//        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
+//        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]),225,100,3,16);
        
-        for (int s = 0; s < 64; s++) {
-            if (s%8 == 0) std::cout << std::endl;
-            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][0][s]) << "," << setw(5)
-                      << EgScore(piece_square_table[0][0][s]) << "), ";
-           
-        }
-        std::cout << std::endl;
-        for (int s = 0; s < 64; s++) {
-            if (s%8 == 0) std::cout << std::endl;
-            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][1][s]) << "," << setw(5)
-                      << EgScore(piece_square_table[0][1][s]) << "), ";
-        }
-        std::cout << std::endl;
-        for (int s = 0; s < 225; s++) {
-            if (s%15 == 0) std::cout << std::endl;
-            std::cout << "M(" << setw(5) << MgScore(piece_our_king_square_table[0][s]) << "," << setw(5)
-                      << EgScore(piece_our_king_square_table[0][s]) << "), ";
-        }
-        std::cout << std::endl;
+//        for (int s = 0; s < 64; s++) {
+//            if (s%8 == 0) std::cout << std::endl;
+//            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][0][s]) << "," << setw(5)
+//                      << EgScore(piece_square_table[0][0][s]) << "), ";
+//
+//        }
+//        std::cout << std::endl;
+//        for (int s = 0; s < 64; s++) {
+//            if (s%8 == 0) std::cout << std::endl;
+//            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][1][s]) << "," << setw(5)
+//                      << EgScore(piece_square_table[0][1][s]) << "), ";
+//        }
+//        std::cout << std::endl;
+//        for (int s = 0; s < 225; s++) {
+//            if (s%15 == 0) std::cout << std::endl;
+//            std::cout << "M(" << setw(5) << MgScore(piece_our_king_square_table[0][s]) << "," << setw(5)
+//                      << EgScore(piece_our_king_square_table[0][s]) << "), ";
+//        }
+//        std::cout << std::endl;
         for (int s = 0; s < 225; s++) {
             if (s%15 == 0) std::cout << std::endl;
             std::cout << "M(" << setw(5) << MgScore(piece_opp_king_square_table[0][s]) << "," << setw(5)
