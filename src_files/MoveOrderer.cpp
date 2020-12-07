@@ -38,28 +38,33 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
 
         if (sameMove(m, hashMove)) {
             moves->scoreMove(i, 1e6);
-        } else if (isCapture(m) && board->staticExchangeEvaluation(m) >= 0) {
+        } else if (isCapture(m)) {
             // add mvv lva score here
+            Score     SEE    = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
                                + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
-            if (mvvLVA == 0) {
-                moves->scoreMove(i, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+            if (SEE >= 0) {
+                if (mvvLVA == 0) {
+                    moves->scoreMove(i, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+                } else {
+                    moves->scoreMove(i, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+                }
             } else {
-                moves->scoreMove(i, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+                moves->scoreMove(i, 10000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
             }
         } else if (isPromotion(m)) {
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
             moves->scoreMove(i, 40000 + mvvLVA + promotionPiece(m));
         } else if (sd->isKiller(m, ply, board->getActivePlayer())) {
             moves->scoreMove(i, 30000);
-        } else if (sd->isCounter(m, board->getPreviousMove(),board->getActivePlayer())) {
+        }else if (sd->isCounter(m, board->getPreviousMove(),board->getActivePlayer())) {
             moves->scoreMove(i, 29999);
-        }
-        else {
+        } else {
             moves->scoreMove(i, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
         }
     }
 }
+
 
 void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b) {
     this->moves   = p_moves;
@@ -74,7 +79,6 @@ void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b) {
         moves->scoreMove(i, 240 + mvvLVA);
     }
 }
-
 bool MoveOrderer::hasNext() { return counter < moves->getSize(); }
 
 move::Move MoveOrderer::next() {
