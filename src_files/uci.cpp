@@ -385,6 +385,14 @@ void uci_set_option(std::string& name, std::string& value) {
 
         threadCount = count;
     }
+    else if (name == "HISTORY_CUTOFF") {
+        LMR_DIV = stoi(value);
+        initLmr();
+    }
+    else if (name == "HISTORY_DIV") {
+        LMR_DIV = stoi(value);
+        initLmr();
+    }
 }
 
 /**

@@ -43,6 +43,8 @@ int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
+int HISTORY_DIV      = 256;
+int HISTORY_CUTOFF   = 200;
 
 void initLmr() {
     int d, m;
@@ -788,7 +790,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < HISTORY_CUTOFF-30*(depth*depth)){
                     continue;
                 }
             }
@@ -860,7 +862,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / HISTORY_DIV;
             lmr += !isImproving;
             lmr -= pv;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
