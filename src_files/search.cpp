@@ -728,7 +728,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             // create a moveorderer to sort the moves during the search
             MoveOrderer moveOrderer {};
-            moveOrderer.setMovesQSearch(mv, b);
+            moveOrderer.setMovesPbCutSearch(mv, b, sd);
             Score betaCut = beta + FUTILITY_MARGIN;
 
             for (int i = 0; i < mv->getSize(); i++) {

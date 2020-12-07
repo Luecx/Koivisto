@@ -77,6 +77,21 @@ void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b) {
     }
 }
 
+void MoveOrderer::setMovesPbCutSearch(move::MoveList* p_moves, Board* b, SearchData* sd) {
+    this->moves   = p_moves;
+    this->counter = 0;
+    this->skip    = false;
+
+    for (int i = 0; i < moves->getSize(); i++) {
+
+        move::Move m = moves->getMove(i);
+        
+        Score     SEE    = b->staticExchangeEvaluation(m);
+
+        moves->scoreMove(i, 10000 + SEE);
+    }
+}
+
 bool MoveOrderer::hasNext() { return counter < moves->getSize(); }
 
 move::Move MoveOrderer::next() {

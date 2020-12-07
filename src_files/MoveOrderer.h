@@ -41,6 +41,8 @@ class MoveOrderer {
 
     void setMovesQSearch(move::MoveList* p_moves, Board* b);
 
+    void setMovesPbCutSearch(move::MoveList* p_moves, Board* b, SearchData* sd);
+
     bool hasNext();
 
     move::Move next();
