@@ -23,9 +23,6 @@
 #include "Board.h"
 #include "psqt.h"
 
-
-
-
 extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
 
@@ -35,8 +32,6 @@ extern EvalScore  pinnedEval[15];
 extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
 
-
-void eval_init();
 
 class Evaluator {
     public:

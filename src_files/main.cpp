@@ -34,7 +34,6 @@ using namespace move;
 void main_tune_features() {
     psqt_init();
     bb_init();
-    eval_init();
     Evaluator* evaluator = new Evaluator();
 
     using namespace tuning;
