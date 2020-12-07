@@ -918,7 +918,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
             // also set this move as a killer move into the history
-            if (!isCapture(m)) sd->setKiller(m, ply, b->getActivePlayer());
+            sd->setKiller(m, ply, b->getActivePlayer());
+            sd->setCounter(m, b->getPreviousMove() , b->getActivePlayer());
+            
             // if the move is not a capture, we also update counter move history tables and history scores.
             
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
