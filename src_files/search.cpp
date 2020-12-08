@@ -52,7 +52,7 @@ void initLmr() {
             lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
 }
 
-int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
+int lmp[2][8] = {{1, 2, 3, 4, 6, 8, 13, 18}, {2, 3, 4, 6, 8, 12, 20, 30}};
 
 /**
  * =================================================================================
@@ -591,7 +591,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     if (depth == 0 || depth > MAX_PLY) {
         // Don't drop into qsearch if in check
         if (inCheck) {
-            depth++;
+            depth=0;
         } else {
             return qSearch(b, alpha, beta, ply, td);
         }
@@ -879,7 +879,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && b->isInCheck(b->getActivePlayer()) && staticExchangeEval > 0)
             extension = 1;
         
         // principal variation search recursion.
