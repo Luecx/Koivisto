@@ -38,10 +38,10 @@ void main_tune_features() {
 
     using namespace tuning;
 
-    loadPositionFile("../resources/other/quiet-labeled2.epd", 1000000);
-    //loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
-    //loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
-    //loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+//    loadPositionFile("../resources/other/quiet-labeled2.epd", 1000000);
+    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
     auto K = tuning::computeK(2.86681, 200, 1e-7, 16);
 
     for (int i = 0; i < 100; i++) {
@@ -54,8 +54,8 @@ void main_tune_features() {
         //        tuning::optimisePSTBlackBox(K,
         //        reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
         //tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]), 225, 100, 3, 16);
-        tuning::optimisePSTBlackBox(K, &evfeatures[13], 12, 1, 1, 2);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(&piece_values[3]), 1, 1, 1, 2);
+        tuning::optimisePSTBlackBox(K, &evfeatures[0], 32, 1, 1, 16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(&piece_values[3]), 5, 1, 1, 16);
         //        for (int s = 0; s < 64; s++) {
         //            if (s%8 == 0) std::cout << std::endl;
         //            std::cout << "M(" << setw(5) << MgScore(piece_square_table[0][0][s]) << "," << setw(5)
@@ -84,7 +84,7 @@ void main_tune_features() {
         std::cout << std::endl;
         //        std::cout << std::endl;
 */
-        for (Square s = 0; s < 25; s++) {
+        for (Square s = 0; s < 32; s++) {
             std::cout << "M(" << setw(5) << MgScore(*evfeatures[s]) << "," << setw(5) << EgScore(*evfeatures[s])
                       << "), ";
             std::cout << std::endl;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
 
     // main_tune_pst_bb(PAWN);
     //    psqt_init();
-    //main_tune_features();
+//    main_tune_features();
     // main_tune_pst();
     // main_tune_features_bb();
 

@@ -79,38 +79,6 @@ EvalScore bishop_pawn_same_color_table_e[9]{
     M(  -33,  -21),
 };
 
-EvalScore SIDE_TO_MOVE                  = M(   10,   16);
-EvalScore PAWN_STRUCTURE                = M(    9,   12);
-EvalScore PAWN_PASSED                   = M(    6,   44);
-EvalScore PAWN_ISOLATED                 = M(   -7,  -10);
-EvalScore PAWN_DOUBLED                  = M(    2,   -6);
-EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -4,  -21);
-EvalScore PAWN_BACKWARD                 = M(  -13,    0);
-EvalScore PAWN_OPEN                     = M(    9,   -5);
-EvalScore PAWN_BLOCKED                  = M(   -9,  -16);
-EvalScore KNIGHT_OUTPOST                = M(   25,   17);
-EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -6,    1);
-EvalScore ROOK_OPEN_FILE                = M(   34,   -6);
-EvalScore ROOK_HALF_OPEN_FILE           = M(   -2,   -4);
-EvalScore ROOK_KING_LINE                = M(    2,   -9);
-EvalScore ROOK_KING_LINE_HALF           = M(   15,    0);
-EvalScore ROOK_KING_LINE_HALF2          = M(    6,    1);
-EvalScore ROOK_KING_LINE_OPEN           = M(    6,   -1);
-EvalScore ROOK_KING_FLANK               = M(    0,    0);       
-EvalScore ROOK_KING_FLANK_HALF          = M(   15,   -2); 
-EvalScore ROOK_KING_FLANK_HALF2         = M(   14,    8);
-EvalScore ROOK_KING_FLANK_OPEN          = M(    1,   -2);
-EvalScore ROOK_KING_CENT                = M(    2,    2);
-EvalScore ROOK_KING_CENT_HALF           = M(    5,   -1); 
-EvalScore ROOK_KING_CENT_HALF2          = M(   -1,    1);
-EvalScore ROOK_KING_CENT_OPEN           = M(    2,    0);
-EvalScore BISHOP_DOUBLED                = M(   40,   55);
-EvalScore BISHOP_FIANCHETTO             = M(   -3,    9);
-EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    4,  -27);
-EvalScore KING_CLOSE_OPPONENT           = M(   -9,   49);
-EvalScore KING_PAWN_SHIELD              = M(   27,    5);
-EvalScore CASTLING_RIGHTS               = M(   25,   -8);
-EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
@@ -127,6 +95,40 @@ EvalScore kingSafetyTable[100] {
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
 };
+
+EvalScore SIDE_TO_MOVE                  = M(   11,   13);
+EvalScore PAWN_STRUCTURE                = M(   10,    7);
+EvalScore PAWN_PASSED                   = M(    7,   44);
+EvalScore PAWN_ISOLATED                 = M(   -6,  -12);
+EvalScore PAWN_DOUBLED                  = M(    0,   -1);
+EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -6,  -20);
+EvalScore PAWN_BACKWARD                 = M(  -11,    0);
+EvalScore PAWN_OPEN                     = M(    8,   -1);
+EvalScore PAWN_BLOCKED                  = M(   -7,  -19);
+EvalScore KNIGHT_OUTPOST                = M(   23,   21);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -8,    3);
+EvalScore ROOK_OPEN_FILE                = M(   15,   -2);
+EvalScore ROOK_HALF_OPEN_FILE           = M(    0,   -4);
+EvalScore ROOK_KING_LINE                = M(  -13,  -11);
+EvalScore ROOK_KING_LINE_HALF           = M(   23,   -3);
+EvalScore ROOK_KING_LINE_HALF2          = M(   19,   -7);
+EvalScore ROOK_KING_LINE_OPEN           = M(    5,    5);
+EvalScore ROOK_KING_FLANK               = M(    0,    0);       
+EvalScore ROOK_KING_FLANK_HALF          = M(   25,    0);
+EvalScore ROOK_KING_FLANK_HALF2         = M(   13,    8);
+EvalScore ROOK_KING_FLANK_OPEN          = M(   -8,   -6);
+EvalScore ROOK_KING_CENT                = M(    2,    2);
+EvalScore ROOK_KING_CENT_HALF           = M(   13,   -5);
+EvalScore ROOK_KING_CENT_HALF2          = M(    3,    5);
+EvalScore ROOK_KING_CENT_OPEN           = M(   -5,   -4);
+EvalScore BISHOP_DOUBLED                = M(   21,   78);
+EvalScore BISHOP_FIANCHETTO             = M(   -7,    9);
+EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    4);
+EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    3,  -27);
+EvalScore KING_CLOSE_OPPONENT           = M(  -18,   40);
+EvalScore KING_PAWN_SHIELD              = M(   27,    5);
+EvalScore CASTLING_RIGHTS               = M(   25,   -5);
+
 
 
 EvalScore* evfeatures[] {
