@@ -8,7 +8,7 @@ EvalScore piece_square_tables[64][64][12][64]{};
 
 // indexed by piece
 EvalScore piece_values[6] = {
-    M(90, 104), M(463, 326), M(474, 288), M(577, 594), M(1359, 1121), M(0, 0),
+    M(90, 104), M(463, 326), M(474, 288), M(572, 602), M(1359, 1121), M(0, 0),
 };
 
 

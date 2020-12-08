@@ -92,7 +92,18 @@ EvalScore KNIGHT_OUTPOST                = M(   25,   17);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -6,    1);
 EvalScore ROOK_OPEN_FILE                = M(   34,   -6);
 EvalScore ROOK_HALF_OPEN_FILE           = M(   -2,   -4);
-EvalScore ROOK_KING_LINE                = M(   20,    8);
+EvalScore ROOK_KING_LINE                = M(    2,   -9);
+EvalScore ROOK_KING_LINE_HALF           = M(   15,    0);
+EvalScore ROOK_KING_LINE_HALF2          = M(    6,    1);
+EvalScore ROOK_KING_LINE_OPEN           = M(    6,   -1);
+EvalScore ROOK_KING_FLANK               = M(    0,    0);       
+EvalScore ROOK_KING_FLANK_HALF          = M(   15,   -2); 
+EvalScore ROOK_KING_FLANK_HALF2         = M(   14,    8);
+EvalScore ROOK_KING_FLANK_OPEN          = M(    1,   -2);
+EvalScore ROOK_KING_CENT                = M(    2,    2);
+EvalScore ROOK_KING_CENT_HALF           = M(    5,   -1); 
+EvalScore ROOK_KING_CENT_HALF2          = M(   -1,    1);
+EvalScore ROOK_KING_CENT_OPEN           = M(    2,    0);
 EvalScore BISHOP_DOUBLED                = M(   40,   55);
 EvalScore BISHOP_FIANCHETTO             = M(   -3,    9);
 EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    4,  -27);
@@ -134,18 +145,29 @@ EvalScore* evfeatures[] {
     
     &ROOK_OPEN_FILE,
     &ROOK_HALF_OPEN_FILE,
-    &ROOK_KING_LINE,                // 13
+    &ROOK_KING_LINE,                
+    &ROOK_KING_LINE_HALF,   
+    &ROOK_KING_LINE_HALF2,
+    &ROOK_KING_LINE_OPEN,           // 16
+    &ROOK_KING_FLANK,    
+    &ROOK_KING_FLANK_HALF,
+    &ROOK_KING_FLANK_HALF2,
+    &ROOK_KING_FLANK_OPEN,
+    &ROOK_KING_CENT,
+    &ROOK_KING_CENT_HALF, 
+    &ROOK_KING_CENT_HALF2,
+    &ROOK_KING_CENT_OPEN,
     
     &BISHOP_DOUBLED,
     &BISHOP_FIANCHETTO,
-    &BISHOP_PIECE_SAME_SQUARE_E,    // 17
+    &BISHOP_PIECE_SAME_SQUARE_E,    // 19
     
-    &QUEEN_DISTANCE_ENEMY_KING,     // 18
+    &QUEEN_DISTANCE_ENEMY_KING,     // 20
     
     &KING_CLOSE_OPPONENT,
-    &KING_PAWN_SHIELD,              // 20
+    &KING_PAWN_SHIELD,              // 22
     
-    &CASTLING_RIGHTS,               // 21
+    &CASTLING_RIGHTS,               // 23
 
     
 };
@@ -582,10 +604,70 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    // clang-format off
-    featureScore += ROOK_KING_LINE * (
-            + bitCount(lookUpRookAttack(blackKingSquare, occupied) & b->getPieces(WHITE, ROOK))
-            - bitCount(lookUpRookAttack(whiteKingSquare, occupied) & b->getPieces(BLACK, ROOK)));
+    if (b->getPieces()[WHITE_ROOK]||b->getPieces()[BLACK_ROOK]){
+
+        U64 bk = FILES[fileIndex(blackKingSquare)];
+        U64 wk = FILES[fileIndex(whiteKingSquare)];
+        // clang-format off
+        featureScore += ROOK_KING_LINE * (
+                + bitCount(bk & b->getPieces(WHITE, ROOK))
+                - bitCount(wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_LINE_HALF * (
+                + bitCount(openFilesWhite & bk & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesBlack & wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_LINE_HALF2 * (
+                + bitCount(openFilesBlack & bk & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesWhite & wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_LINE_OPEN * (
+            + bitCount(openFiles & bk & b->getPieces(WHITE, ROOK))
+            - bitCount(openFiles & wk & b->getPieces(BLACK, ROOK)));
+        
+        bk = bKSide ? shiftWest(FILES[fileIndex(blackKingSquare)]) : shiftEast(FILES[fileIndex(blackKingSquare)]);
+        wk = wKSide ? shiftWest(FILES[fileIndex(whiteKingSquare)]) : shiftEast(FILES[fileIndex(whiteKingSquare)]);
+
+        featureScore += ROOK_KING_FLANK_OPEN * (
+                + bitCount(bk & b->getPieces(WHITE, ROOK))
+                - bitCount(wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_FLANK_HALF * (
+                + bitCount(openFilesWhite & bk & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesBlack & wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_FLANK_HALF2 * (
+                + bitCount(openFilesBlack & bk & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesWhite & wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_FLANK_OPEN * (
+            + bitCount(openFiles & bk & b->getPieces(WHITE, ROOK))
+            - bitCount(openFiles & wk & b->getPieces(BLACK, ROOK)));
+        
+        bk = bKSide ? shiftEast(FILES[fileIndex(blackKingSquare)]) : shiftWest(FILES[fileIndex(blackKingSquare)]);
+        wk = wKSide ? shiftEast(FILES[fileIndex(whiteKingSquare)]) : shiftWest(FILES[fileIndex(whiteKingSquare)]);
+
+        featureScore += ROOK_KING_CENT_OPEN * (
+                + bitCount(bk & b->getPieces(WHITE, ROOK))
+                - bitCount(wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_CENT_HALF * (
+                + bitCount(openFilesWhite & bk & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesBlack & wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_CENT_HALF2 * (
+                + bitCount(openFilesBlack & bk & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesWhite & wk & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_KING_CENT_OPEN * (
+            + bitCount(openFiles & FILES[fileIndex(blackKingSquare)] & b->getPieces(WHITE, ROOK))
+            - bitCount(openFiles & FILES[fileIndex(whiteKingSquare)] & b->getPieces(BLACK, ROOK)));
+
+        featureScore += ROOK_OPEN_FILE * (
+                + bitCount(openFiles & b->getPieces(WHITE, ROOK))
+                - bitCount(openFiles & b->getPieces(BLACK, ROOK)));
+        featureScore += ROOK_HALF_OPEN_FILE * (
+                + bitCount(openFilesBlack & ~openFiles & b->getPieces(WHITE, ROOK))
+                - bitCount(openFilesWhite & ~openFiles & b->getPieces(BLACK, ROOK)));
+        // clang-format on
+    }
+    
+
+
+    featureScore += ROOK_KING_LINE_OPEN * (
+            + bitCount(openFiles & FILES[fileIndex(blackKingSquare)] & b->getPieces(WHITE, ROOK))
+            - bitCount(FILES[fileIndex(whiteKingSquare)] & b->getPieces(BLACK, ROOK)));
     featureScore += ROOK_OPEN_FILE * (
             + bitCount(openFiles & b->getPieces(WHITE, ROOK))
             - bitCount(openFiles & b->getPieces(BLACK, ROOK)));
