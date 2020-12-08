@@ -974,7 +974,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
  * @param ply
  * @return
  */
-Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
+Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
     
     // increase the nodes for this thread
     td->nodes++;
@@ -1003,9 +1003,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             }
         }
     }
-    
-    // check if we are currently in check
-    bool inCheck = b->isInCheck(b->getActivePlayer());
     
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
@@ -1050,7 +1047,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     // keping track of the best move for the trasnpositions
     Move  bestMove  = 0;
     Score bestScore = -MAX_MATE_SCORE;
-    
+
     for (int i = 0; i < mv->getSize(); i++) {
         
         Move m = moveOrderer.next();
@@ -1069,7 +1066,9 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             
         b->move(m);
         
-        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td);
+        bool inCheckOpponent = b->isInCheck(b->getActivePlayer());
+
+        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent);
         
         b->undoMove();
         
@@ -1078,7 +1077,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, 1);
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
                 return beta;
             }
             if (score > alpha) {
