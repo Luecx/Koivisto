@@ -1078,7 +1078,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, 0);
+                table->put(zobrist, bestScore, m, ttNodeType, 1);
                 return beta;
             }
             if (score > alpha) {
