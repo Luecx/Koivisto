@@ -23,6 +23,8 @@
 #include "Board.h"
 #include "psqt.h"
 
+#define WHITE_SPACE_MASK 0x000000003C3C3C00
+#define BLACK_SPACE_MASK 0x003C3C3C00000000
 extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
 
