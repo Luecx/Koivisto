@@ -373,6 +373,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 openFilesBlack = ~fillFile(blackPawns);
     U64 openFiles      = openFilesBlack & openFilesWhite;
 
+    U64 wSpace = 0;
+    U64 bSpace = 0;
+
     k = whitePawns;
 
     EvalScore evalScore    = M(0, 0);
@@ -467,7 +470,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         
         mobScore += mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
 
-        featureScore += SPACE * bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite & WHITE_SPACE_MASK);
+        wSpace = attacks & mobilitySquaresWhite & WHITE_SPACE_MASK;
 
         featureScore += KNIGHT_OUTPOST * isOutpost(square, WHITE, blackPawns, whitePawnCover);
         featureScore += KNIGHT_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
@@ -486,7 +489,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         
         mobScore -= mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresBlack)];
 
-        featureScore -= SPACE * bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresBlack & BLACK_SPACE_MASK);
+        bSpace = attacks & mobilitySquaresBlack & BLACK_SPACE_MASK;
 
         featureScore -= KNIGHT_OUTPOST * isOutpost(square, BLACK, whitePawns, blackPawnCover);
         featureScore -= KNIGHT_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
@@ -509,7 +512,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_BISHOP][square];
         
-        featureScore += SPACE * bitCount(attacks & mobilitySquaresWhite & WHITE_SPACE_MASK);
+        wSpace |= attacks & mobilitySquaresWhite & WHITE_SPACE_MASK;
 
         mobScore += mobilityBishop[bitCount(attacks & mobilitySquaresWhite)];
 
@@ -536,7 +539,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_BISHOP][square];
     
-        featureScore -= SPACE * bitCount(attacks & mobilitySquaresBlack & BLACK_SPACE_MASK);
+        bSpace |= attacks & mobilitySquaresBlack & BLACK_SPACE_MASK;
 
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
         
@@ -561,7 +564,10 @@ bb::Score Evaluator::evaluate(Board* b) {
     // clang-format on
     
  
-    
+    featureScore += SPACE * (
+        + bitCount(wSpace)
+        - bitCount(bSpace));
+
     /**********************************************************************************
      *                                  R O O K S                                     *
      **********************************************************************************/
