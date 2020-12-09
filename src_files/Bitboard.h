@@ -35,6 +35,7 @@ namespace bb {
 
 #define mirrorSquare(s) squareIndex(7 - rankIndex(s), fileIndex(s))
 
+
 typedef uint64_t U64;
 typedef int8_t   Square;
 typedef int8_t   Diagonal;
@@ -243,6 +244,9 @@ constexpr U64 CIRCLE_D = 0x1818000000L;
 
 constexpr U64 WHITE_SQUARES = 0x55AA55AA55AA55AA;
 constexpr U64 BLACK_SQUARES = ~WHITE_SQUARES;
+
+constexpr U64 WHITE_SPACE_MASK = 0x000000003C3C3C00;
+constexpr U64 BLACK_SPACE_MASK = 0x003C3C3C00000000;
 
 constexpr U64 CENTER_SQUARES          = CIRCLE_D;
 constexpr U64 CENTER_SQUARES_EXTENDED = CIRCLE_C | CIRCLE_D;
