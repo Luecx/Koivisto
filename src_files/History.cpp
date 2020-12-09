@@ -89,7 +89,7 @@ void SearchData::setKiller(Move move, Depth ply, Color color) { killer[color][pl
 /*
  * Is killer?
  */
-bool SearchData::isKiller(Move move, Depth ply, Color color) { return sameMove(move, killer[color][ply]); }
+bool SearchData::isKiller(Move move, Depth ply, Color color) { return (getSquareTo(killer[color][ply]) == getSquareTo(move) && getSquareFrom(killer[color][ply]) == getSquareFrom(move));}
 
 /*
  * Set historic eval
