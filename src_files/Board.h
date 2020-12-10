@@ -133,6 +133,14 @@ class Board {
     void computeNewRepetition();
 
     public:
+
+    //Tactical elements
+    U64 attacks[MAX_PLY] = {0};
+
+    void setAttacks(Move m, Depth ply, Color side);
+
+    //Get attacks
+
     // the default constructor uses a fen-representation of the board. if nothing is specified, the starting position
     // will be used
     Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");

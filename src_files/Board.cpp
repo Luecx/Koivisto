@@ -1563,6 +1563,36 @@ bool Board::isLegal(Move m) {
     return !isAttacked;
 }
 
+
+void Board::setAttacks(Move m, Depth ply, Color side) {
+    Piece  movingPiece = getMovingPiece(m) % 6;
+    Square squareFrom   = getSquareFrom(m);
+    Square squareTo    = getSquareTo(m);
+    if (movingPiece == KING) {
+        attacks[ply] = KING_ATTACKS[squareTo]&~KING_ATTACKS[squareFrom];
+    } 
+    if (movingPiece == PAWN) {
+        if (side == WHITE){
+            attacks[ply] = shiftNorthWest(ONE<<squareTo & ~FILE_A) | shiftNorthEast(ONE<<squareTo & ~FILE_H);
+        }
+        if (side == BLACK){
+            attacks[ply] = shiftSouthWest(ONE<<squareTo & ~FILE_A) | shiftSouthEast(ONE<<squareTo & ~FILE_H);
+        }
+    } 
+    if (movingPiece == KNIGHT) {
+        attacks[ply] = KNIGHT_ATTACKS[squareTo];
+    }
+    if (movingPiece == BISHOP){
+        attacks[ply] = lookUpBishopAttack(squareTo, m_occupied) &~ lookUpBishopAttack(squareFrom, m_occupied & ~ (ONE << squareTo));
+    }
+    if (movingPiece == ROOK){
+        attacks[ply] = lookUpRookAttack(squareTo, m_occupied) &~ lookUpRookAttack(squareFrom, m_occupied & ~ (ONE << squareTo));
+    }
+    if (movingPiece == QUEEN){
+        attacks[ply] = lookUpRookAttack(squareTo, m_occupied) &~ lookUpRookAttack(squareFrom, m_occupied & ~ (ONE << squareTo)) | lookUpBishopAttack(squareTo, m_occupied) &~ lookUpBishopAttack(squareFrom, m_occupied & ~ (ONE << squareTo));
+    }
+}
+
 /**
  * returns true if castling for the given index is possible.
  * For a reference to the indexing, check Board.h

@@ -564,7 +564,8 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @return
  */
 Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove) {
-    
+
+
     // increment the node counter for the current thread
     td->nodes++;
     
@@ -679,7 +680,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return res;
         }
     }
-    
+
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
         // razoring:
@@ -755,6 +756,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     int legalMoves = 0;
     int quiets     = 0;
     
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
@@ -863,6 +865,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
             lmr -= pv;
+
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
@@ -876,7 +879,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // doing the move
         b->move(m);
-        
+    
+        if (b->getPreviousMove() != 0) {
+            b->setAttacks(b->getPreviousMove(), ply, b->getActivePlayer());
+        }
+
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
