@@ -786,7 +786,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets > lmp[isImproving][depth] && !(ply > 0 && b->attacks[ply-1]&(ONE<<getSquareTo(m)))) {
                     moveOrderer.skip = true;
                     continue;
                 }
@@ -881,13 +881,15 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         b->move(m);
     
         if (b->getPreviousMove() != 0) {
-            b->setAttacks(b->getPreviousMove(), ply, b->getActivePlayer());
+            b->setAttacks(b->getPreviousMove(), ply, !b->getActivePlayer());
         }
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
+
+        //if (!extension && lmr && b->attacks[ply] & KING_ATTACKS[bitscanForward(b->getPieces()[KING+6*b->getActivePlayer()])]) lmr--;
         
         // principal variation search recursion.
         if (legalMoves == 0) {
