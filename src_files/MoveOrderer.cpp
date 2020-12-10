@@ -52,7 +52,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
             } else {
                 moves->scoreMove(i, 10000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
             }
-        } else if (isPromotion(m)) {
+        } else if (getType(m) == QUEEN_PROMOTION) {
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
             moves->scoreMove(i, 40000 + mvvLVA + promotionPiece(m));
         } else if (sd->isKiller(m, ply, board->getActivePlayer())) {
