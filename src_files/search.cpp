@@ -791,7 +791,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth] && !(b->getPreviousMove()!=0 && 
-                    (b->attacks[ply-1]&(ONE<<getSquareFrom(m) && (getMovingPiece(m)%6>getMovingPiece(b->getPreviousMove())%6||getSquareFrom(m)&b->hanging[ply]))))) {
+                    (b->attacks[ply-1]&ONE<<getSquareFrom(m) && (getMovingPiece(m)%6>getMovingPiece(b->getPreviousMove())%6||getSquareFrom(m)&b->hanging[ply])))) {
                     moveOrderer.skip = true;
                     continue;
                 }
