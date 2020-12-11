@@ -222,9 +222,13 @@ bb::Score Evaluator::evaluateTempo(Board* b){
    return MgScore(SIDE_TO_MOVE) * (1 - phase) + EgScore(SIDE_TO_MOVE) * (phase);
 }
 
-EvalScore Evaluator::computeHangingPieces(Board* b) {
+EvalScore Evaluator::computeHangingPieces(Board* b, U64 wOcc, U64 bOcc, int ply) {
     U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
     U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
+
+    if (ply > -1) {
+        b->hanging[ply] = (wOcc & WnotAttacked)|(bOcc&BnotAttacked);
+    }
 
     EvalScore res = M(0, 0);
 
@@ -302,7 +306,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
  * @param b
  * @return
  */
-bb::Score Evaluator::evaluate(Board* b) {
+bb::Score Evaluator::evaluate(Board* b, int ply) {
 
     Score res = 0;
 
@@ -658,7 +662,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     }
     
     
-    EvalScore hangingEvalScore = computeHangingPieces(b);
+    EvalScore hangingEvalScore = computeHangingPieces(b, whiteTeam, blackTeam, ply);
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];

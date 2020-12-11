@@ -137,6 +137,8 @@ class Board {
     //Tactical elements
     U64 attacks[MAX_PLY] = {0};
 
+    U64 hanging[MAX_PLY] = {0};
+
     void setAttacks(Move m, Depth ply, Color side);
 
     //Get attacks
