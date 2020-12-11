@@ -860,10 +860,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
+                     || (getType(m) == QUEEN_PROMOTION))
                     ? 0
                     : lmrReductions[depth][legalMoves];
-        
+
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
@@ -926,8 +926,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
             // also set this move as a killer move into the history
             sd->setKiller(m, ply, b->getActivePlayer());
-            // if the move is not a capture, we also update counter move history tables and history scores.
-            
+            // set the countermove
+            if (b->getPreviousMove()!=0 && !isCapture(m))
+                sd->setCounter(b->getPreviousMove(), m, b->getActivePlayer());
+
+            // we also update counter move history tables and history scores.
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
             
             return beta;
@@ -981,7 +984,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
  * @param ply
  * @return
  */
-Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
+Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
     
     // increase the nodes for this thread
     td->nodes++;
@@ -1010,9 +1013,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             }
         }
     }
-    
-    // check if we are currently in check
-    bool inCheck = b->isInCheck(b->getActivePlayer());
     
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
@@ -1057,7 +1057,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
     // keping track of the best move for the trasnpositions
     Move  bestMove  = 0;
     Score bestScore = -MAX_MATE_SCORE;
-    
+
     for (int i = 0; i < mv->getSize(); i++) {
         
         Move m = moveOrderer.next();
@@ -1076,7 +1076,9 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             
         b->move(m);
         
-        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td);
+        bool inCheckOpponent = b->isInCheck(b->getActivePlayer());
+
+        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent);
         
         b->undoMove();
         
@@ -1085,7 +1087,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td) {
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, 0);
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
                 return beta;
             }
             if (score > alpha) {
