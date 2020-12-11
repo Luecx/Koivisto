@@ -761,6 +761,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     int quiets     = 0;
     
 
+    Move pvKiller = 0;
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
@@ -790,7 +792,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth] && !(b->getPreviousMove()!=0 && 
+                if (depth <= 7 && quiets > lmp[isImproving][depth] && !(b->getPreviousMove()!=0 && getSquareTo(pvKiller) == getSquareFrom(m) &&
                     (b->attacks[ply-1]&ONE<<getSquareFrom(m) && (getMovingPiece(m)%6>getMovingPiece(b->getPreviousMove())%6||getSquareFrom(m)&b->hanging[ply])))) {
                     moveOrderer.skip = true;
                     continue;
@@ -897,6 +899,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
+            pvKiller = sd->killer[b->getActivePlayer()][ply+1];
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
             if (ply == 0) sd->reduce = true;
