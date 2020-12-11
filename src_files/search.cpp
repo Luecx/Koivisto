@@ -848,7 +848,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
-        // compute the lmr based on the depth, the amount of legal moves etc.
+        // compute the lmr based on the depth, thttps://www.youtube.com/watch?v=h1bUZmWEoDQhe amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
         // furthermore no queen promotions are reduced
@@ -863,6 +863,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
             lmr -= pv;
+            if (sd->isKiller(m,ply,b->getActivePlayer())||sd->isCounter(b->getPreviousMove(), m, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
