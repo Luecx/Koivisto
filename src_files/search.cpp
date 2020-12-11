@@ -53,6 +53,21 @@ void initLmr() {
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
             lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+
+    nitpick_assert(lmrReductions[0][0]   == -2147483648, "lexpected mrReductions[0][0]   == -2147483648 but was " << lmrReductions[0][0]);
+    nitpick_assert(lmrReductions[10][0]  == -2147483648, "lexpected mrReductions[10][0]  == -2147483648 but was " << lmrReductions[10][0]);
+    nitpick_assert(lmrReductions[0][10]  == -2147483648, "lexpected mrReductions[0][10]  == -2147483648 but was " << lmrReductions[0][10]);
+
+    nitpick_assert(lmrReductions[1][1]   == 0, "expected lmrReductions[1][1]   == 0 but was " << lmrReductions[1][1]);
+    nitpick_assert(lmrReductions[10][10] == 3, "expected lmrReductions[10][10] == 3 but was " << lmrReductions[10][10]);
+    nitpick_assert(lmrReductions[20][10] == 3, "expected lmrReductions[20][10] == 3 but was " << lmrReductions[20][10]);
+    
+    // for testing the log function possibly returning different values in older hw
+    // disabled for now
+
+    // for(int i = 0; i < 256; i++) {
+    //     printf("log(%d) == %.17g\n", i, log(i));
+    // }
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
