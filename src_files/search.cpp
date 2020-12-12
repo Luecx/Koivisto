@@ -788,7 +788,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 91-30*(depth*depth)){
                     continue;
                 }
             }
@@ -799,7 +799,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -50 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -40 * moveDepth))
                 continue;
         }
         
