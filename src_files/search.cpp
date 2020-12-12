@@ -788,7 +788,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 91-30*(depth*depth)){
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 30-30*(depth*depth)){ // TUNED CUTOFF
                     continue;
                 }
             }
@@ -799,7 +799,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -40 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
         
@@ -860,7 +860,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 80;
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 81; // TUNED DIV
             lmr += !isImproving;
             lmr -= pv;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
