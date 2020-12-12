@@ -607,6 +607,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
+    // Null move refufation move used in lmp
+    Move        nmRef         = 0;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
@@ -710,6 +712,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
+            nmRef = sd->killer[b->getActivePlayer()][ply+1];
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -784,11 +787,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets > lmp[isImproving][depth] && !(nmRef && getSquareTo(nmRef)==getSquareFrom(m))) {
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
+                if (!(nmRef && getSquareTo(nmRef)==getSquareFrom(m)) && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
                     continue;
                 }
             }
