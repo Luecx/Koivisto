@@ -44,17 +44,17 @@ using namespace bb;
 #define PSQT(wKing, bKing, piece, square) piece_kk_square_tables[wKing][bKing][piece][square]
 
 // indexed by piece
-extern EvalScore piece_values[6];
+extern EvalScore4i piece_values[6];
 
 // indexed by piece, relation to king
 extern EvalScore4i piece_our_king_square_table[5][15*15];
 extern EvalScore4i piece_opp_king_square_table[5][15*15];
 
 // indexed by piece, sameSideCastle, square
-extern EvalScore piece_square_table[6][2][64];
+extern EvalScore4i piece_square_table[6][2][64];
 
 // indexed by wking, bking, piece, square
-extern EvalScore piece_kk_square_tables[64][64][12][64];
+extern EvalScore4i piece_kk_square_tables[64][64][12][64];
 
 void psqt_init();
 

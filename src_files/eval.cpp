@@ -452,7 +452,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore4i evalScore       = L(0, 0, 0, 0);
     EvalScore4i featureScore4i  = L(0, 0, 0, 0);
     EvalScore4i mobScore        = L(0, 0, 0, 0);
-    EvalScore materialScore     = M(0, 0);
+    EvalScore4i materialScore   = L(0, 0, 0, 0);
     
     k = whitePawns;
     while (k) {
@@ -744,9 +744,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     featureScore4i += SIDE_TO_MOVE * (b->getActivePlayer() == WHITE ? 1 : -1);
     
     
-    EvalScore totalScore = evalScore
+    EvalScore totalScore = + M(S1(evalScore), S2(evalScore))
                            + M(S1(mobScore), S2(mobScore))
-                           + materialScore
+                           + M(S1(materialScore), S2(materialScore))
                            + M(S1(pinnedEvalScore), S2(pinnedEvalScore))
                            + M(S1(hangingEvalScore), S2(hangingEvalScore))
                            + M(S1(featureScore4i), S2(featureScore4i));
