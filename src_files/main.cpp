@@ -53,7 +53,8 @@ void main_tune_features() {
         //        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
         //        tuning::optimisePSTBlackBox(K,
         //        reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
-        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_opp_king_square_table[0]), 225, 100, 3, 16);
+        tuning::optimisePSTBlackBox(K, evfeatures, 21, 40, 1, 8);
+        tuning::optimisePSTBlackBox(K, piece_values, 5, 40, 1, 8);
 
         //        for (int s = 0; s < 64; s++) {
         //            if (s%8 == 0) std::cout << std::endl;
@@ -74,11 +75,16 @@ void main_tune_features() {
         //                      << EgScore(piece_our_king_square_table[0][s]) << "), ";
         //        }
         //        std::cout << std::endl;
-        for (int s = 0; s < 225; s++) {
-            if (s % 15 == 0)
-                std::cout << std::endl;
-            std::cout << "M(" << setw(5) << MgScore(piece_opp_king_square_table[0][s]) << "," << setw(5)
-                      << EgScore(piece_opp_king_square_table[0][s]) << "), ";
+        for (int s = 0; s < 21; s++) {
+            std::cout << "M(" << setw(5) << MgScore(evfeatures[s][0]) << "," << setw(5)
+                      << EgScore(evfeatures[s][0]) << "), ";
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        for (int s = 0; s < 5; s++) {
+            std::cout << "M(" << setw(5) << MgScore(piece_values[s]) << "," << setw(5)
+                      << EgScore(piece_values[s]) << "), ";
+            std::cout << std::endl;
         }
         std::cout << std::endl;
         //        std::cout << std::endl;
@@ -107,10 +113,14 @@ void main_tune_features() {
     bb_cleanUp();
 }
 
-int main(int argc, char* argv[]) {
 
+
+
+int main(int argc, char* argv[]) {
     
-    if (argc == 1) {
+    
+    
+    if (argc == 1)   {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
@@ -122,7 +132,7 @@ int main(int argc, char* argv[]) {
 
     // main_tune_pst_bb(PAWN);
     //    psqt_init();
-    //     main_tune_features();
+//    main_tune_features();
     // main_tune_pst();
     // main_tune_features_bb();
 
