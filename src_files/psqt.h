@@ -22,14 +22,14 @@ using namespace bb;
 #define S2(s)   ((Score)((uint16_t)((uint64_t) ((s) + 0x8000)           >> 16)))
 #define S3(s)   ((Score)((uint16_t)((uint64_t) ((s) + 0x80000000)       >> 32)))
 #define S4(s)   ((Score)((uint16_t)((uint64_t) ((s) + 0x800000000000)   >> 48)))
-#define showScore4i(s)      std::setw(5) << S1(s) << ", "   << \
-                            std::setw(5) << S2(s) << ", "   << \
-                            std::setw(5) << S3(s) << ", "   << \
-                            std::setw(5) << S4(s) << ")"
-#define interpolateD2(s, x, y)      ((S1(s) * (1 - x)*(1 - y) + \
-                                      S2(s) * (1 + x)*(1 - y) + \
-                                      S3(s) * (1 - x)*(1 + y) + \
-                                      S4(s) * (1 + x)*(1 + y)) / 4)
+#define showScore4i(s) "L(" << std::setw(4) << S1(s) << ","   << \
+                               std::setw(4) << S2(s) << ","   << \
+                               std::setw(4) << S3(s) << ","   << \
+                               std::setw(4) << S4(s) << ")"
+#define interpolateD2(s, x, y)      ((S1(s) * (1 - (x))*(1 - (y)) + \
+                                      S2(s) * (1 + (x))*(1 - (y)) + \
+                                      S3(s) * (1 - (x))*(1 + (y)) + \
+                                      S4(s) * (1 + (x))*(1 + (y))) / 4.0)
 
 
 #define pst_index_white_s(s)                                squareIndex(7 - rankIndex(s), fileIndex(s))
@@ -47,8 +47,8 @@ using namespace bb;
 extern EvalScore piece_values[6];
 
 // indexed by piece, relation to king
-extern EvalScore piece_our_king_square_table[5][15*15];
-extern EvalScore piece_opp_king_square_table[5][15*15];
+extern EvalScore4i piece_our_king_square_table[5][15*15];
+extern EvalScore4i piece_opp_king_square_table[5][15*15];
 
 // indexed by piece, sameSideCastle, square
 extern EvalScore piece_square_table[6][2][64];

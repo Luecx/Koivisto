@@ -53,7 +53,7 @@ void main_tune_features() {
         //        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
         //        tuning::optimisePSTBlackBox(K,
         //        reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
-        tuning::optimisePSTBlackBox(K, evfeatures, 21, 40, 1, 8);
+//        tuning::optimisePSTBlackBox(K, evfeatures, 21, 40, 1, 8);
         tuning::optimisePSTBlackBox(K, piece_values, 5, 40, 1, 8);
 
         //        for (int s = 0; s < 64; s++) {
@@ -125,6 +125,23 @@ int main(int argc, char* argv[]) {
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     }
+//
+
+    for(int i = 0; i < 6; i++){
+        for(int n = 0; n < 2; n++){
+            for(int j = 0; j < 64; j++){
+                if(j % 4 == 0) std::cout << std::endl;
+                piece_square_table[i][n][j] = L(
+                    S1(piece_square_table[i][n][j]),
+                    S2(piece_square_table[i][n][j]),
+                    S1(piece_square_table[i][n][j]),
+                    S2(piece_square_table[i][n][j]));
+                std::cout <<  showScore4i(piece_square_table[i][n][j]) << ", ";
+            }
+            std::cout << std::endl;
+        }
+    }
+   
 
     /**********************************************************************************
      *                                  T U N I N G                                   *

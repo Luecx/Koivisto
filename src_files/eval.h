@@ -26,10 +26,10 @@
 extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
 
-extern EvalScore* evfeatures[];
-extern EvalScore  hangingEval[5];
-extern EvalScore  pinnedEval[15];
-extern EvalScore* mobilities[6];
+extern EvalScore4i* evfeatures[];
+extern EvalScore4i  hangingEval[5];
+extern EvalScore4i  pinnedEval[15];
+extern EvalScore4i* mobilities[6];
 extern int        mobEntryCount[6];
 
 
@@ -37,10 +37,10 @@ class Evaluator {
     public:
 
     float phase;
-
-    EvalScore computePinnedPieces(Board* b, Color color);
-
-    EvalScore computeHangingPieces(Board* b);
+    
+    EvalScore4i computePinnedPieces(Board* b, Color color);
+    
+    EvalScore4i computeHangingPieces(Board* b);
 
     bb::Score evaluate(Board* b);
 
