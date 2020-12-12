@@ -153,7 +153,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore4i* evalScore, int count, 
         
         for (int param = 0; param < count; param++) {
             
-            std::cout << "\r" << "param: " << param << std::flush;
+            std::cout << "\r" << "param: " << param << " " << std::flush;
             
             for (int phase = 0; phase < 4; phase++) {
                 // std::cout << phase << " " << param << " " << noChangeCount[phase][param] << " " <<
@@ -167,7 +167,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore4i* evalScore, int count, 
                 }
 
                 // check which value we need to adjust
-                EvalScore changer = L(lr, 0, 0, 0);
+                EvalScore4i changer = L(lr, 0, 0, 0);
                 switch (phase) {
                     case 1:
                         changer = L(0, lr, 0, 0);
@@ -237,9 +237,9 @@ double tuning::optimisePSTBlackBox(double K, EvalScore4i* evalScore, int count, 
         }
         std::cout << "iteration: "      << right                        << setw(3)  << it
                   << "    error: "      << left     << setprecision(8)  << setw(12) << er
-                  << "    skipped: "    << right                        << setw(3)  << skipped   << "/" << count * 2
-                  << "    changed: "    << right                        << setw(3)  << changed   << "/" << count * 2
-                  << "    unchanged: "  << right                        << setw(3)  << unchanged << "/" << count * 2
+                  << "    skipped: "    << right                        << setw(3)  << skipped   << "/" << count * 4
+                  << "    changed: "    << right                        << setw(3)  << changed   << "/" << count * 4
+                  << "    unchanged: "  << right                        << setw(3)  << unchanged << "/" << count * 4
                   << std::endl;
     }
     return er;
@@ -267,9 +267,10 @@ double tuning::optimisePSTBlackBox(double K, EvalScore4i** evalScore, int count,
         er = computeError(K, threads);
         
         for (int param = 0; param < count; param++) {
+    
+            std::cout << "\r" << "param: " << param << " " << std::flush;
             
-            
-            for (int phase = 0; phase < 2; phase++) {
+            for (int phase = 0; phase < 4; phase++) {
                 
                 // if we should skip this value, increment the noChangeCount for this variable
                 if (noChangeCount[phase][param] < noChangeBound[phase][param]) {
@@ -279,7 +280,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore4i** evalScore, int count,
                 }
     
                 // check which value we need to adjust
-                EvalScore changer = L(lr, 0, 0, 0);
+                EvalScore4i changer = L(lr, 0, 0, 0);
                 switch (phase) {
                     case 1:
                         changer = L(0, lr, 0, 0);
@@ -348,9 +349,9 @@ double tuning::optimisePSTBlackBox(double K, EvalScore4i** evalScore, int count,
         }
         std::cout << "iteration: "      << right                        << setw(3)  << it
                   << "    error: "      << left     << setprecision(8)  << setw(12) << er
-                  << "    skipped: "    << right                        << setw(3)  << skipped   << "/" << count * 2
-                  << "    changed: "    << right                        << setw(3)  << changed   << "/" << count * 2
-                  << "    unchanged: "  << right                        << setw(3)  << unchanged << "/" << count * 2
+                  << "    skipped: "    << right                        << setw(3)  << skipped   << "/" << count * 4
+                  << "    changed: "    << right                        << setw(3)  << changed   << "/" << count * 4
+                  << "    unchanged: "  << right                        << setw(3)  << unchanged << "/" << count * 4
                   << std::endl;
     }
     return er;

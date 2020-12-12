@@ -38,7 +38,7 @@ void main_tune_features() {
 
     using namespace tuning;
 
-    //    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
+//    loadPositionFile("../resources/other/quiet-labeled2.epd", 100000);
     loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
     loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
@@ -49,7 +49,8 @@ void main_tune_features() {
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-                tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore4i*>(piece_square_table[0][0]),64,10,3,16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore4i**>(evfeatures),21,100,1,16);
+        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore4i*>(piece_values),5,100,5,16);
         //        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
         //        tuning::optimisePSTBlackBox(K,
         //        reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);
@@ -75,16 +76,18 @@ void main_tune_features() {
         //                      << EgScore(piece_our_king_square_table[0][s]) << "), ";
         //        }
         //        std::cout << std::endl;
-        for (int s = 0; s < 21; s++) {
-            std::cout << "M(" << setw(5) << MgScore(evfeatures[s][0]) << "," << setw(5)
-                      << EgScore(evfeatures[s][0]) << "), ";
-            std::cout << std::endl;
+//        for (int s = 0; s < 21; s++) {
+//            std::cout << "M(" << setw(5) << MgScore(evfeatures[s][0]) << "," << setw(5)
+//                      << EgScore(evfeatures[s][0]) << "), ";
+//            std::cout << std::endl;
+//        }
+//        std::cout << std::endl;
+        for (int s = 0; s < 5; s++) {
+            std::cout << showScore4i(piece_values[s]) << "," << std::endl;
         }
         std::cout << std::endl;
-        for (int s = 0; s < 5; s++) {
-            std::cout << "M(" << setw(5) << MgScore(piece_values[s]) << "," << setw(5)
-                      << EgScore(piece_values[s]) << "), ";
-            std::cout << std::endl;
+        for (int s = 0; s < 21; s++) {
+            std::cout << showScore4i(*evfeatures[s]) << "," << std::endl;
         }
         std::cout << std::endl;
         //        std::cout << std::endl;
@@ -117,21 +120,19 @@ void main_tune_features() {
 
 
 int main(int argc, char* argv[]) {
-    
-    if (argc == 1)   {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+
+
+
+//    if (argc == 1)   {
+//        uci_loop(false);
+//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+//        uci_loop(true);
+//    }
     /**********************************************************************************
      *                                  T U N I N G                                   *
      **********************************************************************************/
 
-    // main_tune_pst_bb(PAWN);
-    //    psqt_init();
 //    main_tune_features();
-    // main_tune_pst();
-    // main_tune_features_bb();
 
     return 0;
 }
