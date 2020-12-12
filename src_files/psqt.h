@@ -11,7 +11,8 @@ using namespace bb;
 #define M(mg, eg)    ((EvalScore)((unsigned int) (eg) << 16) + (mg))
 #define MgScore(s)   ((Score)((uint16_t)((unsigned) ((s)))))
 #define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
-#define showScore2i(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;
+#define showScore2i(s) "M(" << std::setw(4) << MgScore(s) << ","   << \
+                               std::setw(4) << EgScore(s) << ")"
 
 #define L(s1,s2,s3,s4)   (EvalScore4i)( \
                                  ((uint64_t) (s4) << 48) + \

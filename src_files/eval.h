@@ -23,8 +23,8 @@
 #include "Board.h"
 #include "psqt.h"
 
-extern EvalScore bishop_pawn_same_color_table_o[9];
-extern EvalScore bishop_pawn_same_color_table_e[9];
+extern EvalScore4i bishop_pawn_same_color_table_o[9];
+extern EvalScore4i bishop_pawn_same_color_table_e[9];
 
 extern EvalScore4i* evfeatures[];
 extern EvalScore4i  hangingEval[5];
