@@ -42,7 +42,7 @@ struct SearchData {
     Move  counter[2][64][64]        = {0};
     bool  sideToReduce;
     bool  reduce;
-
+    int nullRed[2]                  = {0};
 
     SearchData();
 

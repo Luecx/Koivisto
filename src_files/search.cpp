@@ -476,7 +476,6 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     
     SearchData* sd = new SearchData();
     td->searchData = sd;
-    
     // start the basic search on all threads
     Depth d = 1;
     Score s = 0;
@@ -711,7 +710,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
+            sd->nullRed[b->getActivePlayer()]++;
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
+            sd->nullRed[b->getActivePlayer()]--;
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -865,6 +866,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
             lmr -= pv;
+            lmr += sd->nullRed[b->getActivePlayer()];
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
