@@ -788,7 +788,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < -30 - 30 * (depth*depth)){ // TUNED CUTOFF
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < -3 - 30 * (depth*depth)){ // TUNED CUTOFF
                     continue;
                 }
             }
@@ -860,7 +860,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 81; // TUNED DIV
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 107; // TUNED DIV
             lmr += !isImproving;
             lmr -= pv;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
