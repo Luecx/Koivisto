@@ -60,9 +60,9 @@ void loadPositionFile(const std::string& path, int count, int start = 0);
  */
 double optimiseBlackBox(double K, float* params, int paramCount, float lr, int threads = 1);
 
-double optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int iterations, int lr, int threads = 1);
+double optimisePSTBlackBox(double K, EvalScore4i* evalScore, int count, int iterations, int lr, int threads = 1);
 
-double optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int iterations, int lr, int threads = 1);
+double optimisePSTBlackBox(double K, EvalScore4i** evalScore, int count, int iterations, int lr, int threads = 1);
 
 /**
  * computes the error of the evaluator on the given set

@@ -130,13 +130,13 @@ double tuning::optimiseBlackBox(double K, float* params, int paramCount, float l
 }
 
 
-double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int iterations, int lr, int threads) {
+double tuning::optimisePSTBlackBox(double K, EvalScore4i* evalScore, int count, int iterations, int lr, int threads) {
 
     // if a value doesnt change a lot, we wont recompute it every time
     // we need to keep track of how many iterations it should change and since how many it didnt change.
     // assume a maximum size of 1024
-    int noChangeBound[2][1024] {};
-    int noChangeCount[2][1024] {};
+    int noChangeBound[4][1024] {};
+    int noChangeCount[4][1024] {};
 
     // keep track of the error for the entire time
     double er;
@@ -155,7 +155,7 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
             
             std::cout << "\r" << "param: " << param << std::flush;
             
-            for (int phase = 0; phase < 2; phase++) {
+            for (int phase = 0; phase < 4; phase++) {
                 // std::cout << phase << " " << param << " " << noChangeCount[phase][param] << " " <<
                 // noChangeBound[phase][param] << std::endl;
 
@@ -166,11 +166,20 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
                     continue;
                 }
 
-                // check if we adjust the Midgame value or Endgame value
-                EvalScore changer = M(lr, 0);
-                if (phase == 1) {
-                    changer = M(0, lr);
+                // check which value we need to adjust
+                EvalScore changer = L(lr, 0, 0, 0);
+                switch (phase) {
+                    case 1:
+                        changer = L(0, lr, 0, 0);
+                        break;
+                    case 2:
+                        changer = L(0, 0, lr, 0);
+                        break;
+                    case 3:
+                        changer = L(0, 0, 0, lr);
+                        break;
                 }
+                
 
                 // keep track if the variable improved in this iteration
                 bool improved = false;
@@ -236,12 +245,12 @@ double tuning::optimisePSTBlackBox(double K, EvalScore* evalScore, int count, in
     return er;
 }
 
-double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int iterations, int lr, int threads) {
+double tuning::optimisePSTBlackBox(double K, EvalScore4i** evalScore, int count, int iterations, int lr, int threads) {
     // if a value doesnt change a lot, we wont recompute it every time
     // we need to keep track of how many iterations it should change and since how many it didnt change.
     // assume a maximum size of 1024
-    int noChangeBound[2][1024] {};
-    int noChangeCount[2][1024] {};
+    int noChangeBound[4][1024] {};
+    int noChangeCount[4][1024] {};
     
     // keep track of the error for the entire time
     double er;
@@ -268,11 +277,19 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
                     skipped++;
                     continue;
                 }
-                
-                // check if we adjust the Midgame value or Endgame value
-                EvalScore changer = M(lr, 0);
-                if (phase == 1) {
-                    changer = M(0, lr);
+    
+                // check which value we need to adjust
+                EvalScore changer = L(lr, 0, 0, 0);
+                switch (phase) {
+                    case 1:
+                        changer = L(0, lr, 0, 0);
+                        break;
+                    case 2:
+                        changer = L(0, 0, lr, 0);
+                        break;
+                    case 3:
+                        changer = L(0, 0, 0, lr);
+                        break;
                 }
                 
                 // keep track if the variable improved in this iteration

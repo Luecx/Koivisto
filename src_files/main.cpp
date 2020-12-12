@@ -49,7 +49,7 @@ void main_tune_features() {
         std::cout << "--------------------------------------------------- [" << i
                   << "] ----------------------------------------------" << std::endl;
 
-        //        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][0]),64,10,3,16);
+                tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore4i*>(piece_square_table[0][0]),64,10,3,16);
         //        tuning::optimisePSTBlackBox(K, reinterpret_cast<EvalScore*>(piece_square_table[0][1]),64,10,3,16);
         //        tuning::optimisePSTBlackBox(K,
         //        reinterpret_cast<EvalScore*>(piece_our_king_square_table[0]),225,10,3,16);

@@ -763,12 +763,8 @@ bb::Score Evaluator::evaluate(Board* b) {
                             + hangingEvalScore
                             + featureScore;
     
-    
-//    double v1 =  MgScore(totalScore) * (1 - phase) + EgScore(totalScore) * (phase);
     double v2 =  interpolateD2(totalScore2, 2 * phase-1, -1);
-    
     res += v2;
-
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
     return res;
