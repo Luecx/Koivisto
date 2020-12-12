@@ -167,27 +167,27 @@ EvalScore4i bishop_pawn_same_color_table_e[9]{
 
 
 
-EvalScore4i SIDE_TO_MOVE                  = L(  15,  18,  10,   8);
-EvalScore4i PAWN_STRUCTURE                = L(  24,  -9,   7,  12);
-EvalScore4i PAWN_PASSED                   = L(   4,  62,   5,  44);
-EvalScore4i PAWN_ISOLATED                 = L( -12, -23,  -1,  -3);
+EvalScore4i SIDE_TO_MOVE                  = L(  15,  19,  10,   8);
+EvalScore4i PAWN_STRUCTURE                = L(  27, -10,   6,  13);
+EvalScore4i PAWN_PASSED                   = L(   4,  67,   6,  40);
+EvalScore4i PAWN_ISOLATED                 = L( -13, -23,  -1,  -3);
 EvalScore4i PAWN_DOUBLED                  = L(  -5,  -7,  -6,   1);
-EvalScore4i PAWN_DOUBLED_AND_ISOLATED     = L(  -2, -39, -10, -11);
-EvalScore4i PAWN_BACKWARD                 = L(  -4,  13, -12, -14);
-EvalScore4i PAWN_OPEN                     = L( -12, -19,  -8,  12);
+EvalScore4i PAWN_DOUBLED_AND_ISOLATED     = L(  -1, -41, -10, -11);
+EvalScore4i PAWN_BACKWARD                 = L(  -4,  13, -12, -15);
+EvalScore4i PAWN_OPEN                     = L( -12, -22,  -8,  13);
 EvalScore4i PAWN_BLOCKED                  = L(  -7, -28,  -7, -14);
-EvalScore4i KNIGHT_OUTPOST                = L(  42,   0,  17,  32);
-EvalScore4i KNIGHT_DISTANCE_ENEMY_KING    = L( -15,   2,  -6,   3);
-EvalScore4i ROOK_OPEN_FILE                = L(  46, -27,  16,  28);
-EvalScore4i ROOK_HALF_OPEN_FILE           = L(  -3, -11,  -1,  -4);
-EvalScore4i ROOK_KING_LINE                = L(  54,   0, -16,  12);
-EvalScore4i BISHOP_DOUBLED                = L(  -5,  52,  22, 113);
-EvalScore4i BISHOP_FIANCHETTO             = L(  23,  53,  -8, -20);
-EvalScore4i BISHOP_PIECE_SAME_SQUARE_E    = L(   1,   4,   1,   4);
-EvalScore4i QUEEN_DISTANCE_ENEMY_KING     = L( -11, -29,   5, -15);
-EvalScore4i KING_CLOSE_OPPONENT           = L( -56,  56,  21,  20);
+EvalScore4i KNIGHT_OUTPOST                = L(  40,   0,  17,  35);
+EvalScore4i KNIGHT_DISTANCE_ENEMY_KING    = L( -18,   1,  -5,   4);
+EvalScore4i ROOK_OPEN_FILE                = L(  48, -31,  16,  31);
+EvalScore4i ROOK_HALF_OPEN_FILE           = L(  -3, -14,  -1,  -2);
+EvalScore4i ROOK_KING_LINE                = L(  67,  -2, -27,  16);
+EvalScore4i BISHOP_DOUBLED                = L(  -3,  50,  22, 113);
+EvalScore4i BISHOP_FIANCHETTO             = L(  22,  57,  -8, -23);
+EvalScore4i BISHOP_PIECE_SAME_SQUARE_E    = L(   1,   3,   1,   5);
+EvalScore4i QUEEN_DISTANCE_ENEMY_KING     = L( -11, -29,   5, -16);
+EvalScore4i KING_CLOSE_OPPONENT           = L( -58,  58,  22,  19);
 EvalScore4i KING_PAWN_SHIELD              = L(  56,  16,  22, -11);
-EvalScore4i CASTLING_RIGHTS               = L(   5,  -8,  29, -10);
+EvalScore4i CASTLING_RIGHTS               = L(   6,  -6,  29, -11);
 
 EvalScore4i kingSafetyTable[100] {
     L( -18,  -6, -18,  -6), L(   0,   0,   0,   0), L( -22,  -4, -22,  -4), L( -12, -10, -12, -10), L( -14,  -6, -14,  -6),
