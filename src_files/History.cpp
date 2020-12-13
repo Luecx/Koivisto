@@ -90,7 +90,18 @@ void SearchData::setKiller(Move move, Depth ply, Color color) { killer[color][pl
  * Is killer?
  */
 bool SearchData::isKiller(Move move, Depth ply, Color color) { return sameMove(move, killer[color][ply]); }
-
+/*
+ * Set counter
+ */
+void SearchData::setCounter(Move previous, Move move, Color color) { 
+    counter[color][getSquareFrom(previous)][getSquareTo(previous)] = move; 
+}
+/*
+ * Is Counter?
+ */
+bool SearchData::isCounter(Move previous, Move move, Color color) { 
+    return sameMove(move, counter[color][getSquareFrom(previous)][getSquareTo(previous)]); 
+}
 /*
  * Set historic eval
  */

@@ -38,6 +38,7 @@ struct SearchData {
     int   history[2][64][64]        = {0};    // history table (from-to)
     int   cmh[6][64][2][6][64]      = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     Move  killer[2][MAX_PLY]        = {0};
+    Move  counter[2][64][64]        = {0};
     Score eval[2][MAX_PLY]          = {0};
     bool  sideToReduce;
     bool reduce;
@@ -62,6 +63,10 @@ struct SearchData {
     void setKiller(Move move, Depth ply, Color color);
 
     bool isKiller(Move move, Depth ply, Color color);
+
+    void setCounter(Move previous, Move move, Color color);
+
+    bool isCounter(Move previous, Move move, Color color); 
 
     void setHistoricEval(Score eval, Color color, Depth ply);
 
