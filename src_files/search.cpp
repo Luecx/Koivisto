@@ -742,7 +742,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     }
     
 
-    if (depth > 10 && pv)  pvSearch(b, alpha, beta, depth - 4*ONE_PLY, ply, td, 1234);
+    if (depth > 10 && pv)  pvSearch(b, alpha, beta, 4, ply, td, 1234);
 
     // we reuse movelists for memory reasons.
     MoveList* mv = sd->moves[ply];
