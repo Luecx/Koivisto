@@ -37,7 +37,7 @@ class MoveOrderer {
 
     virtual ~MoveOrderer();
 
-    void setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove, SearchData* sd, Board* board, Depth ply);
+    void setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove, SearchData* sd, Board* board, Depth ply, Depth depth);
 
     void setMovesQSearch(move::MoveList* p_moves, Board* b);
 
