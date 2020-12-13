@@ -741,6 +741,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return matingValue;
     }
     
+
+    if (depth > 10 && pv)  pvSearch(b, alpha, beta, depth - 4*ONE_PLY, ply, td, 1234);
+
     // we reuse movelists for memory reasons.
     MoveList* mv = sd->moves[ply];
     
@@ -754,7 +757,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
-    
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
