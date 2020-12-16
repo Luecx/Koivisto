@@ -686,7 +686,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if a qsearch on the current position is below beta, we can fail soft. Note that this is only used during
         // within pv nodes which means that alpha = beta - 1.
         // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
+        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta && b->getPreviousMove() != 0) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) 
             {
