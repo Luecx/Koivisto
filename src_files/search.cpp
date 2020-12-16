@@ -686,7 +686,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if a qsearch on the current position is below beta, we can fail soft. Note that this is only used during
         // within pv nodes which means that alpha = beta - 1.
         // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta && b->getPreviousMove() != 0) {
+        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) 
             {
@@ -707,7 +707,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
-        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
+        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer()) && b->getPreviousMove() != 0) {
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
