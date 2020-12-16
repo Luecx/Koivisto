@@ -46,6 +46,8 @@ int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
 void initLmr() {
+    nitpick_simple_trace_enter("Entering initLmr.");
+
     nitpick_assert(lmrReductions != nullptr, "initLmr called but lmrReductions was null.");
 
     int d, m;
@@ -53,6 +55,8 @@ void initLmr() {
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
             lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+
+    nitpick_simple_trace_log("lmrReductions[50][50] = " << lmrReductions[50][50]);
 
     nitpick_assert(lmrReductions[0][0]   == -2147483648, "lexpected mrReductions[0][0]   == -2147483648 but was " << lmrReductions[0][0]);
     nitpick_assert(lmrReductions[10][0]  == -2147483648, "lexpected mrReductions[10][0]  == -2147483648 but was " << lmrReductions[10][0]);
@@ -68,6 +72,8 @@ void initLmr() {
     // for(int i = 0; i < 256; i++) {
     //     printf("log(%d) == %.17g\n", i, log(i));
     // }
+
+    nitpick_simple_trace_exit("Exiting initLmr.");
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
@@ -180,24 +186,32 @@ void search_setHashSize(int hashSize) {
  * called at the start of the program
  */
 void search_init(int hashSize) {
+    nitpick_simple_trace_enter("Entering search_init.");
+
     table = new TranspositionTable(hashSize);
     initLmr();
     
     for (int i = 0; i < MAX_THREADS; i++) {
         tds[i] = new ThreadData(i);
     }
+
+    nitpick_simple_trace_exit("Exiting search_init.");
 }
 
 /**
  * called at the exit of the program to cleanup and deallocate arrays.
  */
 void search_cleanUp() {
+    nitpick_simple_trace_enter("Entering search_cleanUp.");
+
     delete table;
     table = nullptr;
     
     for (int i = 0; i < MAX_THREADS; i++) {
         delete tds[i];
     }
+
+    nitpick_simple_trace_exit("Exiting search_cleanUp.");
 }
 
 /**
@@ -209,7 +223,12 @@ void search_cleanUp() {
  * @param mvList
  */
 void extractPV(Board* b, MoveList* mvList, Depth depth) {
-    
+    // nitpick_simple_trace_enter("Entering extractPV.");
+
+    if (depth <= 0) {
+        // nitpick_simple_trace_exit("Exiting extractPV, depth == " << (int) depth);
+    }
+
     if (depth <= 0)
         return;
     
@@ -235,11 +254,19 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
                 moveContained = true;
             }
         }
-        
+
+        if(!moveContained) {
+            // nitpick_simple_trace_exit("Exiting extractPV, move doesn't exist for this board.");
+        }
+
         // return if the move doesnt exist for this board
         if (!moveContained)
             return;
         
+        if(!b->isLegal(mov)) {
+            // nitpick_simple_trace_exit("Exiting extractPV, move is not legal for this board.");
+        }
+
         // check if its also legal
         if (!b->isLegal(mov))
             return;
@@ -250,6 +277,8 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
         extractPV(b, mvList, depth - 1);
         b->undoMove();
     }
+
+    // nitpick_simple_trace_exit("Exiting extractPV.");
 }
 
 /**
@@ -458,12 +487,17 @@ SearchOverview search_overview() { return overview; }
  * @return
  */
 Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
-    
+    nitpick_simple_trace_enter("Entering bestMove. maxDepth = " << (int) maxDepth);
+
     // if the main thread calls this function, we need to generate the search data for all the threads first
     if (threadId == 0) {
         
         // if there is a dtz move available, do not start any threads or search at all. just do the dtz move
         Move dtzMove = getDTZMove(b);
+        if (dtzMove != 0) {
+            nitpick_simple_trace_exit("Exiting bestMove, found dtzMove.");
+        }
+
         if (dtzMove != 0)
             return dtzMove;
         
@@ -566,12 +600,16 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         overview.time  = timeManager->elapsedTime();
         overview.move  = best;
         
+        nitpick_simple_trace_exit("Exiting bestMove, returning best.");
+        
         // return the best move if its the main thread
         return best;
     }
     
     delete sd;
     
+    nitpick_simple_trace_exit("Exiting bestMove, returning 0.");
+ 
     // return nothing (doesnt matter)
     return 0;
 }
