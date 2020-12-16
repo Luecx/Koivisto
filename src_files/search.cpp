@@ -875,10 +875,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (getType(m) == QUEEN_PROMOTION))
+                     || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
-
+        
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
@@ -941,11 +941,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
             // also set this move as a killer move into the history
             sd->setKiller(m, ply, b->getActivePlayer());
-            // set the countermove
-            if (b->getPreviousMove()!=0 && !isCapture(m))
-                sd->setCounter(b->getPreviousMove(), m, b->getActivePlayer());
-
-            // we also update counter move history tables and history scores.
+            // if the move is not a capture, we also update counter move history tables and history scores.
+            
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
             
             return beta;
