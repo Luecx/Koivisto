@@ -24,6 +24,8 @@
 auto startTime =
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
+int standardMovesToGo = 35;
+
 /**
  * We use this constructor if the movetime has been specified.
  * This means that we do not want to extend the time in critical positions and want to stop the search exactly after

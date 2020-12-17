@@ -32,6 +32,9 @@ enum TimeMode{
     TOURNAMENT
 };
 
+
+extern int standardMovesToGo;
+
 class TimeManager {
 
     private:

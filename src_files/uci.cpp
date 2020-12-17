@@ -174,7 +174,7 @@ void uci_processCommand(std::string str) {
 
             uci_go_match((wtime.empty()) ? 60000000 : stoi(wtime), (btime.empty()) ? 60000000 : stoi(btime),
                          (wincr.empty()) ? 0 : stoi(wincr), (bincr.empty()) ? 0 : stoi(bincr),
-                         (mvtog.empty()) ? 29 : stoi(mvtog), (depth.empty()) ? MAX_PLY : stoi(depth));
+                         (mvtog.empty()) ? standardMovesToGo : stoi(mvtog), (depth.empty()) ? MAX_PLY : stoi(depth));
 
         } else if (str.find("depth") != string::npos) {
             uci_go_depth(stoi(uci_getValue(split, "depth")));
@@ -384,6 +384,8 @@ void uci_set_option(std::string& name, std::string& value) {
             count = MAX_THREADS;
 
         threadCount = count;
+    } else if (name == "SMTG"){
+        standardMovesToGo = stoi(value);
     }
 }
 
