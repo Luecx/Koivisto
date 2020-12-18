@@ -101,6 +101,7 @@ EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 EvalScore MINOR_BEHIND_PAWN             = M(    1,   21);
+EvalScore WEAK_KING_SQUARES             = M(    0,    0);
 
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
@@ -149,6 +150,7 @@ EvalScore* evfeatures[] {
     &CASTLING_RIGHTS,               // 21
 
     &MINOR_BEHIND_PAWN,
+    &WEAK_KING_SQUARES,
     
 };
 
@@ -416,6 +418,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
+    U64 whiteWeakSquares = ~whitePawnCover;
+    U64 blackWeakSquares = ~blackPawnCover;
+
     // clang-format off
     featureScore += PAWN_DOUBLED_AND_ISOLATED * (
             + bitCount(whiteIsolatedPawns & whiteDoubledPawns)
@@ -465,6 +470,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
     
+        whiteWeakSquares &= ~attacks;
+
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_KNIGHT][square];
         
         
@@ -483,6 +490,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
     
+        blackWeakSquares &= ~attacks;
+
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_KNIGHT][square];
         
         mobScore -= mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresBlack)];
@@ -508,6 +517,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_BISHOP][square];
         
+        whiteWeakSquares &= ~attacks;
         
         mobScore += mobilityBishop[bitCount(attacks & mobilitySquaresWhite)];
 
@@ -532,6 +542,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
     
+        blackWeakSquares &= ~attacks;
+
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_BISHOP][square];
     
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
@@ -566,6 +578,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
     
+        whiteWeakSquares &= ~attacks;
+
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_ROOK][square];
         mobScore += mobilityRook[bitCount(attacks & mobilitySquaresWhite)];
 
@@ -578,6 +592,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpRookAttack(square, occupied);
+
+        blackWeakSquares &= ~attacks;
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_ROOK][square];
         mobScore -= mobilityRook[bitCount(attacks & mobilitySquaresBlack)];
@@ -667,6 +683,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
+            + WEAK_KING_SQUARES * (bitCount(whiteWeakSquares&KING_ATTACKS[whiteKingSquare])-bitCount(blackWeakSquares&KING_ATTACKS[blackKingSquare]));
    
     // clang-format off
     featureScore += CASTLING_RIGHTS*(
