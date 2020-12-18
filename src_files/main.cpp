@@ -39,8 +39,8 @@ void main_tune_features() {
     using namespace tuning;
 
     //loadPositionFile("../resources/other/quiet-labeled2.epd", 10000000);
-    loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
-    //loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    //loadPositionFile("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+    loadPositionFile("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     //loadPositionFile("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
     auto K = tuning::computeK(2.86681, 200, 1e-7, 4);
 
