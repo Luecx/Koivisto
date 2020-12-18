@@ -682,7 +682,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
-    evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
+    evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks]
             + WEAK_KING_SQUARES * (bitCount(whiteWeakSquares&KING_ATTACKS[whiteKingSquare])-bitCount(blackWeakSquares&KING_ATTACKS[blackKingSquare]));
    
     // clang-format off
