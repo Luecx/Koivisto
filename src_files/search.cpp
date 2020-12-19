@@ -48,7 +48,7 @@ void initLmr() {
     int d, m;
     for (d = 0; d < 2; d++)
         for (m = 0; m < 15; m++)
-            lmp[d][m] = (3+(m+d)*(m+d))/2;
+            lmp[d][m] = (5+(m+d)*(m+d))/3;
 
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
