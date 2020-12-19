@@ -101,7 +101,7 @@ EvalScore KING_PAWN_SHIELD              = M(   27,    5);
 EvalScore CASTLING_RIGHTS               = M(   25,   -8);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    3);
 EvalScore MINOR_BEHIND_PAWN             = M(    1,   21);
-EvalScore WEAK_KING_SQUARES             = M(    0,    0);
+EvalScore WEAK_KING_SQUARES             = M(   -7,    0);
 
 EvalScore kingSafetyTable[100] {
     M(  -18,   -6), M(    0,    0), M(  -22,   -4), M(  -12,  -10), M(  -14,   -6), M(   14,   -8), M(   10,  -16), M(   26,   -4),
@@ -226,9 +226,9 @@ bb::Score Evaluator::evaluateTempo(Board* b){
    return MgScore(SIDE_TO_MOVE) * (1 - phase) + EgScore(SIDE_TO_MOVE) * (phase);
 }
 
-EvalScore Evaluator::computeHangingPieces(Board* b) {
-    U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
-    U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
+EvalScore Evaluator::computeHangingPieces(Board* b, U64 wAttack, U64 bAttack) {
+    U64 WnotAttacked = ~wAttack;
+    U64 BnotAttacked = ~bAttack;
 
     EvalScore res = M(0, 0);
 
@@ -319,6 +319,10 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
     U64 blackKingZone = KING_ATTACKS[blackKingSquare];
+
+
+    U64 wAttack = b->getAttackedSquares(WHITE);
+    U64 bAttack = b->getAttackedSquares(BLACK);
 
     Square square;
     U64    attacks;
@@ -679,11 +683,11 @@ bb::Score Evaluator::evaluate(Board* b) {
     }
     
     
-    EvalScore hangingEvalScore = computeHangingPieces(b);
+    EvalScore hangingEvalScore = computeHangingPieces(b, wAttack, bAttack);
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks]
-            + WEAK_KING_SQUARES * (bitCount(whiteWeakSquares&KING_ATTACKS[whiteKingSquare])-bitCount(blackWeakSquares&KING_ATTACKS[blackKingSquare]));
+            + WEAK_KING_SQUARES * (bitCount(bAttack&whiteWeakSquares&KING_ATTACKS[whiteKingSquare])-bitCount(wAttack&blackWeakSquares&KING_ATTACKS[blackKingSquare]));
    
     // clang-format off
     featureScore += CASTLING_RIGHTS*(

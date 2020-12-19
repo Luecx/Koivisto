@@ -40,7 +40,7 @@ class Evaluator {
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    EvalScore computeHangingPieces(Board* b);
+    EvalScore computeHangingPieces(Board* b, U64 wAttack, U64 bAttack);
 
     bb::Score evaluate(Board* b);
 
