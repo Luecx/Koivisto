@@ -14,7 +14,7 @@ ifeq ($(OS),Windows_NT)
     SUFFIX := .exe
 else
     PREFIX := linux
-    SUFFIX := 
+    SUFFIX :=
 endif
 
 WFLAGS = -std=c++17 -Wall -Wextra -Wshadow
@@ -30,12 +30,16 @@ AVX2FLAGS   = -msse -msse3 -mpopcnt -mavx2 -msse4.1 -mssse3 -msse2
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
 openbench:
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
+	rm -f *.gcda fecppnn/*.gcda syzygy/*.gcda eun/*.gcda
+	$(CC) -fprofile-generate $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
+	./$(EXE) bench
+	$(CC) -fprofile-use      $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
+	rm -f *.gcda fecppnn/*.gcda syzygy/*.gcda eun/*.gcda
 
 native:
 	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
-    
+
 release:
 	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
@@ -43,4 +47,5 @@ release:
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-popcnt$(SUFFIX)
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) $(AVX) -o $(EXE)-x64-$(PREFIX)-popcnt-avx$(SUFFIX)
 
-	
+
+
