@@ -35,7 +35,7 @@
 #include <thread>
 #include <unistd.h>
 
-void uci_loop(bool bench);
+void uci_loop(bool bench, int threadCount=1);
 
 void uci_processCommand(std::string str);
 
@@ -49,7 +49,7 @@ void uci_go_mate(int depth);
 
 void uci_stop();
 
-void uci_set_option(std::string& name, std::string& value);
+void uci_set_option(const std::string& name, const std::string& value);
 
 void uci_isReady();
 

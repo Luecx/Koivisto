@@ -32,7 +32,7 @@ MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 openbench:
 	rm -f *.gcda fecppnn/*.gcda syzygy/*.gcda eun/*.gcda
 	$(CC) -fprofile-generate $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
-	./$(EXE) bench
+	./$(EXE) bench 4
 	$(CC) -fprofile-use      $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)
 	rm -f *.gcda fecppnn/*.gcda syzygy/*.gcda eun/*.gcda
 

@@ -35,10 +35,11 @@ std::thread* searchThread = nullptr;
  * and continues reading the lines until 'quit' is parsed which will shut down the engine and deallocate arrays.
  * @param bench
  */
-void uci_loop(bool bench) {
+void uci_loop(bool bench, int threadCount) {
 
     bb_init();
     search_init(16);
+    uci_set_option("Threads", std::to_string(threadCount));
     psqt_init();
 
     if (bench) {
@@ -354,7 +355,7 @@ void uci_stop() { search_stop(); }
  * @param name
  * @param value
  */
-void uci_set_option(std::string& name, std::string& value) {
+void uci_set_option(const std::string& name, const std::string& value) {
     if (name == "Hash") {
         search_setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
