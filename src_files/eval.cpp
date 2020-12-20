@@ -308,7 +308,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
 bb::Score Evaluator::evaluate(Board* b) {
     Score res = 0;
 
-    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
         nitpick_simple_trace_log("res is " << res);
     }
 
@@ -391,7 +391,7 @@ bb::Score Evaluator::evaluate(Board* b) {
      
         k = lsbReset(k);
     }
-    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
         nitpick_simple_trace_log("materialScore is " << materialScore);
     }
 
@@ -403,7 +403,7 @@ bb::Score Evaluator::evaluate(Board* b) {
       
         k = lsbReset(k);
     }
-    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
         nitpick_simple_trace_log("materialScore is " << materialScore);
     }
 
@@ -413,7 +413,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)];
         k = lsbReset(k);
     }
-    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
         nitpick_simple_trace_log("featureScore is " << featureScore);
     }
 
@@ -423,7 +423,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)];
         k = lsbReset(k);
     }
-    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
         nitpick_simple_trace_log("featureScore is " << featureScore);
     }
 
@@ -467,7 +467,7 @@ bb::Score Evaluator::evaluate(Board* b) {
             + bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT]|b->getPieces()[WHITE_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT]|b->getPieces()[BLACK_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN])));
     
-    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
         nitpick_simple_trace_log("featureScore is " << featureScore);
     }
 
