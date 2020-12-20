@@ -5,10 +5,12 @@
 #ifndef KOIVISTO_PSQT_H
 #define KOIVISTO_PSQT_H
 
+#include "Nitpick.h"
 #include "Bitboard.h"
 using namespace bb;
 
-#define M(mg, eg)    ((EvalScore)((unsigned int) (eg) << 16) + (mg))
+EvalScore M(int mg, int eg);
+
 #define MgScore(s)   ((Score)((uint16_t)((unsigned) ((s)))))
 #define EgScore(s)   ((Score)((uint16_t)((unsigned) ((s) + 0x8000) >> 16)))
 #define showScore(s) std::cout << "(" << MgScore(s) << ", " << EgScore(s) << ")" << std::endl;

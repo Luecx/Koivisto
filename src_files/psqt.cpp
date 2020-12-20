@@ -4,6 +4,11 @@
 
 #include "psqt.h"
 
+EvalScore M(int mg, int eg) {
+    nitpick_assert(eg < (1 << 16) || mg < (1 << 16), "eg: " << eg << " mg: " << mg);
+    return (EvalScore) ((unsigned int) (eg) << 16) + (mg);
+} 
+
 EvalScore piece_square_tables[64][64][12][64]{};
 
 // indexed by piece

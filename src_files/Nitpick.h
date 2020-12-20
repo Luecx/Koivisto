@@ -11,7 +11,7 @@ do {                                                                            
         std::cerr << __FILE__ << "@" << __LINE__ << " nitpick_assert: " << msg << std::endl; \
         abort();                                                                             \
     }                                                                                        \
-} while(0)
+} while(0);
 
 
 // Simple tracing macros to indent logging messages.
