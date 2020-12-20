@@ -387,8 +387,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     while (k) {
         square = bitscanForward(k);
-        materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_PAWN][square];
-     
+        bool overflowed = __builtin_sadd_overflow(materialScore, piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_PAWN][square], &materialScore);
+        nitpick_assert(!overflowed, "overflow!!!!");
+
         k = lsbReset(k);
     }
     if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
@@ -398,8 +399,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     k = b->getPieces()[BLACK_PAWN];
     while (k) {
         square = bitscanForward(k);
-        materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square];
-    
+        bool overflowed = __builtin_sadd_overflow(materialScore, piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square], &materialScore);
+        nitpick_assert(!overflowed, "overflow!!!!");
       
         k = lsbReset(k);
     }
@@ -410,7 +411,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     k = whitePassers;
     while (k) {
         square = bitscanForward(k);
-        featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)];
+        bool overflowed = __builtin_sadd_overflow(featureScore, passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)], &featureScore);
+        nitpick_assert(!overflowed, "overflow!!!!");
+
         k = lsbReset(k);
     }
     if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
@@ -420,7 +423,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     k = blackPassers;
     while (k) {
         square = bitscanForward(k);
-        featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)];
+        bool overflowed = __builtin_ssub_overflow(featureScore, passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)], &featureScore);
+        nitpick_assert(!overflowed, "overflow!!!!");
+
         k = lsbReset(k);
     }
     if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
