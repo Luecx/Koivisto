@@ -309,7 +309,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     Score res = 0;
 
     if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("res is " << res);
+        nitpick_simple_trace_log("fen is " << b->fen());
     }
 
 
