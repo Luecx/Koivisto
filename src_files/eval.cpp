@@ -17,7 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "nitpick.h"
+#include "Nitpick.h"
 #include "eval.h"
 
 #include <immintrin.h>
@@ -391,8 +391,9 @@ bb::Score Evaluator::evaluate(Board* b) {
      
         k = lsbReset(k);
     }
-    nitpick_simple_trace_log("materialScore is " << materialScore);
-
+    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+        nitpick_simple_trace_log("materialScore is " << materialScore);
+    }
 
     k = b->getPieces()[BLACK_PAWN];
     while (k) {
@@ -402,7 +403,9 @@ bb::Score Evaluator::evaluate(Board* b) {
       
         k = lsbReset(k);
     }
-    nitpick_simple_trace_log("materialScore is " << materialScore);
+    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+        nitpick_simple_trace_log("materialScore is " << materialScore);
+    }
 
     k = whitePassers;
     while (k) {
@@ -410,7 +413,9 @@ bb::Score Evaluator::evaluate(Board* b) {
         featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)];
         k = lsbReset(k);
     }
-    nitpick_simple_trace_log("featureScore is " << featureScore);
+    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+        nitpick_simple_trace_log("featureScore is " << featureScore);
+    }
 
     k = blackPassers;
     while (k) {
@@ -418,7 +423,9 @@ bb::Score Evaluator::evaluate(Board* b) {
         featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)];
         k = lsbReset(k);
     }
-    nitpick_simple_trace_log("featureScore is " << featureScore);
+    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+        nitpick_simple_trace_log("featureScore is " << featureScore);
+    }
 
     U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
     U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
@@ -460,7 +467,9 @@ bb::Score Evaluator::evaluate(Board* b) {
             + bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT]|b->getPieces()[WHITE_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT]|b->getPieces()[BLACK_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN])));
     
-    nitpick_simple_trace_log("featureScore is " << featureScore);
+    if(b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
+        nitpick_simple_trace_log("featureScore is " << featureScore);
+    }
 
     /*
      * only these squares are counted for mobility
