@@ -685,10 +685,10 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + materialScore;
 
     nitpick_simple_trace_log("res is " << res);
-    res += MgScore(totalScore) * (1 - phase);
+    res += (int) ((float) MgScore(totalScore) * (1 - phase));
 
     nitpick_simple_trace_log("res is " << res);
-    res += EgScore(totalScore) * (phase);
+    res += (int) ((float) EgScore(totalScore) * (phase));
 
     nitpick_simple_trace_log("res is " << res);
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
