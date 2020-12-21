@@ -308,10 +308,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
 bb::Score Evaluator::evaluate(Board* b) {
     Score res = 0;
 
-    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("fen is " << b->fen());
-    }
-
+    nitpick_simple_trace_log("fen is " << b->fen());
 
     U64 whiteTeam = b->getTeamOccupied()[WHITE];
     U64 blackTeam = b->getTeamOccupied()[BLACK];
@@ -387,49 +384,33 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     while (k) {
         square = bitscanForward(k);
-        bool overflowed = __builtin_sadd_overflow(materialScore, piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_PAWN][square], &materialScore);
-        nitpick_assert(!overflowed, "overflow!!!!");
+        materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_PAWN][square];
 
         k = lsbReset(k);
-    }
-    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("materialScore is " << materialScore);
     }
 
     k = b->getPieces()[BLACK_PAWN];
     while (k) {
         square = bitscanForward(k);
-        bool overflowed = __builtin_sadd_overflow(materialScore, piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square], &materialScore);
-        nitpick_assert(!overflowed, "overflow!!!!");
+        materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square];
       
         k = lsbReset(k);
-    }
-    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("materialScore is " << materialScore);
     }
 
     k = whitePassers;
     while (k) {
         square = bitscanForward(k);
-        bool overflowed = __builtin_sadd_overflow(featureScore, passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)], &featureScore);
-        nitpick_assert(!overflowed, "overflow!!!!");
+        featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)];
 
         k = lsbReset(k);
-    }
-    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("featureScore is " << featureScore);
     }
 
     k = blackPassers;
     while (k) {
         square = bitscanForward(k);
-        bool overflowed = __builtin_ssub_overflow(featureScore, passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)], &featureScore);
-        nitpick_assert(!overflowed, "overflow!!!!");
+        featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)];
 
         k = lsbReset(k);
-    }
-    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("featureScore is " << featureScore);
     }
 
     U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
@@ -472,10 +453,6 @@ bb::Score Evaluator::evaluate(Board* b) {
             + bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT]|b->getPieces()[WHITE_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT]|b->getPieces()[BLACK_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN])));
     
-    if(true || b->fen() == "rnb1k2r/pp2bppp/1qp1pn2/8/3P4/2NBPN2/PPQB1PPP/R3K2R b QKqk - 0 1") {
-        nitpick_simple_trace_log("featureScore is " << featureScore);
-    }
-
     /*
      * only these squares are counted for mobility
      */
@@ -708,7 +685,10 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + materialScore;
 
     nitpick_simple_trace_log("res is " << res);
-    res += MgScore(totalScore) * (1 - phase) + EgScore(totalScore) * (phase);
+    res += MgScore(totalScore) * (1 - phase);
+
+    nitpick_simple_trace_log("res is " << res);
+    res += EgScore(totalScore) * (phase);
 
     nitpick_simple_trace_log("res is " << res);
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
