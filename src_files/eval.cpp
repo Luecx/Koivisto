@@ -712,7 +712,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
 
-    nitpick_simple_trace_log("featureScore is " << featureScore);
+    nitpick_simple_trace_log("res is " << res);
     return res;
 }
 
