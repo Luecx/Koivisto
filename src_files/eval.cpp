@@ -163,9 +163,6 @@ float* phaseValues = new float[6] {
 
 EvalScore* mobilities[6] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 
-
-
-
 /**
  * adds the factor to value of attacks if the piece attacks the kingzone
  * @param attacks
@@ -345,10 +342,6 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     U64 whitePawns = b->getPieces()[WHITE_PAWN];
     U64 blackPawns = b->getPieces()[BLACK_PAWN];
-
-    bool   wKSide            = (fileIndex(bitscanForward(b->getPieces()[WHITE_KING])) > 3 ? 0 : 1);
-    bool   bKSide            = (fileIndex(bitscanForward(b->getPieces()[BLACK_KING])) > 3 ? 0 : 1);
-    Square psqtKingsideIndex = psqt_kingside_indexing(wKSide, bKSide);
 
     // all passed pawns for white/black
     U64 whitePassers = wPassedPawns(whitePawns, blackPawns);

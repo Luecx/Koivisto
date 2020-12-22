@@ -36,9 +36,9 @@ struct TrainingEntry {
     double target;
 
     const Board& getBoard() const { return board; }
-    void         setBoard(const Board& board) { TrainingEntry::board = board; }
+    void         setBoard(const Board& p_board) { TrainingEntry::board = p_board; }
     double       getTarget() const { return target; }
-    void         setTarget(double target) { TrainingEntry::target = target; }
+    void         setTarget(double p_target) { TrainingEntry::target = p_target; }
 };
 
 extern std::vector<TrainingEntry> training_entries;

@@ -342,22 +342,22 @@ double tuning::optimisePSTBlackBox(double K, EvalScore** evalScore, int count, i
 double tuning::computeError(double K, int threads) {
     double score = 0;
     
-    auto eval_part = [](int threadId, int threads, double K, double* resultTarget) {
-        int start = training_entries.size() * threadId / threads;
-        int end   = training_entries.size() * (threadId + 1) / threads;
+    auto eval_part = [](int threadId, int p_threads, double p_K, double* resultTarget) {
+        int start = training_entries.size() * threadId / p_threads;
+        int end   = training_entries.size() * (threadId + 1) / p_threads;
 
-        double    score;
+        double    batchScore;
         Evaluator evaluator {};
         for (int i = start; i < end; i++) {
 
             Score  q_i      = evaluator.evaluate(&training_entries[i].board);
             double expected = training_entries[i].target;
 
-            double sig = sigmoid(q_i, K);
+            double sig = sigmoid(q_i, p_K);
 
-            score += (expected - sig) * (expected - sig);
+            batchScore += (expected - sig) * (expected - sig);
         }
-        resultTarget[threadId] = score;
+        resultTarget[threadId] = batchScore;
     };
 
 
@@ -409,7 +409,7 @@ void tuning::evalSpeed() {
 
     startMeasure();
     U64 sum = 0;
-    for (int i = 0; i < training_entries.size(); i++) {
+    for (int i = 0; i < static_cast<int>(training_entries.size()); i++) {
         sum += evaluator.evaluate(&training_entries[i].board);
     }
 
