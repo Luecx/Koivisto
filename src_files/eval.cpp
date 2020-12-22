@@ -118,6 +118,18 @@ EvalScore kingSafetyTable[100] {
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
 };
 
+EvalScore pawnDifference[9]{
+    M(-18,  24),
+    M(  9,  -3),
+    M( 27, -18),
+    M( 12, -18),
+    M(  3, -15),
+    M(  0,  -6),
+    M(  0,  12),
+    M( -6,  46),
+    M(-21,  84),
+};
+
 
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
@@ -417,6 +429,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
     // clang-format off
+    featureScore += pawnDifference[bitCount(whitePawns)] - pawnDifference[bitCount(blackPawns)];
     featureScore += PAWN_DOUBLED_AND_ISOLATED * (
             + bitCount(whiteIsolatedPawns & whiteDoubledPawns)
             - bitCount(blackIsolatedPawns & blackDoubledPawns));
@@ -443,7 +456,6 @@ bb::Score Evaluator::evaluate(Board* b) {
     featureScore += PAWN_BLOCKED * (
             + bitCount(whiteBlockedPawns)
             - bitCount(blackBlockedPawns));
-    
     featureScore += MINOR_BEHIND_PAWN * (
             + bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT]|b->getPieces()[WHITE_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT]|b->getPieces()[BLACK_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN])));

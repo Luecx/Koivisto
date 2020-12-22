@@ -23,15 +23,14 @@
 #include "Board.h"
 #include "psqt.h"
 
-extern EvalScore bishop_pawn_same_color_table_o[9];
-extern EvalScore bishop_pawn_same_color_table_e[9];
-
+extern EvalScore  bishop_pawn_same_color_table_o[9];
+extern EvalScore  bishop_pawn_same_color_table_e[9];
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
 extern EvalScore* mobilities[6];
+extern EvalScore  pawnDifference[9];
 extern int        mobEntryCount[6];
-
 
 class Evaluator {
     public:
