@@ -59,7 +59,7 @@ move::Move MovePicker::nextMove(Board* b, SearchData* sd, Depth ply) {
             return pickQuiet(b, sd);
 
         case BAD_CAPTURE:
-            return 0;
+            return pickCapture(b, sd);
 
         default:
             return 0;
