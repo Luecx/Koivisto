@@ -42,12 +42,11 @@ struct SearchData {
     bool  sideToReduce;
     bool reduce;
 
-
     SearchData();
 
     virtual ~SearchData();
 
-    void updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous);
+    void updateHistories(Move m, Depth depth, Move* mvs, int count, bool side, Move previous);
 
     int getHistories(Move m, bool side, Move previous);
 

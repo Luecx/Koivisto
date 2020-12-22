@@ -971,9 +971,6 @@ void Board::getNonQuietMoves(MoveList* moves) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 moves->add(genMove(target - 8, target, QUEEN_PROMOTION, WHITE_PAWN));
-                moves->add(genMove(target - 8, target, ROOK_PROMOTION, WHITE_PAWN));
-                moves->add(genMove(target - 8, target, BISHOP_PROMOTION, WHITE_PAWN));
-                moves->add(genMove(target - 8, target, KNIGHT_PROMOTION, WHITE_PAWN));
                 attacks = lsbReset(attacks);
             }
 
@@ -981,9 +978,6 @@ void Board::getNonQuietMoves(MoveList* moves) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 moves->add(genMove(target - 7, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->add(genMove(target - 7, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->add(genMove(target - 7, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->add(genMove(target - 7, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
                 attacks = lsbReset(attacks);
             }
 
@@ -991,9 +985,6 @@ void Board::getNonQuietMoves(MoveList* moves) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 moves->add(genMove(target - 9, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->add(genMove(target - 9, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->add(genMove(target - 9, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
-                moves->add(genMove(target - 9, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, getPiece(target)));
                 attacks = lsbReset(attacks);
             }
         }
@@ -1041,9 +1032,6 @@ void Board::getNonQuietMoves(MoveList* moves) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 moves->add(genMove(target + 8, target, QUEEN_PROMOTION, BLACK_PAWN));
-                moves->add(genMove(target + 8, target, ROOK_PROMOTION, BLACK_PAWN));
-                moves->add(genMove(target + 8, target, BISHOP_PROMOTION, BLACK_PAWN));
-                moves->add(genMove(target + 8, target, KNIGHT_PROMOTION, BLACK_PAWN));
                 attacks = lsbReset(attacks);
             }
 
@@ -1051,9 +1039,6 @@ void Board::getNonQuietMoves(MoveList* moves) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 moves->add(genMove(target + 9, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->add(genMove(target + 9, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->add(genMove(target + 9, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->add(genMove(target + 9, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
                 attacks = lsbReset(attacks);
             }
 
@@ -1061,9 +1046,6 @@ void Board::getNonQuietMoves(MoveList* moves) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 moves->add(genMove(target + 7, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->add(genMove(target + 7, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->add(genMove(target + 7, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
-                moves->add(genMove(target + 7, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, getPiece(target)));
                 attacks = lsbReset(attacks);
             }
         }

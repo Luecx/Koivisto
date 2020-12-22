@@ -20,7 +20,7 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous) {
+void SearchData::updateHistories(Move m, Depth depth, Move* mvs, int count, bool side, Move previous) {
     if (depth > 20)
         return;
     Move m2;
@@ -29,8 +29,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
     Square prevTo    = getSquareTo(previous);
     Color  color     = getMovingPiece(m) / 6;
 
-    for (int i = 0; i < mv->getSize(); i++) {
-        m2 = mv->getMove(i);
+    for (int i = 0; i < count; i++) {
+        m2 = mvs[i];
                 
         Piece  movingPiece = getMovingPiece(m2) % 6;
         Square squareTo    = getSquareTo(m2);

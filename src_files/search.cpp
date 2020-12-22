@@ -22,6 +22,7 @@
 #include "History.h"
 #include "TimeManager.h"
 #include "syzygy/tbprobe.h"
+#include "MovePicker.h"
 
 #include <thread>
 
@@ -487,18 +488,20 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     // will have a random position from the tree. Using this would lead to an illegal/not existing pv
     Board searchBoard{b};
     Board printBoard {b};
+
+    MovePicker mp[128];
     
     for (d = 1; d <= maxDepth; d++) {
         
         if (d < 6) {
-            s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
+            s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, &mp[0]);
         } else {
             Score window = 10;
             Score alpha  = s - window;
             Score beta   = s + window;
             
             while (rootTimeLeft()) {
-                s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
+                s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0, &mp[0]);
                 
                 window += window;
                 if (window > 500)
@@ -563,7 +566,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove) {
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, MovePicker* mp) {
     
     // increment the node counter for the current thread
     td->nodes++;
@@ -709,7 +712,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0, mp);
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -741,25 +744,22 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return matingValue;
     }
     
-    // we reuse movelists for memory reasons.
-    MoveList* mv = sd->moves[ply];
-    
-    // store all the moves inside the movelist
-    b->getPseudoLegalMoves(mv);
-    
-    // create a moveorderer and assign the movelist to score the moves.
-    MoveOrderer moveOrderer {};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
+
+    MovePicker* movePicker = &mp[ply];
+    movePicker->init(hashMove);
+
     
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
     
     // loop over all moves in the movelist
-    while (moveOrderer.hasNext()) {
+    while (true) {
         
         // get the current move
-        Move m = moveOrderer.next();
+        Move m = movePicker->nextMove(b, sd, ply);
+        if (!m)
+            break;
         
         // dont search illegal moves
         if (!b->isLegal(m))
@@ -785,7 +785,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth]) {
-                    moveOrderer.skip = true;
                     continue;
                 }
                 if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
@@ -820,20 +819,20 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
             
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
+            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, mp);
             if (score < betaCut) {
                 extension++;
             } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
-                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m);
+                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m, mp);
                 if (score>=beta)
                     return score;
             }
-            b->getPseudoLegalMoves(mv);
-            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-            
-            m = moveOrderer.next();
+
+            movePicker->init(hashMove);
+            m = movePicker->nextMove(b, sd, ply);
+
         }
         
         // *********************************************************************************************************
@@ -884,16 +883,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0, mp);
         } else {
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, mp);
             if (ply == 0) sd->reduce = true;
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                                  0, mp);    // re-search
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                                  0, mp);    // re-search
         }
         
         // undo the move
@@ -921,7 +920,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             sd->setKiller(m, ply, b->getActivePlayer());
             // if the move is not a capture, we also update counter move history tables and history scores.
             
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+            sd->updateHistories(m, depth, movePicker->tried, movePicker->tried_index, b->getActivePlayer(), b->getPreviousMove());
             
             return beta;
         }
