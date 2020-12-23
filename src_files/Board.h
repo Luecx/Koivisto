@@ -53,7 +53,7 @@ constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING  = 3;
 constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
 
 // static exchange evaluation piece values. we do not use the same values as for the evaluation.
-static constexpr Score see_piece_vals[] {100, 325, 325, 500, 1000, 10000};
+static constexpr Score see_piece_vals[] {100, 315, 325, 500, 1000, 10000};
 
 // the board has an internal status object which keeps track of all information which are not represented by
 // the pieces on the board. we compute this when doing a move. when undoing a move, we simply pop the last board status
