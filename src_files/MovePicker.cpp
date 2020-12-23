@@ -24,7 +24,7 @@
 
 // Kind of init movePicker. Actually just sets hashMove if there is one and resets index variabels. 
 void MovePicker::init(move::Move hashMove) {
-    stage               = hashMove ? HASH_MOVE : GOOD_CAPTURE;
+    stage               = hashMove ? HASH_MOVE : GENERATE_CAPTURE;
     eque[0]             = hashMove;
     hash_move           = hashMove;
     tried_index         = 0;
