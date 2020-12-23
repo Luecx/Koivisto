@@ -92,10 +92,20 @@ void MovePicker::addCaptureMoveToEque(move::Move m) {
 void MovePicker::scoreCaptures(Board* b, SearchData* sd) {
     Move m;
     for (int i = 0; i < capture_eque_index; i++) {
-        m               = eque[i];
-        Score SEE       = b->staticExchangeEvaluation(m);
-        scores[i]       = (SEE > 0 ? 1e5 : 1e4) + 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
-                        + (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
+        m                = eque[i];
+        Score SEE        = b->staticExchangeEvaluation(m);
+        MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
+                           + (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
+
+        if (SEE >= 0) {
+            if (mvvLVA == 0) {
+                scores[i] = 50000 + mvvLVA + sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+            } else {
+                scores[i] = 100000 + mvvLVA + sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+            }
+        } else {
+            scores[i] = 10000 + sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+        }
     }
 }
 
