@@ -195,6 +195,34 @@ void MovePicker::getSilentMoves(Board* b) {
             attacks = lsbReset(attacks);
         }
 
+        if (b->getPieces()[WHITE_PAWN] & RANK_7) {
+            attacks = pawnsCenter & RANK_8;
+            while (attacks) {
+                target = bitscanForward(attacks);
+                addQuietMoveToEque(genMove(target - 8, target, ROOK_PROMOTION, WHITE_PAWN));
+                addQuietMoveToEque(genMove(target - 8, target, BISHOP_PROMOTION, WHITE_PAWN));
+                addQuietMoveToEque(genMove(target - 8, target, KNIGHT_PROMOTION, WHITE_PAWN));
+                attacks = lsbReset(attacks);
+            }
+
+            attacks = pawnsLeft & RANK_8 & opponents;
+            while (attacks) {
+                target = bitscanForward(attacks);
+                addQuietMoveToEque(genMove(target - 7, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target - 7, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target - 7, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+                attacks = lsbReset(attacks);
+            }
+
+            attacks = pawnsRight & RANK_8 & opponents;
+            while (attacks) {
+                target = bitscanForward(attacks);
+                addQuietMoveToEque(genMove(target - 9, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target - 9, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target - 9, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+                attacks = lsbReset(attacks);
+            }
+        }
     } else {
 
         attackableSquares = ~(*b->getOccupied());
@@ -223,6 +251,35 @@ void MovePicker::getSilentMoves(Board* b) {
             target = bitscanForward(attacks);
             addQuietMoveToEque(genMove(target + 16, target, DOUBLED_PAWN_PUSH, BLACK_PAWN));
             attacks = lsbReset(attacks);
+        }
+            
+        if (b->getPieces()[BLACK_PAWN] & RANK_2) {
+            attacks = pawnsCenter & RANK_1;
+            while (attacks) {
+                target = bitscanForward(attacks);
+                addQuietMoveToEque(genMove(target + 8, target, ROOK_PROMOTION, BLACK_PAWN));
+                addQuietMoveToEque(genMove(target + 8, target, BISHOP_PROMOTION, BLACK_PAWN));
+                addQuietMoveToEque(genMove(target + 8, target, KNIGHT_PROMOTION, BLACK_PAWN));
+                attacks = lsbReset(attacks);
+            }
+
+            attacks = pawnsLeft & RANK_1 & opponents;
+            while (attacks) {
+                target = bitscanForward(attacks);
+                addQuietMoveToEque(genMove(target + 9, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target + 9, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target + 9, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
+                attacks = lsbReset(attacks);
+            }
+
+            attacks = pawnsRight & RANK_1 & opponents;
+            while (attacks) {
+                target = bitscanForward(attacks);
+                addQuietMoveToEque(genMove(target + 7, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target + 7, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
+                addQuietMoveToEque(genMove(target + 7, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
+                attacks = lsbReset(attacks);
+            }
         }
     }
 
@@ -379,9 +436,6 @@ void MovePicker::getCaptureMoves(Board* b) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 addCaptureMoveToEque(genMove(target - 8, target, QUEEN_PROMOTION, WHITE_PAWN));
-                addCaptureMoveToEque(genMove(target - 8, target, ROOK_PROMOTION, WHITE_PAWN));
-                addCaptureMoveToEque(genMove(target - 8, target, BISHOP_PROMOTION, WHITE_PAWN));
-                addCaptureMoveToEque(genMove(target - 8, target, KNIGHT_PROMOTION, WHITE_PAWN));
                 attacks = lsbReset(attacks);
             }
 
@@ -389,9 +443,6 @@ void MovePicker::getCaptureMoves(Board* b) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 addCaptureMoveToEque(genMove(target - 7, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target - 7, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target - 7, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target - 7, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
                 attacks = lsbReset(attacks);
             }
 
@@ -399,9 +450,6 @@ void MovePicker::getCaptureMoves(Board* b) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 addCaptureMoveToEque(genMove(target - 9, target, QUEEN_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target - 9, target, ROOK_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target - 9, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target - 9, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
                 attacks = lsbReset(attacks);
             }
         }
@@ -449,9 +497,6 @@ void MovePicker::getCaptureMoves(Board* b) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 addCaptureMoveToEque(genMove(target + 8, target, QUEEN_PROMOTION, BLACK_PAWN));
-                addCaptureMoveToEque(genMove(target + 8, target, ROOK_PROMOTION, BLACK_PAWN));
-                addCaptureMoveToEque(genMove(target + 8, target, BISHOP_PROMOTION, BLACK_PAWN));
-                addCaptureMoveToEque(genMove(target + 8, target, KNIGHT_PROMOTION, BLACK_PAWN));
                 attacks = lsbReset(attacks);
             }
 
@@ -459,9 +504,6 @@ void MovePicker::getCaptureMoves(Board* b) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 addCaptureMoveToEque(genMove(target + 9, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target + 9, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target + 9, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target + 9, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
                 attacks = lsbReset(attacks);
             }
 
@@ -469,9 +511,6 @@ void MovePicker::getCaptureMoves(Board* b) {
             while (attacks) {
                 target = bitscanForward(attacks);
                 addCaptureMoveToEque(genMove(target + 7, target, QUEEN_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target + 7, target, ROOK_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target + 7, target, BISHOP_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
-                addCaptureMoveToEque(genMove(target + 7, target, KNIGHT_PROMOTION_CAPTURE, BLACK_PAWN, b->getPiece(target)));
                 attacks = lsbReset(attacks);
             }
         }
