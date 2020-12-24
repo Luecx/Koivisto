@@ -832,8 +832,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
             b->getPseudoLegalMoves(mv);
             moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-            
+
+
             m = moveOrderer.next();
+            while(!b->isLegal(m) && moveOrderer.hasNext()){
+                m = moveOrderer.next();
+            }
         }
         
         // *********************************************************************************************************

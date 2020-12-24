@@ -43,14 +43,14 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
             Score     SEE    = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
                                + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
-            if (SEE >= 0) {
-                if (mvvLVA == 0) {
-                    moves->scoreMove(i, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
-                } else {
-                    moves->scoreMove(i, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
-                }
-            } else {
-                moves->scoreMove(i, 10000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+            if (SEE > 0) {
+                moves->scoreMove(i, 100000 + SEE + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+            }
+//            else if(SEE == 0) {
+//                moves->scoreMove(i, 70000 + mvvLVA + mvvLVA +sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+//            }
+            else{
+                moves->scoreMove(i, 10000 + SEE + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
             }
         } else if (isPromotion(m)) {
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
