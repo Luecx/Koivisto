@@ -30,6 +30,13 @@
 #include <stdint.h>
 #include <string>
 #include <tgmath.h>
+#if defined(__clang__)
+#include <popcntintrin.h>
+#include <intrin.h>
+#elif defined(__EMSCRIPTEN__)
+#include <popcntintrin.h>
+#include <intrin.h>
+#endif
 
 namespace bb {
 
@@ -805,17 +812,23 @@ inline U64 lookUpBishopXRayAttack(Square index, U64 occupied, U64 opponent) {
  */
 inline Square bitscanForward(U64 bb) {
     //    assert(bb != 0);
+#if   defined(__MINGW64__) || defined(__MINGW32__    )
     return __builtin_ctzll(bb);
-}
-
-/**
- * returns the index of the MSB
- * @param bb
- * @return
- */
-inline Square bitscanReverse(U64 bb) {
-    //    assert(bb != 0);
-    return __builtin_clzll(bb) ^ 63;
+#elif defined(__clang__)
+    return _BitScanForward(bb);
+#elif defined(__EMSCRIPTEN__)
+    return _BitScanForward(bb);
+#elif defined(_MSC_VER)
+    return _BitScanForward64(bb);
+#else
+    unsigned pos = 0;
+    while (!(bb & ONE))
+    {
+       value >>= 1;
+       ++pos;
+    }
+    return pos;
+#endif
 }
 
 /**
@@ -824,13 +837,22 @@ inline Square bitscanReverse(U64 bb) {
  * @return
  */
 inline int bitCount(U64 bb) {
+#if   defined(__MINGW64__) || defined(__MINGW32__    )
     return __builtin_popcountll(bb);
-    //        int counter = 0;
-    //        while(bb != 0){
-    //            bb = lsbReset(bb);
-    //            counter ++;
-    //        }
-    //        return counter;
+#elif defined(__clang__)
+    return _mm_popcnt_u64(bb);
+#elif defined(__EMSCRIPTEN__)
+    return _mm_popcnt_u64(bb);
+#elif defined(_MSC_VER)
+    return __popcnt64(bb);
+#else
+    int counter = 0;
+    while (bb != 0) {
+        bb = lsbReset(bb);
+        counter++;
+    }
+    return counter;
+#endif
 }
 
 /**
@@ -850,12 +872,12 @@ inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) { return max(ab
  * @return
  */
 inline int chebyshevDistance(Square sq1, Square sq2) {
-    
+
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
     Rank rI2 = rankIndex(sq2);
-    
+
     return chebyshevDistance(fI1, rI1, fI2, rI2);
 }
 
@@ -880,7 +902,7 @@ inline int manhattanDistance(Square sq1, Square sq2) {
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
     Rank rI2 = rankIndex(sq2);
-    
+
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
 
