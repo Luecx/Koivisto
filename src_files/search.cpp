@@ -754,6 +754,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
+    bool singular  = false;
     
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
@@ -834,6 +835,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
             
             m = moveOrderer.next();
+
+            singular = true;
         }
         
         // *********************************************************************************************************
@@ -862,6 +865,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             int history = 0;
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
+            lmr += singular;
             lmr -= pv;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
