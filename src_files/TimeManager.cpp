@@ -85,8 +85,8 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
 
     double division = movesToGo+1;
 
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
-                                                  : (int(black / division) + blackInc) - 25;
+    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc*0.7) - 25
+                                                  : (int(black / division) + blackInc*0.7) - 25;
 
     upperTimeBound =
         board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 25 : (int(black / (division*0.7)) + blackInc) - 25;
