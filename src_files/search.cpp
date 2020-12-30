@@ -1026,7 +1026,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     }
     
     if (stand_pat >= beta) {
-        table->put(zobrist, stand_pat, 0, ttNodeType, 0);
+        table->put(zobrist, stand_pat, 0, CUT_NODE, 0);
         return stand_pat;
     }
     if (alpha < stand_pat)
