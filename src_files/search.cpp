@@ -888,9 +888,20 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
             if (ply == 0) sd->reduce = true;
-            if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+            if (lmr && score > alpha) {
+                
+                if (lmr > 2){
+                    for (int d = 1; d <lmr-1; d++){
+                        score = -pvSearch(b, -alpha - 1, -alpha, depth - lmr + d - ONE_PLY + extension, ply + ONE_PLY, td,
+                                        0);    // re-search
+                        if (score <= alpha)
+                            break;
+                    }
+                }
+                if (score > alpha)
+                    score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
+                                    0);    // re-search
+            }
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
