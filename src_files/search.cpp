@@ -643,6 +643,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 if (en.score >= beta) {
+                    sd->setKiller(en.move, ply, b->getActivePlayer());
                     return en.score;
                 }
             } else if (en.type == ALL_NODE) {
