@@ -882,6 +882,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // work 100%
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
+
+        if (lmr > 0 && extension) lmr -= 1;
         
         // principal variation search recursion.
         if (legalMoves == 0) {
