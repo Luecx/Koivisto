@@ -863,6 +863,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
             lmr += !isImproving;
             lmr -= pv;
+            lmr -= extension;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
@@ -886,13 +887,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr, ply + ONE_PLY, td, 0);
             if (ply == 0) sd->reduce = true;
             if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY, ply + ONE_PLY, td,
                                   0);    // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY, ply + ONE_PLY, td,
                                   0);    // re-search
         }
         
