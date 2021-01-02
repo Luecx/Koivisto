@@ -197,6 +197,12 @@ bool ocbDraw(Board* b){
     U64 wBishops = b->getPieces()[WHITE_BISHOP];
     U64 bBishops = b->getPieces()[BLACK_BISHOP];
 
+    if (b->getPieces()[WHITE_KNIGHT] != 0 &&
+        b->getPieces()[BLACK_KNIGHT] != 0 &&
+        b->getPieces()[WHITE_ROOK]   != 0 &&
+        b->getPieces()[BLACK_ROOK]   != 0 &&
+        b->getPieces()[WHITE_QUEEN]  != 0 &&
+        b->getPieces()[BLACK_QUEEN]  != 0) return false;
     if (bitCount(wBishops) == 1 && bitCount(bBishops) == 1) {
         // check that only the white bishop or black bishop is on a white square
         if (bitCount((wBishops | bBishops) & WHITE_SQUARES) == 1) {
