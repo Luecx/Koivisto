@@ -176,10 +176,49 @@ EvalScore* mobilities[6] {nullptr, mobilityKnight, mobilityBishop, mobilityRook,
  */
 
 bool hasMatingMaterial(Board* b, bool side) {
-    if ((b->getPieces()[QUEEN + side * 6] | b->getPieces()[ROOK + side * 6] | b->getPieces()[PAWN + side * 6])
-        || (bitCount(b->getPieces()[BISHOP + side * 6] | b->getPieces()[KNIGHT + side * 6]) > 1
-            && b->getPieces()[BISHOP + side * 6]))
+    if (b->getPieces()[QUEEN + side * 6] | b->getPieces()[ROOK + side * 6] | b->getPieces()[PAWN + side * 6]) {
         return true;
+    } else {
+        if (bitCount(b->getPieces()[BISHOP + side * 6] | b->getPieces()[KNIGHT + side * 6]) > 1
+            && b->getPieces()[BISHOP + side * 6])
+            return true;
+    }
+    return false;
+}
+
+/**
+ * checks if there are only pawns left on the board together with bishops of the opposite color.
+ * Also the pawn difference must not be greater than 2. If one side has no pawns left,
+ * the opponent must not have more than 1 pawn.
+ * @return
+ */
+bool ocbDraw(Board* b){
+
+    U64 wBishops = b->getPieces()[WHITE_BISHOP];
+    U64 bBishops = b->getPieces()[BLACK_BISHOP];
+
+    if (bitCount(wBishops) == 1 && bitCount(bBishops) == 1) {
+        // check that only the white bishop or black bishop is on a white square
+        if (bitCount((wBishops | bBishops) & WHITE_SQUARES) == 1) {
+
+            int wPawns = bitCount(b->getPieces()[WHITE_PAWN]);
+            int bPawns = bitCount(b->getPieces()[BLACK_PAWN]);
+
+            if(wPawns == 0 || bPawns == 0){
+                if(abs(wPawns-bPawns) <= 1){
+                    return true;
+                }{
+                    return false;
+                }
+            }
+
+            if(abs(wPawns-bPawns) <= 2) {
+                return true;
+            }
+
+        }
+    }
+
     return false;
 }
 
@@ -682,7 +721,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
 
-    if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
+    if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK) || ocbDraw(b))
         res = res / 10;
     return res;
 }
