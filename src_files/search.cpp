@@ -642,12 +642,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (en.type == PV_NODE) {
                 return en.score;
             } else if (en.type == CUT_NODE) {
+                sd->setKiller(en.move, ply, b->getActivePlayer());
+                sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), b->getPreviousMove(), 1);
                 if (en.score >= beta) {
-                    sd->setKiller(en.move, ply, b->getActivePlayer());
-                    sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), b->getPreviousMove());
                     return en.score;
                 }
             } else if (en.type == ALL_NODE) {
+                sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), b->getPreviousMove(), -1);
                 if (en.score <= alpha) {
                     return en.score;
                 }
