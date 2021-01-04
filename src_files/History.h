@@ -49,6 +49,8 @@ struct SearchData {
 
     void updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous);
 
+    void updateMoveHistory(Move m, Depth depth, bool side, Move previous);
+
     int getHistories(Move m, bool side, Move previous);
 
     void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
