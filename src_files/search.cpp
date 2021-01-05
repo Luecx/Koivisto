@@ -607,9 +607,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
+    Move        previous      = b->getPreviousMove();
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
-    if (b->getPreviousMove() == 0 && ply != 0) {
+    if (previous == 0 && ply != 0) {
         // reuse static evaluation from previous ply in case of nullmove
         staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
@@ -643,12 +644,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 sd->setKiller(en.move, ply, b->getActivePlayer());
-                sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), b->getPreviousMove(), 1);
+                sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), previous, 1);
                 if (en.score >= beta) {
                     return en.score;
                 }
             } else if (en.type == ALL_NODE) {
-                sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), b->getPreviousMove(), -1);
+                sd->updateMoveHistory(en.move, depth, b->getActivePlayer(), previous, -1);
                 if (en.score <= alpha) {
                     return en.score;
                 }
@@ -791,7 +792,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
+                if (sd->getHistories(m, b->getActivePlayer(), previous) < 200-30*(depth*depth)){
                     continue;
                 }
             }
@@ -863,7 +864,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), previous) / 256;
             lmr += !isImproving;
             lmr -= pv;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
@@ -892,7 +893,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
             if (ply == 0) sd->reduce = true;
             if (lmr && score > alpha) {
-                sd->updateMoveHistory(m, depth-lmr, !b->getActivePlayer(), b->getPreviousMove(), 1);
+                sd->updateMoveHistory(m, depth-lmr, !b->getActivePlayer(), previous, 1);
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
             }
@@ -926,7 +927,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             sd->setKiller(m, ply, b->getActivePlayer());
             // if the move is not a capture, we also update counter move history tables and history scores.
             
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+            sd->updateHistories(m, depth, mv, b->getActivePlayer(), previous);
             
             return beta;
         }
