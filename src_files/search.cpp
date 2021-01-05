@@ -892,7 +892,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
             if (ply == 0) sd->reduce = true;
             if (lmr && score > alpha) {
-                sd->updateMoveHistory(m, depth-lmr, b->getActivePlayer(), b->getPreviousMove(), 1);
+                sd->updateMoveHistory(m, depth-lmr, !b->getActivePlayer(), b->getPreviousMove(), 1);
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
             }
