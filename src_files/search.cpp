@@ -49,7 +49,7 @@ void initLmr() {
     
     for (d = 1; d < 257; d++)
         for (m = 1; m < 257; m++)
-            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1.25+log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
@@ -853,7 +853,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
         // furthermore no queen promotions are reduced
-        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr = (legalMoves < 1 + (ply == 0) || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
                      || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves+1];
