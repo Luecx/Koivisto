@@ -152,12 +152,12 @@ void printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {
 
-    private:
+    public: 
+
     move::Move      moves[256];
     move::MoveScore scores[256];
     int             size;
 
-    public:
     MoveList();
 
     virtual ~MoveList();

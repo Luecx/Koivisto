@@ -762,12 +762,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Move m = moveOrderer.next();
         
         // dont search illegal moves
-        if (!b->isLegal(m))
+        if (!b->isLegal(m)) {
+            mv->moves[moveOrderer.counter-1] = 0;
             continue;
+        }
         
         // if the move is the move we want to skip, skip this move (used for extensions)
-        if (sameMove(m, skipMove))
+        if (sameMove(m, skipMove)) {
+            mv->moves[moveOrderer.counter-1] = 0;
             continue;
+        }
         
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);

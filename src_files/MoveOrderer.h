@@ -28,10 +28,11 @@ class MoveOrderer {
 
     private:
     move::MoveList* moves;
-    int             counter;
 
     public:
     bool skip;
+    int  counter;
+
 
     MoveOrderer();
 
