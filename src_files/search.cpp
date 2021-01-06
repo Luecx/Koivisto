@@ -34,7 +34,7 @@ bool                     printInfo   = true;
 
 SearchOverview overview;
 
-int lmrReductions[256][256];
+int lmrReductions[257][257];
 
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData** tds = new ThreadData*[MAX_THREADS];
@@ -47,8 +47,8 @@ int LMR_DIV          = 215;
 void initLmr() {
     int d, m;
     
-    for (d = 0; d < 256; d++)
-        for (m = 0; m < 256; m++)
+    for (d = 1; d < 257; d++)
+        for (m = 1; m < 257; m++)
             lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
 }
 
@@ -754,7 +754,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
-    
+
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
@@ -855,7 +856,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
                      || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
                     ? 0
-                    : lmrReductions[depth][legalMoves];
+                    : lmrReductions[depth][legalMoves+1];
         
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
