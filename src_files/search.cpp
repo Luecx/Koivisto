@@ -855,7 +855,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
                      || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
                     ? 0
-                    : lmrReductions[depth][legalMoves];
+                    : lmrReductions[depth][legalMoves+1];
         
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
@@ -873,13 +873,19 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = depth - 2;
             }
         }
+
+        if (ply == 0) {
+            lmr = lmrReductions[depth][legalMoves+1] - 1;
+            if (legalMoves < 3 || (isCapture(m) && staticExchangeEval >= 0)) 
+                lmr = 0;
+        }
         
         // doing the move
         b->move(m);
         
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()))
+        if (ply != 0 && extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
         // principal variation search recursion.
