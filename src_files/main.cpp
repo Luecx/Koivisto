@@ -124,9 +124,10 @@ int main(int argc, char* argv[]) {
     Evaluator evaluator{};
 
 
-    Board b{"r3k1nr/pp3qpp/2bp4/2n1p3/3pPP2/N2P1N2/PPPB2PP/R3KB1R w KQkq - 0 1"};
+    Board b{"4k3/8/8/8/8/3P4/8/4K3 w - - 0 1"};
     eval_data evalData{&b};
     std::cout << (int)evalData.evaluate() << std::endl;
+    std::cout << "--------------------------------------------------" << std::endl;
     std::cout << evaluator.evaluate(&b) << std::endl;
 
     /**********************************************************************************

@@ -274,32 +274,18 @@ struct pst_data_64{
     }
 
     void evaluate(float& midgame, float& endgame){
-        for(Piece p = PAWN; p <= KING; p++){
+        for (Piece p = PAWN; p <= KING; p++) {
 
-            if(p == BISHOP){
-                for(int8_t w:indices_white[p]){
-                    midgame += w_piece_square_table[p][sameside_castle][w].midgame.value;
-                    endgame += w_piece_square_table[p][sameside_castle][w].endgame.value;
-                }
-                for(int8_t b:indices_black[p]){
-                    midgame -= w_piece_square_table[p][sameside_castle][b].midgame.value;
-                    endgame -= w_piece_square_table[p][sameside_castle][b].endgame.value;
-                }
-            }else{
-                for(int8_t w:indices_white[p]){
-                    midgame += w_piece_square_table[p][sameside_castle][w].midgame.value;
-                    endgame += w_piece_square_table[p][sameside_castle][w].endgame.value;
-                }
-
-                for(int8_t b:indices_black[p]){
-                    midgame -= w_piece_square_table[p][sameside_castle][b].midgame.value;
-                    endgame -= w_piece_square_table[p][sameside_castle][b].endgame.value;
-                }
+            for (int8_t w : indices_white[p]) {
+                midgame += w_piece_square_table[p][!sameside_castle][w].midgame.value;
+                endgame += w_piece_square_table[p][!sameside_castle][w].endgame.value;
             }
 
-
+            for (int8_t b : indices_black[p]) {
+                midgame -= w_piece_square_table[p][!sameside_castle][b].midgame.value;
+                endgame -= w_piece_square_table[p][!sameside_castle][b].endgame.value;
+            }
         }
-
     }
 };
 
@@ -309,10 +295,10 @@ struct pst_data_225{
     bool sameside_castle;
 
     // we use 8 bits (256 values). Can have 32 pieces at most -> 256 bit = 32byte
-    std::vector<int8_t> indices_white_wk[6]{};
-    std::vector<int8_t> indices_black_wk[6]{};
-    std::vector<int8_t> indices_white_bk[6]{};
-    std::vector<int8_t> indices_black_bk[6]{};
+    std::vector<uint8_t> indices_white_wk[6]{};
+    std::vector<uint8_t> indices_black_wk[6]{};
+    std::vector<uint8_t> indices_white_bk[6]{};
+    std::vector<uint8_t> indices_black_bk[6]{};
 
     pst_data_225(Board* b) {
 
@@ -323,7 +309,7 @@ struct pst_data_225{
         bool   bKSide            = (fileIndex(bKingSq) > 3 ? 0 : 1);
         sameside_castle   = wKSide == bKSide;
 
-        for(Piece p = PAWN; p <= KING; p++){
+        for(Piece p = PAWN; p <= QUEEN; p++){
             for(Color c = WHITE; c <= BLACK; c++){
                 U64 k = b->getPieces(c, p);
                 while(k){
@@ -344,24 +330,24 @@ struct pst_data_225{
     }
 
     void evaluate(float& midgame, float& endgame){
-        for(Piece p = PAWN; p <= KING; p++){
+        for(Piece p = PAWN; p <= QUEEN; p++){
 
-            for(int8_t w:indices_white_wk[p]){
+            for(uint8_t w:indices_white_wk[p]){
                 midgame += w_piece_our_king_square_table[p][w].midgame.value;
                 endgame += w_piece_our_king_square_table[p][w].endgame.value;
             }
 
-            for(int8_t w:indices_white_bk[p]){
+            for(uint8_t w:indices_white_bk[p]){
                 midgame += w_piece_opp_king_square_table[p][w].midgame.value;
                 endgame += w_piece_opp_king_square_table[p][w].endgame.value;
             }
 
-            for(int8_t b:indices_black_bk[p]){
+            for(uint8_t b:indices_black_bk[p]){
                 midgame -= w_piece_our_king_square_table[p][b].midgame.value;
                 endgame -= w_piece_our_king_square_table[p][b].endgame.value;
             }
 
-            for(int8_t b:indices_black_wk[p]){
+            for(uint8_t b:indices_black_wk[p]){
                 midgame -= w_piece_opp_king_square_table[p][b].midgame.value;
                 endgame -= w_piece_opp_king_square_table[p][b].endgame.value;
             }
@@ -908,7 +894,6 @@ struct eval_data{
         pst64       ->evaluate(midgame, endgame);
         pst225      ->evaluate(midgame, endgame);
 
-        showScore(M((int)midgame, (int)endgame))
         float res = (int)(meta->phase * endgame) + (int)((1-meta->phase) * midgame);
         meta->evaluate(res);
 

@@ -230,14 +230,14 @@ void psqt_init() {
             for(Piece p = 0; p < 5; p++){
                 for(Square sq = 0; sq < 64; sq++){
                     
-                    piece_kk_square_tables[wKingSq][bKingSq][p]  [sq]
-                        = + piece_square_table              [p][!sameSideCastle][pst_index_white(sq, wKSide)]
+                    piece_kk_square_tables[wKingSq][bKingSq][p]  [sq] =
+                          + piece_square_table              [p][!sameSideCastle][pst_index_white(sq, wKSide)]
                           + piece_values                    [p]
                           + piece_our_king_square_table     [p]     [pst_index_relative_white(sq, wKingSq)]
                           + piece_opp_king_square_table     [p]     [pst_index_relative_white(sq, bKingSq)];
 
-                    piece_kk_square_tables[wKingSq][bKingSq][p+6][sq]
-                        = - piece_square_table              [p][!sameSideCastle][pst_index_black(sq, bKSide)]
+                    piece_kk_square_tables[wKingSq][bKingSq][p+6][sq] =
+                          - piece_square_table              [p][!sameSideCastle][pst_index_black(sq, bKSide)]
                           - piece_values                    [p]
                           - piece_our_king_square_table     [p]     [pst_index_relative_black(sq, bKingSq)]
                           - piece_opp_king_square_table     [p]     [pst_index_relative_black(sq, wKingSq)];

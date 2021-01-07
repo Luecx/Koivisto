@@ -381,7 +381,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore featureScore = M(0, 0);
     EvalScore mobScore     = M(0, 0);
     EvalScore materialScore= M(0, 0);
-    
+
     while (k) {
         square = bitscanForward(k);
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_PAWN][square];
@@ -393,10 +393,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square];
-    
-      
         k = lsbReset(k);
     }
+
     k = whitePassers;
     while (k) {
         square = bitscanForward(k);
@@ -631,7 +630,6 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
     
-    //showScore(materialScore);
     /**********************************************************************************
      *                                  K I N G S                                     *
      **********************************************************************************/
@@ -676,8 +674,6 @@ bb::Score Evaluator::evaluate(Board* b) {
     featureScore += SIDE_TO_MOVE * (b->getActivePlayer() == WHITE ? 1 : -1);
 
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + materialScore;
-
-    showScore(totalScore)
 
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
