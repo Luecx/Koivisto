@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
 
     load_weights();
 
-    Board b{"rnbqk1nr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"};
+    Board b{"k7/8/8/8/8/4B3/8/K7 w - - 0 1"};
 
     eval_data evalData{&b};
     std::cout << evalData.evaluate() << std::endl;
