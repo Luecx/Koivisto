@@ -252,11 +252,20 @@ struct pst_data_64{
                 while(k){
                     Square s = bitscanForward(k);
 
-                    if(c == WHITE) {
-                        indices_white[p].push_back(pst_index_white(s, wKSide));
+                    if(p == KING){
+                        if(c == WHITE) {
+                            indices_white[p].push_back(pst_index_white_s(s));
+                        }else{
+                            indices_black[p].push_back(pst_index_black_s(s));
+                        }
                     }else{
-                        indices_black[p].push_back(pst_index_black(s, bKSide));
+                        if(c == WHITE) {
+                            indices_white[p].push_back(pst_index_white(s, wKSide));
+                        }else{
+                            indices_black[p].push_back(pst_index_black(s, bKSide));
+                        }
                     }
+
 
                     k = lsbReset(k);
                 }
@@ -300,8 +309,10 @@ struct pst_data_225{
     bool sameside_castle;
 
     // we use 8 bits (256 values). Can have 32 pieces at most -> 256 bit = 32byte
-    std::vector<int8_t> indices_white[6]{};
-    std::vector<int8_t> indices_black[6]{};
+    std::vector<int8_t> indices_white_wk[6]{};
+    std::vector<int8_t> indices_black_wk[6]{};
+    std::vector<int8_t> indices_white_bk[6]{};
+    std::vector<int8_t> indices_black_bk[6]{};
 
     pst_data_225(Board* b) {
 
@@ -319,9 +330,11 @@ struct pst_data_225{
                     Square s = bitscanForward(k);
 
                     if(c == WHITE) {
-                        indices_white[p].push_back(pst_index_relative_white(s, wKingSq));
+                        indices_white_wk[p].push_back(pst_index_relative_white(s, wKingSq));
+                        indices_white_bk[p].push_back(pst_index_relative_white(s, bKingSq));
                     }else{
-                        indices_black[p].push_back(pst_index_relative_black(s, bKingSq));
+                        indices_black_wk[p].push_back(pst_index_relative_black(s, wKingSq));
+                        indices_black_bk[p].push_back(pst_index_relative_black(s, bKingSq));
                     }
 
                     k = lsbReset(k);
@@ -333,23 +346,26 @@ struct pst_data_225{
     void evaluate(float& midgame, float& endgame){
         for(Piece p = PAWN; p <= KING; p++){
 
-            for(int8_t w:indices_white[p]){
+            for(int8_t w:indices_white_wk[p]){
                 midgame += w_piece_our_king_square_table[p][w].midgame.value;
                 endgame += w_piece_our_king_square_table[p][w].endgame.value;
+            }
 
+            for(int8_t w:indices_white_bk[p]){
                 midgame += w_piece_opp_king_square_table[p][w].midgame.value;
                 endgame += w_piece_opp_king_square_table[p][w].endgame.value;
             }
 
-            for(int8_t b:indices_black[p]){
+            for(int8_t b:indices_black_bk[p]){
                 midgame -= w_piece_our_king_square_table[p][b].midgame.value;
                 endgame -= w_piece_our_king_square_table[p][b].endgame.value;
+            }
 
+            for(int8_t b:indices_black_wk[p]){
                 midgame -= w_piece_opp_king_square_table[p][b].midgame.value;
                 endgame -= w_piece_opp_king_square_table[p][b].endgame.value;
             }
         }
-
     }
 };
 
@@ -892,8 +908,8 @@ struct eval_data{
         pst64       ->evaluate(midgame, endgame);
         pst225      ->evaluate(midgame, endgame);
 
-
-        float res = meta->phase * endgame + (1-meta->phase) * midgame;
+        showScore(M((int)midgame, (int)endgame))
+        float res = (int)(meta->phase * endgame) + (int)((1-meta->phase) * midgame);
         meta->evaluate(res);
 
         return res;

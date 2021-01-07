@@ -121,12 +121,13 @@ int main(int argc, char* argv[]) {
     psqt_init();
 
     load_weights();
+    Evaluator evaluator{};
 
-    Board b{"k7/8/8/8/8/4B3/8/K7 w - - 0 1"};
 
+    Board b{"r3k1nr/pp3qpp/2bp4/2n1p3/3pPP2/N2P1N2/PPPB2PP/R3KB1R w KQkq - 0 1"};
     eval_data evalData{&b};
-    std::cout << evalData.evaluate() << std::endl;
-
+    std::cout << (int)evalData.evaluate() << std::endl;
+    std::cout << evaluator.evaluate(&b) << std::endl;
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
