@@ -315,8 +315,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     Square whiteKingSquare = bitscanForward(b->getPieces()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieces()[BLACK_KING]);
 
-    U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
-    U64 blackKingZone = KING_ATTACKS[blackKingSquare];
+
 
     Square square;
     U64    attacks;
@@ -333,7 +332,10 @@ bb::Score Evaluator::evaluate(Board* b) {
         phase = 1;
     if (phase < 0)
         phase = 0;
-    
+
+    U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
+    U64 blackKingZone = KING_ATTACKS[blackKingSquare];
+
     int wkingSafety_attPiecesCount = 0;
     int wkingSafety_valueOfAttacks = 0;
 
@@ -416,6 +418,9 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
+    U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnCover);
+    U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnCover);
+
     // clang-format off
     featureScore += PAWN_DOUBLED_AND_ISOLATED * (
             + bitCount(whiteIsolatedPawns & whiteDoubledPawns)
@@ -443,17 +448,11 @@ bb::Score Evaluator::evaluate(Board* b) {
     featureScore += PAWN_BLOCKED * (
             + bitCount(whiteBlockedPawns)
             - bitCount(blackBlockedPawns));
-    
     featureScore += MINOR_BEHIND_PAWN * (
             + bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT]|b->getPieces()[WHITE_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT]|b->getPieces()[BLACK_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN])));
     
-    /*
-     * only these squares are counted for mobility
-     */
-    U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnCover);
-    U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnCover);
-    // clang-format on
+
     
    
     /**********************************************************************************
