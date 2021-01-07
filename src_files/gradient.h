@@ -13,6 +13,11 @@
 
 #define N_THREAD 4
 
+inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
+inline double sigmoidPrime(double s, double K) {
+    double ex = exp(-s * K / 400);
+    return (K * ex) / (400 * (ex + 1) * (ex + 1));
+}
 
 enum feature_indices {
     I_SIDE_TO_MOVE,
@@ -87,142 +92,6 @@ Weight w_king_safety[100];
 Weight w_passer[16];
 Weight w_pinned[15];
 Weight w_hanging[5];
-
-
-
-inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
-
-inline double sigmoidPrime(double s, double K) {
-    double ex = exp(-s * K / 400);
-    return (K * ex) / (400 * (ex + 1) * (ex + 1));
-}
-
-void load_weights(){
-    for(int i = 0; i < 6; i++){
-
-        for(int n = 0; n < 2; n++){
-            for(int j =0; j < 64; j++){
-                float w1 = MgScore(piece_square_table[i][n][j] + piece_values[i]);
-                float w2 = EgScore(piece_square_table[i][n][j] + piece_values[i]);
-                w_piece_square_table[i][n][j] = {{w1},{w2}};
-            }
-        }
-
-        if(i < 5){
-
-            for(int n = 0; n < 15*15; n++){
-                float w1 = MgScore(piece_opp_king_square_table[i][n]);
-                float w2 = EgScore(piece_opp_king_square_table[i][n]);
-                w_piece_opp_king_square_table[i][n] = {{w1},{w2}};
-
-                w1 = MgScore(piece_our_king_square_table[i][n]);
-                w2 = EgScore(piece_our_king_square_table[i][n]);
-                w_piece_our_king_square_table[i][n] = {{w1},{w2}};
-            }
-
-            for(int n = 0; n < mobEntryCount[i]; n++){
-                float w1 = MgScore(mobilities[i][n]);
-                float w2 = EgScore(mobilities[i][n]);
-                w_mobility[i][n] = {{w1},{w2}};
-            }
-
-        }
-    }
-    for(int i = 0; i < 1000; i++){
-        if(i < I_END){
-            float w1 = MgScore(*evfeatures[i]);
-            float w2 = EgScore(*evfeatures[i]);
-            w_features[i] = {{w1},{w2}};
-        }if(i < 9){
-            float w1 = MgScore(bishop_pawn_same_color_table_e[i]);
-            float w2 = EgScore(bishop_pawn_same_color_table_e[i]);
-            w_bishop_pawn_e[i] = {{w1},{w2}};
-        }if(i < 9){
-            float w1 = MgScore(bishop_pawn_same_color_table_o[i]);
-            float w2 = EgScore(bishop_pawn_same_color_table_o[i]);
-            w_bishop_pawn_o[i] = {{w1},{w2}};
-        }if(i < 100){
-            float w1 = MgScore(kingSafetyTable[i]);
-            float w2 = EgScore(kingSafetyTable[i]);
-            w_king_safety[i] = {{w1},{w2}};
-        }if(i < 16){
-            float w1 = MgScore(passer_rank_n[i]);
-            float w2 = EgScore(passer_rank_n[i]);
-            w_passer[i] = {{w1},{w2}};
-        }if(i < 15){
-            float w1 = MgScore(pinnedEval[i]);
-            float w2 = EgScore(pinnedEval[i]);
-            w_pinned[i] = {{w1},{w2}};
-        }if(i < 5){
-            float w1 = MgScore(hangingEval[i]);
-            float w2 = EgScore(hangingEval[i]);
-            w_hanging[i] = {{w1},{w2}};
-        }
-    }
-}
-
-void adjust_weights(float eta) {
-    for(int i = 0; i < 6; i++){
-
-        for(int n = 0; n < 2; n++){
-            for(int j =0; j < 64; j++){
-                w_piece_square_table[i][n][j].midgame.update(eta);
-                w_piece_square_table[i][n][j].endgame.update(eta);
-            }
-        }
-
-        if(i < 5){
-
-            if(i < 1){
-                for(int n = 0; n < 15*15; n++){
-                    w_piece_opp_king_square_table[i][n].midgame.update(eta);
-                    w_piece_opp_king_square_table[i][n].endgame.update(eta);
-
-                    w_piece_our_king_square_table[i][n].midgame.update(eta);
-                    w_piece_our_king_square_table[i][n].endgame.update(eta);
-                }
-            }
-
-
-            for(int n = 0; n < mobEntryCount[i]; n++){
-                w_mobility[i][n].midgame.update(eta);
-                w_mobility[i][n].endgame.update(eta);
-            }
-
-        }
-    }
-    for(int i = 0; i < 1000; i++){
-        if(i < I_END){
-            w_features[i].midgame.update(eta);
-            w_features[i].endgame.update(eta);
-        }
-        if(i < 9){
-            w_bishop_pawn_e[i].midgame.update(eta);
-            w_bishop_pawn_e[i].endgame.update(eta);
-        }
-        if(i < 9){
-            w_bishop_pawn_o[i].midgame.update(eta);
-            w_bishop_pawn_o[i].endgame.update(eta);
-        }
-        if(i < 100){
-            w_king_safety[i].midgame.update(eta);
-            w_king_safety[i].endgame.update(eta);
-        }
-        if(i < 16){
-            w_passer[i].midgame.update(eta);
-            w_passer[i].endgame.update(eta);
-        }
-        if(i < 15){
-            w_pinned[i].midgame.update(eta);
-            w_pinned[i].endgame.update(eta);
-        }
-        if(i < 5){
-            w_hanging[i].midgame.update(eta);
-            w_hanging[i].endgame.update(eta);
-        }
-    }
-}
-
 
 
 struct MetaData {
@@ -1001,7 +870,7 @@ struct EvalData{
     Pst225Data             pst225{};
     MetaData               meta{};
 
-    EvalData(Board* b){
+    void init(Board* b){
         features        .init(b);
         mobility        .init(b);
         hanging         .init(b);
@@ -1013,8 +882,6 @@ struct EvalData{
         pst225          .init(b);
         meta            .init(b);
     }
-
-    virtual ~EvalData(){}
 
     float evaluate(){
         float midgame = 0;
@@ -1059,6 +926,251 @@ struct EvalData{
 
         return 0.5 * difference * difference;
     }
+
+    float error(float target, float K){
+        float out = evaluate();
+        float sig = sigmoid(out, K);
+        float difference = sig - target;
+
+        return 0.5 * difference * difference;
+    }
 };
+
+struct TrainEntry {
+    EvalData evalData;
+    float target;
+
+    TrainEntry(Board* b, float target){
+        this->evalData.init(b);
+        this->target = target;
+    }
+};
+
+
+std::vector<TrainEntry> positions{};
+
+void load_weights(){
+    for(int i = 0; i < 6; i++){
+
+        for(int n = 0; n < 2; n++){
+            for(int j =0; j < 64; j++){
+                float w1 = MgScore(piece_square_table[i][n][j] + piece_values[i]);
+                float w2 = EgScore(piece_square_table[i][n][j] + piece_values[i]);
+                w_piece_square_table[i][n][j] = {{w1},{w2}};
+            }
+        }
+
+        if(i < 5){
+
+            for(int n = 0; n < 15*15; n++){
+                float w1 = MgScore(piece_opp_king_square_table[i][n]);
+                float w2 = EgScore(piece_opp_king_square_table[i][n]);
+                w_piece_opp_king_square_table[i][n] = {{w1},{w2}};
+
+                w1 = MgScore(piece_our_king_square_table[i][n]);
+                w2 = EgScore(piece_our_king_square_table[i][n]);
+                w_piece_our_king_square_table[i][n] = {{w1},{w2}};
+            }
+
+            for(int n = 0; n < mobEntryCount[i]; n++){
+                float w1 = MgScore(mobilities[i][n]);
+                float w2 = EgScore(mobilities[i][n]);
+                w_mobility[i][n] = {{w1},{w2}};
+            }
+
+        }
+    }
+    for(int i = 0; i < 1000; i++){
+        if(i < I_END){
+            float w1 = MgScore(*evfeatures[i]);
+            float w2 = EgScore(*evfeatures[i]);
+            w_features[i] = {{w1},{w2}};
+        }if(i < 9){
+            float w1 = MgScore(bishop_pawn_same_color_table_e[i]);
+            float w2 = EgScore(bishop_pawn_same_color_table_e[i]);
+            w_bishop_pawn_e[i] = {{w1},{w2}};
+        }if(i < 9){
+            float w1 = MgScore(bishop_pawn_same_color_table_o[i]);
+            float w2 = EgScore(bishop_pawn_same_color_table_o[i]);
+            w_bishop_pawn_o[i] = {{w1},{w2}};
+        }if(i < 100){
+            float w1 = MgScore(kingSafetyTable[i]);
+            float w2 = EgScore(kingSafetyTable[i]);
+            w_king_safety[i] = {{w1},{w2}};
+        }if(i < 16){
+            float w1 = MgScore(passer_rank_n[i]);
+            float w2 = EgScore(passer_rank_n[i]);
+            w_passer[i] = {{w1},{w2}};
+        }if(i < 15){
+            float w1 = MgScore(pinnedEval[i]);
+            float w2 = EgScore(pinnedEval[i]);
+            w_pinned[i] = {{w1},{w2}};
+        }if(i < 5){
+            float w1 = MgScore(hangingEval[i]);
+            float w2 = EgScore(hangingEval[i]);
+            w_hanging[i] = {{w1},{w2}};
+        }
+    }
+}
+
+void adjust_weights(float eta) {
+    for(int i = 0; i < 6; i++){
+
+        for(int n = 0; n < 2; n++){
+            for(int j =0; j < 64; j++){
+                w_piece_square_table[i][n][j].midgame.update(eta);
+                w_piece_square_table[i][n][j].endgame.update(eta);
+            }
+        }
+
+        if(i < 5){
+
+            if(i < 1){
+                for(int n = 0; n < 15*15; n++){
+                    w_piece_opp_king_square_table[i][n].midgame.update(eta);
+                    w_piece_opp_king_square_table[i][n].endgame.update(eta);
+
+                    w_piece_our_king_square_table[i][n].midgame.update(eta);
+                    w_piece_our_king_square_table[i][n].endgame.update(eta);
+                }
+            }
+
+
+            for(int n = 0; n < mobEntryCount[i]; n++){
+                w_mobility[i][n].midgame.update(eta);
+                w_mobility[i][n].endgame.update(eta);
+            }
+
+        }
+    }
+    for(int i = 0; i < 1000; i++){
+        if(i < I_END){
+            w_features[i].midgame.update(eta);
+            w_features[i].endgame.update(eta);
+        }
+        if(i < 9){
+            w_bishop_pawn_e[i].midgame.update(eta);
+            w_bishop_pawn_e[i].endgame.update(eta);
+        }
+        if(i < 9){
+            w_bishop_pawn_o[i].midgame.update(eta);
+            w_bishop_pawn_o[i].endgame.update(eta);
+        }
+        if(i < 100){
+            w_king_safety[i].midgame.update(eta);
+            w_king_safety[i].endgame.update(eta);
+        }
+        if(i < 16){
+            w_passer[i].midgame.update(eta);
+            w_passer[i].endgame.update(eta);
+        }
+        if(i < 15){
+            w_pinned[i].midgame.update(eta);
+            w_pinned[i].endgame.update(eta);
+        }
+        if(i < 5){
+            w_hanging[i].midgame.update(eta);
+            w_hanging[i].endgame.update(eta);
+        }
+    }
+}
+
+void load_positions(const std::string& path, int count, int start) {
+
+    fstream newfile;
+    newfile.open(path, ios::in);
+    if (newfile.is_open()) {
+        string tp;
+        int    lineCount = 0;
+        int    posCount  = 0;
+        while (getline(newfile, tp)) {
+
+            if (lineCount < start) {
+                lineCount++;
+                continue;
+            }
+
+            // finding the first "c" to check where the fen ended
+            auto firstC = tp.find_first_of('c');
+            auto lastC  = tp.find_last_of('c');
+            if (firstC == string::npos || lastC == string::npos) {
+                continue;
+            }
+
+            // extracting the fen and result and removing bad characters.
+            string fen = tp.substr(0, firstC);
+            string res = tp.substr(lastC + 2, string::npos);
+
+            fen = trim(fen);
+            res = findAndReplaceAll(res, "\"", "");
+            res = findAndReplaceAll(res, ";", "");
+            res = trim(res);
+
+            TrainEntry new_entry {new Board(fen), 0};
+
+            // parsing the result to a usable value:
+            // assuming that the result is given as : a-b
+            if (res.find('-') != string::npos) {
+                if (res == "1/2-1/2") {
+                    new_entry.target = 0.5;
+                } else if (res == "1-0") {
+                    new_entry.target = 1;
+                } else if (res == "0-1") {
+                    new_entry.target = 0;
+                } else {
+                    continue;
+                }
+            }
+                // trying to read the result as a decimal
+            else {
+                try {
+                    double actualResult = stod(res);
+                    new_entry.target    = actualResult;
+                } catch (std::invalid_argument& e) { continue; }
+            }
+
+            positions.push_back(new_entry);
+
+            lineCount++;
+            posCount++;
+
+            if (posCount % 10000 == 0) {
+
+                std::cout << "\r" << loadingBar(posCount, count, "Loading data") << std::flush;
+            }
+
+            if (posCount >= count)
+                break;
+        }
+
+        std::cout << std::endl;
+        newfile.close();
+    }
+}
+
+void compute_error(){
+    
+}
+
+float tuning::compute_K(double initK, double rate, double deviation) {
+
+    double K    = initK;
+    double dK   = 0.01;
+    double dEdK = 1;
+
+    while (abs(dEdK) > deviation) {
+
+        double Epdk = computeError(K + dK, threads);
+        double Emdk = computeError(K - dK, threads);
+
+        dEdK = (Epdk - Emdk) / (2 * dK);
+
+        std::cout << "K:" << K << " Error: " << (Epdk + Emdk) / 2 << " dev: " << abs(dEdK) << std::endl;
+
+        K -= dEdK * rate;
+    }
+
+    return K;
+}
 
 #endif    // KOIVISTO_GRADIENT_H
