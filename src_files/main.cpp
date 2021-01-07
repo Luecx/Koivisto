@@ -121,14 +121,39 @@ int main(int argc, char* argv[]) {
     psqt_init();
 
     load_weights();
-    Evaluator evaluator{};
+
+    Board b{"3k4/2r1r3/8/5Q2/8/3K4/8/8 w - - 0 1"};
+    EvalData evalData{&b};
+
+    for(int i = 0; i < 1e7; i++){
+
+        std::cout << evalData.train(1, 3, 0) << std::endl;
+        adjust_weights(1);
+    }
 
 
-    Board b{"4k3/8/8/8/8/3P4/8/4K3 w - - 0 1"};
-    eval_data evalData{&b};
-    std::cout << (int)evalData.evaluate() << std::endl;
-    std::cout << "--------------------------------------------------" << std::endl;
-    std::cout << evaluator.evaluate(&b) << std::endl;
+
+//    std::cout << (int)evalData.evaluate() << std::endl;
+//    std::cout << "--------------------------------------------------" << std::endl;
+//    std::cout << evaluator.evaluate(&b) << std::endl;
+
+//    printf("%d\n", (int)sizeof(feature_data));
+//    printf("%d\n", (int)sizeof(mobility_data));
+//    printf("%d\n", (int)sizeof(hanging_data));
+//    printf("%d\n", (int)sizeof(pinned_data));
+//    printf("%d\n", (int)sizeof(passer_data));
+//    printf("%d\n", (int)sizeof(bishop_pawn_table_data));
+//    printf("%d\n", (int)sizeof(king_safety_data));
+//    printf("%d\n", (int)sizeof(pst_data_64));
+//    printf("%d\n", (int)sizeof(pst_data_225));
+//    printf("%d\n", (int)sizeof(meta_data        ));
+//
+//    printf("%d\n", (int)sizeof(eval_data));
+
+
+
+
+
 
     /**********************************************************************************
      *                                  T U N I N G                                   *
