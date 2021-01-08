@@ -229,7 +229,7 @@ void psqt_init() {
             // pawn, knight, bishop, rook, queen
             for(Piece p = 0; p < 5; p++){
                 for(Square sq = 0; sq < 64; sq++){
-                    
+
                     piece_kk_square_tables[wKingSq][bKingSq][p]  [sq] =
                           + piece_square_table              [p][!sameSideCastle][pst_index_white(sq, wKSide)]
                           + piece_values                    [p]
@@ -243,7 +243,7 @@ void psqt_init() {
                           - piece_opp_king_square_table     [p]     [pst_index_relative_black(sq, wKingSq)];
                 }
             }
-            
+
             // kings
             for(Square sq = 0; sq < 64; sq++){
                 piece_kk_square_tables[wKingSq][bKingSq][WHITE_KING][sq]

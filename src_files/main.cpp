@@ -116,23 +116,28 @@ int main(int argc, char* argv[]) {
 //    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
 //        uci_loop(true);
 //    }
+//    std::cout << sizeof(TrainEntry) << std::endl;
+
 
     bb_init();
     psqt_init();
 
     load_weights();
 
-    Board b{"3k4/2r1r3/8/5Q2/8/3K4/8/8 w - - 0 1"};
-    EvalData evalData{&b};
-
-    for(int i = 0; i < 1e7; i++){
-
-        std::cout << evalData.train(1, 3, 0) << std::endl;
-        adjust_weights(1);
+    load_positions("../resources/E12.33-1M-D12-Resolved.book", 10000000 ,0 );
+    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000 ,0 );
+    load_positions("../resources/E12.46FRD-1250k-D12-1s-Resolved.book", 10000000 ,0 );
+    compute_K(3, 100, 1e-7);
+    for(int i = 0; i < 100; i++){
+        train(100, 2.48172, 10000);
+        display_params();
     }
 
 
-
+//    Board b{"r4rk1/1pq2pbp/p2pbnp1/2p1n3/3P4/2P1B1P1/PPN1PNBP/R2Q1RK1 b - - 0 16"};
+//    EvalData evalData;
+//    evalData.init(&b);
+//    Evaluator evaluator{};
 //    std::cout << (int)evalData.evaluate() << std::endl;
 //    std::cout << "--------------------------------------------------" << std::endl;
 //    std::cout << evaluator.evaluate(&b) << std::endl;

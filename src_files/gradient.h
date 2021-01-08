@@ -6,10 +6,12 @@
 #define KOIVISTO_GRADIENT_H
 
 #include "Board.h"
+#include "eval.h"
 
 #include <cstdint>
+#include <omp.h>
+#include <ostream>
 #include <vector>
-#include "eval.h"
 
 #define N_THREAD 4
 
@@ -79,6 +81,11 @@ struct Param {
 struct Weight {
     Param midgame;
     Param endgame;
+
+    friend ostream& operator<<(ostream& os, const Weight& weight) {
+        os << "M(" << std::setw(5) << round(weight.midgame.value) << "," << std::setw(5) << round(weight.endgame.value) << ")";
+        return os;
+    }
 };
 
 Weight w_piece_square_table[6][2][64];
@@ -210,17 +217,18 @@ struct Pst64Data {
 
 struct Pst225Data {
 
-    uint8_t indices_white_wk[6][10]{};
-    uint8_t indices_black_wk[6][10]{};
-    uint8_t indices_white_bk[6][10]{};
-    uint8_t indices_black_bk[6][10]{};
+    //only for pawns currently,
+    uint8_t indices_white_wk[1][10]{};
+    uint8_t indices_black_wk[1][10]{};
+    uint8_t indices_white_bk[1][10]{};
+    uint8_t indices_black_bk[1][10]{};
 
     void init(Board* b) {
 
         Square wKingSq = bitscanForward(b->getPieces(WHITE, KING));
         Square bKingSq = bitscanForward(b->getPieces(BLACK, KING));
 
-        for(Piece p = PAWN; p <= QUEEN; p++){
+        for(Piece p = PAWN; p <= PAWN; p++){
             for(Color c = WHITE; c <= BLACK; c++){
                 U64 k = b->getPieces(c, p);
                 while(k){
@@ -241,7 +249,7 @@ struct Pst225Data {
     }
 
     void evaluate(float& midgame, float& endgame){
-        for(Piece p = PAWN; p <= QUEEN; p++){
+        for(Piece p = PAWN; p <= PAWN; p++){
 
             for(int i = 1; i <= indices_white_wk[p][0]; i++){
                 uint8_t w = indices_white_wk[p][i];
@@ -269,7 +277,7 @@ struct Pst225Data {
     }
 
     void gradient(MetaData* meta, float lossgrad, int threadID){
-        for (Piece p = PAWN; p <= QUEEN; p++) {
+        for (Piece p = PAWN; p <= PAWN; p++) {
             for(int i = 1; i <= indices_white_wk[p][0]; i++){
                 uint8_t w = indices_white_wk[p][i];
                 w_piece_our_king_square_table[p][w].midgame.gradient[threadID] += (1 - meta->phase) * meta->evalReduction * lossgrad;
@@ -883,7 +891,7 @@ struct EvalData{
         meta            .init(b);
     }
 
-    float evaluate(){
+    double evaluate(){
         float midgame = 0;
         float endgame = 0;
 
@@ -897,7 +905,7 @@ struct EvalData{
         pst64       .evaluate(midgame, endgame);
         pst225      .evaluate(midgame, endgame);
 
-        float res = (meta.phase * endgame) + ((1-meta.phase) * midgame);
+        float res = (int)(meta.phase * endgame) + (int)((1-meta.phase) * midgame);
         meta.evaluate(res);
 
         return res;
@@ -915,12 +923,12 @@ struct EvalData{
         pst225      .gradient(&meta, lossgrad, threadID);
     }
 
-    float train(float target, float K, int threadID){
-        float out = evaluate();
-        float sig = sigmoid(out, K);
-        float sigPrime = sigmoidPrime(out, K);
-        float difference = sig - target;
-        float lossgrad = difference * sigPrime;
+    double train(float target, float K, int threadID){
+        double out = evaluate();
+        double sig = sigmoid(out, K);
+        double sigPrime = sigmoidPrime(out, K);
+        double difference = sig - target;
+        double lossgrad = difference * sigPrime;
 
         gradient(lossgrad, threadID);
 
@@ -928,9 +936,9 @@ struct EvalData{
     }
 
     float error(float target, float K){
-        float out = evaluate();
-        float sig = sigmoid(out, K);
-        float difference = sig - target;
+        double out = evaluate();
+        double sig = sigmoid(out, K);
+        double difference = sig - target;
 
         return 0.5 * difference * difference;
     }
@@ -938,7 +946,7 @@ struct EvalData{
 
 struct TrainEntry {
     EvalData evalData;
-    float target;
+    double target;
 
     TrainEntry(Board* b, float target){
         this->evalData.init(b);
@@ -1014,6 +1022,7 @@ void load_weights(){
 }
 
 void adjust_weights(float eta) {
+    eta /= positions.size();
     for(int i = 0; i < 6; i++){
 
         for(int n = 0; n < 2; n++){
@@ -1077,8 +1086,10 @@ void adjust_weights(float eta) {
 
 void load_positions(const std::string& path, int count, int start) {
 
+    positions.reserve(30000000);
     fstream newfile;
     newfile.open(path, ios::in);
+    Evaluator evaluator{};
     if (newfile.is_open()) {
         string tp;
         int    lineCount = 0;
@@ -1106,7 +1117,13 @@ void load_positions(const std::string& path, int count, int start) {
             res = findAndReplaceAll(res, ";", "");
             res = trim(res);
 
-            TrainEntry new_entry {new Board(fen), 0};
+            Board b{fen};
+            TrainEntry new_entry {&b, 0};
+            if((int)(new_entry.evalData.evaluate()) != evaluator.evaluate(&b)){
+                std::cout << fen << std::endl;
+                std::cout << new_entry.evalData.evaluate() << std::endl;
+                std::cout << evaluator.evaluate(&b) << std::endl;
+            }
 
             // parsing the result to a usable value:
             // assuming that the result is given as : a-b
@@ -1148,11 +1165,33 @@ void load_positions(const std::string& path, int count, int start) {
     }
 }
 
-void compute_error(){
-    
+float compute_loss(float K){
+    double lossSum = 0;
+#pragma omp parallel for schedule(auto) num_threads(N_THREAD) reduction(+:lossSum)
+    for(int i = 0; i < positions.size(); i++){
+        const int threadID = omp_get_thread_num();
+        lossSum += positions[i].evalData.train(positions[i].target, K, threadID);
+    }
+    return lossSum / positions.size();
 }
 
-float tuning::compute_K(double initK, double rate, double deviation) {
+float compute_error(float K){
+    double lossSum = 0;
+#pragma omp parallel for schedule(auto) num_threads(N_THREAD) reduction(+:lossSum)
+    for(int i = 0; i < positions.size(); i++){
+        lossSum += positions[i].evalData.error(positions[i].target, K);
+    }
+    return lossSum / positions.size();
+}
+
+void train(int iterations, float K, float eta){
+    for(int i = 0; i < iterations; i++){
+        std::cout << "loss=" << compute_loss(K) << std::endl;
+        adjust_weights(eta);
+    }
+}
+
+float compute_K(double initK, double rate, double deviation) {
 
     double K    = initK;
     double dK   = 0.01;
@@ -1160,8 +1199,8 @@ float tuning::compute_K(double initK, double rate, double deviation) {
 
     while (abs(dEdK) > deviation) {
 
-        double Epdk = computeError(K + dK, threads);
-        double Emdk = computeError(K - dK, threads);
+        double Epdk = compute_error(K + dK);
+        double Emdk = compute_error(K - dK);
 
         dEdK = (Epdk - Emdk) / (2 * dK);
 
@@ -1171,6 +1210,152 @@ float tuning::compute_K(double initK, double rate, double deviation) {
     }
 
     return K;
+}
+
+void display_params(){
+
+    // --------------------------------- features ---------------------------------
+    const static std::string feature_names[]{
+        "SIDE_TO_MOVE",
+        "PAWN_STRUCTURE",
+        "PAWN_PASSED",
+        "PAWN_ISOLATED",
+        "PAWN_DOUBLED",
+        "PAWN_DOUBLED_AND_ISOLATED",
+        "PAWN_BACKWARD",
+        "PAWN_OPEN",
+        "PAWN_BLOCKED",
+        "KNIGHT_OUTPOST",
+        "KNIGHT_DISTANCE_ENEMY_KING",
+        "ROOK_OPEN_FILE",
+        "ROOK_HALF_OPEN_FILE",
+        "ROOK_KING_LINE",
+        "BISHOP_DOUBLED",
+        "BISHOP_FIANCHETTO",
+        "QUEEN_DISTANCE_ENEMY_KING",
+        "KING_CLOSE_OPPONENT",
+        "KING_PAWN_SHIELD",
+        "CASTLING_RIGHTS",
+        "BISHOP_PIECE_SAME_SQUARE_E",
+        "MINOR_BEHIND_PAWN",};
+
+    for(int i = 0; i < I_END; i++){
+        std::cout <<  "EvalScore " << left << setw(30) <<feature_names[i] << right << "= ";
+        std::cout << w_features[i] << ";" << std::endl;
+    }std::cout << std::endl;
+    
+    // --------------------------------- mobility ---------------------------------
+
+    const static std::string mobility_names[]{
+        "EvalScore mobilityKnight[9] = {",
+        "EvalScore mobilityBishop[14] = {",
+        "EvalScore mobilityRook[15] = {",
+        "EvalScore mobilityQueen[28] = {",};
+
+    for(int i = 0; i < 4; i++){
+        std::cout << mobility_names[i];
+        for(int n = 0; n < mobEntryCount[i+1]; n++){
+            if(n % 5 == 0) std::cout << std::endl << "\t";
+            std::cout << w_mobility[i+1][n] << ", ";
+        }
+        std::cout << "};\n" << std::endl;
+    }
+
+    // --------------------------------- hanging ---------------------------------
+    std::cout << "EvalScore hangingEval[5] = {";
+    for(int n = 0; n < 5; n++){
+        if(n % 5 == 0) std::cout << std::endl << "\t";
+        std::cout << w_hanging[n] << ", ";
+    }
+    std::cout << "};\n" << std::endl;
+
+    // --------------------------------- pinned ---------------------------------
+    std::cout << "EvalScore pinnedEval[15] = {";
+    for(int n = 0; n < 15; n++){
+        if(n % 5 == 0) std::cout << std::endl << "\t";
+        std::cout << w_pinned[n] << ", ";
+    }
+    std::cout << "};\n" << std::endl;
+
+    // --------------------------------- passer_rank_n ---------------------------------
+    std::cout << "EvalScore passer_rank_n[16] = {";
+    for(int n = 0; n < 16; n++){
+        if(n % 4 == 0) std::cout << std::endl << "\t";
+        std::cout << w_passer[n] << ", ";
+    }
+    std::cout << "};\n" << std::endl;
+
+    // --------------------------------- bishop_pawn_same_color_table_o ---------------------------------
+    std::cout << "EvalScore bishop_pawn_same_color_table_o[9] = {";
+    for(int n = 0; n < 9; n++){
+        if(n % 3 == 0) std::cout << std::endl << "\t";
+        std::cout << w_bishop_pawn_o[n] << ", ";
+    }
+    std::cout << "};\n" << std::endl;
+
+    // --------------------------------- bishop_pawn_same_color_table_o ---------------------------------
+    std::cout << "EvalScore bishop_pawn_same_color_table_e[9] = {";
+    for(int n = 0; n < 9; n++){
+        if(n % 3 == 0) std::cout << std::endl << "\t";
+        std::cout << w_bishop_pawn_e[n] << ", ";
+    }
+    std::cout << "};\n" << std::endl;
+
+    // --------------------------------- kingSafetyTable ---------------------------------
+    std::cout << "EvalScore kingSafetyTable[100] = {";
+    for(int n = 0; n < 100; n++){
+        if(n % 5 == 0) std::cout << std::endl << "\t";
+        std::cout << w_king_safety[n] << ", ";
+    }
+    std::cout << "};\n" << std::endl;
+
+    // --------------------------------- piece_square_table ---------------------------------
+
+    std::cout << "EvalScore piece_square_table[6][2][64]{\n";
+    for(Piece p = 0; p < 6; p++){
+        std::cout << "\t{\n";
+
+        for(int i = 0; i < 2; i++){
+            std::cout << "\t\t{\n";
+            for(int n = 0; n < 64; n++){
+                if(n % 4 == 0) std::cout << std::endl << "\t\t\t";
+                Weight temp = w_piece_square_table[p][i][n];
+                temp.midgame.value -= MgScore(piece_values[p]);
+                temp.endgame.value -= EgScore(piece_values[p]);
+                std::cout << temp << ", ";
+            }
+            std::cout << "\n\t\t},\n";
+        }
+        std::cout << "\t},\n";
+    }
+    std::cout << "};" << std::endl;
+
+
+    // --------------------------------- piece_our_king_square_table ---------------------------------
+    std::cout << "EvalScore piece_our_king_square_table[5][15*15]{\n";
+    for (Piece p = 0; p < 5; p++) {
+        std::cout << "\t{";
+        for (int n = 0; n < 15 * 15; n++) {
+            if (n % 5 == 0) std::cout << std::endl << "\t\t";
+            std::cout << w_piece_our_king_square_table[p][n] << ", ";
+        }
+
+        std::cout << "\n\t},\n";
+    }
+    std::cout << "};" << std::endl;
+
+    // --------------------------------- piece_opp_king_square_table ---------------------------------
+    std::cout << "EvalScore piece_opp_king_square_table[5][15*15]{\n";
+    for (Piece p = 0; p < 5; p++) {
+        std::cout << "\t{";
+        for (int n = 0; n < 15 * 15; n++) {
+            if (n % 5 == 0) std::cout << std::endl << "\t\t";
+            std::cout << w_piece_opp_king_square_table[p][n] << ", ";
+        }
+
+        std::cout << "\n\t},\n";
+    }
+    std::cout << "};" << std::endl;
 }
 
 #endif    // KOIVISTO_GRADIENT_H
