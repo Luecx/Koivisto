@@ -13,6 +13,8 @@
 #include <ostream>
 #include <vector>
 
+#ifdef TUNING
+
 #define N_THREAD 4
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -1357,5 +1359,7 @@ void display_params(){
     }
     std::cout << "};" << std::endl;
 }
+
+#endif
 
 #endif    // KOIVISTO_GRADIENT_H

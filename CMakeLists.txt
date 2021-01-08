@@ -28,8 +28,6 @@ add_executable(Koivisto
         src_files/History.cpp
         src_files/History.h
         src_files/Verification.h
-        src_files/Tuning.cpp
-        src_files/Tuning.h
         src_files/TimeManager.cpp
         src_files/TimeManager.h
         src_files/syzygy/stdendian.h

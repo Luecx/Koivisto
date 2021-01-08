@@ -111,27 +111,26 @@ using namespace move;
 int main(int argc, char* argv[]) {
 
     
-//    if (argc == 1) {
-//        uci_loop(false);
-//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-//        uci_loop(true);
-//    }
-//    std::cout << sizeof(TrainEntry) << std::endl;
-
-
-    bb_init();
-    psqt_init();
-
-    load_weights();
-
-    load_positions("../resources/E12.33-1M-D12-Resolved.book", 10000000 ,0 );
-    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000 ,0 );
-    load_positions("../resources/E12.46FRD-1250k-D12-1s-Resolved.book", 10000000 ,0 );
-    compute_K(2.48617, 100, 1e-7);
-    for(int i = 0; i < 100; i++){
-        train(100, 2.48172, 60000);
-        display_params();
+    if (argc == 1) {
+        uci_loop(false);
+    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+        uci_loop(true);
     }
+
+
+//    bb_init();
+//    psqt_init();
+//
+//    load_weights();
+//
+//    load_positions("../resources/E12.33-1M-D12-Resolved.book", 10000000 ,0 );
+//    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000 ,0 );
+//    load_positions("../resources/E12.46FRD-1250k-D12-1s-Resolved.book", 10000000 ,0 );
+//    compute_K(2.48617, 100, 1e-7);
+//    for(int i = 0; i < 100; i++){
+//        train(100, 2.48172, 60000);
+//        display_params();
+//    }
 
 
 //    Board b{"r4rk1/1pq2pbp/p2pbnp1/2p1n3/3P4/2P1B1P1/PPN1PNBP/R2Q1RK1 b - - 0 16"};
