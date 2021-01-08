@@ -17,46 +17,73 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+#ifndef KOIVISTO_TUNING_H
+#define KOIVISTO_TUNING_H
+
 #include "Bitboard.h"
-#include "Board.h"
-#include "Move.h"
-#include "MoveOrderer.h"
-#include "Tuning.h"
-#include "Verification.h"
-#include "uci.h"
+#include "Util.h"
+#include "eval.h"
 
-#include <iomanip>
-#include "gradient.h"
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <unistd.h>
 
-using namespace std;
-using namespace bb;
-using namespace move;
+namespace tuning {
 
+struct TrainingEntry {
+    Board  board;
+    double target;
 
-int main(int argc, char* argv[]) {
+    const Board& getBoard() const { return board; }
+    void         setBoard(const Board& board) { TrainingEntry::board = board; }
+    double       getTarget() const { return target; }
+    void         setTarget(double target) { TrainingEntry::target = target; }
+};
 
-    
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+extern std::vector<TrainingEntry> training_entries;
 
+inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
 
-//    bb_init();
-//    psqt_init();
-//
-//    load_weights();
-//
-//    load_positions("../resources/E12.33-1M-D12-Resolved.book", 10000000 ,0 );
-//    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000 ,0 );
-//    load_positions("../resources/E12.46FRD-1250k-D12-1s-Resolved.book", 10000000 ,0 );
-//    compute_K(2.48617, 100, 1e-7);
-//    for(int i = 0; i < 100; i++){
-//        train(100, 2.48172, 60000);
-//        display_params();
-//    }
-
-
-    return 0;
+inline double sigmoidPrime(double s, double K) {
+    double ex = exp(-s * K / 400);
+    return (K * ex) / (400 * (ex + 1) * (ex + 1));
 }
+
+void loadPositionFile(const std::string& path, int count, int start = 0);
+
+/**
+ * does blackbox tuning on the given data. This is usually inefficient.
+ * @param evaluator
+ * @param K
+ * @return
+ */
+double optimiseBlackBox(double K, float* params, int paramCount, float lr, int threads = 1);
+
+double optimisePSTBlackBox(double K, EvalScore* evalScore, int count, int iterations, int lr, int threads = 1);
+
+double optimisePSTBlackBox(double K, EvalScore** evalScore, int count, int iterations, int lr, int threads = 1);
+
+/**
+ * computes the error of the evaluator on the given set
+ */
+double computeError(double K, int threads = 1);
+
+/**
+ * computes the K value
+ * @param evaluator
+ * @param initK
+ * @param rate
+ * @param deviation
+ * @return
+ */
+double computeK(double initK, double rate, double deviation, int threads = 1);
+
+/**
+ * computes the average time for evaluation
+ */
+void evalSpeed();
+
+}    // namespace tuning
+
+#endif    // KOIVISTO_TUNING_H

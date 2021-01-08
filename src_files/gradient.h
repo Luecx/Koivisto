@@ -13,8 +13,8 @@
 #include <ostream>
 #include <vector>
 
-#ifdef TUNING
 
+#ifdef TUNING
 #define N_THREAD 4
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -1218,7 +1218,7 @@ void display_params(){
 
     // --------------------------------- features ---------------------------------
     const static std::string feature_names[]{
-        "SIDE_TO_MOVE",
+        "SIDE_TO_MOVE",                                     
         "PAWN_STRUCTURE",
         "PAWN_PASSED",
         "PAWN_ISOLATED",
@@ -1234,11 +1234,11 @@ void display_params(){
         "ROOK_KING_LINE",
         "BISHOP_DOUBLED",
         "BISHOP_FIANCHETTO",
+        "BISHOP_PIECE_SAME_SQUARE_E",
         "QUEEN_DISTANCE_ENEMY_KING",
         "KING_CLOSE_OPPONENT",
         "KING_PAWN_SHIELD",
         "CASTLING_RIGHTS",
-        "BISHOP_PIECE_SAME_SQUARE_E",
         "MINOR_BEHIND_PAWN",};
 
     for(int i = 0; i < I_END; i++){
