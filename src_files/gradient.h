@@ -13,7 +13,17 @@
 #include <ostream>
 #include <vector>
 
-
+/**
+ * How to add new eval params:
+ * If it is a new feature, do the following:
+ *    1. Add the feature name starting with I_ inside feature_indices
+ *    2. Add the evaluation of the feature inside FeatureData.init()
+ *    3. Add the feature name at the displayValues() to print the features.
+ *
+ * If it is a new array, ask Finn first
+ *
+ */
+ 
 #ifdef TUNING
 #define N_THREAD 4
 
