@@ -23,7 +23,7 @@
  * If it is a new array, ask Finn first
  *
  */
-
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -76,6 +76,11 @@ struct Param {
 
     float value;
     float gradient[N_THREAD]{};
+
+    double  firstMoment = 0;
+    double secondMoment = 0;
+    double t            = 0;
+
     void mergeGradients(){
         for(int i = 1; i < N_THREAD; i++){
             gradient[0] += gradient[i];
@@ -84,7 +89,22 @@ struct Param {
     }
     void update(float eta){
         mergeGradients();
-        this->value -= eta * gradient[0];
+
+        static double beta1 = 0.9;
+        static double beta2 = 0.999;
+        static double eps   = 1e-8;
+
+         firstMoment = beta1 *  firstMoment + (1-beta1) * gradient[0];
+        secondMoment = beta1 * secondMoment + (1-beta1) * gradient[0];
+
+        this->t ++;
+
+        double  firstMomentCorrected =  firstMoment / (1 - pow(beta1, t));
+        double secondMomentCorrected = secondMoment / (1 - pow(beta2, t));
+
+        this->value -= eta / (sqrt(secondMomentCorrected) + eps) * firstMomentCorrected;
+
+//        this->value -= eta * gradient[0];
         this->gradient[0] = 0;
     }
 
