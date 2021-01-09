@@ -35,28 +35,28 @@ using namespace move;
 int main(int argc, char* argv[]) {
 
     
-//    if (argc == 1) {
-//        uci_loop(false);
-//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-//        uci_loop(true);
-//    }
-
-
-using namespace tuning;
-
-    bb_init();
-    psqt_init();
-
-    load_weights();
-
-    load_positions("../resources/E12.33-1M-D12-Resolved.book", 1000000 ,0 );
-//    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000 ,0 );
-//    load_positions("../resources/E12.46FRD-1250k-D12-1s-Resolved.book", 10000000 ,0 );
-//    compute_K(2.48617, 100, 1e-7);
-    for(int i = 0; i < 1; i++){
-        train(50, 2.48172, 0.001 * sqrt(1000000));
-        display_params();
+    if (argc == 1) {
+        uci_loop(false);
+    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+        uci_loop(true);
     }
+
+
+//using namespace tuning;
+//
+//    bb_init();
+//    psqt_init();
+//
+//    load_weights();
+//
+//    load_positions("../resources/E12.33-1M-D12-Resolved.book", 1000000 ,0 );
+////    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000 ,0 );
+////    load_positions("../resources/E12.46FRD-1250k-D12-1s-Resolved.book", 10000000 ,0 );
+////    compute_K(2.48617, 100, 1e-7);
+//    for(int i = 0; i < 1; i++){
+//        train(50, 2.48172, 0.001 * sqrt(1000000));
+//        display_params();
+//    }
 
 
     return 0;
