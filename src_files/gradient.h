@@ -23,7 +23,7 @@
  * If it is a new array, ask Finn first
  *
  */
- 
+
 #ifdef TUNING
 #define N_THREAD 4
 
