@@ -1,12 +1,10 @@
-#thank you @Andrew Grant for your help with this file! :)
-
 CC      = g++
 SRC     = *.cpp syzygy/tbprobe.c
 LIBS    = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER  = bin/
 ROOT    = ../
 NAME    = Koivisto
-MINOR   = 19
+MINOR   = 20
 MAJOR   = 4
 EXE     = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 ifeq ($(OS),Windows_NT)
@@ -26,6 +24,7 @@ DFLAGS = -O0 $(WFLAGS) -g
 POPCNTFLAGS = -DUSE_POPCNT -msse3 -mpopcnt
 PEXTFLAGS   = $(POPCNTFLAGS) -DUSE_PEXT -mbmi2
 AVX2FLAGS   = -msse -msse3 -mpopcnt -mavx2 -msse4.1 -mssse3 -msse2
+OPENMPFLAGS = -fopenmp
 
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
@@ -43,4 +42,6 @@ release:
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) -o $(EXE)-x64-$(PREFIX)-popcnt$(SUFFIX)
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) $(AVX) -o $(EXE)-x64-$(PREFIX)-popcnt-avx$(SUFFIX)
 
-	
+tuning:
+	mkdir -p $(ROOT)$(FOLDER)
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) $(OPENMPFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
