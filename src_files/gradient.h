@@ -216,7 +216,7 @@ namespace tuning {
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (Piece p = PAWN; p <= KING; p++) {
+            for (Piece p = PAWN; p < KING; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
                     midgame += td->w_piece_square_table[p][!sameside_castle][w].midgame.value;
@@ -228,10 +228,22 @@ namespace tuning {
                     endgame -= td->w_piece_square_table[p][!sameside_castle][b].endgame.value;
                 }
             }
+
+            // the kings are done seperate as they are not affected by castling side
+            for (int i = 1; i <= indices_white[KING][0]; i++) {
+                int8_t w = indices_white[KING][i];
+                midgame += td->w_piece_square_table[KING][0][w].midgame.value;
+                endgame += td->w_piece_square_table[KING][0][w].endgame.value;
+            }
+            for (int i = 1; i < indices_black[KING][0]; i++) {
+                int8_t b = indices_black[KING][i];
+                midgame -= td->w_piece_square_table[KING][0][b].midgame.value;
+                endgame -= td->w_piece_square_table[KING][0][b].endgame.value;
+            }
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            for (Piece p = PAWN; p <= KING; p++) {
+            for (Piece p = PAWN; p < KING; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
                     td->w_piece_square_table[p][!sameside_castle][w].midgame.gradient +=
@@ -246,6 +258,22 @@ namespace tuning {
                     td->w_piece_square_table[p][!sameside_castle][b].endgame.gradient -=
                             (meta->phase) * meta->evalReduction * lossgrad;
                 }
+            }
+
+            // the kings are done seperate as they are not affected by castling side
+            for (int i = 1; i <= indices_white[KING][0]; i++) {
+                int8_t w = indices_white[KING][i];
+                td->w_piece_square_table[KING][0][w].midgame.gradient +=
+                        (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_square_table[KING][0][w].endgame.gradient +=
+                        (meta->phase) * meta->evalReduction * lossgrad;
+            }
+            for (int i = 1; i <= indices_black[KING][0]; i++) {
+                int8_t b = indices_black[KING][i];
+                td->w_piece_square_table[KING][0][b].midgame.gradient -=
+                        (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_square_table[KING][0][b].endgame.gradient -=
+                        (meta->phase) * meta->evalReduction * lossgrad;
             }
         }
     };
