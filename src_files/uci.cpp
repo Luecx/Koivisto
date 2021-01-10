@@ -384,6 +384,15 @@ void uci_set_option(std::string& name, std::string& value) {
             count = MAX_THREADS;
 
         threadCount = count;
+    } else if(name == "RAZOR_MARGIN") {
+        RAZOR_MARGIN = stoi(value);
+    } else if(name == "FUTILITY_MARGIN") {
+        FUTILITY_MARGIN = stoi(value);
+    } else if(name == "SE_MARGIN_STATIC") {
+        RAZOR_MARGIN = stoi(value);
+    } else if(name == "LMR_DIV") {
+        LMR_DIV = stoi(value);
+        initLmr();
     }
 }
 
