@@ -907,12 +907,13 @@ namespace tuning {
                                 attacks = KNIGHT_ATTACKS[square];
                                 break;
                             case BISHOP:
-                                attacks = lookUpBishopAttack(square, occupied);
+                                attacks = lookUpBishopAttack(square, occupied &~b->getPieces(c, QUEEN));
                                 break;
                             case QUEEN:
-                                attacks = lookUpBishopAttack(square, occupied);
+                                attacks = lookUpBishopAttack(square, occupied &~b->getPieces(c, BISHOP)) | lookUpRookAttack(square, occupied &~b->getPieces(c, ROOK));
+                                break;
                             case ROOK:
-                                attacks |= lookUpRookAttack(square, occupied);
+                                attacks |= lookUpRookAttack(square, occupied &~b->getPieces(c, QUEEN)&~b->getPieces(c, ROOK));
                                 break;
                         }
                         if (c == WHITE) {
