@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 4
 
 namespace tuning {
 
@@ -43,6 +43,7 @@ namespace tuning {
 
         I_PAWN_STRUCTURE,
         I_PAWN_PASSED,
+        I_PAWN_PASSER_CANDIDATE,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -621,6 +622,26 @@ namespace tuning {
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
+            k = whitePawns & openFilesBlack;
+            while(k){
+                square = bitscanForward(k);
+                U64 defendingPawns = blackPassedPawnMask[square+8] & whitePawns;
+                U64 attackingPawns = whitePassedPawnMask[square  ] & blackPawns;
+                if(bitCount(attackingPawns) > bitCount(defendingPawns)){
+                    count[I_PAWN_PASSER_CANDIDATE] ++;
+                }
+                k = lsbReset(k);
+            }
+            k = blackPawns & openFilesWhite;
+            while(k) {
+                square = bitscanForward(k);
+                U64 defendingPawns = whitePassedPawnMask[square-8] & blackPawns;
+                U64 attackingPawns = blackPassedPawnMask[square  ] & whitePawns;
+                if(bitCount(attackingPawns) > bitCount(defendingPawns)){
+                    count[I_PAWN_PASSER_CANDIDATE] --;
+                }
+                k = lsbReset(k);
+            }
             // clang-format off
             count[I_PAWN_DOUBLED_AND_ISOLATED] = (
                     +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
@@ -669,7 +690,6 @@ namespace tuning {
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
                 k = lsbReset(k);
             }
-
 
             k = b->getPieces()[WHITE_BISHOP];
             while (k) {
@@ -1553,6 +1573,7 @@ namespace tuning {
                 "SIDE_TO_MOVE",
                 "PAWN_STRUCTURE",
                 "PAWN_PASSED",
+                "PAWN_PASSER_CANDIDATE",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
