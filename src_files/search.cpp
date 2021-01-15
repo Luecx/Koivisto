@@ -497,15 +497,17 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score alpha  = s - window;
             Score beta   = s + window;
             
-            while (rootTimeLeft()) {
+            while (true) {
                 s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
                 
                 window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
                 if (s >= beta) {
+                    if (!rootTimeLeft()) break;
                     beta += window;
                 } else if (s <= alpha) {
+                    if (!isTimeLeft()) break;
                     alpha -= window;
                 } else {
                     break;
