@@ -497,7 +497,15 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score alpha  = s - window;
             Score beta   = s + window;
             
-            while (rootTimeLeft()) {
+            while (true) {
+                if (threadId == 0) {
+                    if (!rootTimeLeft())
+                        break;
+                } else {
+                    if (!isTimeLeft())
+                        break;
+                }
+
                 s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
                 
                 window += window;
@@ -517,9 +525,13 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             printInfoString(&printBoard, d, s);
         }
         
-        // if the search finished due to timeout, we also need to stop here
-        if (!rootTimeLeft())
-            break;
+        if (threadId == 0) {
+            if (!rootTimeLeft())
+                break;
+        } else {
+            if (!isTimeLeft())
+                break;
+        }
     }
     
     // if the main thread finishes, we will record the data of this thread
