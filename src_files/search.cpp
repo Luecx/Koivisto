@@ -1046,7 +1046,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // keping track of the best move for the trasnpositions
     Move  bestMove  = 0;
-    Score bestScore = -MAX_MATE_SCORE;
+    Score bestScore = stand_pat;
 
     for (int i = 0; i < mv->getSize(); i++) {
         
