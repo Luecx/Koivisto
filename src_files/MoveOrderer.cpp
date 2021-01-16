@@ -38,7 +38,9 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
 
         if (sameMove(m, hashMove)) {
             moves->scoreMove(i, 1e6);
-        } else if (isCapture(m)) {
+        } else if (sameMove(m, sd->skipMoveRef[board->getActivePlayer()][ply])){
+            moves->scoreMove(i, 1e6-1);
+        }else if (isCapture(m)) {
             // add mvv lva score here
             Score     SEE    = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)

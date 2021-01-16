@@ -39,6 +39,7 @@ struct SearchData {
     int   cmh[6][64][2][6][64]      = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     Move  killer[2][MAX_PLY]        = {0};
     Score eval[2][MAX_PLY]          = {0};
+    Move skipMoveRef[2][MAX_PLY]    = {0};
     bool  sideToReduce;
     bool reduce;
 

@@ -747,6 +747,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // store all the moves inside the movelist
     b->getPseudoLegalMoves(mv);
     
+    //Set skipMove killer to 0
+    sd->skipMoveRef[b->getActivePlayer()][ply] = 0;
+
     // create a moveorderer and assign the movelist to score the moves.
     MoveOrderer moveOrderer {};
     moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
@@ -872,7 +875,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
-            if (isCapture(m) && lmr > 3) lmr = 3;
         }
         
         // doing the move
@@ -917,6 +919,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (!skipMove) {
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
+            } else {
+                sd->skipMoveRef[b->getActivePlayer()][ply] = m;
             }
             // also set this move as a killer move into the history
             sd->setKiller(m, ply, b->getActivePlayer());
