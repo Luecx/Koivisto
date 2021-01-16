@@ -872,6 +872,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
+            if (isCapture(m) && lmr > 3) lmr = 3;
         }
         
         // doing the move
