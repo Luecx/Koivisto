@@ -1087,9 +1087,8 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         }
     }
     
-    // store the current position inside the transposition table
-    if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+    table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+    
     return alpha;
     
     //    return 0;
