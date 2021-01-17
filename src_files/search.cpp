@@ -493,12 +493,15 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         if (d < 6) {
             s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
         } else {
+
+            Depth tempDepth = d;
+
             Score window = 10;
             Score alpha  = s - window;
             Score beta   = s + window;
             
             while (rootTimeLeft()) {
-                s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
+                s = pvSearch(&searchBoard, alpha, beta, tempDepth, 0, td, 0);
                 
                 window += window;
                 if (window > 500)
@@ -506,6 +509,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
                 if (s >= beta) {
                     beta += window;
                 } else if (s <= alpha) {
+                    tempDepth = d-1;
                     alpha -= window;
                 } else {
                     break;
