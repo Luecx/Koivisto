@@ -48,9 +48,9 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
                 MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
                                 + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
                 if (SEE >= 0) {
-                    moves->scoreMove(i, ms + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 1));
+                    moves->scoreMove(i, ms + mvvLVA + 2*sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 1));
                 } else {
-                    moves->scoreMove(i, ms + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 0));
+                    moves->scoreMove(i, ms + 2*sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 0));
                 }
             }else {
                 moves->scoreMove(i, ms + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 0));
