@@ -44,15 +44,15 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
             MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
                                + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
             if (SEE >= 0) {
-                moves->scoreMove(i, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 1));
+                moves->scoreMove(i, 20000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 1));
             } else {
                 moves->scoreMove(i, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 0));
             }
         } else if (isPromotion(m)) {
             MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            moves->scoreMove(i, 40000 + mvvLVA + promotionPiece(m));
+            moves->scoreMove(i, 20000 + mvvLVA + promotionPiece(m));
         } else if (sd->isKiller(m, ply, board->getActivePlayer())) {
-            moves->scoreMove(i, 30000);
+            moves->scoreMove(i, 20000+200+sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 0));
         } else {
             moves->scoreMove(i, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(), 0));
         }
