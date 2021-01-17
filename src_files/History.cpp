@@ -37,9 +37,15 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
 
         if (sameMove(m, m2)) {
             if (isCapture(m)){
-                 captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
-                    (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                if (mv->getScore(i)<30000){
+                    captureHistoryBad[side][getSquareFrom(m)][getSquareTo(m)] +=
+                        (depth * depth + 5 * depth)
+                        - (depth * depth + 5 * depth) * captureHistoryBad[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                } else {
+                    captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
+                        (depth * depth + 5 * depth)
+                        - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                }
             } else {
                 history[side][getSquareFrom(m)][getSquareTo(m)] +=
                     (depth * depth + 5 * depth)
@@ -52,9 +58,15 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
             // we can return at this point because all moves searched are in front of this move
             return;
         } else if (isCapture(m2)) {
-            captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
-                -(depth * depth + 5 * depth)
-                - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+            if (mv->getScore(i)<30000){
+                captureHistoryBad[side][getSquareFrom(m2)][getSquareTo(m2)] +=
+                    -(depth * depth + 5 * depth)
+                    - (depth * depth + 5 * depth) * captureHistoryBad[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+            } else {
+                captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
+                    -(depth * depth + 5 * depth)
+                    - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+            }
         } else {
             history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
@@ -68,9 +80,10 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
     return;
 }
 
-int SearchData::getHistories(Move m, bool side, Move previous){
+int SearchData::getHistories(Move m, bool side, Move previous, bool goodCap){
     if (isCapture(m)){
-        return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
+        if (goodCap)return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
+        return captureHistoryBad[side][getSquareFrom(m)][getSquareTo(m)];
     } else {
         Piece  prevPiece   = getMovingPiece(previous) % 6;
         Square prevTo      = getSquareTo(previous);
