@@ -10,7 +10,7 @@ Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and
 ### Supported UCI settings:
 - Hash
 - SyzygyPath (up to 6 pieces)
-- Threads (up to 32)
+- Threads (up to 256)
 
 ### Acknowledgements
 - [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page)
