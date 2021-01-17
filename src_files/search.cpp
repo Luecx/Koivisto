@@ -808,6 +808,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (isCapture(m) && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
+        if (isCapture(m)) {
+            mv->scoreMove(legalMoves, 30000+staticExchangeEval);
+        }
         
         // keep track of the depth we want to extend by
         int extension = 0;
