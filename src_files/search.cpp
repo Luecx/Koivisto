@@ -40,7 +40,7 @@ int lmrReductions[256][256];
 ThreadData** tds = new ThreadData*[MAX_THREADS];
 
 int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 92;
+int FUTILITY_MARGIN  = 30;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
@@ -616,6 +616,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval =
             inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
+
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
@@ -699,7 +700,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + depth * depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
