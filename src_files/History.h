@@ -41,7 +41,8 @@ struct SearchData {
     Score eval[2][MAX_PLY]          = {0};
     bool  sideToReduce;
     bool reduce;
-
+    bool nullSide;
+    bool nullReduce;
 
     SearchData();
 

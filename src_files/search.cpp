@@ -708,9 +708,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
+            sd->nullReduce = true;
+            sd->nullSide = b->getActivePlayer();
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
+            sd->nullReduce = false;
             if (score >= beta) {
                 return beta;
             }
@@ -863,6 +866,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
+            lmr += (sd->nullReduce&&sd->nullSide==b->getActivePlayer());
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
                 lmr = lmr + 1;
             }
