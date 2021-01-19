@@ -564,7 +564,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @return
  */
 Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove) {
-    
+    if (depth > 4) depth--;
     // increment the node counter for the current thread
     td->nodes++;
     
@@ -721,6 +721,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
     // **********************************************************************************************************
+    
     if (depth >= 4 && !hashMove)
         depth--;
     
