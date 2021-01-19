@@ -25,9 +25,9 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 8
 
 namespace tuning {
 
@@ -103,8 +103,6 @@ namespace tuning {
             double secondMomentCorrected = secondMoment / (1 - pow(beta2, t));
 
             this->value -= eta / (sqrt(secondMomentCorrected) + eps) * firstMomentCorrected;
-
-//            this->value -= eta * this->gradient;
 
             this->gradient = 0;
         }
@@ -235,7 +233,7 @@ namespace tuning {
                 midgame += td->w_piece_square_table[KING][0][w].midgame.value;
                 endgame += td->w_piece_square_table[KING][0][w].endgame.value;
             }
-            for (int i = 1; i < indices_black[KING][0]; i++) {
+            for (int i = 1; i <= indices_black[KING][0]; i++) {
                 int8_t b = indices_black[KING][i];
                 midgame -= td->w_piece_square_table[KING][0][b].midgame.value;
                 endgame -= td->w_piece_square_table[KING][0][b].endgame.value;
@@ -413,12 +411,19 @@ namespace tuning {
                                 attacks = KNIGHT_ATTACKS[square];
                                 break;
                             case BISHOP:
-                                attacks = lookUpBishopAttack(square, occupied);
+                                attacks =
+                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, QUEEN));
                                 break;
                             case QUEEN:
-                                attacks = lookUpBishopAttack(square, occupied);
+                                attacks =
+                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, BISHOP)) |
+                                        lookUpRookAttack    (square, occupied &~b->getPieces(c, ROOK));
+                                break;
                             case ROOK:
-                                attacks |= lookUpRookAttack(square, occupied);
+                                attacks =
+                                        lookUpRookAttack    (square,occupied &
+                                                                    ~b->getPieces(c, QUEEN)&
+                                                                    ~b->getPieces(c, ROOK));
                                 break;
                         }
                         if (c == WHITE) {
@@ -907,12 +912,19 @@ namespace tuning {
                                 attacks = KNIGHT_ATTACKS[square];
                                 break;
                             case BISHOP:
-                                attacks = lookUpBishopAttack(square, occupied);
+                                attacks =
+                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, QUEEN));
                                 break;
                             case QUEEN:
-                                attacks = lookUpBishopAttack(square, occupied);
+                                attacks =
+                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, BISHOP)) |
+                                        lookUpRookAttack    (square, occupied &~b->getPieces(c, ROOK));
+                                break;
                             case ROOK:
-                                attacks |= lookUpRookAttack(square, occupied);
+                                attacks =
+                                        lookUpRookAttack    (square,occupied &
+                                                ~b->getPieces(c, QUEEN)&
+                                                ~b->getPieces(c, ROOK));
                                 break;
                         }
                         if (c == WHITE) {
@@ -951,8 +963,6 @@ namespace tuning {
                     td->w_mobility[p][w].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
                     td->w_mobility[p][w].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
 
-//                midgame += w_mobility[p][w].midgame.value;
-//                endgame += w_mobility[p][w].endgame.value;
                 }
                 for (int i = 1; i <= indices_black[p][0]; i++) {
                     int8_t b = indices_black[p][i];
@@ -960,8 +970,6 @@ namespace tuning {
                     td->w_mobility[p][b].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
                     td->w_mobility[p][b].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
 
-//                midgame -= w_mobility[p][b].midgame.value;
-//                endgame -= w_mobility[p][b].endgame.value;
                 }
             }
         }
@@ -1406,7 +1414,7 @@ namespace tuning {
         share_weights();
     }
 
-    void load_positions(const std::string &path, int count, int start) {
+    void load_positions(const std::string &path, int count, int start=0) {
 
         positions.reserve(30000000);
         fstream newfile;

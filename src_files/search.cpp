@@ -761,10 +761,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // get the current move
         Move m = moveOrderer.next();
         
-        // dont search illegal moves
-        if (!b->isLegal(m))
-            continue;
-        
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
             continue;
@@ -802,6 +798,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
+
+        // dont search illegal moves
+        if (!b->isLegal(m))
+            continue;
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
@@ -860,7 +860,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 256;
+            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) {
