@@ -85,11 +85,20 @@ int SearchData::getHistories(Move m, bool side, Move previous){
 /*
  * Set killer
  */
-void SearchData::setKiller(Move move, Depth ply, Color color) { killer[color][ply] = move; }
+void SearchData::setKiller(Move move, Depth ply, Color color) { 
+    if (!sameMove(move, killer[color][ply][0])) {
+        killer[color][ply][1] = killer[color][ply][0];
+        killer[color][ply][0] = move;
+    }
+}
 /*
  * Is killer?
  */
-bool SearchData::isKiller(Move move, Depth ply, Color color) { return sameMove(move, killer[color][ply]); }
+int SearchData::isKiller(Move move, Depth ply, Color color) { 
+    if (sameMove(move, killer[color][ply][0])) 
+        return 2;
+    return sameMove(move, killer[color][ply][0]);
+}
 
 /*
  * Set historic eval
