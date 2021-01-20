@@ -680,6 +680,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
+    // reset killer of granchildren
+    sd->setKiller(0, ply + 2, b->getActivePlayer());
+
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
         // razoring:
