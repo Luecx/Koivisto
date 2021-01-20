@@ -679,6 +679,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return res;
         }
     }
+
+    // reset killer for child node
+    sd->killer[!b->getActivePlayer()][ply + 1] = 0;
     
     // reset killer of granchildren
     sd->setKiller(0, ply + 2, b->getActivePlayer());
