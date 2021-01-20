@@ -97,7 +97,7 @@ void SearchData::setKiller(Move move, Depth ply, Color color) {
 int SearchData::isKiller(Move move, Depth ply, Color color) { 
     if (sameMove(move, killer[color][ply][0])) 
         return 2;
-    return sameMove(move, killer[color][ply][0]);
+    return sameMove(move, killer[color][ply][1]);
 }
 
 /*
