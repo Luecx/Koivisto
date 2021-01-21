@@ -84,15 +84,16 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     mode         = TOURNAMENT;
 
     double division = movesToGo+1;
-
-    timeToUse = board->getActivePlayer() == WHITE ? (int(white / division) + whiteInc) - 25
-                                                  : (int(black / division) + blackInc) - 25;
-
-    upperTimeBound =
-        board->getActivePlayer() == WHITE ? (int(white / (division*0.7)) + whiteInc) - 25 : (int(black / (division*0.7)) + blackInc) - 25;
-
-    timeToUse = std::min(timeToUse, WHITE ? white - 25 : black - 25);
-    upperTimeBound = std::min(upperTimeBound, WHITE ? white - 100 : black - 25);
+    
+    bool whiteToMove = board->getActivePlayer() == WHITE;
+    
+    timeToUse       = whiteToMove ? (int(white / division) + whiteInc) - 25
+                                  : (int(black / division) + blackInc) - 25;
+    upperTimeBound  = whiteToMove ? (int(white / (division*0.7)) + whiteInc) - 25
+                                  : (int(black / (division*0.7)) + blackInc) - 25;
+    
+    timeToUse       = std::min(timeToUse        , whiteToMove ? white - 25  : black - 25);
+    upperTimeBound  = std::min(upperTimeBound   , whiteToMove ? white - 100 : black - 100);
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
