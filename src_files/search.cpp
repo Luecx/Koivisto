@@ -504,6 +504,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
                 if (window > 500)
                     window = MIN_MATE_SCORE;
                 if (s >= beta) {
+                    alpha = beta-1;
                     beta += window;
                 } else if (s <= alpha) {
                     alpha -= window;
