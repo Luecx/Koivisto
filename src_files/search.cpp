@@ -715,6 +715,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
+            sd->moveHistory[ply] = 0;
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
             if (score >= beta) {
@@ -863,14 +864,17 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
+        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             int history = 0;
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
+            lmr -= history / 150;
             lmr += !isImproving;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
+            if (ply > 0) lmr -= (history>sd->moveHistory[ply-1]);
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -879,6 +883,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
+        sd->moveHistory[ply] = history;
+
         // doing the move
         b->move(m);
         
