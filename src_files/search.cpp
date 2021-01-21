@@ -771,6 +771,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (sameMove(m, skipMove))
             continue;
         
+        if (skipMove && quiets > 4) break;
+
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
