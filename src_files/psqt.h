@@ -22,8 +22,6 @@ using namespace bb;
 
 #define psqt_kingside_indexing(wkingside, bkingside) (wkingside) * 2 + (bkingside)
 
-#define PSQT(wKing, bKing, piece, square) piece_kk_square_tables[wKing][bKing][piece][square]
-
 // indexed by piece
 extern EvalScore piece_values[6];
 
@@ -34,8 +32,12 @@ extern EvalScore piece_opp_king_square_table[5][15*15];
 // indexed by piece, sameSideCastle, square
 extern EvalScore piece_square_table[6][2][64];
 
+// indexed by east/west, sameSideCastle, square
+extern EvalScore pawn_structure_table[2][2][64];
+
 // indexed by wking, bking, piece, square
 extern EvalScore piece_kk_square_tables[64][64][12][64];
+
 
 void psqt_init();
 

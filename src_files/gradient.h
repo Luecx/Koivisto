@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 24
 
 namespace tuning {
 
@@ -41,7 +41,6 @@ namespace tuning {
     enum feature_indices {
         I_SIDE_TO_MOVE,
 
-        I_PAWN_STRUCTURE,
         I_PAWN_PASSED,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
@@ -122,6 +121,7 @@ namespace tuning {
 
     struct ThreadData {
         Weight w_piece_square_table[6][2][64];
+        Weight w_pawn_structure_table[2][2][64];
         Weight w_piece_opp_king_square_table[5][15 * 15];
         Weight w_piece_our_king_square_table[5][15 * 15];
         Weight w_mobility[5][28];
@@ -372,7 +372,123 @@ namespace tuning {
             }
         }
     };
+    
+    struct PSTPawnStructureData {
+        uint8_t indices_white_east[8]{};
+        uint8_t indices_black_east[8]{};
+        uint8_t indices_white_west[8]{};
+        uint8_t indices_black_west[8]{};
+    
+        bool sameside_castle;
+        
+        void init(Board* b) {
+    
+            Square wKingSq = bitscanForward(b->getPieces(WHITE, KING));
+            Square bKingSq = bitscanForward(b->getPieces(BLACK, KING));
+    
+            bool wKSide = (fileIndex(bitscanForward(b->getPieces(WHITE, KING))) > 3 ? 0 : 1);
+            bool bKSide = (fileIndex(bitscanForward(b->getPieces(BLACK, KING))) > 3 ? 0 : 1);
+            sameside_castle = wKSide == bKSide;
+    
+    
+            U64 whitePawns = b->getPieces(WHITE, PAWN);
+            U64 blackPawns = b->getPieces(BLACK, PAWN);
+    
+            U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
+            U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
+            U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
+            U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
+            
+            U64 k;
+            Square square;
+    
+            // defended pawns from east and west for both colors
+            k = whitePawnEastCover;
+            while(k){
+                square = bitscanForward(k);
+                indices_white_east[++indices_white_east[0]] = pst_index_white(square, wKSide);
+                k = lsbReset(k);
+            } k = whitePawnWestCover;
+            while(k){
+                square = bitscanForward(k);
+                indices_white_west[++indices_white_west[0]] = pst_index_white(square, wKSide);
+                k = lsbReset(k);
+            } k = blackPawnEastCover;
+            while(k){
+                square = bitscanForward(k);
+                indices_black_east[++indices_black_east[0]] = pst_index_black(square, bKSide);
+                k = lsbReset(k);
+            } k = blackPawnWestCover;
+            while(k){
+                square = bitscanForward(k);
+                indices_black_west[++indices_black_west[0]] = pst_index_black(square, bKSide);
+                k = lsbReset(k);
+            }
+        }
+    
+        void evaluate(float &midgame, float &endgame, ThreadData* td) {
+            
+            for (int i = 1; i <= indices_white_east[0]; i++) {
+                uint8_t w = indices_white_east[i];
+                midgame += td->w_pawn_structure_table[0][sameside_castle][w].midgame.value;
+                endgame += td->w_pawn_structure_table[0][sameside_castle][w].endgame.value;
+            }
 
+            for (int i = 1; i <= indices_white_west[0]; i++) {
+                uint8_t w = indices_white_west[i];
+                midgame += td->w_pawn_structure_table[1][sameside_castle][w].midgame.value;
+                endgame += td->w_pawn_structure_table[1][sameside_castle][w].endgame.value;
+            }
+
+            for (int i = 1; i <= indices_black_east[0]; i++) {
+                uint8_t b = indices_black_east[i];
+                midgame -= td->w_pawn_structure_table[0][sameside_castle][b].midgame.value;
+                endgame -= td->w_pawn_structure_table[0][sameside_castle][b].endgame.value;
+            }
+
+            for (int i = 1; i <= indices_black_west[0]; i++) {
+                uint8_t b = indices_black_west[i];
+                midgame -= td->w_pawn_structure_table[1][sameside_castle][b].midgame.value;
+                endgame -= td->w_pawn_structure_table[1][sameside_castle][b].endgame.value;
+            }
+        }
+
+        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+            
+            for (int i = 1; i <= indices_white_east[0]; i++) {
+                uint8_t w = indices_white_east[i];
+                td->w_pawn_structure_table[0][sameside_castle][w].midgame.gradient +=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_pawn_structure_table[0][sameside_castle][w].endgame.gradient +=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+
+            for (int i = 1; i <= indices_white_west[0]; i++) {
+                uint8_t w = indices_white_west[i];
+                td->w_pawn_structure_table[1][sameside_castle][w].midgame.gradient +=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_pawn_structure_table[1][sameside_castle][w].endgame.gradient +=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+            for (int i = 1; i <= indices_black_east[0]; i++) {
+                uint8_t b = indices_black_east[i];
+                td->w_pawn_structure_table[0][sameside_castle][b].midgame.gradient -=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_pawn_structure_table[0][sameside_castle][b].endgame.gradient -=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+
+            for (int i = 1; i <= indices_black_west[0]; i++) {
+                uint8_t b = indices_black_west[i];
+                td->w_pawn_structure_table[1][sameside_castle][b].midgame.gradient -=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_pawn_structure_table[1][sameside_castle][b].endgame.gradient -=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+        }
+        
+    };
+    
     struct KingSafetyData {
         // we only need to store one index for the white and black king
 
@@ -634,11 +750,6 @@ namespace tuning {
             count[I_PAWN_PASSED] += (
                     +bitCount(whitePassers)
                     - bitCount(blackPassers));
-            count[I_PAWN_STRUCTURE] += (
-                    +bitCount(whitePawnEastCover)
-                    + bitCount(whitePawnWestCover)
-                    - bitCount(blackPawnEastCover)
-                    - bitCount(blackPawnWestCover));
             count[I_PAWN_OPEN] += (
                     +bitCount(whitePawns & ~fillSouth(blackPawns))
                     - bitCount(blackPawns & ~fillNorth(whitePawns)));
@@ -987,6 +1098,7 @@ namespace tuning {
         KingSafetyData king_safety{};
         Pst64Data pst64{};
         Pst225Data pst225{};
+        PSTPawnStructureData pstPawnStructure{};
         MetaData meta{};
 
         void init(Board *b) {
@@ -999,6 +1111,7 @@ namespace tuning {
             king_safety.init(b);
             pst64.init(b);
             pst225.init(b);
+            pstPawnStructure.init(b);
             meta.init(b);
         }
 
@@ -1015,6 +1128,7 @@ namespace tuning {
             king_safety.evaluate(midgame, endgame, &threadData[threadID]);
             pst64.evaluate(midgame, endgame, &threadData[threadID]);
             pst225.evaluate(midgame, endgame, &threadData[threadID]);
+            pstPawnStructure.evaluate(midgame, endgame, &threadData[threadID]);
 
             float res = (int) (meta.phase * endgame) + (int) ((1 - meta.phase) * midgame);
             meta.evaluate(res, &threadData[threadID]);
@@ -1032,6 +1146,7 @@ namespace tuning {
             king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
             pst64.gradient(&meta, lossgrad, &threadData[threadID]);
             pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+            pstPawnStructure.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1100,7 +1215,17 @@ namespace tuning {
                         threadData[t].w_mobility[i][n] = {{w1},
                                                           {w2}};
                     }
+                }
 
+                if (i < 2){
+                    for (int n = 0; n < 2; n++) {
+                        for (int j = 0; j < 64; j++) {
+                            float w1 = MgScore(pawn_structure_table[i][n][j]);
+                            float w2 = EgScore(pawn_structure_table[i][n][j]);
+                            threadData[t].w_pawn_structure_table[i][n][j] = {{w1},
+                                                                             {w2}};
+                        }
+                    }
                 }
             }
             for (int i = 0; i < 1000; i++) {
@@ -1188,6 +1313,19 @@ namespace tuning {
                         threadData[t].w_mobility[i][n].endgame.gradient = 0;
                     }
 
+                }
+    
+                if (i < 2){
+                    for (int n = 0; n < 2; n++) {
+                        for (int j = 0; j < 64; j++) {
+                            threadData[0].w_pawn_structure_table[i][n][j].midgame.gradient +=
+                                threadData[t].w_pawn_structure_table[i][n][j].midgame.gradient;
+                            threadData[0].w_pawn_structure_table[i][n][j].endgame.gradient +=
+                                threadData[t].w_pawn_structure_table[i][n][j].endgame.gradient;
+                            threadData[t].w_pawn_structure_table[i][n][j].midgame.gradient = 0;
+                            threadData[t].w_pawn_structure_table[i][n][j].endgame.gradient = 0;
+                        }
+                    }
                 }
             }
             for (int i = 0; i < 1000; i++) {
@@ -1291,6 +1429,17 @@ namespace tuning {
                     }
 
                 }
+
+                if (i < 2){
+                    for (int n = 0; n < 2; n++) {
+                        for (int j = 0; j < 64; j++) {
+                            threadData[t].w_pawn_structure_table[i][n][j].midgame =
+                                threadData[0].w_pawn_structure_table[i][n][j].midgame;
+                            threadData[t].w_pawn_structure_table[i][n][j].endgame =
+                                threadData[0].w_pawn_structure_table[i][n][j].endgame;
+                        }
+                    }
+                }
             }
             for (int i = 0; i < 1000; i++) {
                 if (i < I_END) {
@@ -1352,7 +1501,7 @@ namespace tuning {
         merge_gradients();
 
         for (int i = 0; i < 6; i++) {
-
+            
             for (int n = 0; n < 2; n++) {
                 for (int j = 0; j < 64; j++) {
                     threadData[0].w_piece_square_table[i][n][j].midgame.update(eta);
@@ -1377,7 +1526,15 @@ namespace tuning {
                     threadData[0].w_mobility[i][n].midgame.update(eta);
                     threadData[0].w_mobility[i][n].endgame.update(eta);
                 }
+            }
 
+            if (i < 2){
+                for (int n = 0; n < 2; n++) {
+                    for (int j = 0; j < 64; j++) {
+                        threadData[0].w_pawn_structure_table[i][n][j].midgame.update(eta);
+                        threadData[0].w_pawn_structure_table[i][n][j].endgame.update(eta);
+                    }
+                }
             }
         }
         for (int i = 0; i < 1000; i++) {
@@ -1410,6 +1567,7 @@ namespace tuning {
                 threadData[0].w_hanging[i].endgame.update(eta);
             }
         }
+        
 
         share_weights();
     }
@@ -1551,7 +1709,6 @@ namespace tuning {
         // --------------------------------- features ---------------------------------
         const static std::string feature_names[]{
                 "SIDE_TO_MOVE",
-                "PAWN_STRUCTURE",
                 "PAWN_PASSED",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
@@ -1689,6 +1846,22 @@ namespace tuning {
             }
 
             std::cout << "\n\t},\n";
+        }
+        std::cout << "};" << std::endl;
+    
+        // --------------------------------- pawn_structure_table ---------------------------------
+        std::cout << "EvalScore pawn_structure_table[2][2][64]{\n";
+        for (Piece p = 0; p < 2; p++) {
+            std::cout << "\t{\n";
+            for (int i = 0; i < 2; i++) {
+                std::cout << "\t\t{\n";
+                for (int n = 0; n < 64; n++) {
+                    if (n % 4 == 0) std::cout << std::endl << "\t\t\t";
+                    std::cout << threadData[0].w_pawn_structure_table[p][i][n] << ", ";
+                }
+                std::cout << "\n\t\t},\n";
+            }
+            std::cout << "\t},\n";
         }
         std::cout << "};" << std::endl;
     }
