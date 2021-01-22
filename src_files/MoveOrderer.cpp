@@ -40,11 +40,11 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
             moves->scoreMove(i, 1e6);
         } else if (isCapture(m)) {
             // add mvv lva score here
-            Score     SEE    = board->staticExchangeEvaluation(m);
+            Score SEE = board->staticExchangeEvaluation(m);
             MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
                                + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
             if (SEE >= 0) {
-                if (mvvLVA == 0) {
+                if (SEE == 0) {
                     moves->scoreMove(i, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
                 } else {
                     moves->scoreMove(i, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
