@@ -497,7 +497,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score alpha  = s - window;
             Score beta   = s + window;
             
-            while (rootTimeLeft()) {
+            while (isTimeLeft()) {
                 s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
                 
                 window += window;
