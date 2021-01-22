@@ -46,9 +46,9 @@ class Evaluator {
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    EvalScore computeHangingPieces(Board* b);
+    EvalScore computeHangingPieces(Board* b, U64* whiteHanging, U64* blackHanging);
 
-    bb::Score evaluate(Board* b);
+    bb::Score evaluate(Board* b, U64* whiteHanging = nullptr, U64* blackHanging = nullptr);
 
     bb::Score evaluateTempo(Board* b);
 

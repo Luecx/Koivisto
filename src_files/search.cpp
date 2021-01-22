@@ -607,6 +607,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
+    U64 whiteHanging, blackHanging;
+
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
@@ -614,7 +616,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
         staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, &whiteHanging, &blackHanging) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -684,7 +686,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
-
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -869,6 +870,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
+            if (b->getActivePlayer() == WHITE && getBit(getSquareTo(m),whiteHanging)) lmr++;
+            if (b->getActivePlayer() == BLACK && getBit(getSquareTo(m),blackHanging)) lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
