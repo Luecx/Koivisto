@@ -27,7 +27,7 @@ MoveOrderer::MoveOrderer() {}
 MoveOrderer::~MoveOrderer() {}
 
 void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove, SearchData* sd, Board* board,
-                                   Depth ply) {
+                                   Depth ply, U64 hanging) {
 
     this->moves   = p_moves;
     this->counter = 0;
@@ -58,7 +58,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
         } else if (sd->isKiller(m, ply, board->getActivePlayer())) {
             moves->scoreMove(i, 30000 + sd->isKiller(m, ply, board->getActivePlayer()));
         } else {
-            moves->scoreMove(i, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+            moves->scoreMove(i, 20000 /*- 200 * (getBit(getSquareTo(m), hanging)==1)*/ + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
         }
     }
 }

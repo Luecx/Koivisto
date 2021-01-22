@@ -598,17 +598,17 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     }
     
     // we extract a lot of information about various things.
-    SearchData* sd            = td->searchData;
-    U64         zobrist       = b->zobrist();
-    bool        pv            = (beta - alpha) != 1;
-    Score       originalAlpha = alpha;
-    Score       highestScore  = -MAX_MATE_SCORE;
-    Score       score         = -MAX_MATE_SCORE;
-    Move        bestMove      = 0;
-    Move        hashMove      = 0;
+    SearchData* sd              = td->searchData;
+    U64         zobrist         = b->zobrist();
+    bool        pv              = (beta - alpha) != 1;
+    Score       originalAlpha   = alpha;
+    Score       highestScore    = -MAX_MATE_SCORE;
+    Score       score           = -MAX_MATE_SCORE;
+    Move        bestMove        = 0;
+    Move        hashMove        = 0;
     Score       staticEval;
-    U64 whiteHanging, blackHanging;
-
+    U64 whiteHanging            = 0;
+    U64 blackHanging            = 0;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
@@ -756,7 +756,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // create a moveorderer and assign the movelist to score the moves.
     MoveOrderer moveOrderer {};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
+    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply, b->getActivePlayer()==WHITE?whiteHanging:blackHanging);
     
     // count the legal and quiet moves.
     int legalMoves = 0;
@@ -782,6 +782,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
             
             if (quiet) {
+                if (depth == 1 && getBit(getSquareTo(m), b->getActivePlayer()==WHITE?whiteHanging:blackHanging))
+                    continue;
                 quiets++;
                 // **************************************************************************************************
                 // late move pruning:
@@ -838,7 +840,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     return score;
             }
             b->getPseudoLegalMoves(mv);
-            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
+            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply, b->getActivePlayer()==WHITE?whiteHanging:blackHanging);
             
             m = moveOrderer.next();
         }
@@ -870,9 +872,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
-            if (b->getActivePlayer() == WHITE && getBit(getSquareTo(m),whiteHanging)) lmr++;
-            if (b->getActivePlayer() == BLACK && getBit(getSquareTo(m),blackHanging)) lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
+            //if (getBit(getSquareTo(m), b->getActivePlayer()==WHITE?whiteHanging:blackHanging)) lmr++;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
