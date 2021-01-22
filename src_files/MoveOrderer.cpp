@@ -41,14 +41,9 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
         } else if (isCapture(m)) {
             // add mvv lva score here
             Score     SEE    = board->staticExchangeEvaluation(m);
-            MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
-                               + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
+            MoveScore mvvLVA = see_piece_vals[getCapturedPiece(m) % 6] - see_piece_vals[getMovingPiece(m) % 6]/10;
             if (SEE >= 0) {
-                if (mvvLVA == 0) {
-                    moves->scoreMove(i, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
-                } else {
-                    moves->scoreMove(i, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
-                }
+                moves->scoreMove(i, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 moves->scoreMove(i, 10000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
             }
@@ -63,7 +58,7 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
     }
 }
 
-void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b) {
+void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b, SearchData* sd) {
     this->moves   = p_moves;
     this->counter = 0;
     this->skip    = false;
@@ -71,9 +66,9 @@ void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b) {
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
 
-        MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
-                           + (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
-        moves->scoreMove(i, 240 + mvvLVA);
+        MoveScore mvvLVA = 2*see_piece_vals[getCapturedPiece(m) % 6] - see_piece_vals[getMovingPiece(m) % 6]/5;
+
+        moves->scoreMove(i, 10000 + mvvLVA + sd->getHistories(m, b->getActivePlayer(), 0));
     }
 }
 

@@ -1048,7 +1048,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // create a moveorderer to sort the moves during the search
     MoveOrderer moveOrderer {};
-    moveOrderer.setMovesQSearch(mv, b);
+    moveOrderer.setMovesQSearch(mv, b, sd);
     
     // keping track of the best move for the trasnpositions
     Move  bestMove  = 0;
