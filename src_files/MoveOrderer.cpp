@@ -66,9 +66,9 @@ void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b, SearchData*
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
 
-        MoveScore mvvLVA = 2*see_piece_vals[getCapturedPiece(m) % 6] - see_piece_vals[getMovingPiece(m) % 6]/5;
-
-        moves->scoreMove(i, 10000 + mvvLVA + sd->getHistories(m, b->getActivePlayer(), 0));
+        MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
+                           + (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
+        moves->scoreMove(i, 240 + mvvLVA);
     }
 }
 
