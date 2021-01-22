@@ -1320,21 +1320,21 @@ U64 Board::attacksTo(U64 p_occupied, Square sq) {
  * @param attacker
  * @return
  */
-bool Board::isUnderAttack(Square square, Color attacker) {
+bool Board::isUnderAttack(Square square, Color attacker, U64 excluded) {
     U64 sqBB = ONE << square;
 
     if (attacker == WHITE) {
-        return (lookUpRookAttack(square, m_occupied) & (m_pieces[WHITE_QUEEN] | m_pieces[WHITE_ROOK])) != 0
-               || (lookUpBishopAttack(square, m_occupied) & (m_pieces[WHITE_QUEEN] | m_pieces[WHITE_BISHOP])) != 0
-               || (KNIGHT_ATTACKS[square] & m_pieces[WHITE_KNIGHT]) != 0
-               || ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB)) & m_pieces[WHITE_PAWN]) != 0
-               || (KING_ATTACKS[square] & m_pieces[WHITE_KING]) != 0;
+        return (lookUpRookAttack(square, m_occupied&~excluded) & (m_pieces[WHITE_QUEEN] | m_pieces[WHITE_ROOK])&~excluded) != 0
+               || (lookUpBishopAttack(square, m_occupied&~excluded) & (m_pieces[WHITE_QUEEN] | m_pieces[WHITE_BISHOP])&~excluded) != 0
+               || (KNIGHT_ATTACKS[square] & m_pieces[WHITE_KNIGHT]&~excluded) != 0
+               || ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB)) & m_pieces[WHITE_PAWN]&~excluded) != 0
+               || (KING_ATTACKS[square] & m_pieces[WHITE_KING]&~excluded) != 0;
     } else {
-        return (lookUpRookAttack(square, m_occupied) & (m_pieces[BLACK_QUEEN] | m_pieces[BLACK_ROOK])) != 0
-               || (lookUpBishopAttack(square, m_occupied) & (m_pieces[BLACK_QUEEN] | m_pieces[BLACK_BISHOP])) != 0
-               || (KNIGHT_ATTACKS[square] & m_pieces[BLACK_KNIGHT]) != 0
-               || ((shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) & m_pieces[BLACK_PAWN]) != 0
-               || (KING_ATTACKS[square] & m_pieces[BLACK_KING]) != 0;
+        return (lookUpRookAttack(square, m_occupied&~excluded) & (m_pieces[BLACK_QUEEN] | m_pieces[BLACK_ROOK])&~excluded) != 0
+               || (lookUpBishopAttack(square, m_occupied&~excluded) & (m_pieces[BLACK_QUEEN] | m_pieces[BLACK_BISHOP])&~excluded) != 0
+               || (KNIGHT_ATTACKS[square] & m_pieces[BLACK_KNIGHT]&~excluded) != 0
+               || ((shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) & m_pieces[BLACK_PAWN]&~excluded) != 0
+               || (KING_ATTACKS[square] & m_pieces[BLACK_KING]&~excluded) != 0;
     }
 }
 

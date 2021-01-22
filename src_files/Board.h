@@ -216,7 +216,7 @@ class Board {
     U64 getPinnedPieces(Color color, U64& pinners);
 
     // returns true if the given square is attacked by the attacker
-    bool isUnderAttack(Square sq, Color attacker);
+    bool isUnderAttack(Square sq, Color attacker, U64 excluded = 0);
 
     // returns true if the move gives check
     bool givesCheck(Move m);
