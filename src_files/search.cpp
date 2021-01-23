@@ -775,13 +775,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet = !isCapture(m) && !isPromotion && !givesCheck;
-        
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
             
             if (quiet) {
-                quiets++;
                 // **************************************************************************************************
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
@@ -804,6 +802,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
+        quiets += quiet;
 
         // dont search illegal moves
         if (!b->isLegal(m))
