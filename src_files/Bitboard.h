@@ -409,7 +409,9 @@ constexpr U64 KNIGHT_ATTACKS[] {
 extern U64** ROOK_ATTACKS;
 extern U64** BISHOP_ATTACKS;
 
-extern U64** all_hashes;
+extern U64** piece_hashes;
+extern U64   ep_hashes[64];
+extern U64   castling_hashes[4];
 
 extern U64** inBetweenSquares;
 
@@ -753,7 +755,7 @@ double randDouble(double min = 0, double max = 1);
  * @param sq
  * @return
  */
-inline U64 getHash(Piece piece, Square sq) { return all_hashes[piece][sq]; }
+inline U64 getHash(Piece piece, Square sq) { return piece_hashes[piece][sq]; }
 
 /**
  * looks up the rook attack for a rook on the given square.

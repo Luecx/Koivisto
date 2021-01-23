@@ -26,7 +26,9 @@ using namespace bb;
 U64** bb::ROOK_ATTACKS   = new U64*[64];
 U64** bb::BISHOP_ATTACKS = new U64*[64];
 
-U64** bb::all_hashes = {};
+U64** bb::piece_hashes = {};
+U64  bb::ep_hashes[64]{};
+U64  bb::castling_hashes[4]{};
 
 U64** bb::inBetweenSquares = new U64*[64];
 
@@ -57,12 +59,12 @@ void bb::bb_cleanUp() {
     inBetweenSquares = nullptr;
 
     for (int i = 0; i < 12; i++) {
-        delete[] all_hashes[i];
-        all_hashes[i] = nullptr;
+        delete[] piece_hashes[i];
+        piece_hashes[i] = nullptr;
     }
 
-    delete[] all_hashes;
-    all_hashes = nullptr;
+    delete[] piece_hashes;
+    piece_hashes = nullptr;
 }
 
 U64 bb::randU64() {
@@ -207,14 +209,22 @@ U64 bb::populateMask(U64 mask, U64 index) {
 
 void bb::generateZobristKeys() {
 
-    all_hashes = new U64*[12];
+    piece_hashes = new U64*[12];
     for (int i = 0; i < 6; i++) {
-        all_hashes[i]     = new U64[64];
-        all_hashes[i + 6] = new U64[64];
+        piece_hashes[i]     = new U64[64];
+        piece_hashes[i + 6] = new U64[64];
         for (int n = 0; n < 64; n++) {
-            all_hashes[i][n]     = randU64();
-            all_hashes[i + 6][n] = randU64();
+            piece_hashes[i][n]     = randU64();
+            piece_hashes[i + 6][n] = randU64();
         }
+    }
+    
+    for (int n = 0; n < 64; n++) {
+        ep_hashes[n]       = randU64();
+    }
+    
+    for (int n = 0; n < 4; n++) {
+        castling_hashes[n] = randU64();
     }
 }
 

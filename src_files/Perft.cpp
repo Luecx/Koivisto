@@ -74,7 +74,6 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
 
     U64 zob = ZERO;
     if (hash) {
-
         if (ply == 0) {
             perft_tt->clear();
         }
@@ -120,7 +119,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
             b->undoMove();
         }
     }
-
+    
     if (hash) {
         perft_tt->put(zob, 0, nodes, 0, depth);
     }

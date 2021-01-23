@@ -394,7 +394,12 @@ void Board::move(Move m) {
     Type   mType  = getType(m);
     Color  color  = getActivePlayer();
     int    factor = getActivePlayer() == 0 ? 1 : -1;
-
+    
+    if(isDoubledPawnPush(previousStatus->move)){
+        // unset the zobrist change done before due to e.p.
+        newBoardStatus.zobrist ^= ep_hashes[getSquareTo(previousStatus->move)];
+    }
+    
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
@@ -403,14 +408,26 @@ void Board::move(Move m) {
             if (color == BLACK) {
                 if (sqTo == A1) {
                     newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_QUEENSIDE_CASTLING));
+                    if(getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)){
+                        newBoardStatus.zobrist ^= castling_hashes[STATUS_INDEX_WHITE_QUEENSIDE_CASTLING];
+                    }
                 } else if (sqTo == H1) {
                     newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_KINGSIDE_CASTLING));
+                    if(getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)){
+                        newBoardStatus.zobrist ^= castling_hashes[STATUS_INDEX_WHITE_KINGSIDE_CASTLING];
+                    }
                 }
             } else {
                 if (sqTo == A8) {
                     newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_BLACK_QUEENSIDE_CASTLING));
+                    if(getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)){
+                        newBoardStatus.zobrist ^= castling_hashes[STATUS_INDEX_BLACK_QUEENSIDE_CASTLING];
+                    }
                 } else if (sqTo == H8) {
                     newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                    if(getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING)){
+                        newBoardStatus.zobrist ^= castling_hashes[STATUS_INDEX_WHITE_QUEENSIDE_CASTLING];
+                    }
                 }
             }
         }
@@ -425,6 +442,7 @@ void Board::move(Move m) {
         // if a pawn advances by 2 squares, enabled enPassant capture next move
         if (mType == DOUBLED_PAWN_PUSH) {
             newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
+            newBoardStatus.zobrist ^= ep_hashes[sqTo];
         }
 
         // promotions are handled differently because the new piece at the target square is not the piece that initially
@@ -461,10 +479,15 @@ void Board::move(Move m) {
             return;
         }
     } else if (pFrom % 6 == KING) {
-
+        
         // revoke castling rights if king moves
         newBoardStatus.castlingRights &= ~(ONE << (color * 2));
         newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
+        if(getCastlingChance(color * 2)){
+            newBoardStatus.zobrist ^= castling_hashes[color * 2];
+        }if(getCastlingChance(color * 2 + 1)){
+            newBoardStatus.zobrist ^= castling_hashes[color * 2 + 1];
+        }
 
         // we handle this case seperately so we return after this finished.
         m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
