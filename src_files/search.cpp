@@ -42,14 +42,14 @@ ThreadData** tds = new ThreadData*[MAX_THREADS];
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
-int LMR_DIV          = 215;
+int LMR_DIV          = 2150;
 
 void initLmr() {
     int d, m;
     
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 0.75+log(d) * log(m) * 1000 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
