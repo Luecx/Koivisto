@@ -723,6 +723,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
+
+    if (en.type == ALL_NODE && depth >= 10 && !skipMove) {
+        pvSearch(b, alpha, beta, depth >> 1, ply, td, 6666);
+    }
+
     // **********************************************************************************************************
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
