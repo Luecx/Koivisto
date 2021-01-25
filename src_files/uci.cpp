@@ -78,6 +78,7 @@ void uci_uci() {
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
     std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
+    std::cout << "option name VariableFilePath type string default" << std::endl;
 
     std::cout << "uciok" << std::endl;
 }
@@ -196,17 +197,8 @@ void uci_processCommand(std::string str) {
     } else if (split.at(0) == "debug") {
         uci_debug(uci_getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
-        if (str.find("FUTILITY_MARGIN") != string::npos) {
-            FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
-        }
-        if (str.find("RAZOR_MARGIN") != string::npos) {
-            RAZOR_MARGIN = stoi(uci_getValue(split, "RAZOR_MARGIN"));
-        }
-        if (str.find("SE_MARGIN_STATIC") != string::npos) {
-            SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
-        }
-        if (str.find("LMR_DIV") != string::npos) {
-            LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
+        if(split.size() >= 3){
+            uci_set_value(split[1], split[2]);
         }
     } else if (split.at(0) == "position") {
 
@@ -345,6 +337,22 @@ void uci_go_mate(int depth) {
  */
 void uci_stop() { search_stop(); }
 
+void uci_set_value(std::string& name, std::string& value){
+    if (name.find("FUTILITY_MARGIN") != string::npos) {
+        FUTILITY_MARGIN = stoi(value);
+    }
+    if (name.find("RAZOR_MARGIN") != string::npos) {
+        RAZOR_MARGIN = stoi(value);
+    }
+    if (name.find("SE_MARGIN_STATIC") != string::npos) {
+        SE_MARGIN_STATIC = stoi(value);
+    }
+    if (name.find("LMR_DIV") != string::npos) {
+        LMR_DIV = stoi(value);
+        initLmr();
+    }
+}
+
 /**
  * parses the uci command: setoption name [name] value [value]
  * Sets internal search options.
@@ -387,6 +395,13 @@ void uci_set_option(std::string& name, std::string& value) {
             count = MAX_THREADS;
 
         threadCount = count;
+    } else if (name == "VariableFilePath"){
+        std::ifstream infile(value);
+        std::string variable, content;
+        while (infile >> variable >> content)
+        {
+            uci_set_value(variable, content);
+        }
     }
 }
 

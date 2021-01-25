@@ -49,6 +49,7 @@ void uci_go_mate(int depth);
 
 void uci_stop();
 
+void uci_set_value(std::string& name, std::string& value);
 void uci_set_option(std::string& name, std::string& value);
 
 void uci_isReady();
