@@ -39,10 +39,10 @@ int lmrReductions[256][256];
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData** tds = new ThreadData*[MAX_THREADS];
 
-int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 92;
+int RAZOR_MARGIN     = 193;
+int FUTILITY_MARGIN  = 86;
 int SE_MARGIN_STATIC = 0;
-int LMR_DIV          = 2150;
+int LMR_DIV          = 1957;
 
 void initLmr() {
     int d, m;
