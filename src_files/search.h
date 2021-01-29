@@ -38,7 +38,7 @@
 #include <tgmath.h>
 
 extern int threadCount;
-
+extern int testArray[6][6][2][2];
 extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;

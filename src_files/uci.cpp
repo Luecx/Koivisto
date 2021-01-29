@@ -555,4 +555,15 @@ void uci_bench() {
     search_enable_infoStrings();
 
     printf("OVERALL: %53d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
+
+
+    for (int i = 0; i < 6; i++) {
+        std::cout << "{";
+        for (int e = 0; e < 6; e++){
+            std::cout << "{" << (float)testArray[i][e][0][0]/(float)testArray[i][e][0][1] << ", " << (float)testArray[i][e][1][0]/(float)(testArray[i][e][1][1]+1) << "}, ";
+
+        }  
+        std::cout << "}," << std::endl;
+    }
+
 }

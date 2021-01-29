@@ -54,6 +54,8 @@ void initLmr() {
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
 
+int testArray[6][6][2][2] = {0};
+
 /**
  * =================================================================================
  *                              S E A R C H
@@ -1082,6 +1084,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             bestScore = score;
             bestMove  = m;
             if (score >= beta) {
+                testArray[getMovingPiece(m)%6][getCapturedPiece(m)][(getSquareTo(b->getPreviousMove()) == getSquareTo(m))][0] += 1;
                 ttNodeType = CUT_NODE;
                 table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
                 return beta;
@@ -1091,6 +1094,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
                 alpha      = score;
             }
         }
+        testArray[getMovingPiece(m)%6][getCapturedPiece(m)][(getSquareTo(b->getPreviousMove()) == getSquareTo(m))][1] += 1;
     }
     
     // store the current position inside the transposition table
