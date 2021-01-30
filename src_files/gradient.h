@@ -68,6 +68,7 @@ namespace tuning {
 
         I_CASTLING_RIGHTS,
         I_MINOR_BEHIND_PAWN,
+        I_TARRASH,
 
         // always have this at the end
         I_END,
@@ -653,6 +654,10 @@ namespace tuning {
                               (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN]))
                     - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT] | b->getPieces()[BLACK_BISHOP]) &
                                (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])));
+            count[I_TARRASH] += (
+                + bitCount(wRearSpans(whitePassers) | bRearSpans(blackPassers) & (b->getPieces()[WHITE_ROOK] | b->getPieces()[WHITE_QUEEN]))
+                - bitCount(wRearSpans(whitePassers) | bRearSpans(blackPassers) & (b->getPieces()[BLACK_ROOK] | b->getPieces()[BLACK_QUEEN]))
+            );
 
             k = b->getPieces()[WHITE_KNIGHT];
             while (k) {
@@ -669,6 +674,7 @@ namespace tuning {
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
                 k = lsbReset(k);
             }
+            
 
 
             k = b->getPieces()[WHITE_BISHOP];
@@ -1571,7 +1577,8 @@ namespace tuning {
                 "KING_CLOSE_OPPONENT",
                 "KING_PAWN_SHIELD",
                 "CASTLING_RIGHTS",
-                "MINOR_BEHIND_PAWN",};
+                "MINOR_BEHIND_PAWN",
+                "TARRASH"};
 
         for (int i = 0; i < I_END; i++) {
             std::cout << "EvalScore " << left << setw(30) << feature_names[i] << right << "= ";
