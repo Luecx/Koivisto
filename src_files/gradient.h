@@ -25,7 +25,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 8
 
@@ -655,8 +655,8 @@ namespace tuning {
                     - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT] | b->getPieces()[BLACK_BISHOP]) &
                                (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])));
             count[I_TARRASH] += (
-                + bitCount(wRearSpans(whitePassers) | bRearSpans(blackPassers) & (b->getPieces()[WHITE_ROOK] | b->getPieces()[WHITE_QUEEN]))
-                - bitCount(wRearSpans(whitePassers) | bRearSpans(blackPassers) & (b->getPieces()[BLACK_ROOK] | b->getPieces()[BLACK_QUEEN]))
+                + bitCount((wRearSpans(whitePassers) | bRearSpans(blackPassers)) & (b->getPieces()[WHITE_ROOK] | b->getPieces()[WHITE_QUEEN]))
+                - bitCount((wRearSpans(whitePassers) | bRearSpans(blackPassers)) & (b->getPieces()[BLACK_ROOK] | b->getPieces()[BLACK_QUEEN]))
             );
 
             k = b->getPieces()[WHITE_KNIGHT];
