@@ -51,14 +51,6 @@ struct SearchData {
 
     int getHistories(Move m, bool side, Move previous);
 
-    void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
-
-    MoveScore getHistoryMoveScore(Move m, bool side);
-
-    void addCaptureHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
-
-    MoveScore getCaptureHistoryMoveScore(Move m, bool side);
-
     void setKiller(Move move, Depth ply, Color color);
 
     int isKiller(Move move, Depth ply, Color color);
@@ -66,10 +58,6 @@ struct SearchData {
     void setHistoricEval(Score eval, Color color, Depth ply);
 
     bool isImproving(Score eval, Color color, Depth ply);
-
-    void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv);
-
-    MoveScore getCounterMoveHistoryScore(Move previous, Move m);
 };
 
 /**

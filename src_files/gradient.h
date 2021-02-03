@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 16
 
 namespace tuning {
 
@@ -49,6 +49,7 @@ namespace tuning {
         I_PAWN_BACKWARD,
         I_PAWN_OPEN,
         I_PAWN_BLOCKED,
+        I_PAWN_FAWN,
 
         I_KNIGHT_OUTPOST,
         I_KNIGHT_DISTANCE_ENEMY_KING,
@@ -653,6 +654,19 @@ namespace tuning {
                               (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN]))
                     - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT] | b->getPieces()[BLACK_BISHOP]) &
                                (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])));
+    
+            k = shiftSouth(blackPawns) & whiteBlockedPawns;
+            while(k){
+                square = bitscanForward(k);
+                count[I_PAWN_FAWN] += (((whitePassedPawnMask[square] & ~FILES[fileIndex(square)]) & blackPawns) == 0);
+                k = lsbReset(k);
+            }
+            k = shiftNorth(whitePawns) & blackBlockedPawns;
+            while(k){
+                square = bitscanForward(k);
+                count[I_PAWN_FAWN] -= (((blackPassedPawnMask[square] & ~FILES[fileIndex(square)]) & whitePawns) == 0);
+                k = lsbReset(k);
+            }
 
             k = b->getPieces()[WHITE_KNIGHT];
             while (k) {
@@ -661,7 +675,6 @@ namespace tuning {
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
                 k = lsbReset(k);
             }
-
             k = b->getPieces()[BLACK_KNIGHT];
             while (k) {
                 square = bitscanForward(k);
@@ -669,7 +682,6 @@ namespace tuning {
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
                 k = lsbReset(k);
             }
-
 
             k = b->getPieces()[WHITE_BISHOP];
             while (k) {
@@ -685,7 +697,6 @@ namespace tuning {
                          && whitePawns & (ONE << B3 | ONE << B4));
                 k = lsbReset(k);
             }
-
             k = b->getPieces()[BLACK_BISHOP];
             while (k) {
                 square = bitscanForward(k);
@@ -721,7 +732,6 @@ namespace tuning {
                 count[I_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
                 k = lsbReset(k);
             }
-
             k = b->getPieces()[BLACK_QUEEN];
             while (k) {
                 square = bitscanForward(k);
@@ -736,7 +746,6 @@ namespace tuning {
                 count[I_KING_CLOSE_OPPONENT] += bitCount(KING_ATTACKS[square] & blackTeam);
                 k = lsbReset(k);
             }
-
             k = b->getPieces()[BLACK_KING];
             while (k) {
                 square = bitscanForward(k);
@@ -1559,6 +1568,7 @@ namespace tuning {
                 "PAWN_BACKWARD",
                 "PAWN_OPEN",
                 "PAWN_BLOCKED",
+                "PAWN_FAWN",
                 "KNIGHT_OUTPOST",
                 "KNIGHT_DISTANCE_ENEMY_KING",
                 "ROOK_OPEN_FILE",
