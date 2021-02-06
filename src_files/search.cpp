@@ -848,10 +848,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // *********************************************************************************************************
         if (ply == 0) {
             sd->sideToReduce = !b->getActivePlayer();
-            sd->reduce = false;
-            if (legalMoves == 0){
-                sd->reduce = true;
-            }
+            sd->reduce = true;
         }
         
         // compute the lmr based on the depth, the amount of legal moves etc.
