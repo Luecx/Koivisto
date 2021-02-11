@@ -25,9 +25,9 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 6
 
 namespace tuning {
 
@@ -386,7 +386,7 @@ namespace tuning {
             U64 attacks;
             U64 occupied = *(b->getOccupied());
 
-            static int factors[6] = {0, 2, 2, 3, 4};
+            static int factors[6] = {0, 2, 2, 3, 6};
 
             Square whiteKingSquare = bitscanForward(b->getPieces(WHITE, KING));
             Square blackKingSquare = bitscanForward(b->getPieces(BLACK, KING));
