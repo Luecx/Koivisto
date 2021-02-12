@@ -160,51 +160,6 @@ float* phaseValues = new float[6] {
 
 EvalScore* mobilities[6] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 
-
-
-
-/**
- * adds the factor to value of attacks if the piece attacks the kingzone
- * @param attacks
- * @param kingZone
- * @param pieceCount
- * @param valueOfAttacks
- * @param factor
- */
-
-bool hasMatingMaterial(Board* b, bool side) {
-    if ((b->getPieces()[QUEEN + side * 6] | b->getPieces()[ROOK + side * 6] | b->getPieces()[PAWN + side * 6])
-        || (bitCount(b->getPieces()[BISHOP + side * 6] | b->getPieces()[KNIGHT + side * 6]) > 1
-            && b->getPieces()[BISHOP + side * 6]))
-        return true;
-    return false;
-}
-
-void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor) {
-    if (attacks & kingZone) {
-        pieceCount++;
-        valueOfAttacks += factor * bitCount(attacks & kingZone);
-    }
-}
-
-/**
- * checks if the given square is an outpost given the color and a bitboard of the opponent pawns
- */
-bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
-    U64 sq = ONE << s;
-
-    if (c == WHITE) {
-        if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
-            return true;
-        }
-    } else {
-        if (((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 bb::Score Evaluator::evaluateTempo(Board* b){
     phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
         - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
@@ -212,6 +167,7 @@ bb::Score Evaluator::evaluateTempo(Board* b){
         - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
         - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
         / 24.0f;
+
 
     if (phase > 1)
         phase = 1;
@@ -260,7 +216,16 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
     
     // get all pinners (either rook or bishop attackers)
     U64 potentialPinners = (rookAttacks | bishopAttacks);
-    
+
+    // precompute changes to normalise pieces
+    int pinnerNormalise = 0;
+    int pinnedNormalise = 0;
+    if(us == WHITE){
+        pinnerNormalise = -6;
+    }else{
+        pinnedNormalise = -6;
+    }
+
     while(potentialPinners){
 
         Square pinnerSquare = bitscanForward(potentialPinners);
@@ -280,11 +245,8 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
         Piece pinnerPiece = b->getPiece(pinnerSquare) - BISHOP;
 
         // normalise the values (black pieces will be made to white pieces)
-        if(us == WHITE){
-            pinnerPiece -= 6;
-        }else{
-            pinnedPiece -= 6;
-        }
+        pinnedPiece += pinnedNormalise;
+        pinnerPiece += pinnerNormalise;
 
         // add to the result indexing using pinnedPiece for which there are 5 different pieces and the pinner
         result += pinnedEval[pinnedPiece * 3 + pinnerPiece];

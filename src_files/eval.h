@@ -35,9 +35,39 @@ extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[16];
 
-bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover);
-bool hasMatingMaterial(Board* b, bool side);
-void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
+inline bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover){
+    U64 sq = ONE << s;
+
+
+    return ((sq & pawnCover) && (c == WHITE && ((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0) ||
+                                (c == BLACK && ((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0) );
+
+//    if (c == WHITE) {
+//        if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+//            return true;
+//        }
+//    } else {
+//        if (((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+//            return true;
+//        }
+//    }
+//    return false;
+}
+inline bool hasMatingMaterial(Board* b, bool side){
+    return (
+        (  b->getPieces()[QUEEN + side * 6]
+         | b->getPieces()[ROOK  + side * 6]
+         | b->getPieces()[PAWN  + side * 6])
+        || (bitCount(
+                b->getPieces()[BISHOP + side * 6]|
+                b->getPieces()[KNIGHT + side * 6]) > 1
+            && b->getPieces()[BISHOP + side * 6]));
+//        return true;
+//    return false;
+}
+inline void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor){
+    valueOfAttacks += factor * bitCount(attacks & kingZone);
+}
 
 class Evaluator {
     public:

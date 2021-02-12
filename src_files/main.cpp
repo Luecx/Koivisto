@@ -92,34 +92,34 @@ int main(int argc, char *argv[]) {
 
 
 
-//    if (argc == 1) {
-//        uci_loop(false);
-//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-//        uci_loop(true);
-//    }
+    if (argc == 1) {
+        uci_loop(false);
+    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+        uci_loop(true);
+    }
 
 //
 //using namespace tuning;
 //
-    bb_init();
-    psqt_init();
-//
-//    load_weights();
-//
-    Evaluator ev{};
-    load_positions("../resources/E12.33-1M-D12-Resolved.book", 1000000);
-    double total_elapsed = 0;
-    for(int k = 0; k < 10; k++){
-        Score v = 0;
-        startMeasure();
-        for(int i = 0; i < boards.size(); i++){
-            v += ev.evaluate(&(boards[i]));
-        }
-        double elapsed = stopMeasure();
-        total_elapsed += elapsed;
-        printf("#%-5d time= %-5.0f eps= %-8.0f sum= %-6d\n", k, elapsed, boards.size() * 1000.0 / elapsed, v);
-    }
-    printf("#TOTAL time= %-5.0f eps= %-8.0f\n", total_elapsed, boards.size() * 10 * 1000.0 / total_elapsed);
+//    bb_init();
+//    psqt_init();
+////
+////    load_weights();
+////
+//    Evaluator ev{};
+//    load_positions("../resources/E12.33-1M-D12-Resolved.book", 1000000);
+//    double total_elapsed = 0;
+//    for(int k = 0; k < 10; k++){
+//        Score v = 0;
+//        startMeasure();
+//        for(int i = 0; i < boards.size(); i++){
+//            v += ev.evaluate(&(boards[i]));
+//        }
+//        double elapsed = stopMeasure();
+//        total_elapsed += elapsed;
+//        printf("#%-5d time= %-5.0f eps= %-8.0f sum= %-6d\n", k, elapsed, boards.size() * 1000.0 / elapsed, v);
+//    }
+//    printf("#TOTAL time= %-5.0f eps= %-8.0f\n", total_elapsed, boards.size() * 10 * 1000.0 / total_elapsed);
 
 
 //    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000);
