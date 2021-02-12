@@ -32,24 +32,96 @@ using namespace bb;
 using namespace move;
 
 
+std::vector<Board> boards{};
+
+void load_positions(const std::string &path, int count, int start=0) {
+
+    boards.reserve(count);
+    fstream newfile;
+    newfile.open(path, ios::in);
+    Evaluator evaluator{};
+    if (newfile.is_open()) {
+        string tp;
+        int lineCount = 0;
+        int posCount = 0;
+        while (getline(newfile, tp)) {
+
+            if (lineCount < start) {
+                lineCount++;
+                continue;
+            }
+
+            // finding the first "c" to check where the fen ended
+            auto firstC = tp.find_first_of('c');
+            auto lastC = tp.find_last_of('c');
+            if (firstC == string::npos || lastC == string::npos) {
+                continue;
+            }
+
+            // extracting the fen and result and removing bad characters.
+            string fen = tp.substr(0, firstC);
+            string res = tp.substr(lastC + 2, string::npos);
+
+            fen = trim(fen);
+            res = findAndReplaceAll(res, "\"", "");
+            res = findAndReplaceAll(res, ";", "");
+            res = trim(res);
+
+            boards.emplace_back(Board{fen});
+
+            lineCount++;
+            posCount++;
+
+            if (posCount % 10000 == 0) {
+
+                std::cout << "\r" << loadingBar(posCount, count, "Loading data") << std::flush;
+            }
+
+            if (posCount >= count)
+                break;
+        }
+
+        std::cout << std::endl;
+        newfile.close();
+    }
+}
+
 int main(int argc, char *argv[]) {
 
 
-    if (argc == 1) {
-        uci_loop(false);
-    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
-    }
+
+
+
+//    if (argc == 1) {
+//        uci_loop(false);
+//    } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
+//        uci_loop(true);
+//    }
 
 //
 //using namespace tuning;
 //
-//    bb_init();
-//    psqt_init();
+    bb_init();
+    psqt_init();
 //
 //    load_weights();
 //
-//    load_positions("../resources/E12.33-1M-D12-Resolved.book", 10000000);
+    Evaluator ev{};
+    load_positions("../resources/E12.33-1M-D12-Resolved.book", 1000000);
+    double total_elapsed = 0;
+    for(int k = 0; k < 10; k++){
+        Score v = 0;
+        startMeasure();
+        for(int i = 0; i < boards.size(); i++){
+            v += ev.evaluate(&(boards[i]));
+        }
+        double elapsed = stopMeasure();
+        total_elapsed += elapsed;
+        printf("#%-5d time= %-5.0f eps= %-8.0f sum= %-6d\n", k, elapsed, boards.size() * 1000.0 / elapsed, v);
+    }
+    printf("#TOTAL time= %-5.0f eps= %-8.0f\n", total_elapsed, boards.size() * 10 * 1000.0 / total_elapsed);
+
+
 //    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000);
 //    load_positions("../resources/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
 //
