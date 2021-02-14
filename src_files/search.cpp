@@ -563,7 +563,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove) {
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, Depth* lmrFactor) {
     
     // increment the node counter for the current thread
     td->nodes++;
@@ -828,6 +828,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
+                if (lmrFactor != nullptr) {
+                    depth += *lmrFactor;
+                    *lmrFactor = 0;
+                }
                 extension++;
             } else if (score >= beta){
                 return score;
@@ -846,7 +850,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at.
         // *********************************************************************************************************
-        if (ply == 0) {
+        if (pv) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce = false;
             if (legalMoves == 0){
@@ -891,8 +895,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
-            if (ply == 0) sd->reduce = true;
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
+            if (pv) sd->reduce = true;
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
