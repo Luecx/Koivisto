@@ -29,6 +29,7 @@ extern EvalScore bishop_pawn_same_color_table_e[9];
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
+extern EvalScore  attackedEval[2*6*5];
 extern EvalScore* mobilities[6];
 extern int        mobEntryCount[6];
 extern float* phaseValues;
@@ -47,6 +48,22 @@ class Evaluator {
     EvalScore computePinnedPieces(Board* b, Color color);
 
     EvalScore computeHangingPieces(Board* b);
+
+    inline EvalScore computeAttackedPieces(Board* b, U64 whiteAttacks, U64 blackAttacks, Piece attacker, Color active){
+
+            EvalScore ev {};
+
+            for(Piece p = PAWN; p <= QUEEN; p++){
+                ev += attackedEval[     attacker * 5 + p + 30 * active] * (
+                    + bitCount(whiteAttacks & b->getPieces(BLACK, p)));
+                ev -= attackedEval[30 + attacker * 5 + p - 30 * active] * (
+                    + bitCount(blackAttacks & b->getPieces(WHITE, p)));
+            }
+
+            return ev;
+
+
+    }
 
     bb::Score evaluate(Board* b);
 
