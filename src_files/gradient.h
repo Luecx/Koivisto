@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 4
 
 namespace tuning {
 
@@ -52,6 +52,7 @@ namespace tuning {
 
         I_KNIGHT_OUTPOST,
         I_KNIGHT_DISTANCE_ENEMY_KING,
+        I_KNIGHT_DISTANCE_OWN_KING,
 
         I_ROOK_OPEN_FILE,
         I_ROOK_HALF_OPEN_FILE,
@@ -60,6 +61,8 @@ namespace tuning {
         I_BISHOP_DOUBLED,
         I_BISHOP_FIANCHETTO,
         I_BISHOP_PIECE_SAME_SQUARE_E,
+        I_BISHOP_DISTANCE_ENEMY_KING,
+        I_BISHOP_DISTANCE_OWN_KING,
 
         I_QUEEN_DISTANCE_ENEMY_KING,
 
@@ -659,6 +662,7 @@ namespace tuning {
                 square = bitscanForward(k);
                 count[I_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
+                count[I_KNIGHT_DISTANCE_OWN_KING  ] += manhattanDistance(square, whiteKingSquare);
                 k = lsbReset(k);
             }
 
@@ -667,6 +671,7 @@ namespace tuning {
                 square = bitscanForward(k);
                 count[I_KNIGHT_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
+                count[I_KNIGHT_DISTANCE_OWN_KING  ] -= manhattanDistance(square, blackKingSquare);
                 k = lsbReset(k);
             }
 
@@ -683,6 +688,8 @@ namespace tuning {
                 count[I_BISHOP_FIANCHETTO] +=
                         (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
                          && whitePawns & (ONE << B3 | ONE << B4));
+                count[I_BISHOP_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
+                count[I_BISHOP_DISTANCE_OWN_KING  ] += manhattanDistance(square, whiteKingSquare);
                 k = lsbReset(k);
             }
 
@@ -697,6 +704,8 @@ namespace tuning {
                 count[I_BISHOP_FIANCHETTO] -=
                         (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
                          && blackPawns & (ONE << B6 | ONE << B5));
+                count[I_BISHOP_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
+                count[I_BISHOP_DISTANCE_OWN_KING  ] -= manhattanDistance(square, blackKingSquare);
                 k = lsbReset(k);
             }
             count[I_BISHOP_DOUBLED] += (
@@ -1024,14 +1033,14 @@ namespace tuning {
 
         void gradient(float lossgrad, int threadID) {
             features.gradient(&meta, lossgrad, &threadData[threadID]);
-            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
-            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+//            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
+//            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
+//            passed.gradient(&meta, lossgrad, &threadData[threadID]);
+//            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
+//            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1561,12 +1570,15 @@ namespace tuning {
                 "PAWN_BLOCKED",
                 "KNIGHT_OUTPOST",
                 "KNIGHT_DISTANCE_ENEMY_KING",
+                "KNIGHT_DISTANCE_OWN_KING",
                 "ROOK_OPEN_FILE",
                 "ROOK_HALF_OPEN_FILE",
                 "ROOK_KING_LINE",
                 "BISHOP_DOUBLED",
                 "BISHOP_FIANCHETTO",
                 "BISHOP_PIECE_SAME_SQUARE_E",
+                "BISHOP_DISTANCE_ENEMY_KING",
+                "BISHOP_DISTANCE_OWN_KING",
                 "QUEEN_DISTANCE_ENEMY_KING",
                 "KING_CLOSE_OPPONENT",
                 "KING_PAWN_SHIELD",

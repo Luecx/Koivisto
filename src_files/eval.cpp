@@ -69,28 +69,68 @@ EvalScore bishop_pawn_same_color_table_e[9] = {
         M(  -60,  -20), M(  -59,  -36), M(  -66,  -55), };
 
 
-EvalScore SIDE_TO_MOVE                  = M(   10,   15);
-EvalScore PAWN_STRUCTURE                = M(   10,    4);
+EvalScore SIDE_TO_MOVE                  = M(    9,   14);
+EvalScore PAWN_STRUCTURE                = M(    9,    4);
 EvalScore PAWN_PASSED                   = M(    3,   48);
 EvalScore PAWN_ISOLATED                 = M(   -2,  -14);
 EvalScore PAWN_DOUBLED                  = M(   -7,   -5);
-EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -8,  -26);
-EvalScore PAWN_BACKWARD                 = M(  -11,    1);
-EvalScore PAWN_OPEN                     = M(  -10,   -6);
-EvalScore PAWN_BLOCKED                  = M(   -4,  -14);
-EvalScore KNIGHT_OUTPOST                = M(   25,   19);
+EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -8,  -27);
+EvalScore PAWN_BACKWARD                 = M(  -11,    0);
+EvalScore PAWN_OPEN                     = M(   -9,   -6);
+EvalScore PAWN_BLOCKED                  = M(   -4,  -15);
+EvalScore KNIGHT_OUTPOST                = M(   24,   18);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -6,   -1);
-EvalScore ROOK_OPEN_FILE                = M(   24,   -2);
-EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -12);
-EvalScore ROOK_KING_LINE                = M(   21,    2);
-EvalScore BISHOP_DOUBLED                = M(   16,   78);
-EvalScore BISHOP_FIANCHETTO             = M(   -3,    2);
-EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    6);
-EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    2,  -30);
-EvalScore KING_CLOSE_OPPONENT           = M(  -10,   14);
-EvalScore KING_PAWN_SHIELD              = M(   27,    8);
-EvalScore CASTLING_RIGHTS               = M(   20,   -3);
-EvalScore MINOR_BEHIND_PAWN             = M(    5,   24);
+EvalScore KNIGHT_DISTANCE_OWN_KING      = M(   -1,   -1);
+EvalScore ROOK_OPEN_FILE                = M(   24,   -0);
+EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -11);
+EvalScore ROOK_KING_LINE                = M(   19,    3);
+EvalScore BISHOP_DOUBLED                = M(   15,   79);
+EvalScore BISHOP_FIANCHETTO             = M(   -6,    1);
+EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    6);
+EvalScore BISHOP_DISTANCE_ENEMY_KING    = M(   -0,   -1);
+EvalScore BISHOP_DISTANCE_OWN_KING      = M(   -0,    0);
+EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    3,  -30);
+EvalScore KING_CLOSE_OPPONENT           = M(  -11,   13);
+EvalScore KING_PAWN_SHIELD              = M(   27,    9);
+EvalScore CASTLING_RIGHTS               = M(   19,   -4);
+EvalScore MINOR_BEHIND_PAWN             = M(    5,   25);
+
+
+EvalScore* evfeatures[] {
+    &SIDE_TO_MOVE,
+    &PAWN_STRUCTURE,
+    &PAWN_PASSED,
+    &PAWN_ISOLATED,
+    &PAWN_DOUBLED,
+    &PAWN_DOUBLED_AND_ISOLATED,
+    &PAWN_BACKWARD,
+    &PAWN_OPEN,
+    &PAWN_BLOCKED,
+
+    &KNIGHT_OUTPOST,
+    &KNIGHT_DISTANCE_ENEMY_KING,
+    &KNIGHT_DISTANCE_OWN_KING,
+
+    &ROOK_OPEN_FILE,
+    &ROOK_HALF_OPEN_FILE,
+    &ROOK_KING_LINE,
+
+    &BISHOP_DOUBLED,
+    &BISHOP_FIANCHETTO,
+    &BISHOP_PIECE_SAME_SQUARE_E,
+    &BISHOP_DISTANCE_ENEMY_KING,
+    &BISHOP_DISTANCE_OWN_KING,
+
+    &QUEEN_DISTANCE_ENEMY_KING,
+
+    &KING_CLOSE_OPPONENT,
+    &KING_PAWN_SHIELD,
+
+    &CASTLING_RIGHTS,
+
+    &MINOR_BEHIND_PAWN,
+
+};
 
 
 EvalScore kingSafetyTable[100] = {
@@ -115,39 +155,6 @@ EvalScore kingSafetyTable[100] = {
         M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
         M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), };
 
-
-EvalScore* evfeatures[] {
-    &SIDE_TO_MOVE,
-    &PAWN_STRUCTURE,
-    &PAWN_PASSED,
-    &PAWN_ISOLATED,
-    &PAWN_DOUBLED,
-    &PAWN_DOUBLED_AND_ISOLATED,
-    &PAWN_BACKWARD,
-    &PAWN_OPEN,
-    &PAWN_BLOCKED,
-    
-    &KNIGHT_OUTPOST,
-    &KNIGHT_DISTANCE_ENEMY_KING,
-    
-    &ROOK_OPEN_FILE,
-    &ROOK_HALF_OPEN_FILE,
-    &ROOK_KING_LINE,
-    
-    &BISHOP_DOUBLED,
-    &BISHOP_FIANCHETTO,
-    &BISHOP_PIECE_SAME_SQUARE_E,
-    
-    &QUEEN_DISTANCE_ENEMY_KING,
-    
-    &KING_CLOSE_OPPONENT,
-    &KING_PAWN_SHIELD,
-    
-    &CASTLING_RIGHTS,
-
-    &MINOR_BEHIND_PAWN,
-    
-};
 
 
 
@@ -467,6 +474,7 @@ bb::Score Evaluator::evaluate(Board* b) {
 
         featureScore += KNIGHT_OUTPOST * isOutpost(square, WHITE, blackPawns, whitePawnCover);
         featureScore += KNIGHT_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
+        featureScore += KNIGHT_DISTANCE_OWN_KING   * manhattanDistance(square, whiteKingSquare);
 
         addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 2);
 
@@ -484,6 +492,7 @@ bb::Score Evaluator::evaluate(Board* b) {
 
         featureScore -= KNIGHT_OUTPOST * isOutpost(square, BLACK, whitePawns, blackPawnCover);
         featureScore -= KNIGHT_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
+        featureScore -= KNIGHT_DISTANCE_OWN_KING   * manhattanDistance(square, blackKingSquare);
 
         addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 2);
 
@@ -516,6 +525,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         featureScore += BISHOP_FIANCHETTO
                         * (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
                            && whitePawns & (ONE << B3 | ONE << B4));
+        featureScore += BISHOP_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
+        featureScore += BISHOP_DISTANCE_OWN_KING   * manhattanDistance(square, whiteKingSquare);
 
         addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 2);
 
@@ -540,6 +551,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         featureScore -= BISHOP_FIANCHETTO
                         * (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
                            && blackPawns & (ONE << B6 | ONE << B5));
+        featureScore -= BISHOP_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
+        featureScore -= BISHOP_DISTANCE_OWN_KING   * manhattanDistance(square, blackKingSquare);
         addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 2);
 
         k = lsbReset(k);
