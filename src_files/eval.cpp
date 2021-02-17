@@ -69,30 +69,31 @@ EvalScore bishop_pawn_same_color_table_e[9] = {
         M(  -60,  -20), M(  -59,  -36), M(  -66,  -55), };
 
 
-EvalScore SIDE_TO_MOVE                  = M(    9,   14);
+
+EvalScore SIDE_TO_MOVE                  = M(    9,   15);
 EvalScore PAWN_STRUCTURE                = M(    9,    4);
 EvalScore PAWN_PASSED                   = M(    3,   48);
 EvalScore PAWN_ISOLATED                 = M(   -2,  -14);
 EvalScore PAWN_DOUBLED                  = M(   -7,   -5);
-EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -8,  -27);
+EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -8,  -26);
 EvalScore PAWN_BACKWARD                 = M(  -11,    0);
-EvalScore PAWN_OPEN                     = M(   -9,   -6);
-EvalScore PAWN_BLOCKED                  = M(   -4,  -15);
-EvalScore KNIGHT_OUTPOST                = M(   24,   18);
+EvalScore PAWN_OPEN                     = M(   -9,   -7);
+EvalScore PAWN_BLOCKED                  = M(   -4,  -14);
+EvalScore KNIGHT_OUTPOST                = M(   25,   19);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -6,   -1);
-EvalScore KNIGHT_DISTANCE_OWN_KING      = M(   -1,   -1);
-EvalScore ROOK_OPEN_FILE                = M(   24,   -0);
+EvalScore KNIGHT_DISTANCE_OWN_KING      = M(   -1,   -0);
+EvalScore ROOK_OPEN_FILE                = M(   24,   -2);
 EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -11);
-EvalScore ROOK_KING_LINE                = M(   19,    3);
+EvalScore ROOK_KING_LINE                = M(   18,    3);
 EvalScore BISHOP_DOUBLED                = M(   15,   79);
-EvalScore BISHOP_FIANCHETTO             = M(   -6,    1);
-EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    2,    6);
-EvalScore BISHOP_DISTANCE_ENEMY_KING    = M(   -0,   -1);
+EvalScore BISHOP_FIANCHETTO             = M(   -4,    2);
+EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    6);
+EvalScore BISHOP_DISTANCE_ENEMY_KING    = M(    0,   -0);
 EvalScore BISHOP_DISTANCE_OWN_KING      = M(   -0,    0);
 EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    3,  -30);
-EvalScore KING_CLOSE_OPPONENT           = M(  -11,   13);
-EvalScore KING_PAWN_SHIELD              = M(   27,    9);
-EvalScore CASTLING_RIGHTS               = M(   19,   -4);
+EvalScore KING_CLOSE_OPPONENT           = M(  -10,   13);
+EvalScore KING_PAWN_SHIELD              = M(   26,    9);
+EvalScore CASTLING_RIGHTS               = M(   21,   -2);
 EvalScore MINOR_BEHIND_PAWN             = M(    5,   25);
 
 
