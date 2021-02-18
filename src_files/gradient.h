@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 24
 
 namespace tuning {
 
@@ -1033,14 +1033,14 @@ namespace tuning {
 
         void gradient(float lossgrad, int threadID) {
             features.gradient(&meta, lossgrad, &threadData[threadID]);
-//            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-//            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-//            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-//            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
-//            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
+            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
+            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
+            passed.gradient(&meta, lossgrad, &threadData[threadID]);
+            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
+            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
+            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
+            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1082,80 +1082,82 @@ namespace tuning {
 
                 for (int n = 0; n < 2; n++) {
                     for (int j = 0; j < 64; j++) {
-                        float w1 = MgScore(piece_square_table[i][n][j] + piece_values[i]);
-                        float w2 = EgScore(piece_square_table[i][n][j] + piece_values[i]);
+//                        float w1 = MgScore(piece_square_table[i][n][j] + piece_values[i]);
+//                        float w2 = EgScore(piece_square_table[i][n][j] + piece_values[i]);
+                        float w1 = MgScore(piece_values[i]);
+                        float w2 = EgScore(piece_values[i]);
                         threadData[t].w_piece_square_table[i][n][j] = {{w1},
                                                                        {w2}};
                     }
                 }
 
-                if (i < 5) {
-
-                    for (int n = 0; n < 15 * 15; n++) {
-                        float w1 = MgScore(piece_opp_king_square_table[i][n]);
-                        float w2 = EgScore(piece_opp_king_square_table[i][n]);
-                        threadData[t].w_piece_opp_king_square_table[i][n] = {{w1},
-                                                                             {w2}};
-
-                        w1 = MgScore(piece_our_king_square_table[i][n]);
-                        w2 = EgScore(piece_our_king_square_table[i][n]);
-                        threadData[t].w_piece_our_king_square_table[i][n] = {{w1},
-                                                                             {w2}};
-                    }
-
-                    for (int n = 0; n < mobEntryCount[i]; n++) {
-                        float w1 = MgScore(mobilities[i][n]);
-                        float w2 = EgScore(mobilities[i][n]);
-                        threadData[t].w_mobility[i][n] = {{w1},
-                                                          {w2}};
-                    }
-
-                }
+//                if (i < 5) {
+//
+//                    for (int n = 0; n < 15 * 15; n++) {
+//                        float w1 = MgScore(piece_opp_king_square_table[i][n]);
+//                        float w2 = EgScore(piece_opp_king_square_table[i][n]);
+//                        threadData[t].w_piece_opp_king_square_table[i][n] = {{w1},
+//                                                                             {w2}};
+//
+//                        w1 = MgScore(piece_our_king_square_table[i][n]);
+//                        w2 = EgScore(piece_our_king_square_table[i][n]);
+//                        threadData[t].w_piece_our_king_square_table[i][n] = {{w1},
+//                                                                             {w2}};
+//                    }
+//
+//                    for (int n = 0; n < mobEntryCount[i]; n++) {
+//                        float w1 = MgScore(mobilities[i][n]);
+//                        float w2 = EgScore(mobilities[i][n]);
+//                        threadData[t].w_mobility[i][n] = {{w1},
+//                                                          {w2}};
+//                    }
+//
+//                }
             }
-            for (int i = 0; i < 1000; i++) {
-                if (i < I_END) {
-                    float w1 = MgScore(*evfeatures[i]);
-                    float w2 = EgScore(*evfeatures[i]);
-                    threadData[t].w_features[i] = {{w1},
-                                                   {w2}};
-                }
-                if (i < 9) {
-                    float w1 = MgScore(bishop_pawn_same_color_table_e[i]);
-                    float w2 = EgScore(bishop_pawn_same_color_table_e[i]);
-                    threadData[t].w_bishop_pawn_e[i] = {{w1},
-                                                        {w2}};
-                }
-                if (i < 9) {
-                    float w1 = MgScore(bishop_pawn_same_color_table_o[i]);
-                    float w2 = EgScore(bishop_pawn_same_color_table_o[i]);
-                    threadData[t].w_bishop_pawn_o[i] = {{w1},
-                                                        {w2}};
-                }
-                if (i < 100) {
-                    float w1 = MgScore(kingSafetyTable[i]);
-                    float w2 = EgScore(kingSafetyTable[i]);
-                    threadData[t].w_king_safety[i] = {{w1},
-                                                      {w2}};
-                }
-                if (i < 16) {
-                    float w1 = MgScore(passer_rank_n[i]);
-                    float w2 = EgScore(passer_rank_n[i]);
-                    threadData[t].w_passer[i] = {{w1},
-                                                 {w2}};
-                }
-                if (i < 15) {
-                    float w1 = MgScore(pinnedEval[i]);
-                    float w2 = EgScore(pinnedEval[i]);
-                    threadData[t].w_pinned[i] = {{w1},
-                                                 {w2}};
-                }
-                if (i < 5) {
-                    float w1 = MgScore(hangingEval[i]);
-                    float w2 = EgScore(hangingEval[i]);
-                    threadData[t].w_hanging[i] = {{w1},
-                                                  {w2}};
-                }
-            }
+//            for (int i = 0; i < 1000; i++) {
+//                if (i < I_END) {
+//                    float w1 = MgScore(*evfeatures[i]);
+//                    float w2 = EgScore(*evfeatures[i]);
+//                    threadData[t].w_features[i] = {{w1},
+//                                                   {w2}};
+//                }
+//                if (i < 9) {
+//                    float w1 = MgScore(bishop_pawn_same_color_table_e[i]);
+//                    float w2 = EgScore(bishop_pawn_same_color_table_e[i]);
+//                    threadData[t].w_bishop_pawn_e[i] = {{w1},
+//                                                        {w2}};
+//                }
+//                if (i < 9) {
+//                    float w1 = MgScore(bishop_pawn_same_color_table_o[i]);
+//                    float w2 = EgScore(bishop_pawn_same_color_table_o[i]);
+//                    threadData[t].w_bishop_pawn_o[i] = {{w1},
+//                                                        {w2}};
+//                }
+//                if (i < 100) {
+//                    float w1 = MgScore(kingSafetyTable[i]);
+//                    float w2 = EgScore(kingSafetyTable[i]);
+//                    threadData[t].w_king_safety[i] = {{w1},
+//                                                      {w2}};
+//                }
+//                if (i < 16) {
+//                    float w1 = MgScore(passer_rank_n[i]);
+//                    float w2 = EgScore(passer_rank_n[i]);
+//                    threadData[t].w_passer[i] = {{w1},
+//                                                 {w2}};
+//                }
+//                if (i < 15) {
+//                    float w1 = MgScore(pinnedEval[i]);
+//                    float w2 = EgScore(pinnedEval[i]);
+//                    threadData[t].w_pinned[i] = {{w1},
+//                                                 {w2}};
+//                }
+//                if (i < 5) {
+//                    float w1 = MgScore(hangingEval[i]);
+//                    float w2 = EgScore(hangingEval[i]);
+//                    threadData[t].w_hanging[i] = {{w1},
+//                                                  {w2}};
+//                }
+//            }
         }
 
     }
@@ -1458,11 +1460,11 @@ namespace tuning {
 
                 Board b{fen};
                 TrainEntry new_entry{&b, 0};
-                if ((int) (new_entry.evalData.evaluate()) != evaluator.evaluate(&b)) {
-                    std::cout << fen << std::endl;
-                    std::cout << new_entry.evalData.evaluate() << std::endl;
-                    std::cout << evaluator.evaluate(&b) << std::endl;
-                }
+//                if ((int) (new_entry.evalData.evaluate()) != evaluator.evaluate(&b)) {
+//                    std::cout << fen << std::endl;
+//                    std::cout << new_entry.evalData.evaluate() << std::endl;
+//                    std::cout << evaluator.evaluate(&b) << std::endl;
+//                }
 
                 // parsing the result to a usable value:
                 // assuming that the result is given as : a-b
