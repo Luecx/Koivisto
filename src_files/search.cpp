@@ -563,7 +563,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, Depth* lmrFactor) {
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove) {
     
     // increment the node counter for the current thread
     td->nodes++;
@@ -828,10 +828,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
-                if (lmrFactor != nullptr) {
-                    depth += *lmrFactor;
-                    *lmrFactor = 0;
-                }
                 extension++;
             } else if (score >= beta){
                 return score;
@@ -895,14 +891,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0);
             if (pv) sd->reduce = true;
             if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0); // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);    // re-search
         }
         
         // undo the move
