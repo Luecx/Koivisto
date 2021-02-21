@@ -123,7 +123,10 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
+bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, bool doNull) {
+
+    zobrist |= m_mask+1;
+    zobrist ^= (m_mask+1)*doNull;
 
     U64 index = zobrist & m_mask;
 
@@ -134,7 +137,7 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
         enP->setAge(m_currentAge);
         return true;
     } else {
-        if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE||enP->zobrist == zobrist) && enP->depth <= depth)) {
+        if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE|| matchingKey(enP->zobrist, zobrist)) && enP->depth <= depth)) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
             return true;
@@ -153,6 +156,14 @@ void TranspositionTable::incrementAge() {
     if (TranspositionTable::m_currentAge == 255) {
         TranspositionTable::m_currentAge = 0;
     }
+}
+
+bool TranspositionTable::matchingKey(U64 key, U64 key2) {
+    return (key|(m_mask+1)) == (key2|(m_mask+1));
+}
+
+bool TranspositionTable::doNull(U64 key) {
+    return key == (key|(m_mask+1));
 }
 
 /**

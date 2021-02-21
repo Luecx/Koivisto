@@ -193,7 +193,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
     
     U64   zob = b->zobrist();
     Entry en  = table->get(zob);
-    if (en.zobrist == zob && en.type == PV_NODE) {
+    if (table->matchingKey(en.zobrist, zob) && en.type == PV_NODE) {
         
         // extract the move from the table
         Move mov = en.move;
@@ -628,7 +628,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // **************************************************************************************************************
     Entry en = table->get(zobrist);
     
-    if (en.zobrist == zobrist && !skipMove) {
+    if (table->matchingKey(en.zobrist, zobrist) && !skipMove) {
         hashMove = en.move;
         
         // adjusting eval
@@ -685,6 +685,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
+    bool triedNull = false;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -713,13 +714,14 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
-        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
+        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer()) && (skipMove || !table->matchingKey(zobrist, en.zobrist) || table->doNull(en.zobrist))) {
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
             }
+            triedNull = true;
         }
     }
     
@@ -822,7 +824,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // singular extensions:
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && table->matchingKey(en.zobrist, zobrist) && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
             
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
@@ -924,7 +926,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                table->put(zobrist, score, m, CUT_NODE, depth, triedNull);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -966,9 +968,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth, triedNull);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth, triedNull);
         }
     }
     
@@ -1000,7 +1002,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
     // position. As we have no information about the depth, we will allways use the perft_tt entry.
     // **************************************************************************************************************
-    if (en.zobrist == zobrist) {
+    if (table->matchingKey(en.zobrist, zobrist)) {
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -1026,7 +1028,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.
-    if (en.zobrist == zobrist) {
+    if (table->matchingKey(en.zobrist, zobrist)) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type == ALL_NODE && stand_pat > en.score)) {

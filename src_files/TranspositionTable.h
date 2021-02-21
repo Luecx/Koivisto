@@ -90,7 +90,7 @@ class TranspositionTable {
 
     Entry get(U64 zobrist);
 
-    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
+    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, bool doNull = true);
 
     void incrementAge();
 
@@ -101,8 +101,12 @@ class TranspositionTable {
     double usage();
 
     U64 getSize();
-};
 
+    bool matchingKey(U64 key, U64 key2);
+
+    bool doNull(U64 key);
+
+};
 
 int maxTTSize();
 
