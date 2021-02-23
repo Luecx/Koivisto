@@ -823,7 +823,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
-            && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
+            && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3
+            && !(sd->reduce && sd->sideToReduce != b->getActivePlayer())) {
             
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
