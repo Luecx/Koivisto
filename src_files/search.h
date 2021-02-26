@@ -43,6 +43,8 @@ extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
+extern int HISTORY_C;
+extern int HISTORY_C2;
 extern TranspositionTable* table;
 #define MAX_THREADS 256
 
