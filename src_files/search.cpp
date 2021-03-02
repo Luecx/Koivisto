@@ -829,10 +829,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
-                    depth += *lmrFactor;
-                    *lmrFactor = 0;
+                    depth += 1;
+                    *lmrFactor -= 1;
+                } else {
+                    extension++;
                 }
-                extension++;
             } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
