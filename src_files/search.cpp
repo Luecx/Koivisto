@@ -863,7 +863,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
+                     || getType(m) == QUEEN_PROMOTION)
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
@@ -888,7 +888,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && sd->evaluator.phase > 0.1 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
         // principal variation search recursion.
