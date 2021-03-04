@@ -50,6 +50,11 @@ typedef uint8_t Depth;
 typedef int16_t Score;
 typedef int32_t EvalScore;
 
+constexpr int N_PIECE = 6;
+constexpr int N_COLOR = 2;
+constexpr int N_RANK  = 8;
+constexpr int N_FILE  = 8;
+
 constexpr Depth ONE_PLY          = 1;
 constexpr Depth MAX_PLY          = 128;
 constexpr Depth MAX_INTERNAL_PLY = 255;
@@ -62,97 +67,53 @@ constexpr Score MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY);
 constexpr Color WHITE = 0;
 constexpr Color BLACK = 1;
 
-constexpr Piece PAWN   = 0;
-constexpr Piece KNIGHT = 1;
-constexpr Piece BISHOP = 2;
-constexpr Piece ROOK   = 3;
-constexpr Piece QUEEN  = 4;
-constexpr Piece KING   = 5;
+enum PieceTypes{
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+    QUEEN,
+    KING
+};
 
-constexpr Piece WHITE_PAWN   = 0;
-constexpr Piece WHITE_KNIGHT = 1;
-constexpr Piece WHITE_BISHOP = 2;
-constexpr Piece WHITE_ROOK   = 3;
-constexpr Piece WHITE_QUEEN  = 4;
-constexpr Piece WHITE_KING   = 5;
-constexpr Piece BLACK_PAWN   = 6;
-constexpr Piece BLACK_KNIGHT = 7;
-constexpr Piece BLACK_BISHOP = 8;
-constexpr Piece BLACK_ROOK   = 9;
-constexpr Piece BLACK_QUEEN  = 10;
-constexpr Piece BLACK_KING   = 11;
+enum Pieces{
+    WHITE_PAWN,
+    WHITE_KNIGHT,
+    WHITE_BISHOP,
+    WHITE_ROOK,
+    WHITE_QUEEN,
+    WHITE_KING,
+    BLACK_PAWN,
+    BLACK_KNIGHT,
+    BLACK_BISHOP,
+    BLACK_ROOK,
+    BLACK_QUEEN,
+    BLACK_KING,
+};
 
-constexpr Square A1 = 0;
-constexpr Square B1 = 1;
-constexpr Square C1 = 2;
-constexpr Square D1 = 3;
-constexpr Square E1 = 4;
-constexpr Square F1 = 5;
-constexpr Square G1 = 6;
-constexpr Square H1 = 7;
+enum Squares{
+    A1,    B1,    C1,    D1,    E1,    F1,    G1,    H1,    
+    A2,    B2,    C2,    D2,    E2,    F2,    G2,    H2,    
+    A3,    B3,    C3,    D3,    E3,    F3,    G3,    H3,    
+    A4,    B4,    C4,    D4,    E4,    F4,    G4,    H4,    
+    A5,    B5,    C5,    D5,    E5,    F5,    G5,    H5,    
+    A6,    B6,    C6,    D6,    E6,    F6,    G6,    H6,    
+    A7,    B7,    C7,    D7,    E7,    F7,    G7,    H7,    
+    A8,    B8,    C8,    D8,    E8,    F8,    G8,    H8,
+    
+};
 
-constexpr Square A2 = 8;
-constexpr Square B2 = 9;
-constexpr Square C2 = 10;
-constexpr Square D2 = 11;
-constexpr Square E2 = 12;
-constexpr Square F2 = 13;
-constexpr Square G2 = 14;
-constexpr Square H2 = 15;
 
-constexpr Square A3 = 16;
-constexpr Square B3 = 17;
-constexpr Square C3 = 18;
-constexpr Square D3 = 19;
-constexpr Square E3 = 20;
-constexpr Square F3 = 21;
-constexpr Square G3 = 22;
-constexpr Square H3 = 23;
-
-constexpr Square A4 = 24;
-constexpr Square B4 = 25;
-constexpr Square C4 = 26;
-constexpr Square D4 = 27;
-constexpr Square E4 = 28;
-constexpr Square F4 = 29;
-constexpr Square G4 = 30;
-constexpr Square H4 = 31;
-
-constexpr Square A5 = 32;
-constexpr Square B5 = 33;
-constexpr Square C5 = 34;
-constexpr Square D5 = 35;
-constexpr Square E5 = 36;
-constexpr Square F5 = 37;
-constexpr Square G5 = 38;
-constexpr Square H5 = 39;
-
-constexpr Square A6 = 40;
-constexpr Square B6 = 41;
-constexpr Square C6 = 42;
-constexpr Square D6 = 43;
-constexpr Square E6 = 44;
-constexpr Square F6 = 45;
-constexpr Square G6 = 46;
-constexpr Square H6 = 47;
-
-constexpr Square A7 = 48;
-constexpr Square B7 = 49;
-constexpr Square C7 = 50;
-constexpr Square D7 = 51;
-constexpr Square E7 = 52;
-constexpr Square F7 = 53;
-constexpr Square G7 = 54;
-constexpr Square H7 = 55;
-
-constexpr Square A8 = 56;
-constexpr Square B8 = 57;
-constexpr Square C8 = 58;
-constexpr Square D8 = 59;
-constexpr Square E8 = 60;
-constexpr Square F8 = 61;
-constexpr Square G8 = 62;
-constexpr Square H8 = 63;
+enum Directions{
+    NORTH = 8,
+    SOUTH = -8,
+    WEST = -1,
+    EAST = 1,
+    NORTH_WEST = 7,
+    NORTH_EAST = 9,
+    SOUTH_WEST = -9,
+    SOUTH_EAST = -7
+};
 
 constexpr char const* SQUARE_IDENTIFIER[] {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -163,14 +124,7 @@ constexpr char const* SQUARE_IDENTIFIER[] {
 
 constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
 
-constexpr Direction NORTH      = 8;
-constexpr Direction SOUTH      = -8;
-constexpr Direction WEST       = -1;
-constexpr Direction EAST       = 1;
-constexpr Direction NORTH_WEST = 7;
-constexpr Direction NORTH_EAST = 9;
-constexpr Direction SOUTH_WEST = -9;
-constexpr Direction SOUTH_EAST = -7;
+
 
 constexpr Square index64[64] = {0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 38, 29, 17, 4,  62, 55, 59, 36, 53, 51,
                                 43, 22, 45, 39, 33, 30, 24, 18, 12, 5,  63, 47, 56, 27, 60, 41, 37, 16, 54, 35, 52, 21,

@@ -26,6 +26,16 @@
 extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
 
+enum KingDangers{
+    ATTACK_COUNT,
+    QUEEN_EXISTENCE,
+    WEAK_KING_RING,
+    KING_DANGER_FACTORS_COUNT
+};
+
+extern int kingDangerFactors[KING_DANGER_FACTORS_COUNT];
+extern int kingSafetyAttackWeights[N_PIECE];
+
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
@@ -40,6 +50,11 @@ bool hasMatingMaterial(Board* b, bool side);
 void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 class Evaluator {
+    private:
+    U64 attacks[N_COLOR][N_PIECE];
+    U64 kingSafetySquares[N_COLOR];
+    U64 pieceAttackScore [N_COLOR];
+    
     public:
 
     float phase;
@@ -48,9 +63,12 @@ class Evaluator {
 
     EvalScore computeHangingPieces(Board* b);
 
+    template<Color us> EvalScore kingSafety(Board* b);
+    
     bb::Score evaluate(Board* b);
 
     bb::Score evaluateTempo(Board* b);
+    
 
     /**
      * returns the phase of the last calculation

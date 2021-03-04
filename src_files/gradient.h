@@ -25,9 +25,9 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 24
 
 namespace tuning {
 
@@ -78,8 +78,8 @@ namespace tuning {
 
         Param(float value) : value(value) {}
 
-        float value;
-        float gradient;
+        float value = 0;
+        float gradient = 0;
 
         double firstMoment = 0;
         double secondMoment = 0;
@@ -109,8 +109,8 @@ namespace tuning {
     };
 
     struct Weight {
-        Param midgame;
-        Param endgame;
+        Param midgame{};
+        Param endgame{};
 
         friend ostream &operator<<(ostream &os, const Weight &weight) {
             os << "M(" << std::setw(5) << round(weight.midgame.value) << "," << std::setw(5)
@@ -121,17 +121,20 @@ namespace tuning {
     };
 
     struct ThreadData {
-        Weight w_piece_square_table[6][2][64];
-        Weight w_piece_opp_king_square_table[5][15 * 15];
-        Weight w_piece_our_king_square_table[5][15 * 15];
-        Weight w_mobility[5][28];
-        Weight w_features[I_END];
-        Weight w_bishop_pawn_e[9];
-        Weight w_bishop_pawn_o[9];
-        Weight w_king_safety[100];
-        Weight w_passer[16];
-        Weight w_pinned[15];
-        Weight w_hanging[5];
+        Weight w_piece_square_table[6][2][64]{};
+        Weight w_piece_opp_king_square_table[5][15 * 15]{};
+        Weight w_piece_our_king_square_table[5][15 * 15]{};
+        Weight w_mobility[5][28]{};
+        Weight w_features[I_END]{};
+        Weight w_bishop_pawn_e[9]{};
+        Weight w_bishop_pawn_o[9]{};
+        Weight w_passer[16]{};
+        Weight w_pinned[15]{};
+        Weight w_hanging[5]{};
+        
+        // only contain 1 value
+        Weight w_attack_weights[6];
+        Weight w_king_danger_factors[KING_DANGER_FACTORS_COUNT];
     };
 
     ThreadData threadData[N_THREAD]{};
@@ -375,38 +378,44 @@ namespace tuning {
 
     struct KingSafetyData {
         // we only need to store one index for the white and black king
-
-        int8_t wkingsafety_index;
-        int8_t bkingsafety_index;
-
+        int  king_danger_counts[N_COLOR][KING_DANGER_FACTORS_COUNT]{};
+        uint8_t attack_counts  [N_COLOR][N_PIECE]{};
+        int  king_dangers_last [N_COLOR];
+        
         void init(Board *b) {
 
             U64 k;
             Square square;
             U64 attacks;
             U64 occupied = *(b->getOccupied());
-
-            static int factors[6] = {0, 2, 2, 3, 4};
-
+            
             Square whiteKingSquare = bitscanForward(b->getPieces(WHITE, KING));
             Square blackKingSquare = bitscanForward(b->getPieces(BLACK, KING));
-
+            
             U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
             U64 blackKingZone = KING_ATTACKS[blackKingSquare];
+            if(fileIndex(whiteKingSquare) == 0) whiteKingZone |= shiftEast(whiteKingZone);
+            if(fileIndex(whiteKingSquare) == 7) whiteKingZone |= shiftWest(whiteKingZone);
+            if(fileIndex(blackKingSquare) == 0) blackKingZone |= shiftEast(blackKingZone);
+            if(fileIndex(blackKingSquare) == 7) blackKingZone |= shiftWest(blackKingZone);
+            
+            U64 attacks_table[2][6]{};
+            U64 attack_scores[2]{};
 
-            int wkingSafety_attPiecesCount = 0;
-            int wkingSafety_valueOfAttacks = 0;
-
-            int bkingSafety_attPiecesCount = 0;
-            int bkingSafety_valueOfAttacks = 0;
-
-            for (Piece p = KNIGHT; p <= QUEEN; p++) {
+            for (Piece p = PAWN; p <= KING; p++) {
                 for (Color c = WHITE; c <= BLACK; c++) {
                     k = b->getPieces(c, p);
                     while (k) {
                         square = bitscanForward(k);
                         attacks = ZERO;
                         switch (p) {
+                            case PAWN:
+                                if(c == WHITE){
+                                    attacks = shiftNorthEast((ONE << square)) | shiftNorthWest((ONE << square));
+                                }else{
+                                    attacks = shiftSouthEast((ONE << square)) | shiftSouthWest((ONE << square));
+                                }
+                                break;
                             case KNIGHT:
                                 attacks = KNIGHT_ATTACKS[square];
                                 break;
@@ -425,41 +434,100 @@ namespace tuning {
                                                                     ~b->getPieces(c, QUEEN)&
                                                                     ~b->getPieces(c, ROOK));
                                 break;
+                            case KING:
+                                attacks = KING_ATTACKS[square];
+                                break;
                         }
+                        attacks_table[c][p] |= attacks;
                         if (c == WHITE) {
-                            addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount,
-                                            bkingSafety_valueOfAttacks,
-                                            factors[p]);
+                            attack_counts[c][p]  += bitCount(attacks & blackKingZone);
                         } else {
-                            addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount,
-                                            wkingSafety_valueOfAttacks,
-                                            factors[p]);
+                            attack_counts[c][p]  += bitCount(attacks & whiteKingZone);
                         }
 
                         k = lsbReset(k);
                     }
                 }
             }
-
-            wkingsafety_index = wkingSafety_valueOfAttacks;
-            bkingsafety_index = bkingSafety_valueOfAttacks;
+            
+            king_danger_counts[WHITE][WEAK_KING_RING] =
+                bitCount(   (attacks_table[BLACK][PAWN] | attacks_table[BLACK][KNIGHT] | attacks_table[BLACK][BISHOP] |
+                             attacks_table[BLACK][ROOK] | attacks_table[BLACK][QUEEN ] | attacks_table[BLACK][KING  ])
+                         & ~(attacks_table[WHITE][PAWN] | attacks_table[WHITE][KNIGHT] | attacks_table[WHITE][BISHOP] |
+                             attacks_table[WHITE][ROOK])
+                         & whiteKingZone);
+            king_danger_counts[BLACK][WEAK_KING_RING] =
+                bitCount(   (attacks_table[WHITE][PAWN] | attacks_table[WHITE][KNIGHT] | attacks_table[WHITE][BISHOP] |
+                             attacks_table[WHITE][ROOK] | attacks_table[WHITE][QUEEN ] | attacks_table[WHITE][KING  ])
+                         & ~(attacks_table[BLACK][PAWN] | attacks_table[BLACK][KNIGHT] | attacks_table[BLACK][BISHOP] |
+                             attacks_table[BLACK][ROOK])
+                         & blackKingZone);
+            king_danger_counts[WHITE][QUEEN_EXISTENCE] = b->getPieces(BLACK, QUEEN) != 0;
+            king_danger_counts[BLACK][QUEEN_EXISTENCE] = b->getPieces(WHITE, QUEEN) != 0;
+            
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            midgame += td->w_king_safety[bkingsafety_index].midgame.value - td->w_king_safety[wkingsafety_index].midgame.value;
-            endgame += td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
+            
+            int attack_scores[N_COLOR]{};
+            for(Piece p = PAWN; p <= KING; p++){
+                attack_scores[WHITE] += td->w_attack_weights[p].midgame.value * attack_counts[WHITE][p];
+                attack_scores[BLACK] += td->w_attack_weights[p].midgame.value * attack_counts[BLACK][p];
+            }
+            king_danger_counts[WHITE][ATTACK_COUNT] = attack_scores[WHITE];
+            king_danger_counts[BLACK][ATTACK_COUNT] = attack_scores[BLACK];
+            
+            king_dangers_last[WHITE] = 0;
+            king_dangers_last[BLACK] = 0;
+            for(Color c = WHITE; c <= BLACK; c++){
+                for(int i = 0; i < KING_DANGER_FACTORS_COUNT; i++){
+                    king_dangers_last[c] += king_danger_counts[c][i] * td->w_king_danger_factors[i].midgame.value;
+                }
+            }
+        
+            midgame += king_dangers_last[WHITE] * king_dangers_last[WHITE] / 4096;
+            midgame -= king_dangers_last[BLACK] * king_dangers_last[BLACK] / 4096;
+    
+            endgame += king_dangers_last[WHITE] / 16;
+            endgame -= king_dangers_last[BLACK] / 16;
+    
+            
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            td->w_king_safety[bkingsafety_index].midgame.gradient +=
-                    (1 - meta->phase) * meta->evalReduction * lossgrad;
-            td->w_king_safety[bkingsafety_index].endgame.gradient +=
-                    (meta->phase) * meta->evalReduction * lossgrad;
-
-            td->w_king_safety[wkingsafety_index].midgame.gradient -=
-                    (1 - meta->phase) * meta->evalReduction * lossgrad;
-            td->w_king_safety[wkingsafety_index].endgame.gradient -=
-                    (meta->phase) * meta->evalReduction * lossgrad;
+            
+            double devalddanger_w =
+                     meta->phase    * 1 / 16.0 +
+                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[WHITE];
+            double devalddanger_b = -
+                     meta->phase    * 1 / 16.0 -
+                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[BLACK];
+            
+            devalddanger_w *= meta->evalReduction * lossgrad;
+            devalddanger_b *= meta->evalReduction * lossgrad;
+            
+            // backtrack gradients to each scalar
+            for(int i = 0; i < KING_DANGER_FACTORS_COUNT; i++){
+                td->w_king_danger_factors[i].midgame.gradient += devalddanger_w * king_danger_counts[WHITE][i];
+                td->w_king_danger_factors[i].midgame.gradient += devalddanger_b * king_danger_counts[BLACK][i];
+            }
+            
+            for(int i = 0; i < 6; i++){
+                td->w_attack_weights[i].midgame.gradient += devalddanger_w * attack_counts[WHITE][i];
+                td->w_attack_weights[i].midgame.gradient += devalddanger_b * attack_counts[BLACK][i];
+            }
+            
+            
+        
+//            td->w_king_safety[bkingsafety_index].midgame.gradient +=
+//                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+//            td->w_king_safety[bkingsafety_index].endgame.gradient +=
+//                    (meta->phase) * meta->evalReduction * lossgrad;
+//
+//            td->w_king_safety[wkingsafety_index].midgame.gradient -=
+//                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+//            td->w_king_safety[wkingsafety_index].endgame.gradient -=
+//                    (meta->phase) * meta->evalReduction * lossgrad;
         }
     };
 
@@ -1023,15 +1091,15 @@ namespace tuning {
         }
 
         void gradient(float lossgrad, int threadID) {
-            features.gradient(&meta, lossgrad, &threadData[threadID]);
-            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
+//            features.gradient(&meta, lossgrad, &threadData[threadID]);
+//            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
+//            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
+//            passed.gradient(&meta, lossgrad, &threadData[threadID]);
+//            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
             king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1122,12 +1190,7 @@ namespace tuning {
                     threadData[t].w_bishop_pawn_o[i] = {{w1},
                                                         {w2}};
                 }
-                if (i < 100) {
-                    float w1 = MgScore(kingSafetyTable[i]);
-                    float w2 = EgScore(kingSafetyTable[i]);
-                    threadData[t].w_king_safety[i] = {{w1},
-                                                      {w2}};
-                }
+
                 if (i < 16) {
                     float w1 = MgScore(passer_rank_n[i]);
                     float w2 = EgScore(passer_rank_n[i]);
@@ -1145,6 +1208,14 @@ namespace tuning {
                     float w2 = EgScore(hangingEval[i]);
                     threadData[t].w_hanging[i] = {{w1},
                                                   {w2}};
+                }
+                if (i < KING_DANGER_FACTORS_COUNT){
+                    float w1 = kingDangerFactors[i];
+                    threadData[t].w_king_danger_factors[i] = {w1,0};
+                }
+                if (i < 6){
+                    float w1 = kingSafetyAttackWeights[i];
+                    threadData[t].w_attack_weights[i] = {w1,0};
                 }
             }
         }
@@ -1217,15 +1288,6 @@ namespace tuning {
                     threadData[t].w_bishop_pawn_o[i].endgame.gradient = 0;
 
                 }
-                if (i < 100) {
-                    threadData[0].w_king_safety[i].midgame.gradient +=
-                            threadData[t].w_king_safety[i].midgame.gradient;
-                    threadData[0].w_king_safety[i].endgame.gradient +=
-                            threadData[t].w_king_safety[i].endgame.gradient;
-                    threadData[t].w_king_safety[i].midgame.gradient = 0;
-                    threadData[t].w_king_safety[i].endgame.gradient = 0;
-
-                }
                 if (i < 16) {
                     threadData[0].w_passer[i].midgame.gradient +=
                             threadData[t].w_passer[i].midgame.gradient;
@@ -1246,14 +1308,22 @@ namespace tuning {
 
                 }
                 if (i < 5) {
-
                     threadData[0].w_hanging[i].midgame.gradient +=
                             threadData[t].w_hanging[i].midgame.gradient;
                     threadData[0].w_hanging[i].endgame.gradient +=
                             threadData[t].w_hanging[i].endgame.gradient;
                     threadData[t].w_hanging[i].midgame.gradient = 0;
                     threadData[t].w_hanging[i].endgame.gradient = 0;
-
+                }
+                if (i < KING_DANGER_FACTORS_COUNT) {
+                    threadData[0].w_king_danger_factors[i].midgame.gradient +=
+                        threadData[t].w_king_danger_factors[i].midgame.gradient;
+                    threadData[t].w_king_danger_factors[i].midgame.gradient = 0;
+                }
+                if (i < 6) {
+                    threadData[0].w_attack_weights[i].midgame.gradient +=
+                        threadData[t].w_attack_weights[i].midgame.gradient;
+                    threadData[t].w_attack_weights[i].midgame.gradient = 0;
                 }
             }
         }
@@ -1313,13 +1383,7 @@ namespace tuning {
                             threadData[0].w_bishop_pawn_o[i].endgame.value;
 
                 }
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].midgame.value =
-                            threadData[0].w_king_safety[i].midgame.value;
-                    threadData[t].w_king_safety[i].endgame.value =
-                            threadData[0].w_king_safety[i].endgame.value;
 
-                }
                 if (i < 16) {
                     threadData[t].w_passer[i].midgame.value =
                             threadData[0].w_passer[i].midgame.value;
@@ -1343,6 +1407,16 @@ namespace tuning {
                             threadData[0].w_hanging[i].endgame.value;
 
                 }
+    
+                if (i < KING_DANGER_FACTORS_COUNT) {
+                    threadData[t].w_king_danger_factors[i].midgame.value =
+                        threadData[0].w_king_danger_factors[i].midgame.value;
+                }
+                if (i < 6) {
+                    threadData[t].w_attack_weights[i].midgame.value =
+                        threadData[0].w_attack_weights[i].midgame.value;
+                }
+
             }
         }
     }
@@ -1393,10 +1467,6 @@ namespace tuning {
                 threadData[0].w_bishop_pawn_o[i].midgame.update(eta);
                 threadData[0].w_bishop_pawn_o[i].endgame.update(eta);
             }
-            if (i < 100) {
-                threadData[0].w_king_safety[i].midgame.update(eta);
-                threadData[0].w_king_safety[i].endgame.update(eta);
-            }
             if (i < 16) {
                 threadData[0].w_passer[i].midgame.update(eta);
                 threadData[0].w_passer[i].endgame.update(eta);
@@ -1408,6 +1478,13 @@ namespace tuning {
             if (i < 5) {
                 threadData[0].w_hanging[i].midgame.update(eta);
                 threadData[0].w_hanging[i].endgame.update(eta);
+            }
+            if (i < KING_DANGER_FACTORS_COUNT){
+//                std::cout << threadData[0].w_king_danger_factors[i].midgame.gradient << std::endl;
+                threadData[0].w_king_danger_factors[i].midgame.update(eta);
+            }
+            if (i < 6){
+                threadData[0].w_attack_weights[i].midgame.update(eta);
             }
         }
 
@@ -1453,6 +1530,7 @@ namespace tuning {
                     std::cout << fen << std::endl;
                     std::cout << new_entry.evalData.evaluate() << std::endl;
                     std::cout << evaluator.evaluate(&b) << std::endl;
+                    exit(-1);
                 }
 
                 // parsing the result to a usable value:
@@ -1520,9 +1598,13 @@ namespace tuning {
             startMeasure();
             std::cout << left;
             std::cout << "loss= " << setw(20) << compute_loss(K)
-                      << " eps= " << setw(20) << positions.size() / stopMeasure() * 1000 << std::endl;
+                      << " eps= " << setw(20) << positions.size() / std::max(0.0001,stopMeasure()* 1000.0) << std::endl;
             adjust_weights(eta);
         }
+        for(int i = 0; i < 3; i++)
+            std::cout << threadData[0].w_king_danger_factors[i].midgame.value << std::endl;
+        for(int i = 0; i < 6; i++)
+            std::cout << threadData[0].w_attack_weights[i].midgame.value << std::endl;
     }
 
     float compute_K(double initK, double rate, double deviation) {
@@ -1633,14 +1715,6 @@ namespace tuning {
         for (int n = 0; n < 9; n++) {
             if (n % 3 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_bishop_pawn_e[n] << ", ";
-        }
-        std::cout << "};\n" << std::endl;
-
-        // --------------------------------- kingSafetyTable ---------------------------------
-        std::cout << "EvalScore kingSafetyTable[100] = {";
-        for (int n = 0; n < 100; n++) {
-            if (n % 5 == 0) std::cout << std::endl << "\t";
-            std::cout << threadData[0].w_king_safety[n] << ", ";
         }
         std::cout << "};\n" << std::endl;
 
