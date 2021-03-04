@@ -115,7 +115,7 @@ std::string loadingBar(int count, int max, std::string msg) {
     std::stringstream ss {};
     double            p = count / (double) max;
 
-    ss << (int) (100 * p) << "% [";
+    ss << std::setw(3) << (int) (100 * p) << "% [";
     for (int i = 0; i < 50 * p; i++) {
         ss << "=";
     }

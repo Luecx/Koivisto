@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
 
 
     if (argc == 1) {
-        uci_loop(false);
+        uci_loop(true);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     }
 
-//
+
 //using namespace tuning;
 //
 //    bb_init();
@@ -49,13 +49,13 @@ int main(int argc, char *argv[]) {
 //
 //    load_weights();
 //
-//    load_positions("../resources/E12.33-1M-D12-Resolved.book", 10000000);
-//    load_positions("../resources/E12.41-1M-D12-Resolved.book", 10000000);
-//    load_positions("../resources/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+//    load_positions("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
+//    load_positions("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+//    load_positions("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
 //
-//    compute_K(2.48617, 100, 1e-7);
-//    for(int i = 0; i < 1; i++){
-//        train(50, 2.48172, 0.001 * sqrt(1000000));
+//    double K = compute_K(2.48617, 50, 2e-7);
+//    for(int i = 0; i < 10; i++){
+//        train(50, K, 0.001 * sqrt(10000000 * 3));
 //        display_params();
 //    }
 

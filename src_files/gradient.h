@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 24
 
 namespace tuning {
 
@@ -52,6 +52,12 @@ namespace tuning {
 
         I_KNIGHT_OUTPOST,
         I_KNIGHT_DISTANCE_ENEMY_KING,
+        I_KNIGHT_OPPONENT_PAWN_BONUS_D_RING,
+        I_KNIGHT_OPPONENT_PAWN_BONUS_C_RING,
+        I_KNIGHT_OPPONENT_PAWN_BONUS_B_RING,
+        I_KNIGHT_FRIENDLY_PAWN_BONUS_D_RING,
+        I_KNIGHT_FRIENDLY_PAWN_BONUS_C_RING,
+        I_KNIGHT_FRIENDLY_PAWN_BONUS_B_RING,
 
         I_ROOK_OPEN_FILE,
         I_ROOK_HALF_OPEN_FILE,
@@ -78,8 +84,8 @@ namespace tuning {
 
         Param(float value) : value(value) {}
 
-        float value;
-        float gradient;
+        float value = 0;
+        float gradient = 0;
 
         double firstMoment = 0;
         double secondMoment = 0;
@@ -109,8 +115,8 @@ namespace tuning {
     };
 
     struct Weight {
-        Param midgame;
-        Param endgame;
+        Param midgame{};
+        Param endgame{};
 
         friend ostream &operator<<(ostream &os, const Weight &weight) {
             os << "M(" << std::setw(5) << round(weight.midgame.value) << "," << std::setw(5)
@@ -121,17 +127,17 @@ namespace tuning {
     };
 
     struct ThreadData {
-        Weight w_piece_square_table[6][2][64];
-        Weight w_piece_opp_king_square_table[5][15 * 15];
-        Weight w_piece_our_king_square_table[5][15 * 15];
-        Weight w_mobility[5][28];
-        Weight w_features[I_END];
-        Weight w_bishop_pawn_e[9];
-        Weight w_bishop_pawn_o[9];
-        Weight w_king_safety[100];
-        Weight w_passer[16];
-        Weight w_pinned[15];
-        Weight w_hanging[5];
+        Weight w_piece_square_table[6][2][64]{};
+        Weight w_piece_opp_king_square_table[5][15 * 15]{};
+        Weight w_piece_our_king_square_table[5][15 * 15]{};
+        Weight w_mobility[5][28]{};
+        Weight w_features[I_END]{};
+        Weight w_bishop_pawn_e[9]{};
+        Weight w_bishop_pawn_o[9]{};
+        Weight w_king_safety[100]{};
+        Weight w_passer[16]{};
+        Weight w_pinned[15]{};
+        Weight w_hanging[5]{};
     };
 
     ThreadData threadData[N_THREAD]{};
@@ -669,6 +675,27 @@ namespace tuning {
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
                 k = lsbReset(k);
             }
+            int nWKnights = bitCount(b->getPieces()[WHITE_KNIGHT]);
+            int nBKnights = bitCount(b->getPieces()[BLACK_KNIGHT]);
+            count[I_KNIGHT_FRIENDLY_PAWN_BONUS_B_RING] =
+                bitCount(whitePawns & CIRCLE_B) * nWKnights -
+                bitCount(blackPawns & CIRCLE_B) * nBKnights;
+            count[I_KNIGHT_FRIENDLY_PAWN_BONUS_C_RING] =
+                bitCount(whitePawns & CIRCLE_C) * nWKnights -
+                bitCount(blackPawns & CIRCLE_C) * nBKnights;
+            count[I_KNIGHT_FRIENDLY_PAWN_BONUS_D_RING] =
+                bitCount(whitePawns & CIRCLE_D) * nWKnights -
+                bitCount(blackPawns & CIRCLE_D) * nBKnights;
+            count[I_KNIGHT_OPPONENT_PAWN_BONUS_B_RING] =
+                bitCount(blackPawns & CIRCLE_B) * nWKnights -
+                bitCount(whitePawns & CIRCLE_B) * nBKnights;
+            count[I_KNIGHT_OPPONENT_PAWN_BONUS_C_RING] =
+                bitCount(blackPawns & CIRCLE_C) * nWKnights -
+                bitCount(whitePawns & CIRCLE_C) * nBKnights;
+            count[I_KNIGHT_OPPONENT_PAWN_BONUS_D_RING] =
+                bitCount(blackPawns & CIRCLE_D) * nWKnights -
+                bitCount(whitePawns & CIRCLE_D) * nBKnights;
+           
 
 
             k = b->getPieces()[WHITE_BISHOP];
@@ -1561,6 +1588,12 @@ namespace tuning {
                 "PAWN_BLOCKED",
                 "KNIGHT_OUTPOST",
                 "KNIGHT_DISTANCE_ENEMY_KING",
+                "KNIGHT_OPPONENT_PAWN_BONUS_D_RING",
+                "KNIGHT_OPPONENT_PAWN_BONUS_C_RING",
+                "KNIGHT_OPPONENT_PAWN_BONUS_B_RING",
+                "KNIGHT_FRIENDLY_PAWN_BONUS_D_RING",
+                "KNIGHT_FRIENDLY_PAWN_BONUS_C_RING",
+                "KNIGHT_FRIENDLY_PAWN_BONUS_B_RING",
                 "ROOK_OPEN_FILE",
                 "ROOK_HALF_OPEN_FILE",
                 "ROOK_KING_LINE",
