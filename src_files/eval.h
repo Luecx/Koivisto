@@ -44,6 +44,8 @@ class Evaluator {
 
     float phase;
 
+    int KingSafety[2] = {};
+
     EvalScore computePinnedPieces(Board* b, Color color);
 
     EvalScore computeHangingPieces(Board* b);

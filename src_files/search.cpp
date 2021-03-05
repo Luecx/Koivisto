@@ -888,9 +888,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && MgScore(sd->evaluator.KingSafety[b->getActivePlayer()]) < 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
-        
+        //std::cout <<  MgScore(sd->evaluator.KingSafety[WHITE]) << std::endl;
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);

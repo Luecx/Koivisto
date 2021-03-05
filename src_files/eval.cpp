@@ -309,6 +309,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64 blackTeam = b->getTeamOccupied()[BLACK];
     U64 occupied  = *b->getOccupied();
 
+    KingSafety[0] = 0; KingSafety[1] = 0;
+
     Square whiteKingSquare = bitscanForward(b->getPieces()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieces()[BLACK_KING]);
 
@@ -639,8 +641,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_KING][square];
 
-        featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
-        featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
+        KingSafety[WHITE] += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
+        KingSafety[WHITE] += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
 
         k = lsbReset(k);
     }
@@ -651,8 +653,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_KING][square];
 
-        featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
-        featureScore -= KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
+        KingSafety[BLACK] += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
+        KingSafety[BLACK] += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
 
         k = lsbReset(k);
     }
@@ -661,7 +663,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
-    evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
+    KingSafety[WHITE] -= kingSafetyTable[wkingSafety_valueOfAttacks];
+    KingSafety[BLACK] -= kingSafetyTable[bkingSafety_valueOfAttacks];
    
     // clang-format off
     featureScore += CASTLING_RIGHTS*(
@@ -672,7 +675,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     // clang-format on
     featureScore += SIDE_TO_MOVE * (b->getActivePlayer() == WHITE ? 1 : -1);
 
-    EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + materialScore;
+    EvalScore totalScore = KingSafety[WHITE] - KingSafety[BLACK] + evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + materialScore;
 
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
