@@ -208,6 +208,15 @@ void uci_processCommand(std::string str) {
         if (str.find("LMR_DIV") != string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
         }
+        if (str.find("LMP1") != string::npos) {
+            lmp[1][1] = stoi(uci_getValue(split, "LMP1"));
+        }
+        if (str.find("LMP2") != string::npos) {
+            lmp[1][2] = stoi(uci_getValue(split, "LMP2"));
+        }
+        if (str.find("LMP3") != string::npos) {
+            lmp[1][3] = stoi(uci_getValue(split, "LMP3"));
+        }
     } else if (split.at(0) == "position") {
 
         auto fenPos  = str.find("fen");
