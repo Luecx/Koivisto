@@ -33,18 +33,18 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
         m2 = mv->getMove(i);
                 
         Piece  movingPiece      = getMovingPiece(m2) % 6;
-        Piece  capturedPiece    = getCapturedPiece(m) % 6;
+        Piece  capturedPiece    = getCapturedPiece(m2) % 6;
         Square squareTo         = getSquareTo(m2);
 
         if (sameMove(m, m2)) {
-            if (isCapture(m)){
-                 captureHistory[side][movingPiece][capturedPiece][getSquareTo(m)] +=
+            if (isCapture(m2)){
+                 captureHistory[side][movingPiece][capturedPiece][getSquareTo(m2)] +=
                     (depth * depth + 5 * depth)
                     - (depth * depth + 5 * depth) * captureHistory[side][movingPiece][capturedPiece][getSquareTo(m)] / MAX_HISTORY_SCORE;
             } else {
-                history[side][getSquareFrom(m)][getSquareTo(m)] +=
+                history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                     (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                    - (depth * depth + 5 * depth) * history[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
                 cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
                     (depth * depth + 5 * depth)
                     - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo] / MAX_HISTORY_SCORE;
@@ -53,9 +53,9 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
             // we can return at this point because all moves searched are in front of this move
             return;
         } else if (isCapture(m2)) {
-            captureHistory[side][movingPiece][capturedPiece][getSquareTo(m)] +=
+            captureHistory[side][movingPiece][capturedPiece][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
-                - (depth * depth + 5 * depth) * captureHistory[side][movingPiece][capturedPiece][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                - (depth * depth + 5 * depth) * captureHistory[side][movingPiece][capturedPiece][getSquareTo(m2)] / MAX_HISTORY_SCORE;
         } else {
             history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
