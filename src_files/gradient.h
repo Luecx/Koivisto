@@ -25,7 +25,7 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
 #define N_THREAD 24
 
@@ -470,12 +470,12 @@ namespace tuning {
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
             
             int attack_scores[N_COLOR]{};
-            for(Piece p = PAWN; p <= KING; p++){
+            for(Piece p = KNIGHT; p <= KING; p++){
                 attack_scores[WHITE] += td->w_attack_weights[p].midgame.value * attack_counts[WHITE][p];
                 attack_scores[BLACK] += td->w_attack_weights[p].midgame.value * attack_counts[BLACK][p];
             }
-            king_danger_counts[WHITE][ATTACK_COUNT] = attack_scores[WHITE];
-            king_danger_counts[BLACK][ATTACK_COUNT] = attack_scores[BLACK];
+            king_danger_counts[WHITE][ATTACK_COUNT] = attack_scores[BLACK];
+            king_danger_counts[BLACK][ATTACK_COUNT] = attack_scores[WHITE];
             
             king_dangers_last[WHITE] = 0;
             king_dangers_last[BLACK] = 0;
@@ -484,23 +484,23 @@ namespace tuning {
                     king_dangers_last[c] += king_danger_counts[c][i] * td->w_king_danger_factors[i].midgame.value;
                 }
             }
-        
-            midgame += king_dangers_last[WHITE] * king_dangers_last[WHITE] / 4096;
-            midgame -= king_dangers_last[BLACK] * king_dangers_last[BLACK] / 4096;
+            
+            midgame += -(int)(king_dangers_last[WHITE] * king_dangers_last[WHITE] / 4096);
+            midgame -= -(int)(king_dangers_last[BLACK] * king_dangers_last[BLACK] / 4096);
     
-            endgame += king_dangers_last[WHITE] / 16;
-            endgame -= king_dangers_last[BLACK] / 16;
+            endgame += -(int)(king_dangers_last[WHITE] / 16);
+            endgame -= -(int)(king_dangers_last[BLACK] / 16);
     
             
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
             
-            double devalddanger_w =
-                     meta->phase    * 1 / 16.0 +
-                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[WHITE];
-            double devalddanger_b = -
+            double devalddanger_w = -
                      meta->phase    * 1 / 16.0 -
+                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[WHITE];
+            double devalddanger_b =
+                     meta->phase    * 1 / 16.0 +
                 (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[BLACK];
             
             devalddanger_w *= meta->evalReduction * lossgrad;
@@ -511,23 +511,21 @@ namespace tuning {
                 td->w_king_danger_factors[i].midgame.gradient += devalddanger_w * king_danger_counts[WHITE][i];
                 td->w_king_danger_factors[i].midgame.gradient += devalddanger_b * king_danger_counts[BLACK][i];
             }
+    
+//            std::cout << devalddanger_w << std::endl;
+//            std::cout << devalddanger_b << std::endl;
+//            std::cout << (int)attack_counts[WHITE][BISHOP] << std::endl;
+//            std::cout << (int)attack_counts[WHITE][BISHOP] << std::endl;
+//            std::cout << td->w_attack_weights[BISHOP].midgame.gradient<<std::endl;
             
-            for(int i = 0; i < 6; i++){
-                td->w_attack_weights[i].midgame.gradient += devalddanger_w * attack_counts[WHITE][i];
-                td->w_attack_weights[i].midgame.gradient += devalddanger_b * attack_counts[BLACK][i];
+//            std::cout << king_dangers_last[WHITE] << "  " << king_dangers_last[BLACK] << std::endl;
+//            std::cout << devalddanger_w << "  " << devalddanger_b << std::endl;
+            
+            for(int i = 1; i < 6; i++){
+                td->w_attack_weights[i].midgame.gradient += (devalddanger_w + devalddanger_b) *
+                                                            td->w_king_danger_factors[0].midgame.value * attack_counts[WHITE][i];
+//                std::cerr << devalddanger_w + devalddanger_b <<std::endl;
             }
-            
-            
-        
-//            td->w_king_safety[bkingsafety_index].midgame.gradient +=
-//                    (1 - meta->phase) * meta->evalReduction * lossgrad;
-//            td->w_king_safety[bkingsafety_index].endgame.gradient +=
-//                    (meta->phase) * meta->evalReduction * lossgrad;
-//
-//            td->w_king_safety[wkingsafety_index].midgame.gradient -=
-//                    (1 - meta->phase) * meta->evalReduction * lossgrad;
-//            td->w_king_safety[wkingsafety_index].endgame.gradient -=
-//                    (meta->phase) * meta->evalReduction * lossgrad;
         }
     };
 

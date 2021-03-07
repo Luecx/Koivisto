@@ -150,12 +150,21 @@ EvalScore* evfeatures[] {
 };
 
 int kingDangerFactors[KING_DANGER_FACTORS_COUNT]{
-    5,110,-6
+    3,
+    202,
+    33,
 };
 
 int kingSafetyAttackWeights[6]{
-    4,12,17,19,26,-3
+    0,
+    14,
+    22,
+    27,
+    31,
+    -25,
 };
+
+
 
 
 int mobEntryCount[6] {0, 9, 14, 15, 28, 0};
@@ -311,17 +320,18 @@ EvalScore Evaluator::kingSafety(Board* b){
             attacks[us][BISHOP] |
             attacks[us][ROOK];
     
+    
     U64 weakSquares = themAttacks &~defendedByPtr;
     
     int danger =
-         + kingDangerFactors[ATTACK_COUNT]      * pieceAttackScore[us]
+         + kingDangerFactors[ATTACK_COUNT]      * pieceAttackScore[them]
          + kingDangerFactors[QUEEN_EXISTENCE]   * (b->getPieces(them, QUEEN) != 0)
          + kingDangerFactors[WEAK_KING_RING]    * bitCount(kingSafetySquares[us] & weakSquares);
    
     // idea by stockfish
     result = M(danger * danger / 4096, danger / 16);
     
-    return result;
+    return -result;
 }
 
 
@@ -492,9 +502,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     Evaluator::attacks[WHITE][PAWN] = whitePawnCover;
     Evaluator::attacks[BLACK][PAWN] = blackPawnCover;
-    
-    
-    
+
     /**********************************************************************************
      *                                  K N I G H T S                                 *
      **********************************************************************************/
