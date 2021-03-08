@@ -505,23 +505,23 @@ namespace tuning {
                 }
             }
             
-            midgame += -(int)(king_dangers_last[WHITE] * king_dangers_last[WHITE] / 4096);
-            midgame -= -(int)(king_dangers_last[BLACK] * king_dangers_last[BLACK] / 4096);
+            midgame += -(int)(king_dangers_last[WHITE]  / 256);
+            midgame -= -(int)(king_dangers_last[BLACK]  / 256);
     
-            endgame += -(int)(king_dangers_last[WHITE] / 16);
-            endgame -= -(int)(king_dangers_last[BLACK] / 16);
+//            endgame += -(int)(king_dangers_last[WHITE] / 16);
+//            endgame -= -(int)(king_dangers_last[BLACK] / 16);
     
             
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
             
-            double devalddanger_w = -
-                     meta->phase    * 1 / 16.0 -
-                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[WHITE];
-            double devalddanger_b =
-                     meta->phase    * 1 / 16.0 +
-                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[BLACK];
+            double devalddanger_w = - (1 - meta->phase) / 256.0;
+//                     meta->phase    * 1 / 16.0 -
+//                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[WHITE];
+            double devalddanger_b =   (1 - meta->phase) / 256.0;
+//                     meta->phase    * 1 / 16.0 +
+//                (1 - meta->phase)   * 2.0 / 4096.0 * king_dangers_last[BLACK];
             
             devalddanger_w *= meta->evalReduction * lossgrad;
             devalddanger_b *= meta->evalReduction * lossgrad;
@@ -544,7 +544,6 @@ namespace tuning {
             for(int i = 1; i < 6; i++){
                 td->w_attack_weights[i].midgame.gradient += (devalddanger_w + devalddanger_b) *
                                                             td->w_king_danger_factors[0].midgame.value * attack_counts[WHITE][i];
-//                std::cerr << devalddanger_w + devalddanger_b <<std::endl;
             }
         }
     };
