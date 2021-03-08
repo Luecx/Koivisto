@@ -464,6 +464,26 @@ namespace tuning {
                          & blackKingZone);
             king_danger_counts[WHITE][QUEEN_EXISTENCE] = b->getPieces(BLACK, QUEEN) != 0;
             king_danger_counts[BLACK][QUEEN_EXISTENCE] = b->getPieces(WHITE, QUEEN) != 0;
+        
+            U64 occ = *b->getOccupied();
+            
+            U64 w_knightCheckSquares = KNIGHT_ATTACKS[whiteKingSquare]          & ~attacks_table[WHITE][PAWN];
+            U64 w_bishopCheckSquares = lookUpBishopAttack(whiteKingSquare, occ) & ~attacks_table[WHITE][PAWN];
+            U64 w_rookCheckSquares   = lookUpRookAttack  (whiteKingSquare, occ) & ~attacks_table[WHITE][PAWN];
+            U64 w_queenCheckSquares  = w_bishopCheckSquares | w_rookCheckSquares;
+            U64 b_knightCheckSquares = KNIGHT_ATTACKS[blackKingSquare]          & ~attacks_table[BLACK][PAWN];
+            U64 b_bishopCheckSquares = lookUpBishopAttack(blackKingSquare, occ) & ~attacks_table[BLACK][PAWN];
+            U64 b_rookCheckSquares   = lookUpRookAttack  (blackKingSquare, occ) & ~attacks_table[BLACK][PAWN];
+            U64 b_queenCheckSquares  = b_bishopCheckSquares | b_rookCheckSquares;
+            
+            king_danger_counts[WHITE][SAFE_QUEEN_CHECK ] = bitCount(attacks_table[BLACK][QUEEN ] & w_queenCheckSquares);
+            king_danger_counts[BLACK][SAFE_QUEEN_CHECK ] = bitCount(attacks_table[WHITE][QUEEN ] & b_queenCheckSquares);
+            king_danger_counts[WHITE][SAFE_ROOK_CHECK  ] = bitCount(attacks_table[BLACK][ROOK  ] & w_rookCheckSquares);
+            king_danger_counts[BLACK][SAFE_ROOK_CHECK  ] = bitCount(attacks_table[WHITE][ROOK  ] & b_rookCheckSquares);
+            king_danger_counts[WHITE][SAFE_BISHOP_CHECK] = bitCount(attacks_table[BLACK][BISHOP] & w_bishopCheckSquares);
+            king_danger_counts[BLACK][SAFE_BISHOP_CHECK] = bitCount(attacks_table[WHITE][BISHOP] & b_bishopCheckSquares);
+            king_danger_counts[WHITE][SAFE_KNIGHT_CHECK] = bitCount(attacks_table[BLACK][KNIGHT] & w_knightCheckSquares);
+            king_danger_counts[BLACK][SAFE_KNIGHT_CHECK] = bitCount(attacks_table[WHITE][KNIGHT] & b_knightCheckSquares);
             
         }
 
@@ -1089,15 +1109,15 @@ namespace tuning {
         }
 
         void gradient(float lossgrad, int threadID) {
-//            features.gradient(&meta, lossgrad, &threadData[threadID]);
-//            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-//            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-//            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-//            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
+            features.gradient(&meta, lossgrad, &threadData[threadID]);
+            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
+            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
+            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
+            passed.gradient(&meta, lossgrad, &threadData[threadID]);
+            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
             king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
+            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1599,10 +1619,7 @@ namespace tuning {
                       << " eps= " << setw(20) << positions.size() / std::max(0.0001,stopMeasure()* 1000.0) << std::endl;
             adjust_weights(eta);
         }
-        for(int i = 0; i < 3; i++)
-            std::cout << threadData[0].w_king_danger_factors[i].midgame.value << std::endl;
-        for(int i = 0; i < 6; i++)
-            std::cout << threadData[0].w_attack_weights[i].midgame.value << std::endl;
+        
     }
 
     float compute_K(double initK, double rate, double deviation) {
@@ -1763,6 +1780,19 @@ namespace tuning {
             std::cout << "\n\t},\n";
         }
         std::cout << "};" << std::endl;
+    
+        // --------------------------------- kingDangerFactors ---------------------------------
+        std::cout << "int kingDangerFactors[KING_DANGER_FACTORS_COUNT]{" << std::endl;
+        for(int i = 0; i < KING_DANGER_FACTORS_COUNT; i++)
+            std::cout << round(threadData[0].w_king_danger_factors[i].midgame.value) << ", ";
+        std::cout << "\n};" << std::endl;
+
+        // --------------------------------- kingSafetyAttackWeights ---------------------------------
+        std::cout << "int kingSafetyAttackWeights[N_PIECE]{" << std::endl;
+        for(int i = 0; i < N_PIECE; i++)
+            std::cout << round(threadData[0].w_attack_weights[i].midgame.value) << ", ";
+        std::cout << "\n};" << std::endl;
+
     }
 
 }

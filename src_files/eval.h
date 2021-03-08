@@ -30,6 +30,10 @@ enum KingDangers{
     ATTACK_COUNT,
     QUEEN_EXISTENCE,
     WEAK_KING_RING,
+    SAFE_QUEEN_CHECK,
+    SAFE_ROOK_CHECK,
+    SAFE_KNIGHT_CHECK,
+    SAFE_BISHOP_CHECK,
     KING_DANGER_FACTORS_COUNT
 };
 
@@ -51,6 +55,7 @@ void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAtt
 
 class Evaluator {
     private:
+    Square kingSquare[N_COLOR];
     U64 attacks[N_COLOR][N_PIECE];
     U64 kingSafetySquares[N_COLOR];
     U64 pieceAttackScore [N_COLOR];

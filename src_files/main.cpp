@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
 //    load_positions("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
 //    load_positions("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
 ////
-////    compute_K(2.48617, 100, 1e-7);
+//    double K = compute_K(2.48617, 100, 2e-7);
 //    for(int i = 0; i < 10; i++){
-//        train(100, 2.48172, 0.001* sqrt(positions.size()));
-////        display_params();
+//        train(100, K, 0.001* sqrt(positions.size()));
+//        display_params();
 //    }
 
 
