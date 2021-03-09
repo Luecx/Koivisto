@@ -63,8 +63,8 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
             moves->scoreMove(i, 30000 + sd->isKiller(m, ply, board->getActivePlayer()));
         } else {
             moves->scoreMove(i, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
-            if (getMovingPiece(m)%6 > 0 && pawnCover[!board->getActivePlayer()] & (ONE << getSquareTo(m))) 
-                moves->scoreMove(i, moves->getScore(i) - 10000);
+            if (getMovingPiece(m)%6 != PAWN && pawnCover[!board->getActivePlayer()] & (ONE << getSquareTo(m))) 
+                moves->scoreMove(i, moves->getScore(i) - 5000);
         }
     }
 }
