@@ -222,14 +222,14 @@ bb::Score Evaluator::evaluateTempo(Board* b){
 }
 
 EvalScore Evaluator::computeHangingPieces(Board* b) {
-    U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
-    U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
+    notAttacked[WHITE] = ~b->getAttackedSquares(WHITE);
+    notAttacked[BLACK] = ~b->getAttackedSquares(BLACK);
 
     EvalScore res = M(0, 0);
 
     for (int i = PAWN; i <= QUEEN; i++) {
         res += hangingEval[i]
-               * (+bitCount(b->getPieces(WHITE, i) & WnotAttacked) - bitCount(b->getPieces(BLACK, i) & BnotAttacked));
+               * (+bitCount(b->getPieces(WHITE, i) & notAttacked[WHITE]) - bitCount(b->getPieces(BLACK, i) & notAttacked[BLACK]));
     }
     return res;
 }

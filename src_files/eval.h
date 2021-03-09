@@ -44,6 +44,8 @@ class Evaluator {
 
     float phase;
 
+    U64 notAttacked [2];
+
     EvalScore computePinnedPieces(Board* b, Color color);
 
     EvalScore computeHangingPieces(Board* b);

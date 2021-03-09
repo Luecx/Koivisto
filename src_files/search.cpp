@@ -755,7 +755,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // create a moveorderer and assign the movelist to score the moves.
     MoveOrderer moveOrderer {};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
+    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply, &sd->evaluator);
     
     // count the legal and quiet moves.
     int legalMoves = 0;
@@ -841,7 +841,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     return score;
             }
             b->getPseudoLegalMoves(mv);
-            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
+            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply, &sd->evaluator);
             
             m = moveOrderer.next();
         }
