@@ -33,6 +33,10 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
     this->counter = 0;
     this->skip    = false;
 
+    U64 pawnCover[2];
+    pawnCover[WHITE] = shiftNorthEast(board->getPieces()[WHITE_PAWN]) | shiftNorthWest(board->getPieces()[WHITE_PAWN]);
+    pawnCover[BLACK] = shiftSouthEast(board->getPieces()[BLACK_PAWN]) | shiftSouthWest(board->getPieces()[BLACK_PAWN]);
+
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
 
@@ -59,6 +63,8 @@ void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove,
             moves->scoreMove(i, 30000 + sd->isKiller(m, ply, board->getActivePlayer()));
         } else {
             moves->scoreMove(i, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+            if (getMovingPiece(m)%6 > 0 && pawnCover[!board->getActivePlayer()] & (ONE << getSquareTo(m))) 
+                moves->scoreMove(i, moves->getScore(i) - 10000);
         }
     }
 }
