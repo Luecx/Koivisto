@@ -27,7 +27,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 8
+#define N_THREAD 12
 
 namespace tuning {
 
@@ -68,7 +68,12 @@ namespace tuning {
 
         I_CASTLING_RIGHTS,
         I_MINOR_BEHIND_PAWN,
-
+        
+        I_SAFE_QUEEN_CHECK,
+        I_SAFE_ROOK_CHECK,
+        I_SAFE_BISHOP_CHECK,
+        I_SAFE_KNIGHT_CHECK,
+        
         // always have this at the end
         I_END,
     };
@@ -574,11 +579,11 @@ namespace tuning {
     struct FeatureData {
         // we assume that these features are linear which means that we only need their count
 
-        int8_t count[I_END];
+        int8_t count[I_END]{};
 
         void init(Board *b) {
 
-            U64 k;
+            U64 k, attacks;
             Square square;
 
             Square whiteKingSquare = bitscanForward(b->getPieces(WHITE, KING));
@@ -620,7 +625,15 @@ namespace tuning {
 
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
-
+    
+            U64 occupied = *b->getOccupied();
+            U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
+            U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied)  & ~whiteTeam;
+            U64 wKingRookAttacks   = lookUpRookAttack  (whiteKingSquare, occupied)  & ~blackTeam;
+            U64 bKingRookAttacks   = lookUpRookAttack  (blackKingSquare, occupied)  & ~whiteTeam;
+            U64 wKingKnightAttacks = KNIGHT_ATTACKS    [whiteKingSquare]            & ~blackTeam;
+            U64 bKingKnightAttacks = KNIGHT_ATTACKS    [blackKingSquare]            & ~whiteTeam;
+            
             // clang-format off
             count[I_PAWN_DOUBLED_AND_ISOLATED] = (
                     +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
@@ -657,16 +670,20 @@ namespace tuning {
             k = b->getPieces()[WHITE_KNIGHT];
             while (k) {
                 square = bitscanForward(k);
+                attacks = KNIGHT_ATTACKS[square];
                 count[I_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
+                count[I_SAFE_KNIGHT_CHECK] += bitCount(bKingKnightAttacks & attacks & ~blackPawnCover);
                 k = lsbReset(k);
             }
 
             k = b->getPieces()[BLACK_KNIGHT];
             while (k) {
                 square = bitscanForward(k);
+                attacks = KNIGHT_ATTACKS[square];
                 count[I_KNIGHT_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
+                count[I_SAFE_KNIGHT_CHECK] -= bitCount(wKingKnightAttacks & attacks & ~whitePawnCover);
                 k = lsbReset(k);
             }
 
@@ -674,7 +691,7 @@ namespace tuning {
             k = b->getPieces()[WHITE_BISHOP];
             while (k) {
                 square = bitscanForward(k);
-
+                attacks = lookUpBishopAttack(square, occupied & ~b->getPieces()[WHITE_QUEEN]);
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] +=
                         bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
                 count[I_BISHOP_FIANCHETTO] +=
@@ -683,12 +700,14 @@ namespace tuning {
                 count[I_BISHOP_FIANCHETTO] +=
                         (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
                          && whitePawns & (ONE << B3 | ONE << B4));
+                count[I_SAFE_BISHOP_CHECK] += bitCount(bKingBishopAttacks & attacks & ~blackPawnCover);
                 k = lsbReset(k);
             }
 
             k = b->getPieces()[BLACK_BISHOP];
             while (k) {
                 square = bitscanForward(k);
+                attacks = lookUpBishopAttack(square, occupied & ~b->getPieces()[BLACK_QUEEN]);
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] -=
                         bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
                 count[I_BISHOP_FIANCHETTO] -=
@@ -697,12 +716,33 @@ namespace tuning {
                 count[I_BISHOP_FIANCHETTO] -=
                         (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
                          && blackPawns & (ONE << B6 | ONE << B5));
+                count[I_SAFE_BISHOP_CHECK] -= bitCount(wKingBishopAttacks & attacks & ~whitePawnCover);
+
                 k = lsbReset(k);
             }
             count[I_BISHOP_DOUBLED] += (
                     +(bitCount(b->getPieces()[WHITE_BISHOP]) == 2)
                     - (bitCount(b->getPieces()[BLACK_BISHOP]) == 2));
+    
+    
+            k = b->getPieces()[WHITE_ROOK];
+            while (k) {
+                square  = bitscanForward(k);
+                attacks = lookUpRookAttack(square, occupied & ~b->getPieces()[WHITE_ROOK] & ~b->getPieces()[WHITE_QUEEN]);
+                count[I_SAFE_ROOK_CHECK] += bitCount(bKingRookAttacks & attacks & ~blackPawnCover);
 
+                k = lsbReset(k);
+            }
+    
+            k = b->getPieces()[BLACK_ROOK];
+            while (k) {
+                square  = bitscanForward(k);
+                attacks = lookUpRookAttack(square, occupied & ~b->getPieces()[BLACK_ROOK] & ~b->getPieces()[BLACK_QUEEN]);
+    
+                count[I_SAFE_ROOK_CHECK] -= bitCount(wKingRookAttacks & attacks & ~whitePawnCover);
+
+                k = lsbReset(k);
+            }
 
             count[I_ROOK_KING_LINE] += (
                     +bitCount(lookUpRookAttack(blackKingSquare, *b->getOccupied()) & b->getPieces(WHITE, ROOK))
@@ -718,14 +758,20 @@ namespace tuning {
             k = b->getPieces()[WHITE_QUEEN];
             while (k) {
                 square = bitscanForward(k);
+                attacks = lookUpRookAttack  (square,    occupied & ~b->getPieces()[WHITE_ROOK])
+                        | lookUpBishopAttack(square,    occupied & ~b->getPieces()[WHITE_BISHOP]);
                 count[I_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
+                count[I_SAFE_QUEEN_CHECK]          += bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~blackPawnCover);
                 k = lsbReset(k);
             }
 
             k = b->getPieces()[BLACK_QUEEN];
             while (k) {
                 square = bitscanForward(k);
+                attacks = lookUpRookAttack  (square,    occupied & ~b->getPieces()[BLACK_ROOK])
+                        | lookUpBishopAttack(square,    occupied & ~b->getPieces()[BLACK_BISHOP]);
                 count[I_QUEEN_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
+                count[I_SAFE_QUEEN_CHECK]          -= bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~whitePawnCover);
                 k = lsbReset(k);
             }
 
@@ -1453,6 +1499,7 @@ namespace tuning {
                     std::cout << fen << std::endl;
                     std::cout << new_entry.evalData.evaluate() << std::endl;
                     std::cout << evaluator.evaluate(&b) << std::endl;
+                    exit(-1);
                 }
 
                 // parsing the result to a usable value:
@@ -1571,7 +1618,11 @@ namespace tuning {
                 "KING_CLOSE_OPPONENT",
                 "KING_PAWN_SHIELD",
                 "CASTLING_RIGHTS",
-                "MINOR_BEHIND_PAWN",};
+                "MINOR_BEHIND_PAWN",
+                "SAFE_QUEEN_CHECK",
+                "SAFE_ROOK_CHECK",
+                "SAFE_BISHOP_CHECK",
+                "SAFE_KNIGHT_CHECK",};
 
         for (int i = 0; i < I_END; i++) {
             std::cout << "EvalScore " << left << setw(30) << feature_names[i] << right << "= ";
