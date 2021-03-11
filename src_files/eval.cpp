@@ -831,8 +831,9 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore;
 
-    res += MgScore(totalScore) * (1 - phase) + EgScore(totalScore) * (phase);
-
+    res += (int) ((float) MgScore(totalScore) * (1 - phase));
+    res += (int) ((float) EgScore(totalScore) * (phase));
+    
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
     return res;
