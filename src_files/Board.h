@@ -105,11 +105,11 @@ class Board {
     private:
     // we store a bitboard for each piece which marks the occupied squares.
     // not that the white pieces come first and the black pawn starts at index=6
-    U64 m_pieces[12];
+    U64 m_piecesBB[N_PIECES];
     // beside the piece occupancy, we also keep track of the occupied squares for each side
-    U64 m_teamOccupied[2];
+    U64 m_teamOccupiedBB[N_COLORS];
     // furthermore we keep track of all the squares occupied. mainly used for move generation.
-    U64 m_occupied;
+    U64 m_occupiedBB;
 
     // for caching see entries, we allocate an array.
     // note that this might be very slow if a lot of board objects are requires (e.g. tuning).
@@ -119,7 +119,7 @@ class Board {
 #endif
 
     // we also store the piece for each square.
-    Piece m_pieceBoard[64];
+    Piece m_pieceBoard[N_SQUARES];
 
     // keeping track of the player who has to move
     Color m_activePlayer;
@@ -207,17 +207,23 @@ class Board {
     U64 attacksTo(U64 occupied, Square sq);
 
     // returns a bitboard of all attacked squares by a given color
-    U64 getAttackedSquares(Color attacker);
+    template<Color attacker>
+    U64 getAttackedSquares();
 
     // returns the least value piece. mainly used for see as well.
     U64 getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece);
 
     // returns a map of all absolute pinned pieces. stores the pieces which pin other pieces inside the given bitboard.
-    U64 getPinnedPieces(Color color, U64& pinners);
+    template<Color side>
+    U64 getPinnedPieces(U64& pinners);
 
     // returns true if the given square is attacked by the attacker
+    template<Color attacker>
+    bool isUnderAttack(Square sq);
+    
+    // returns true if the given square is attacked by the attacker
     bool isUnderAttack(Square sq, Color attacker);
-
+    
     // returns true if the move gives check
     bool givesCheck(Move m);
 
@@ -246,19 +252,24 @@ class Board {
     void setEnPassantSquare(Square square);
 
     // returns the entire meta information about the board.
-    BoardStatus* getBoardStatus();
+    [[nodiscard]] BoardStatus* getBoardStatus();
 
     // returns all occupied squares.
-    U64* getOccupied();
+    [[nodiscard]] U64* getOccupiedBB();
 
     // returns all occupied squares by both teams (arrays with 2 entries).
-    const U64* getTeamOccupied() const;
+    [[nodiscard]] const U64* getTeamOccupiedBB() const;
 
     // returns the occupied squares by each piece (array with 12 entries).
-    const U64* getPieces() const;
+    [[nodiscard]] const U64* getPieceBB() const;
 
-    // does the same as getPieces() above yet this only returns a single bitboard.
-    U64 getPieces(Color color, Piece piece);
+    // does the same as getPieceBB() above yet this only returns a single bitboard.
+    [[nodiscard]] U64 getPieceBB(Color color, Piece piece);
+    
+    // does the same as getPieceBB() above yet this only returns a single bitboard.
+    template<Color color>
+    [[nodiscard]] U64 getPieceBB(Piece piece);
+    
 };
 
 #endif    // CHESSCOMPUTER_BOARD_H

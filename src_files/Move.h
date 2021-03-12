@@ -82,10 +82,10 @@ constexpr Type QUEEN_PROMOTION_CAPTURE  = 15;
 
 // Move genMove(const std::string str);
 
-Move genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece);
+Move genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece);
 
-Move genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece,
-             const bb::Piece capturedPiece);
+Move genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece,
+             const bb::Piece &capturedPiece);
 
 inline bool sameMove(const Move& m1, const Move& m2) {
     // toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
@@ -146,7 +146,7 @@ bool isPromotion(Move move);
 
 bb::Piece promotionPiece(Move move);
 
-std::string toString(const Move move);
+std::string toString(const Move &move);
 
 void printMoveBits(Move move, bool bitInfo = true);
 

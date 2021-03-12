@@ -29,7 +29,7 @@ using namespace move;
  * @param movingPiece
  * @return
  */
-Move move::genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece) {
+Move move::genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece) {
 
     Move m {0};
     setSquareFrom(m, from);
@@ -48,8 +48,8 @@ Move move::genMove(const bb::Square from, const bb::Square to, const Type type, 
  * @param movingPiece
  * @return
  */
-Move move::genMove(const bb::Square from, const bb::Square to, const Type type, const bb::Piece movingPiece,
-                   const bb::Piece capturedPiece) {
+Move move::genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece,
+                   const bb::Piece &capturedPiece) {
 
     Move m {0};
 
@@ -165,7 +165,7 @@ bb::Piece move::promotionPiece(Move move) { return ((move & 0x3000) >> SHIFT_TYP
  * @param move
  * @return
  */
-std::string move::toString(const Move move) {
+std::string move::toString(const Move &move) {
 
     std::string res {};
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);

@@ -157,14 +157,14 @@ EvalScore* evfeatures[] {
 
 
 
-int mobEntryCount[6] {0, 9, 14, 15, 28, 0};
+int mobEntryCount[N_PIECE_TYPES] {0, 9, 14, 15, 28, 0};
 
 float* phaseValues = new float[6] {
     0, 1, 1, 2, 4, 0,
 };
 
 
-EvalScore* mobilities[6] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
+EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 
 
 
@@ -179,9 +179,9 @@ EvalScore* mobilities[6] {nullptr, mobilityKnight, mobilityBishop, mobilityRook,
  */
 
 bool hasMatingMaterial(Board* b, bool side) {
-    if ((b->getPieces()[QUEEN + side * 6] | b->getPieces()[ROOK + side * 6] | b->getPieces()[PAWN + side * 6])
-        || (bitCount(b->getPieces()[BISHOP + side * 6] | b->getPieces()[KNIGHT + side * 6]) > 1
-            && b->getPieces()[BISHOP + side * 6]))
+    if ((b->getPieceBB()[QUEEN + side * 6] | b->getPieceBB()[ROOK + side * 6] | b->getPieceBB()[PAWN + side * 6])
+        || (bitCount(b->getPieceBB()[BISHOP + side * 6] | b->getPieceBB()[KNIGHT + side * 6]) > 1
+            && b->getPieceBB()[BISHOP + side * 6]))
         return true;
     return false;
 }
@@ -200,23 +200,24 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     U64 sq = ONE << s;
 
     if (c == WHITE) {
-        if (((whitePassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+        if (((whitePassedPawnMask[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
         }
     } else {
-        if (((blackPassedPawnMask[s] & ~FILES[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+        if (((blackPassedPawnMask[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
         }
     }
     return false;
 }
 
+
 bb::Score Evaluator::evaluateTempo(Board* b){
-    phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
-        - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
-        - phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])
-        - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-        - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+    phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
+        - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
+        - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
+        - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
+        - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
         / 24.0f;
 
     if (phase > 1)
@@ -228,14 +229,14 @@ bb::Score Evaluator::evaluateTempo(Board* b){
 }
 
 EvalScore Evaluator::computeHangingPieces(Board* b) {
-    U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
-    U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
+    U64 WnotAttacked = ~b->getAttackedSquares<WHITE>();
+    U64 BnotAttacked = ~b->getAttackedSquares<BLACK>();
 
     EvalScore res = M(0, 0);
 
     for (int i = PAWN; i <= QUEEN; i++) {
         res += hangingEval[i]
-               * (+bitCount(b->getPieces(WHITE, i) & WnotAttacked) - bitCount(b->getPieces(BLACK, i) & BnotAttacked));
+               * (+bitCount(b->getPieceBB(WHITE, i) & WnotAttacked) - bitCount(b->getPieceBB(BLACK, i) & BnotAttacked));
     }
     return res;
 }
@@ -249,16 +250,16 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
     Color them = 1 - color;
     
     // figure out where the opponent has pieces
-    U64 opponentOcc = b->getTeamOccupied()[them];
-    U64      ourOcc = b->getTeamOccupied()[us];
+    U64 opponentOcc = b->getTeamOccupiedBB()[them];
+    U64      ourOcc = b->getTeamOccupiedBB()[us];
     
     // get the pieces which can pin our king
-    U64 bishops = b->getPieces(them, BISHOP);
-    U64   rooks = b->getPieces(them, ROOK);
-    U64  queens = b->getPieces(them, QUEEN);
+    U64 bishops = b->getPieceBB(them, BISHOP);
+    U64   rooks = b->getPieceBB(them, ROOK);
+    U64  queens = b->getPieceBB(them, QUEEN);
     
     // get the king positions
-    Square kingSq = bitscanForward(b->getPieces(us, KING));
+    Square kingSq = bitscanForward(b->getPieceBB(us, KING));
     
     // get the potential pinners for rook/bishop attacks
     U64 rookAttacks   = lookUpRookAttack  (kingSq, opponentOcc) & (rooks   | queens);
@@ -311,12 +312,12 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     Score res = 0;
 
-    U64 whiteTeam = b->getTeamOccupied()[WHITE];
-    U64 blackTeam = b->getTeamOccupied()[BLACK];
-    U64 occupied  = *b->getOccupied();
+    U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
+    U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
+    U64 occupied  = *b->getOccupiedBB();
 
-    Square whiteKingSquare = bitscanForward(b->getPieces()[WHITE_KING]);
-    Square blackKingSquare = bitscanForward(b->getPieces()[BLACK_KING]);
+    Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
+    Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
 
 
@@ -324,11 +325,11 @@ bb::Score Evaluator::evaluate(Board* b) {
     U64    attacks;
     U64    k;
 
-    phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
-             - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
-             - phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])
-             - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-             - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+    phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
+             - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
+             - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
+             - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
+             - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
             / 24.0f;
 
     if (phase > 1)
@@ -356,8 +357,8 @@ bb::Score Evaluator::evaluate(Board* b) {
      *                                  P A W N S                                     *
      **********************************************************************************/
 
-    U64 whitePawns = b->getPieces()[WHITE_PAWN];
-    U64 blackPawns = b->getPieces()[BLACK_PAWN];
+    U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
+    U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
 
     // all passed pawns for white/black
     U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
@@ -396,7 +397,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    k = b->getPieces()[BLACK_PAWN];
+    k = b->getPieceBB()[BLACK_PAWN];
     while (k) {
         square = bitscanForward(k);
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square];
@@ -455,8 +456,8 @@ bb::Score Evaluator::evaluate(Board* b) {
             + bitCount(whiteBlockedPawns)
             - bitCount(blackBlockedPawns));
     featureScore += MINOR_BEHIND_PAWN * (
-            + bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT]|b->getPieces()[WHITE_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN]))
-            - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT]|b->getPieces()[BLACK_BISHOP])&(b->getPieces()[WHITE_PAWN]|b->getPieces()[BLACK_PAWN])));
+            + bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT]|b->getPieceBB()[WHITE_BISHOP])&(b->getPieceBB()[WHITE_PAWN]|b->getPieceBB()[BLACK_PAWN]))
+            - bitCount(shiftSouth(b->getPieceBB()[BLACK_KNIGHT]|b->getPieceBB()[BLACK_BISHOP])&(b->getPieceBB()[WHITE_PAWN]|b->getPieceBB()[BLACK_PAWN])));
     
 
     
@@ -465,7 +466,7 @@ bb::Score Evaluator::evaluate(Board* b) {
      *                                  K N I G H T S                                 *
      **********************************************************************************/
 
-    k = b->getPieces()[WHITE_KNIGHT];
+    k = b->getPieceBB()[WHITE_KNIGHT];
     while (k) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
@@ -484,7 +485,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    k = b->getPieces()[BLACK_KNIGHT];
+    k = b->getPieceBB()[BLACK_KNIGHT];
     while (k) {
         square  = bitscanForward(k);
         attacks = KNIGHT_ATTACKS[square];
@@ -508,20 +509,20 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     
     
-    k = b->getPieces()[WHITE_BISHOP];
+    k = b->getPieceBB()[WHITE_BISHOP];
     while (k) {
         square  = bitscanForward(k);
-        attacks = lookUpBishopAttack(square, occupied & ~b->getPieces()[WHITE_QUEEN]);
+        attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_QUEEN]);
         
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_BISHOP][square];
         
         
         mobScore += mobilityBishop[bitCount(attacks & mobilitySquaresWhite)];
 
-        featureScore += bishop_pawn_same_color_table_e[bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
-        featureScore += bishop_pawn_same_color_table_o[bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
+        featureScore += bishop_pawn_same_color_table_e[bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))];
+        featureScore += bishop_pawn_same_color_table_o[bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))];
         featureScore += BISHOP_PIECE_SAME_SQUARE_E 
-                        * bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+                        * bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
         featureScore += BISHOP_FIANCHETTO
                         * (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                            && whitePawns & (ONE << G3 | ONE << G4));
@@ -535,18 +536,18 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    k = b->getPieces()[BLACK_BISHOP];
+    k = b->getPieceBB()[BLACK_BISHOP];
     while (k) {
         square  = bitscanForward(k);
-        attacks = lookUpBishopAttack(square, occupied & ~b->getPieces()[BLACK_QUEEN]);
+        attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_QUEEN]);
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_BISHOP][square];
     
         mobScore -= mobilityBishop[bitCount(attacks & mobilitySquaresBlack)];
-        featureScore -= bishop_pawn_same_color_table_e[bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
-        featureScore -= bishop_pawn_same_color_table_o[bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))];
+        featureScore -= bishop_pawn_same_color_table_e[bitCount(whitePawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))];
+        featureScore -= bishop_pawn_same_color_table_o[bitCount(blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))];
         featureScore -= BISHOP_PIECE_SAME_SQUARE_E 
-                        * bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+                        * bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
         featureScore -= BISHOP_FIANCHETTO
                         * (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                            && blackPawns & (ONE << G6 | ONE << G5));
@@ -562,8 +563,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     }
     // clang-format off
     featureScore += BISHOP_DOUBLED * (
-            + (bitCount(b->getPieces()[WHITE_BISHOP]) == 2)
-            - (bitCount(b->getPieces()[BLACK_BISHOP]) == 2));
+            + (bitCount(b->getPieceBB()[WHITE_BISHOP]) == 2)
+            - (bitCount(b->getPieceBB()[BLACK_BISHOP]) == 2));
     // clang-format on
     
  
@@ -572,10 +573,10 @@ bb::Score Evaluator::evaluate(Board* b) {
      *                                  R O O K S                                     *
      **********************************************************************************/
 
-    k = b->getPieces()[WHITE_ROOK];
+    k = b->getPieceBB()[WHITE_ROOK];
     while (k) {
         square  = bitscanForward(k);
-        attacks = lookUpRookAttack(square, occupied & ~b->getPieces()[WHITE_ROOK] & ~b->getPieces()[WHITE_QUEEN]);
+        attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[WHITE_ROOK] & ~b->getPieceBB()[WHITE_QUEEN]);
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_ROOK][square];
         mobScore      += mobilityRook[bitCount(attacks & mobilitySquaresWhite)];
@@ -586,10 +587,10 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    k = b->getPieces()[BLACK_ROOK];
+    k = b->getPieceBB()[BLACK_ROOK];
     while (k) {
         square  = bitscanForward(k);
-        attacks = lookUpRookAttack(square, occupied & ~b->getPieces()[BLACK_ROOK] & ~b->getPieces()[BLACK_QUEEN]);
+        attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[BLACK_ROOK] & ~b->getPieceBB()[BLACK_QUEEN]);
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_ROOK][square];
         mobScore      -= mobilityRook[bitCount(attacks & mobilitySquaresBlack)];
@@ -602,14 +603,14 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     // clang-format off
     featureScore += ROOK_KING_LINE * (
-            + bitCount(lookUpRookAttack(blackKingSquare, occupied) & b->getPieces(WHITE, ROOK))
-            - bitCount(lookUpRookAttack(whiteKingSquare, occupied) & b->getPieces(BLACK, ROOK)));
+            + bitCount(lookUpRookAttack(blackKingSquare, occupied) & b->getPieceBB(WHITE, ROOK))
+            - bitCount(lookUpRookAttack(whiteKingSquare, occupied) & b->getPieceBB(BLACK, ROOK)));
     featureScore += ROOK_OPEN_FILE * (
-            + bitCount(openFiles & b->getPieces(WHITE, ROOK))
-            - bitCount(openFiles & b->getPieces(BLACK, ROOK)));
+            + bitCount(openFiles & b->getPieceBB(WHITE, ROOK))
+            - bitCount(openFiles & b->getPieceBB(BLACK, ROOK)));
     featureScore += ROOK_HALF_OPEN_FILE * (
-            + bitCount(openFilesBlack & ~openFiles & b->getPieces(WHITE, ROOK))
-            - bitCount(openFilesWhite & ~openFiles & b->getPieces(BLACK, ROOK)));
+            + bitCount(openFilesBlack & ~openFiles & b->getPieceBB(WHITE, ROOK))
+            - bitCount(openFilesWhite & ~openFiles & b->getPieceBB(BLACK, ROOK)));
     // clang-format on
 
     
@@ -617,11 +618,11 @@ bb::Score Evaluator::evaluate(Board* b) {
      *                                  Q U E E N S                                   *
      **********************************************************************************/
 
-    k = b->getPieces()[WHITE_QUEEN];
+    k = b->getPieceBB()[WHITE_QUEEN];
     while (k) {
         square  = bitscanForward(k);
-        attacks = lookUpRookAttack  (square,    occupied & ~b->getPieces()[WHITE_ROOK])
-                | lookUpBishopAttack(square,    occupied & ~b->getPieces()[WHITE_BISHOP]);
+        attacks = lookUpRookAttack  (square,    occupied & ~b->getPieceBB()[WHITE_ROOK])
+                | lookUpBishopAttack(square,    occupied & ~b->getPieceBB()[WHITE_BISHOP]);
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_QUEEN][square];
         mobScore      += mobilityQueen[bitCount(attacks & mobilitySquaresWhite)];
@@ -633,11 +634,11 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    k = b->getPieces()[BLACK_QUEEN];
+    k = b->getPieceBB()[BLACK_QUEEN];
     while (k) {
         square  = bitscanForward(k);
-        attacks = lookUpRookAttack  (square,    occupied & ~b->getPieces()[BLACK_ROOK])
-                | lookUpBishopAttack(square,    occupied & ~b->getPieces()[BLACK_BISHOP]);
+        attacks = lookUpRookAttack  (square,    occupied & ~b->getPieceBB()[BLACK_ROOK])
+                | lookUpBishopAttack(square,    occupied & ~b->getPieceBB()[BLACK_BISHOP]);
     
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_QUEEN][square];
         mobScore      -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack)];
@@ -652,7 +653,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     /**********************************************************************************
      *                                  K I N G S                                     *
      **********************************************************************************/
-    k = b->getPieces()[WHITE_KING];
+    k = b->getPieceBB()[WHITE_KING];
 
     while (k) {
         square = bitscanForward(k);
@@ -665,7 +666,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         k = lsbReset(k);
     }
 
-    k = b->getPieces()[BLACK_KING];
+    k = b->getPieceBB()[BLACK_KING];
     while (k) {
         square = bitscanForward(k);
     

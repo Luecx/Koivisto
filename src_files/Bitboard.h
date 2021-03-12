@@ -44,115 +44,107 @@ typedef int8_t   Direction;
 typedef int8_t  File;
 typedef int8_t  Rank;
 typedef int8_t  Piece;
-typedef uint8_t Color;
+typedef bool    Color;
 
 typedef uint8_t Depth;
 typedef int16_t Score;
 typedef int32_t EvalScore;
 
-constexpr Depth ONE_PLY          = 1;
-constexpr Depth MAX_PLY          = 128;
-constexpr Depth MAX_INTERNAL_PLY = 255;
 
-constexpr Score TB_CURSED_SCORE = (Score)(1);
-constexpr Score TB_WIN_SCORE    = (Score)((1 << 13) - MAX_INTERNAL_PLY);
-constexpr Score MAX_MATE_SCORE  = (Score)((1 << 14) - 1);
-constexpr Score MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY);
 
-constexpr Color WHITE = 0;
-constexpr Color BLACK = 1;
+enum Plies{
+    ONE_PLY          = 1,
+    MAX_PLY          = 128,
+    MAX_INTERNAL_PLY = 255,
+};
 
-constexpr Piece PAWN   = 0;
-constexpr Piece KNIGHT = 1;
-constexpr Piece BISHOP = 2;
-constexpr Piece ROOK   = 3;
-constexpr Piece QUEEN  = 4;
-constexpr Piece KING   = 5;
+enum Scores{
+    TB_CURSED_SCORE = (Score)(1),
+    TB_WIN_SCORE    = (Score)((1 << 13) - MAX_INTERNAL_PLY),
+    MAX_MATE_SCORE  = (Score)((1 << 14) - 1),
+    MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY),
+};
 
-constexpr Piece WHITE_PAWN   = 0;
-constexpr Piece WHITE_KNIGHT = 1;
-constexpr Piece WHITE_BISHOP = 2;
-constexpr Piece WHITE_ROOK   = 3;
-constexpr Piece WHITE_QUEEN  = 4;
-constexpr Piece WHITE_KING   = 5;
-constexpr Piece BLACK_PAWN   = 6;
-constexpr Piece BLACK_KNIGHT = 7;
-constexpr Piece BLACK_BISHOP = 8;
-constexpr Piece BLACK_ROOK   = 9;
-constexpr Piece BLACK_QUEEN  = 10;
-constexpr Piece BLACK_KING   = 11;
+enum Colors{
+    WHITE,
+    BLACK,
+    N_COLORS = 2
+};
 
-constexpr Square A1 = 0;
-constexpr Square B1 = 1;
-constexpr Square C1 = 2;
-constexpr Square D1 = 3;
-constexpr Square E1 = 4;
-constexpr Square F1 = 5;
-constexpr Square G1 = 6;
-constexpr Square H1 = 7;
+enum PieceTypes{
+    PAWN   = 0,
+    KNIGHT = 1,
+    BISHOP = 2,
+    ROOK   = 3,
+    QUEEN  = 4,
+    KING   = 5,
+    N_PIECE_TYPES = 6
+};
 
-constexpr Square A2 = 8;
-constexpr Square B2 = 9;
-constexpr Square C2 = 10;
-constexpr Square D2 = 11;
-constexpr Square E2 = 12;
-constexpr Square F2 = 13;
-constexpr Square G2 = 14;
-constexpr Square H2 = 15;
+enum Pieces{
+    WHITE_PAWN   = 0,
+    WHITE_KNIGHT = 1,
+    WHITE_BISHOP = 2,
+    WHITE_ROOK   = 3,
+    WHITE_QUEEN  = 4,
+    WHITE_KING   = 5,
+    BLACK_PAWN   = 6,
+    BLACK_KNIGHT = 7,
+    BLACK_BISHOP = 8,
+    BLACK_ROOK   = 9,
+    BLACK_QUEEN  = 10,
+    BLACK_KING   = 11,
+    N_PIECES     = 12
+};
 
-constexpr Square A3 = 16;
-constexpr Square B3 = 17;
-constexpr Square C3 = 18;
-constexpr Square D3 = 19;
-constexpr Square E3 = 20;
-constexpr Square F3 = 21;
-constexpr Square G3 = 22;
-constexpr Square H3 = 23;
+enum Squares{
+    A1,B1,C1,D1,E1,F1,G1,H1,
+    A2,B2,C2,D2,E2,F2,G2,H2,
+    A3,B3,C3,D3,E3,F3,G3,H3,
+    A4,B4,C4,D4,E4,F4,G4,H4,
+    A5,B5,C5,D5,E5,F5,G5,H5,
+    A6,B6,C6,D6,E6,F6,G6,H6,
+    A7,B7,C7,D7,E7,F7,G7,H7,
+    A8,B8,C8,D8,E8,F8,G8,H8,
+    N_SQUARES = 64
+};
 
-constexpr Square A4 = 24;
-constexpr Square B4 = 25;
-constexpr Square C4 = 26;
-constexpr Square D4 = 27;
-constexpr Square E4 = 28;
-constexpr Square F4 = 29;
-constexpr Square G4 = 30;
-constexpr Square H4 = 31;
+enum Directions{
+    NORTH      =  8,
+    SOUTH      = -8,
+    WEST       = -1,
+    EAST       =  1,
+    NORTH_WEST =  7,
+    NORTH_EAST =  9,
+    SOUTH_WEST = -9,
+    SOUTH_EAST = -7,
+    N_DIRECTIONS = 8
+};
 
-constexpr Square A5 = 32;
-constexpr Square B5 = 33;
-constexpr Square C5 = 34;
-constexpr Square D5 = 35;
-constexpr Square E5 = 36;
-constexpr Square F5 = 37;
-constexpr Square G5 = 38;
-constexpr Square H5 = 39;
+enum Ranks{
+    RANK_1,
+    RANK_2,
+    RANK_3,
+    RANK_4,
+    RANK_5,
+    RANK_6,
+    RANK_7,
+    RANK_8,
+    N_RANKS = 8
+};
 
-constexpr Square A6 = 40;
-constexpr Square B6 = 41;
-constexpr Square C6 = 42;
-constexpr Square D6 = 43;
-constexpr Square E6 = 44;
-constexpr Square F6 = 45;
-constexpr Square G6 = 46;
-constexpr Square H6 = 47;
+enum Files{
+    FILE_A,
+    FILE_B,
+    FILE_C,
+    FILE_D,
+    FILE_E,
+    FILE_F,
+    FILE_G,
+    FILE_H,
+    N_FILES = 8
+};
 
-constexpr Square A7 = 48;
-constexpr Square B7 = 49;
-constexpr Square C7 = 50;
-constexpr Square D7 = 51;
-constexpr Square E7 = 52;
-constexpr Square F7 = 53;
-constexpr Square G7 = 54;
-constexpr Square H7 = 55;
-
-constexpr Square A8 = 56;
-constexpr Square B8 = 57;
-constexpr Square C8 = 58;
-constexpr Square D8 = 59;
-constexpr Square E8 = 60;
-constexpr Square F8 = 61;
-constexpr Square G8 = 62;
-constexpr Square H8 = 63;
 
 constexpr char const* SQUARE_IDENTIFIER[] {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -163,14 +155,7 @@ constexpr char const* SQUARE_IDENTIFIER[] {
 
 constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
 
-constexpr Direction NORTH      = 8;
-constexpr Direction SOUTH      = -8;
-constexpr Direction WEST       = -1;
-constexpr Direction EAST       = 1;
-constexpr Direction NORTH_WEST = 7;
-constexpr Direction NORTH_EAST = 9;
-constexpr Direction SOUTH_WEST = -9;
-constexpr Direction SOUTH_EAST = -7;
+
 
 constexpr Square index64[64] = {0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 38, 29, 17, 4,  62, 55, 59, 36, 53, 51,
                                 43, 22, 45, 39, 33, 30, 24, 18, 12, 5,  63, 47, 56, 27, 60, 41, 37, 16, 54, 35, 52, 21,
@@ -179,87 +164,86 @@ constexpr Square index64[64] = {0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 
 constexpr U64 ONE  = (U64) 1;
 constexpr U64 ZERO = (U64) 0;
 
-constexpr U64 FILE_H = 0x8080808080808080L;
-constexpr U64 FILE_G = FILE_H >> 1;
-constexpr U64 FILE_F = FILE_H >> 2;
-constexpr U64 FILE_E = FILE_H >> 3;
-constexpr U64 FILE_D = FILE_H >> 4;
-constexpr U64 FILE_C = FILE_H >> 5;
-constexpr U64 FILE_B = FILE_H >> 6;
-constexpr U64 FILE_A = FILE_H >> 7;
+constexpr U64 FILE_H_BB = 0x8080808080808080L;
+constexpr U64 FILE_G_BB = FILE_H_BB >> 1;
+constexpr U64 FILE_F_BB = FILE_H_BB >> 2;
+constexpr U64 FILE_E_BB = FILE_H_BB >> 3;
+constexpr U64 FILE_D_BB = FILE_H_BB >> 4;
+constexpr U64 FILE_C_BB = FILE_H_BB >> 5;
+constexpr U64 FILE_B_BB = FILE_H_BB >> 6;
+constexpr U64 FILE_A_BB = FILE_H_BB >> 7;
 
-constexpr U64 RANK_1 = 0x00000000000000FFL;
-constexpr U64 RANK_2 = RANK_1 << 8;
-constexpr U64 RANK_3 = RANK_1 << 16;
-constexpr U64 RANK_4 = RANK_1 << 24;
-constexpr U64 RANK_5 = RANK_1 << 32;
-constexpr U64 RANK_6 = RANK_1 << 40;
-constexpr U64 RANK_7 = RANK_1 << 48;
-constexpr U64 RANK_8 = RANK_1 << 56;
+constexpr U64 RANK_1_BB = 0x00000000000000FFL;
+constexpr U64 RANK_2_BB = RANK_1_BB << 8;
+constexpr U64 RANK_3_BB = RANK_1_BB << 16;
+constexpr U64 RANK_4_BB = RANK_1_BB << 24;
+constexpr U64 RANK_5_BB = RANK_1_BB << 32;
+constexpr U64 RANK_6_BB = RANK_1_BB << 40;
+constexpr U64 RANK_7_BB = RANK_1_BB << 48;
+constexpr U64 RANK_8_BB = RANK_1_BB << 56;
 
-constexpr U64 ANTI_DIAGONAL_7 = 0x102040810204080L;
-constexpr U64 ANTI_DIAGONAL_6 = ANTI_DIAGONAL_7 << 8;
-constexpr U64 ANTI_DIAGONAL_5 = ANTI_DIAGONAL_7 << 16;
-constexpr U64 ANTI_DIAGONAL_4 = ANTI_DIAGONAL_7 << 24;
-constexpr U64 ANTI_DIAGONAL_3 = ANTI_DIAGONAL_7 << 32;
-constexpr U64 ANTI_DIAGONAL_2 = ANTI_DIAGONAL_7 << 40;
-constexpr U64 ANTI_DIAGONAL_1 = ANTI_DIAGONAL_7 << 48;
-constexpr U64 ANTI_DIAGONAL_0 = ANTI_DIAGONAL_7 << 56;
+constexpr U64 ANTI_DIAGONAL_7_BB = 0x102040810204080L;
+constexpr U64 ANTI_DIAGONAL_6_BB = ANTI_DIAGONAL_7_BB << 8;
+constexpr U64 ANTI_DIAGONAL_5_BB = ANTI_DIAGONAL_7_BB << 16;
+constexpr U64 ANTI_DIAGONAL_4_BB = ANTI_DIAGONAL_7_BB << 24;
+constexpr U64 ANTI_DIAGONAL_3_BB = ANTI_DIAGONAL_7_BB << 32;
+constexpr U64 ANTI_DIAGONAL_2_BB = ANTI_DIAGONAL_7_BB << 40;
+constexpr U64 ANTI_DIAGONAL_1_BB = ANTI_DIAGONAL_7_BB << 48;
+constexpr U64 ANTI_DIAGONAL_0_BB = ANTI_DIAGONAL_7_BB << 56;
 
-constexpr U64 ANTI_DIAGONAL_8  = ANTI_DIAGONAL_7 >> 8;
-constexpr U64 ANTI_DIAGONAL_9  = ANTI_DIAGONAL_7 >> 16;
-constexpr U64 ANTI_DIAGONAL_10 = ANTI_DIAGONAL_7 >> 24;
-constexpr U64 ANTI_DIAGONAL_11 = ANTI_DIAGONAL_7 >> 32;
-constexpr U64 ANTI_DIAGONAL_12 = ANTI_DIAGONAL_7 >> 40;
-constexpr U64 ANTI_DIAGONAL_13 = ANTI_DIAGONAL_7 >> 48;
-constexpr U64 ANTI_DIAGONAL_14 = ANTI_DIAGONAL_7 >> 56;
+constexpr U64 ANTI_DIAGONAL_8_BB  = ANTI_DIAGONAL_7_BB >> 8;
+constexpr U64 ANTI_DIAGONAL_9_BB  = ANTI_DIAGONAL_7_BB >> 16;
+constexpr U64 ANTI_DIAGONAL_10_BB = ANTI_DIAGONAL_7_BB >> 24;
+constexpr U64 ANTI_DIAGONAL_11_BB = ANTI_DIAGONAL_7_BB >> 32;
+constexpr U64 ANTI_DIAGONAL_12_BB = ANTI_DIAGONAL_7_BB >> 40;
+constexpr U64 ANTI_DIAGONAL_13_BB = ANTI_DIAGONAL_7_BB >> 48;
+constexpr U64 ANTI_DIAGONAL_14_BB = ANTI_DIAGONAL_7_BB >> 56;
 
-constexpr U64 DIAGONAL_7  = 0x8040201008040201L;
-constexpr U64 DIAGONAL_8  = DIAGONAL_7 >> 8;
-constexpr U64 DIAGONAL_9  = DIAGONAL_7 >> 16;
-constexpr U64 DIAGONAL_10 = DIAGONAL_7 >> 24;
-constexpr U64 DIAGONAL_11 = DIAGONAL_7 >> 32;
-constexpr U64 DIAGONAL_12 = DIAGONAL_7 >> 40;
-constexpr U64 DIAGONAL_13 = DIAGONAL_7 >> 48;
-constexpr U64 DIAGONAL_14 = DIAGONAL_7 >> 56;
+constexpr U64 DIAGONAL_7_BB = 0x8040201008040201L;
+constexpr U64 DIAGONAL_8_BB  = DIAGONAL_7_BB >> 8;
+constexpr U64 DIAGONAL_9_BB  = DIAGONAL_7_BB >> 16;
+constexpr U64 DIAGONAL_10_BB = DIAGONAL_7_BB >> 24;
+constexpr U64 DIAGONAL_11_BB = DIAGONAL_7_BB >> 32;
+constexpr U64 DIAGONAL_12_BB = DIAGONAL_7_BB >> 40;
+constexpr U64 DIAGONAL_13_BB = DIAGONAL_7_BB >> 48;
+constexpr U64 DIAGONAL_14_BB = DIAGONAL_7_BB >> 56;
 
-constexpr U64 DIAGONAL_6 = DIAGONAL_7 << 8;
-constexpr U64 DIAGONAL_5 = DIAGONAL_7 << 16;
-constexpr U64 DIAGONAL_4 = DIAGONAL_7 << 24;
-constexpr U64 DIAGONAL_3 = DIAGONAL_7 << 32;
-constexpr U64 DIAGONAL_2 = DIAGONAL_7 << 40;
-constexpr U64 DIAGONAL_1 = DIAGONAL_7 << 48;
-constexpr U64 DIAGONAL_0 = DIAGONAL_7 << 56;
+constexpr U64 DIAGONAL_6_BB = DIAGONAL_7_BB << 8;
+constexpr U64 DIAGONAL_5_BB = DIAGONAL_7_BB << 16;
+constexpr U64 DIAGONAL_4_BB = DIAGONAL_7_BB << 24;
+constexpr U64 DIAGONAL_3_BB = DIAGONAL_7_BB << 32;
+constexpr U64 DIAGONAL_2_BB = DIAGONAL_7_BB << 40;
+constexpr U64 DIAGONAL_1_BB = DIAGONAL_7_BB << 48;
+constexpr U64 DIAGONAL_0_BB = DIAGONAL_7_BB << 56;
 
-constexpr U64 NOT_FILE_A = ~FILE_A;
-constexpr U64 NOT_FILE_H = ~FILE_H;
-constexpr U64 NOT_RANK_1 = ~RANK_1;
-constexpr U64 NOT_RANK_8 = ~RANK_8;
+constexpr U64 NOT_FILE_A_BB = ~FILE_A_BB;
+constexpr U64 NOT_FILE_H_BB = ~FILE_H_BB;
+constexpr U64 NOT_RANK_1_BB = ~RANK_1_BB;
+constexpr U64 NOT_RANK_8_BB = ~RANK_8_BB;
 
-constexpr U64 CIRCLE_A = 0xFF818181818181FFL;
-constexpr U64 CIRCLE_B = 0x7E424242427E00L;
-constexpr U64 CIRCLE_C = 0x3C24243C0000L;
-constexpr U64 CIRCLE_D = 0x1818000000L;
+constexpr U64 CIRCLE_A_BB = 0xFF818181818181FFL;
+constexpr U64 CIRCLE_B_BB = 0x7E424242427E00L;
+constexpr U64 CIRCLE_C_BB = 0x3C24243C0000L;
+constexpr U64 CIRCLE_D_BB = 0x1818000000L;
 
-constexpr U64 WHITE_SQUARES = 0x55AA55AA55AA55AA;
-constexpr U64 BLACK_SQUARES = ~WHITE_SQUARES;
+constexpr U64 WHITE_SQUARES_BB = 0x55AA55AA55AA55AA;
+constexpr U64 BLACK_SQUARES_BB = ~WHITE_SQUARES_BB;
 
-constexpr U64 CENTER_SQUARES          = CIRCLE_D;
-constexpr U64 CENTER_SQUARES_EXTENDED = CIRCLE_C | CIRCLE_D;
+constexpr U64 CENTER_SQUARES_BB          = CIRCLE_D_BB;
+constexpr U64 CENTER_SQUARES_EXTENDED_BB = CIRCLE_C_BB | CIRCLE_D_BB;
 
-constexpr U64 RANKS[] {RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8};
-
-constexpr U64 FILES[] {FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H};
-constexpr U64 FILES_NEIGHBOUR[] {FILE_B,          FILE_A | FILE_C, FILE_B | FILE_D, FILE_C | FILE_E,
-                                 FILE_D | FILE_F, FILE_E | FILE_G, FILE_F | FILE_H, FILE_G};
-constexpr U64 CIRCLES[] {CIRCLE_A, CIRCLE_B, CIRCLE_C, CIRCLE_D};
-constexpr U64 DIAGONALS[] {DIAGONAL_0,  DIAGONAL_1,  DIAGONAL_2,  DIAGONAL_3,  DIAGONAL_4,
-                           DIAGONAL_5,  DIAGONAL_6,  DIAGONAL_7,  DIAGONAL_8,  DIAGONAL_9,
-                           DIAGONAL_10, DIAGONAL_11, DIAGONAL_12, DIAGONAL_13, DIAGONAL_14};
-constexpr U64 ANTI_DIAGONALS[] {ANTI_DIAGONAL_0,  ANTI_DIAGONAL_1,  ANTI_DIAGONAL_2,  ANTI_DIAGONAL_3,
-                                ANTI_DIAGONAL_4,  ANTI_DIAGONAL_5,  ANTI_DIAGONAL_6,  ANTI_DIAGONAL_7,
-                                ANTI_DIAGONAL_8,  ANTI_DIAGONAL_9,  ANTI_DIAGONAL_10, ANTI_DIAGONAL_11,
-                                ANTI_DIAGONAL_12, ANTI_DIAGONAL_13, ANTI_DIAGONAL_14};
+constexpr U64 RANKS_BB[] {RANK_1_BB, RANK_2_BB, RANK_3_BB, RANK_4_BB, RANK_5_BB, RANK_6_BB, RANK_7_BB, RANK_8_BB};
+constexpr U64 FILES_BB[] {FILE_A_BB, FILE_B_BB, FILE_C_BB, FILE_D_BB, FILE_E_BB, FILE_F_BB, FILE_G_BB, FILE_H_BB};
+constexpr U64 FILES_NEIGHBOUR_BB[] {FILE_B_BB,          FILE_A_BB | FILE_C_BB, FILE_B_BB | FILE_D_BB, FILE_C_BB | FILE_E_BB,
+                                    FILE_D_BB | FILE_F_BB, FILE_E_BB | FILE_G_BB, FILE_F_BB | FILE_H_BB, FILE_G_BB};
+constexpr U64 CIRCLES[] {CIRCLE_A_BB, CIRCLE_B_BB, CIRCLE_C_BB, CIRCLE_D_BB};
+constexpr U64 DIAGONALS[] {DIAGONAL_0_BB,  DIAGONAL_1_BB,  DIAGONAL_2_BB,  DIAGONAL_3_BB,  DIAGONAL_4_BB,
+                           DIAGONAL_5_BB,  DIAGONAL_6_BB,  DIAGONAL_7_BB,  DIAGONAL_8_BB,  DIAGONAL_9_BB,
+                           DIAGONAL_10_BB, DIAGONAL_11_BB, DIAGONAL_12_BB, DIAGONAL_13_BB, DIAGONAL_14_BB};
+constexpr U64 ANTI_DIAGONALS[] {ANTI_DIAGONAL_0_BB,  ANTI_DIAGONAL_1_BB,  ANTI_DIAGONAL_2_BB,  ANTI_DIAGONAL_3_BB,
+                                ANTI_DIAGONAL_4_BB,  ANTI_DIAGONAL_5_BB,  ANTI_DIAGONAL_6_BB,  ANTI_DIAGONAL_7_BB,
+                                ANTI_DIAGONAL_8_BB,  ANTI_DIAGONAL_9_BB,  ANTI_DIAGONAL_10_BB, ANTI_DIAGONAL_11_BB,
+                                ANTI_DIAGONAL_12_BB, ANTI_DIAGONAL_13_BB, ANTI_DIAGONAL_14_BB};
 
 constexpr U64 CASTLING_WHITE_QUEENSIDE_MASK = 0x000000000000000EL;
 constexpr U64 CASTLING_WHITE_KINGSIDE_MASK  = 0x0000000000000060L;
@@ -413,8 +397,7 @@ extern U64** all_hashes;
 
 extern U64** inBetweenSquares;
 
-// extern U64 **ROOK_ATTACKS;
-// extern U64 **BISHOP_ATTACKS;
+
 
 template<class T> inline T abs(const T a) {
     if (a < 0)
@@ -488,21 +471,13 @@ inline void unsetBit(U64& number, Square index) { number &= ~(1ULL << index); }
  */
 inline bool getBit(U64 number, Square index) { return ((number >> index) & 1ULL) == 1; }
 
-inline U64 _xor(U64 a, U64 b) { return a ^ b; }
-
-inline U64 _or(U64 a, U64 b) { return a | b; }
-
-inline U64 _and(U64 a, U64 b) { return a & b; }
-
-inline U64 _not(U64 a) { return ~a; }
-
 inline U64 shiftWest(U64 b) {
-    b = (b >> 1) & NOT_FILE_H;
+    b = (b >> 1) & NOT_FILE_H_BB;
     return b;
 }
 
 inline U64 shiftEast(U64 b) {
-    b = (b << 1) & NOT_FILE_A;
+    b = (b << 1) & NOT_FILE_A_BB;
     return b;
 }
 
@@ -517,22 +492,22 @@ inline U64 shiftNorth(U64 b) {
 }
 
 inline U64 shiftNorthEast(U64 b) {
-    b = (b << 9) & NOT_FILE_A;
+    b = (b << 9) & NOT_FILE_A_BB;
     return b;
 }
 
 inline U64 shiftSouthEast(U64 b) {
-    b = (b >> 7) & NOT_FILE_A;
+    b = (b >> 7) & NOT_FILE_A_BB;
     return b;
 }
 
 inline U64 shiftSouthWest(U64 b) {
-    b = (b >> 9) & NOT_FILE_H;
+    b = (b >> 9) & NOT_FILE_H_BB;
     return b;
 }
 
 inline U64 shiftNorthWest(U64 b) {
-    b = (b << 7) & NOT_FILE_H;
+    b = (b << 7) & NOT_FILE_H_BB;
     return b;
 }
 
