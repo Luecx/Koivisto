@@ -73,6 +73,7 @@ void generatePawnMoves(
     constexpr Color them = !c;
     
     constexpr U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
+    constexpr U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
     constexpr U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
     
     constexpr Direction forward      = c == WHITE ? NORTH:SOUTH;
@@ -140,46 +141,46 @@ void generatePawnMoves(
         if constexpr (score) scoreMove<c, EN_PASSANT, m>(b, mv, hashMove, sd, ply);
     }
  
-    if (pawns & RANK_7_BB) {
+    if (pawns & relative_rank_7_bb) {
         
-        attacks = pawnsCenter & RANK_8_BB;
+        attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
             mv->add(genMove(target - forward, target, QUEEN_PROMOTION, movingPiece));
-            mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
-            mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
-            mv->add(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION,  m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
             if constexpr (score) scoreMove<c, ROOK_PROMOTION,   m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
             if constexpr (score) scoreMove<c, BISHOP_PROMOTION, m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
             if constexpr (score) scoreMove<c, KNIGHT_PROMOTION, m>(b, mv, hashMove, sd, ply);
             attacks = lsbReset(attacks);
         }
         
-        attacks = pawnsLeft & RANK_8_BB & opponents;
+        attacks = pawnsLeft & relative_rank_8_bb & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
             mv->add(genMove(target - left, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
-            mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
-            mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            mv->add(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
             attacks = lsbReset(attacks);
         }
 
-        attacks = pawnsRight & RANK_8_BB & opponents;
+        attacks = pawnsRight & relative_rank_8_bb & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
-            mv->add(genMove(target - right, target, QUEEN_PROMOTION_CAPTURE , WHITE_PAWN, b->getPiece(target)));
-            mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , WHITE_PAWN, b->getPiece(target)));
-            mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
-            mv->add(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, WHITE_PAWN, b->getPiece(target)));
+            mv->add(genMove(target - right, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            mv->add(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
             attacks = lsbReset(attacks);
         }

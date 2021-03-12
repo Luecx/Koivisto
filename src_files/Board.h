@@ -190,13 +190,7 @@ class Board {
 
     // undoes a null-move
     void undoMove_null();
-
-    // returns ALL pseudo legal moves. this contains illegal moves.
-    void getPseudoLegalMoves(MoveList* moves);
-
-    // returns non-quiet moves. this contains captures and promotions. we do not consider checks as non-quiet moves.
-    void getNonQuietMoves(MoveList* moves);
-
+    
     // returns the previous move which lead to the current position. this is stored within the meta information.
     Move getPreviousMove();
 

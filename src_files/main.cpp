@@ -35,10 +35,10 @@ using namespace move;
 
 int main(int argc, char *argv[]) {
 
-    
+//
 //    bb_init();
 //
-//    Board b{"r1b1k2r/p1q2p1p/np1bpn2/2pp1Np1/2B1P1Q1/2N1B3/PPP2PPP/R4RK1 w Qkq - 0 1"};
+//    Board b{"r1N2k1r/p1q2p1p/Bp2pQ2/2p5/4P3/4B3/PpP2PPP/R4RK1 b - - 0 5"};
 //    SearchData sd{};
 //    Depth ply = 0;
 //    MoveList mv{};

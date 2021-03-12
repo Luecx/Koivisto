@@ -202,7 +202,8 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
         // get a movelist which can be used to store all pseudo legal moves
         MoveList mvStorage;
         // extract pseudo legal moves
-        b->getPseudoLegalMoves(&mvStorage);
+        generatePerftMoves(b, &mvStorage);
+//        b->getPseudoLegalMoves(&mvStorage);
         
         bool moveContained = false;
         // check if the move is actually valid for the position
@@ -382,7 +383,7 @@ Move getDTZMove(Board* board) {
     
     // we generate all pseudo legal moves and check for equality between the moves to make sure the bits are correct.
     MoveList* mv = new MoveList();
-    board->getPseudoLegalMoves(mv);
+    generatePerftMoves(board, mv);
     
     for (int i = 0; i < mv->getSize(); i++) {
         // get the current move from the movelist
@@ -751,9 +752,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // we reuse movelists for memory reasons.
     MoveList* mv = sd->moves[ply];
     
-    // store all the moves inside the movelist
-    b->getPseudoLegalMoves(mv);
-    
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
     MoveOrderer moveOrderer {mv};
@@ -976,6 +974,44 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     return alpha;
 }
 
+void compare(MoveList* mv1, MoveList* mv2){
+    if(mv1->getSize() != mv2->getSize()){
+        std::cout << "size not matching:" << mv1->getSize() << " " << mv2->getSize() << std::endl;
+        exit(-1);
+    }
+    bool similar = true;
+    for(int i = 0; i< mv1->getSize(); i++){
+        
+        if(mv1->getMove(i) != mv2->getMove(i)){
+//            std::cerr << mv1->getMove(i) << " " << mv2->getMove(i) << std::endl;
+//            exit(-1);
+similar = false;
+        }
+        
+        if(mv1->getScore(i) != mv2->getScore(i)){
+//            std::cerr << mv1->getScore(i) << " " << mv2->getScore(i) << std::endl;
+            similar = false;
+        }
+    }
+    
+    if(!similar){
+        for(int i = 0; i< mv1->getSize(); i++){
+
+//        if(mv1->getMove(i) != mv2->getMove(i)){
+            std::cerr << toString(mv1->getMove(i)) << " " << toString(mv2->getMove(i)) << std::endl;
+//            exit(-1);
+//        }
+
+//        if(mv1->getScore(i) != mv2->getScore(i)){
+            std::cerr << mv1->getScore(i) << " " << mv2->getScore(i) << std::endl;
+//            exit(-1);
+//        }
+        }
+        exit(-1);
+    }
+    
+}
+
 /**
  * a more selective search than pv-search in which we only consider captures and promitions.
  *
@@ -1049,13 +1085,12 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // getNonQuietMoves() although they are not quiet.
     //
     MoveList* mv = sd->moves[ply];
-    b->getNonQuietMoves(mv);
     
     // create a moveorderer to sort the moves during the search
     generateNonQuietMoves(b, mv);
     MoveOrderer moveOrderer {mv};
     
-    // keping track of the best move for the trasnpositions
+    // keping track of the best move for the transpositions
     Move  bestMove  = 0;
     Score bestScore = -MAX_MATE_SCORE;
 
