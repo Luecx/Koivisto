@@ -35,32 +35,6 @@ using namespace move;
 
 int main(int argc, char *argv[]) {
 
-//
-//    bb_init();
-//
-//    Board b{"r1N2k1r/p1q2p1p/Bp2pQ2/2p5/4P3/4B3/PpP2PPP/R4RK1 b - - 0 5"};
-//    SearchData sd{};
-//    Depth ply = 0;
-//    MoveList mv{};
-//
-//    generateNonQuietMoves(&b, &mv, 0, &sd, ply);
-//
-//    MoveList oldMV{};
-//    b.getNonQuietMoves(&oldMV);
-//
-//    MoveOrderer orderer{&oldMV};
-//    orderer.setMovesQSearch(&oldMV,&b);// 0, &sd, &b, ply);
-//
-//    std::cout << mv.getSize() << std::endl;
-//    for(int i = 0; i< mv.getSize(); i++){
-//
-//        if(mv.getScore(i) != oldMV.getScore(i)){
-//            std::cerr << mv.getScore(i) << " " << oldMV.getScore(i) << std::endl;
-//        }
-//        std::cout << toString(mv.getMove(i)) << "  " << toString(oldMV.getMove(i)) << "   " << (mv.getMove(i) == oldMV.getMove(i)) <<
-//            "      " << mv.getScore(i) << " " << oldMV.getScore(i) <<
-//            std::endl;
-//    }
 
     if (argc == 1) {
         uci_loop(false);
