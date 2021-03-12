@@ -31,7 +31,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
         if constexpr (isCapture){
             Score     SEE    = board->staticExchangeEvaluation(move);
-            MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 6) - 10 * (getMovingPiece(move) % 6)
+            MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
                                + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
             if (SEE >= 0) {
                 if (mvvLVA == 0) {
@@ -43,7 +43,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
         } else if constexpr (isPromotion){
-            MoveScore mvvLVA = (getCapturedPiece(move) % 6) - (getMovingPiece(move) % 6);
+            MoveScore mvvLVA = (getCapturedPiece(move) % 8) - (getMovingPiece(move) % 8);
             mv->scoreMove(idx, 40000 + mvvLVA + promotionPiece(move));
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
@@ -53,7 +53,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
     }else if constexpr (m == GENERATE_NON_QUIET){
         // scoring when only non quiet moves are generated
-        MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 6) - 10 * (getMovingPiece(move) % 6)
+        MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
                            + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
         mv->scoreMove(idx, 240 + mvvLVA);
         
@@ -89,7 +89,7 @@ void generatePawnMoves(
     const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
     const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
     
-    const Piece movingPiece = us * 6 + PAWN;
+    const Piece movingPiece = us * 8 + PAWN;
     
     U64 nonPromoAttacks = opponents & ~relative_rank_8_bb;
     Square target;
@@ -209,7 +209,7 @@ void generatePieceMoves(
     
     for(Piece p = KNIGHT; p <= QUEEN; p++){
         U64 pieceOcc    = b->getPieceBB<c>(p);
-        U64 movingPiece = p + 6 * us;
+        U64 movingPiece = p + 8 * us;
         while(pieceOcc){
             Square square = bitscanForward(pieceOcc);
             U64 attacks = ZERO;
@@ -276,7 +276,7 @@ void generateKingMoves(
     constexpr Color us   =  c;
     constexpr Color them = !c;
     
-    constexpr Piece movingPiece = KING + us * 6;
+    constexpr Piece movingPiece = KING + us * 8;
     
     const U64 occupied   = *b->getOccupiedBB();
     const U64 opponents  = b->getTeamOccupiedBB<them>();
@@ -306,12 +306,12 @@ void generateKingMoves(
     
         if constexpr (m != GENERATE_NON_QUIET) {
             if constexpr (c == WHITE) {
-                if (b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
+                if (b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
                     && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
                     mv->add(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
                     if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
                 }
-                if (b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING) && b->getPiece(H1) == WHITE_ROOK
+                if (b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING) && b->getPiece(H1) == WHITE_ROOK
                     && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
                     mv->add(genMove(E1, G1, KING_CASTLE, WHITE_KING));
                     if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
@@ -319,12 +319,12 @@ void generateKingMoves(
                 
             } else {
                 
-                if (b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
+                if (b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
                     && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
                     mv->add(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
                     if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
                 }
-                if (b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING) && b->getPiece(H8) == BLACK_ROOK
+                if (b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING) && b->getPiece(H8) == BLACK_ROOK
                     && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
                     mv->add(genMove(E8, G8, KING_CASTLE, BLACK_KING));
                     if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);

@@ -35,7 +35,7 @@ extern EvalScore piece_opp_king_square_table[5][15*15];
 extern EvalScore piece_square_table[6][2][64];
 
 // indexed by wking, bking, piece, square
-extern EvalScore piece_kk_square_tables[64][64][12][64];
+extern EvalScore piece_kk_square_tables[64][64][14][64];
 
 void psqt_init();
 

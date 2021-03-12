@@ -179,9 +179,9 @@ EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, m
  */
 
 bool hasMatingMaterial(Board* b, bool side) {
-    if ((b->getPieceBB()[QUEEN + side * 6] | b->getPieceBB()[ROOK + side * 6] | b->getPieceBB()[PAWN + side * 6])
-        || (bitCount(b->getPieceBB()[BISHOP + side * 6] | b->getPieceBB()[KNIGHT + side * 6]) > 1
-            && b->getPieceBB()[BISHOP + side * 6]))
+    if ((b->getPieceBB()[QUEEN + side * 8] | b->getPieceBB()[ROOK + side * 8] | b->getPieceBB()[PAWN + side * 8])
+        || (bitCount(b->getPieceBB()[BISHOP + side * 8] | b->getPieceBB()[KNIGHT + side * 8]) > 1
+            && b->getPieceBB()[BISHOP + side * 8]))
         return true;
     return false;
 }
@@ -288,9 +288,9 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
 
         // normalise the values (black pieces will be made to white pieces)
         if(us == WHITE){
-            pinnerPiece -= 6;
+            pinnerPiece -= 8;
         }else{
-            pinnedPiece -= 6;
+            pinnedPiece -= 8;
         }
 
         // add to the result indexing using pinnedPiece for which there are 5 different pieces and the pinner
@@ -359,7 +359,7 @@ bb::Score Evaluator::evaluate(Board* b) {
 
     U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
     U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
-
+    
     // all passed pawns for white/black
     U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
     U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
@@ -681,18 +681,18 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
-
+    
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
-   
+    
+    
     // clang-format off
     featureScore += CASTLING_RIGHTS*(
-            + b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
-            + b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
-            - b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-            - b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+            + b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
+            + b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
+            - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
+            - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
     // clang-format on
     featureScore += SIDE_TO_MOVE * (b->getActivePlayer() == WHITE ? 1 : -1);
-
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + materialScore;
 
     res += (int) ((float) MgScore(totalScore) * (1 - phase));

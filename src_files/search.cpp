@@ -298,8 +298,8 @@ Score getWDL(Board* board) {
         board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
         board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
         board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingChance(0) | board->getCastlingChance(1) | board->getCastlingChance(2)
-        | board->getCastlingChance(3),
+        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
+        | board->getCastlingRights(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE);
     
     // if the result failed, we return the max_mate_score internally. This is not used within the search and will be
@@ -344,8 +344,8 @@ Move getDTZMove(Board* board) {
         board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
         board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
         board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingChance(0) | board->getCastlingChance(1) | board->getCastlingChance(2)
-        | board->getCastlingChance(3),
+        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
+        | board->getCastlingRights(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE, NULL);
     
     // if the result failed for some reason or the game is over, dont do anything
@@ -391,7 +391,7 @@ Move getDTZMove(Board* board) {
         
         // check if its the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo)) {
+            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && promotionPiece(m) % 8 == promo)) {
                 
                 std::cout << "info"
                              " depth "
@@ -799,7 +799,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
             // consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
+            if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
@@ -810,7 +810,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
-        if (isCapture(m) && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)) {
+        if (isCapture(m) && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
         
@@ -862,7 +862,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
+                     || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
@@ -1107,7 +1107,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
         // consider this quiet move as well.
         // **********************************************************************************************************
-        if (!inCheck && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) < 0)
+        if (!inCheck && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
             continue;
             
         b->move(m);

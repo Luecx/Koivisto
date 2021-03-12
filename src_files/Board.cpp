@@ -78,7 +78,7 @@ Board::Board(std::string fen) {
             continue;
         } else {
 
-            int offset = (c >= 'a') ? 6 : 0;
+            int offset = (c >= 'a') ? 8 : 0;
 
             Square sq = squareIndex(y, x);
 
@@ -107,26 +107,26 @@ Board::Board(std::string fen) {
     if (split.size() >= 3) {
 
         for (int i = 0; i < 4; i++) {
-            setCastlingChance(i, false);
+            setCastlingRights(i, false);
         }
 
         for (char c : split[2]) {
             switch (c) {
                 case 'K':
                     if (getPiece(E1) == WHITE_KING)
-                        setCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING, true);
+                        setCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING, true);
                     break;
                 case 'Q':
                     if (getPiece(E1) == WHITE_KING)
-                        setCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING, true);
+                        setCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING, true);
                     break;
                 case 'k':
                     if (getPiece(E8) == BLACK_KING)
-                        setCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING, true);
+                        setCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING, true);
                     break;
                 case 'q':
                     if (getPiece(E8) == BLACK_KING)
-                        setCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING, true);
+                        setCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING, true);
                     break;
             }
         }
@@ -155,7 +155,7 @@ Board::Board(Board* board) {
     m_teamOccupiedBB[BLACK] = board->getTeamOccupiedBB()[BLACK];
 
     // we need to copy occupancy bitboards for each piece
-    for (int n = 0; n < 12; n++) {
+    for (int n = 0; n < N_PIECES; n++) {
         m_piecesBB[n] = board->m_piecesBB[n];
     }
 
@@ -220,19 +220,19 @@ std::string Board::fen() {
 
     // its relevant to add a '-' if no castling rights exist
     bool anyCastling = false;
-    if (getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)) {
+    if (getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)) {
         anyCastling = true;
         ss << "Q";
     }
-    if (getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)) {
+    if (getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)) {
         anyCastling = true;
         ss << "K";
     }
-    if (getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)) {
+    if (getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)) {
         anyCastling = true;
         ss << "q";
     }
-    if (getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING)) {
+    if (getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING)) {
         anyCastling = true;
         ss << "k";
     }
@@ -305,7 +305,7 @@ void Board::setPiece(Square sq, Piece piece) {
 
     // settings the occupancy for the team, the piece and the total occupancy.
     m_piecesBB[piece] |= sqBB;
-    m_teamOccupiedBB[piece / 6] |= sqBB;
+    m_teamOccupiedBB[piece / 8] |= sqBB;
     m_occupiedBB |= sqBB;
 
     // also adjust the zobrist key
@@ -329,7 +329,7 @@ void Board::unsetPiece(Square sq) {
 
     // actually removing bits from the occupancy bitboards.
     m_piecesBB[p] &= sqBB;
-    m_teamOccupiedBB[p / 6] &= sqBB;
+    m_teamOccupiedBB[p / 8] &= sqBB;
     m_occupiedBB &= sqBB;
 
     // also adjust the zobrist key
@@ -355,8 +355,8 @@ void Board::replacePiece(Square sq, Piece piece) {
 
     m_piecesBB[p] &= ~sqBB;                 // unset
     m_piecesBB[piece] |= sqBB;              // set
-    m_teamOccupiedBB[p / 6] &= ~sqBB;       // unset
-    m_teamOccupiedBB[piece / 6] |= sqBB;    // set
+    m_teamOccupiedBB[p / 8] &= ~sqBB;       // unset
+    m_teamOccupiedBB[piece / 8] |= sqBB;    // set
 
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
@@ -393,13 +393,13 @@ void Board::move(Move m) {
     Piece  pFrom  = getMovingPiece(m);
     MoveType mType  = getType(m);
     Color  color  = getActivePlayer();
-    int    factor = getActivePlayer() == 0 ? 1 : -1;
+    int    factor = getActivePlayer() == WHITE ? 1 : -1;
 
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
 
-        if (getPiece(sqTo) % 6 == ROOK) {
+        if (getPiece(sqTo) % 8 == ROOK) {
             if (color == BLACK) {
                 if (sqTo == A1) {
                     newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_QUEENSIDE_CASTLING));
@@ -417,7 +417,7 @@ void Board::move(Move m) {
     }
 
     newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
-    if (pFrom % 6 == PAWN) {
+    if (pFrom % 8 == PAWN) {
 
         // reset fifty move counter if pawn has moved
         newBoardStatus.fiftyMoveCounter = 0;
@@ -460,7 +460,7 @@ void Board::move(Move m) {
 
             return;
         }
-    } else if (pFrom % 6 == KING) {
+    } else if (pFrom % 8 == KING) {
 
         // revoke castling rights if king moves
         newBoardStatus.castlingRights &= ~(ONE << (color * 2));
@@ -475,7 +475,7 @@ void Board::move(Move m) {
             Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
             Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
             unsetPiece(rookSquare);
-            setPiece(rookTarget, ROOK + 6 * color);
+            setPiece(rookTarget, ROOK + 8 * color);
         }
 
         this->unsetPiece(sqFrom);
@@ -493,7 +493,7 @@ void Board::move(Move m) {
     }
 
     // revoke castling rights if rook moves and it is on the initial square
-    else if (pFrom % 6 == ROOK) {
+    else if (pFrom % 8 == ROOK) {
         if (color == WHITE) {
             if (sqFrom == A1) {
                 newBoardStatus.castlingRights &= ~(ONE << (color * 2));
@@ -546,13 +546,13 @@ void Board::undoMove() {
     int    factor   = getActivePlayer() == 0 ? 1 : -1;
 
     if (mType == EN_PASSANT) {
-        setPiece(sqTo - 8 * factor, (1 - color) * 6);
+        setPiece(sqTo - 8 * factor, (1 - color) * 8);
     }
 
-    if (pFrom % 6 == KING && isCastle(m)) {
+    if (pFrom % 8 == KING && isCastle(m)) {
         Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
         Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-        setPiece(rookSquare, ROOK + 6 * color);
+        setPiece(rookSquare, ROOK + 8 * color);
         unsetPiece(rookTarget);
     }
 
@@ -621,11 +621,11 @@ template<Color attacker> U64 Board::getAttackedSquares() {
         attacks |= shiftSouthEast(m_piecesBB[BLACK_PAWN]) | shiftSouthWest((m_piecesBB[BLACK_PAWN]));
     }
 
-    U64 knights(m_piecesBB[KNIGHT + 6 * attacker]);
-    U64 bishops(m_piecesBB[BISHOP + 6 * attacker]);
-    U64 rooks(m_piecesBB[ROOK + 6 * attacker]);
-    U64 queens(m_piecesBB[QUEEN + 6 * attacker]);
-    U64 kings(m_piecesBB[KING + 6 * attacker]);
+    U64 knights(m_piecesBB[KNIGHT + 8 * attacker]);
+    U64 bishops(m_piecesBB[BISHOP + 8 * attacker]);
+    U64 rooks(m_piecesBB[ROOK + 8 * attacker]);
+    U64 queens(m_piecesBB[QUEEN + 8 * attacker]);
+    U64 kings(m_piecesBB[KING + 8 * attacker]);
 
     while (knights) {
         Square s = bitscanForward(knights);
@@ -666,7 +666,7 @@ template<Color attacker> U64 Board::getAttackedSquares() {
  * @return
  */
 U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) {
-    for (piece = PAWN + bySide * 6; piece <= KING + bySide * 6; piece += 1) {
+    for (piece = PAWN + bySide * 8; piece <= KING + bySide * 8; piece += 1) {
         U64 subset = attadef & m_piecesBB[piece];
         if (subset)
             return subset & -subset;    // single bit
@@ -718,7 +718,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         (fixed | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
 
     if (isCapture(m))
-        gain[d] = see_piece_vals[capturedPiece % 6];
+        gain[d] = see_piece_vals[capturedPiece % 8];
     else {
         gain[d] = 0;
     }
@@ -727,7 +727,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         d++;
         attacker = 1 - attacker;
 
-        gain[d] = see_piece_vals[capturingPiece % 6] - gain[d - 1];
+        gain[d] = see_piece_vals[capturingPiece % 8] - gain[d - 1];
 
         if (-gain[d - 1] < 0 && gain[d] < 0)
             break;    // pruning does not influence the result
@@ -844,10 +844,8 @@ bool Board::givesCheck(Move m) {
     }
     
     // direct check
-    switch (pFrom % 6) {
+    switch (getPieceType(pFrom)) {
         case QUEEN: {
-            
-            
             U64 att = lookUpBishopAttack(sqTo, m_occupiedBB) | lookUpRookAttack(sqTo, m_occupiedBB);
 //            printBitmap(m_occupiedBB);
 //            printBitmap(att);
@@ -1010,7 +1008,7 @@ bool Board::isLegal(Move m) {
 
     bool isAttacked = false;
 
-    if (getMovingPiece(m) % 6 == KING) {
+    if (getPieceType(getMovingPiece(m)) == KING) {
         thisKing = sqTo;
     }
 
@@ -1037,13 +1035,13 @@ bool Board::isLegal(Move m) {
  * @param index
  * @return
  */
-bool Board::getCastlingChance(Square index) { return getBit(getBoardStatus()->castlingRights, index); }
+bool Board::getCastlingRights(int index) { return getBit(getBoardStatus()->castlingRights, index); }
 
 /**
  * enables/disables castling.
  * For a reference to the indexing, check Board.h
  */
-void Board::setCastlingChance(Square index, bool val) {
+void Board::setCastlingRights(int index, bool val) {
     if (val) {
         setBit(getBoardStatus()->castlingRights, index);
     } else {
@@ -1121,10 +1119,10 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
     os << "zobrist key              " << board.zobrist() << "\n";
     os << "repetition               " << board.getCurrentRepetitionCount() << "\n";
     os << "50 move rule             " << board.getCurrent50MoveRuleCount() << "\n";
-    os << "white kingside castle    " << (board.getCastlingChance(1) ? "true" : "false") << "\n";
-    os << "white queenside castle   " << (board.getCastlingChance(0) ? "true" : "false") << "\n";
-    os << "black kingside castle    " << (board.getCastlingChance(3) ? "true" : "false") << "\n";
-    os << "black queenside castle   " << (board.getCastlingChance(2) ? "true" : "false") << "\n";
+    os << "white kingside castle    " << (board.getCastlingRights(1) ? "true" : "false") << "\n";
+    os << "white queenside castle   " << (board.getCastlingRights(0) ? "true" : "false") << "\n";
+    os << "black kingside castle    " << (board.getCastlingRights(3) ? "true" : "false") << "\n";
+    os << "black queenside castle   " << (board.getCastlingRights(2) ? "true" : "false") << "\n";
     os << "en passent square        "
        << (board.getEnPassantSquare() >= 0 ? SQUARE_IDENTIFIER[board.getEnPassantSquare()] : "-") << "\n";
 

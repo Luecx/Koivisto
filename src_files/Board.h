@@ -227,11 +227,11 @@ class Board {
 
     // returns the castling rights for the given index. note that no square is required but an index.
     // for the indices, look at the start of Board.h
-    bool getCastlingChance(Square index);
+    bool getCastlingRights(int index);
 
     // sets the castling rights.  Note that no square is required but an index.
     // for the indices, look at the start of Board.h
-    void setCastlingChance(Square index, bool val);
+    void setCastlingRights(int index, bool val);
 
     // returns how many times this position has occurred in the history of the board.
     int getCurrentRepetitionCount();
@@ -261,15 +261,15 @@ class Board {
     template<Color color>
     [[nodiscard]] inline const U64 getTeamOccupiedBB() const {return m_teamOccupiedBB[color];}
 
-    // returns the occupied squares by each piece (array with 12 entries).
+    // returns the occupied squares by each piece (array with 14 entries).
     [[nodiscard]] inline const U64* getPieceBB() const {return m_piecesBB;};
 
     // does the same as getPieceBB() above yet this only returns a single bitboard.
-    [[nodiscard]] inline U64 getPieceBB(Color color, Piece piece) const { return m_piecesBB[color * 6 + piece];}
+    [[nodiscard]] inline U64 getPieceBB(Color color, Piece piece) const { return m_piecesBB[color * 8 + piece];}
     
     // does the same as getPieceBB() above yet this only returns a single bitboard.
     template<Color color>
-    [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 6 + piece];}
+    [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 8 + piece];}
     
 };
 
