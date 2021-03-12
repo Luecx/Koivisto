@@ -130,8 +130,8 @@ void search_stop() {
  * @return
  */
 bool hasOnlyPawns(Board* board, Color color) {
-    return board->getTeamOccupied()[color]
-           == ((board->getPieces()[PAWN + color * 6] | board->getPieces()[KING + color * 6]));
+    return board->getTeamOccupiedBB()[color]
+           == ((board->getPieceBB()[PAWN + color * 6] | board->getPieceBB()[KING + color * 6]));
 }
 
 /**
@@ -284,18 +284,18 @@ void printInfoString(Board* b, Depth d, Score score) {
 Score getWDL(Board* board) {
     
     // we cannot prove the tables if there are too many pieces on the board
-    if (bitCount(*board->getOccupied()) > (signed) TB_LARGEST)
+    if (bitCount(*board->getOccupiedBB()) > (signed) TB_LARGEST)
         return MAX_MATE_SCORE;
     
     // use the given files to prove the tables using the information from the board.
     unsigned res = tb_probe_wdl(
-        board->getTeamOccupied()[WHITE], board->getTeamOccupied()[BLACK],
-        board->getPieces()[WHITE_KING] | board->getPieces()[BLACK_KING],
-        board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN],
-        board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK],
-        board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP],
-        board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
-        board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
+        board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
+        board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
+        board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
+        board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
+        board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
+        board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
+        board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
         board->getCastlingChance(0) | board->getCastlingChance(1) | board->getCastlingChance(2)
         | board->getCastlingChance(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE);
@@ -331,17 +331,17 @@ Score getWDL(Board* board) {
  */
 Move getDTZMove(Board* board) {
     
-    if (bitCount(*board->getOccupied()) > (signed) TB_LARGEST)
+    if (bitCount(*board->getOccupiedBB()) > (signed) TB_LARGEST)
         return 0;
     
     unsigned result = tb_probe_root(
-        board->getTeamOccupied()[WHITE], board->getTeamOccupied()[BLACK],
-        board->getPieces()[WHITE_KING] | board->getPieces()[BLACK_KING],
-        board->getPieces()[WHITE_QUEEN] | board->getPieces()[BLACK_QUEEN],
-        board->getPieces()[WHITE_ROOK] | board->getPieces()[BLACK_ROOK],
-        board->getPieces()[WHITE_BISHOP] | board->getPieces()[BLACK_BISHOP],
-        board->getPieces()[WHITE_KNIGHT] | board->getPieces()[BLACK_KNIGHT],
-        board->getPieces()[WHITE_PAWN] | board->getPieces()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
+        board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
+        board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
+        board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
+        board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
+        board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
+        board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
+        board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
         board->getCastlingChance(0) | board->getCastlingChance(1) | board->getCastlingChance(2)
         | board->getCastlingChance(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE, NULL);

@@ -365,7 +365,7 @@ void uci_set_option(std::string& name, std::string& value) {
         strcpy(path, value.c_str());
         tb_init(path);
 
-        std::cout << "using syzygy table with " << TB_LARGEST << " m_pieces" << std::endl;
+        std::cout << "using syzygy table with " << TB_LARGEST << " m_piecesBB" << std::endl;
 
         /*
          * only use TB if loading was successful

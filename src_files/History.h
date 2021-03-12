@@ -33,12 +33,17 @@ struct SearchData {
 
     MoveList** moves;
     Evaluator  evaluator {};
-
-    int   captureHistory[2][64][64] = {0};
-    int   history[2][64][64]        = {0};    // history table (from-to)
-    int   cmh[6][64][2][6][64]      = {0};    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    Move  killer[2][MAX_PLY+2][2]   = {0};    // +2 used to make sure we can always reset +2
-    Score eval[2][MAX_PLY]          = {0};
+    
+    // capture history table (side-from-to)
+    int   captureHistory[N_COLORS][N_SQUARES][N_SQUARES] = {0};
+    // history table (side-from-to)
+    int   history       [N_COLORS][N_SQUARES][N_SQUARES] = {0};
+    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
+    int   cmh           [N_PIECE_TYPES][N_SQUARES][N_COLORS][N_PIECE_TYPES][N_SQUARES]      = {0};
+    // kill table
+    Move  killer        [N_COLORS][MAX_PLY+2][2]   = {0};    // +2 used to make sure we can always reset +2
+    // eval history across plies
+    Score eval          [N_COLORS][MAX_PLY]        = {0};
     bool  sideToReduce;
     bool reduce;
 
@@ -47,18 +52,10 @@ struct SearchData {
 
     virtual ~SearchData();
 
-    void updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous);
+    void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
-    int getHistories(Move m, bool side, Move previous);
-
-    void addHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
-
-    MoveScore getHistoryMoveScore(Move m, bool side);
-
-    void addCaptureHistoryScore(Move m, Depth depth, MoveList* mv, bool side);
-
-    MoveScore getCaptureHistoryMoveScore(Move m, bool side);
-
+    int getHistories(Move m, Color side, Move previous);
+    
     void setKiller(Move move, Depth ply, Color color);
 
     int isKiller(Move move, Depth ply, Color color);
@@ -67,9 +64,6 @@ struct SearchData {
 
     bool isImproving(Score eval, Color color, Depth ply);
 
-    void addCounterMoveHistoryScore(Move previous, Move m, Depth depth, MoveList* mv);
-
-    MoveScore getCounterMoveHistoryScore(Move previous, Move m);
 };
 
 /**

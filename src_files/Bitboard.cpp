@@ -23,12 +23,12 @@
 
 using namespace bb;
 
-U64** bb::ROOK_ATTACKS   = new U64*[64];
-U64** bb::BISHOP_ATTACKS = new U64*[64];
+U64** bb::ROOK_ATTACKS   = new U64*[N_SQUARES];
+U64** bb::BISHOP_ATTACKS = new U64*[N_SQUARES];
 
 U64** bb::all_hashes = {};
 
-U64** bb::inBetweenSquares = new U64*[64];
+U64** bb::inBetweenSquares = new U64*[N_SQUARES];
 
 std::mt19937_64 rng;
 
@@ -41,7 +41,7 @@ void bb::bb_init() {
 }
 
 void bb::bb_cleanUp() {
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < N_SQUARES; i++) {
         delete[] ROOK_ATTACKS[i];
         ROOK_ATTACKS[i] = nullptr;
         delete[] BISHOP_ATTACKS[i];
@@ -56,7 +56,7 @@ void bb::bb_cleanUp() {
     delete[] inBetweenSquares;
     inBetweenSquares = nullptr;
 
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < N_PIECES; i++) {
         delete[] all_hashes[i];
         all_hashes[i] = nullptr;
     }
@@ -87,19 +87,19 @@ double bb::randDouble(double min, double max) {
 U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     U64 res {0};
 
-    static const U64 topBottom = RANK_1 | RANK_8;
-    static const U64 leftRight = FILE_A | FILE_H;
+    static const U64 topBottom = RANK_1_BB | RANK_8_BB;
+    static const U64 leftRight = FILE_A_BB | FILE_H_BB;
 
-    if ((1ULL << sq) & RANK_1 && direction < -2) {
+    if ((1ULL << sq) & RANK_1_BB && direction < -2) {
         return res;
     }
-    if ((1ULL << sq) & RANK_8 && direction > 2) {
+    if ((1ULL << sq) & RANK_8_BB && direction > 2) {
         return res;
     }
-    if ((1ULL << sq) & FILE_A && (direction == WEST || direction == SOUTH_WEST || direction == NORTH_WEST)) {
+    if ((1ULL << sq) & FILE_A_BB && (direction == WEST || direction == SOUTH_WEST || direction == NORTH_WEST)) {
         return res;
     }
-    if ((1ULL << sq) & FILE_H && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
+    if ((1ULL << sq) & FILE_H_BB && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
         return res;
     }
 
@@ -110,7 +110,7 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
 
         res |= currentSq;
 
-        if (_and(occ, currentSq)) {
+        if (occ & currentSq) {
             return res;
         }
         if (abs(direction) == 8) {
@@ -122,7 +122,7 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
                 return res;
             }
         } else {
-            if (currentSq & CIRCLE_A) {
+            if (currentSq & CIRCLE_A_BB) {
                 return res;
             }
         }
@@ -207,7 +207,7 @@ U64 bb::populateMask(U64 mask, U64 index) {
 
 void bb::generateZobristKeys() {
 
-    all_hashes = new U64*[12];
+    all_hashes = new U64*[N_PIECES];
     for (int i = 0; i < 6; i++) {
         all_hashes[i]     = new U64[64];
         all_hashes[i + 6] = new U64[64];

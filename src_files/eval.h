@@ -29,15 +29,15 @@ extern EvalScore bishop_pawn_same_color_table_e[9];
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
-extern EvalScore* mobilities[6];
-extern int        mobEntryCount[6];
+extern EvalScore* mobilities[N_PIECE_TYPES];
+extern int        mobEntryCount[N_PIECE_TYPES];
 extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
-extern EvalScore passer_rank_n[16];
+extern EvalScore passer_rank_n[2*N_RANKS];
 
-bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover);
-bool hasMatingMaterial(Board* b, bool side);
-void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
+bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
+bool hasMatingMaterial  (Board* b, bool side);
+void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 class Evaluator {
     public:
@@ -51,11 +51,7 @@ class Evaluator {
     bb::Score evaluate(Board* b);
 
     bb::Score evaluateTempo(Board* b);
-
-    /**
-     * returns the phase of the last calculation
-     * @return
-     */
+    
     float getPhase();
 };
 

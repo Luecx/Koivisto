@@ -20,33 +20,35 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, Move previous) {
+void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
     if (depth > 20)
         return;
     Move m2;
-    
+
     Piece  prevPiece = getMovingPiece(previous) % 6;
     Square prevTo    = getSquareTo(previous);
     Color  color     = getMovingPiece(m) / 6;
 
     for (int i = 0; i < mv->getSize(); i++) {
         m2 = mv->getMove(i);
-                
+
         Piece  movingPiece = getMovingPiece(m2) % 6;
         Square squareTo    = getSquareTo(m2);
 
         if (sameMove(m, m2)) {
-            if (isCapture(m)){
-                 captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
+            if (isCapture(m)) {
+                captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
                     (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                    - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)]
+                          / MAX_HISTORY_SCORE;
             } else {
                 history[side][getSquareFrom(m)][getSquareTo(m)] +=
                     (depth * depth + 5 * depth)
                     - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
                 cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
                     (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo] / MAX_HISTORY_SCORE;
+                    - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]
+                          / MAX_HISTORY_SCORE;
             }
 
             // we can return at this point because all moves searched are in front of this move
@@ -54,7 +56,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
         } else if (isCapture(m2)) {
             captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
-                - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+                - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)]
+                      / MAX_HISTORY_SCORE;
         } else {
             history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
@@ -68,8 +71,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, bool side, M
     return;
 }
 
-int SearchData::getHistories(Move m, bool side, Move previous){
-    if (isCapture(m)){
+int SearchData::getHistories(Move m, Color side, Move previous) {
+    if (isCapture(m)) {
         return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
     } else {
         Piece  prevPiece   = getMovingPiece(previous) % 6;
@@ -85,17 +88,18 @@ int SearchData::getHistories(Move m, bool side, Move previous){
 /*
  * Set killer
  */
-void SearchData::setKiller(Move move, Depth ply, Color color) { 
+void SearchData::setKiller(Move move, Depth ply, Color color) {
     if (!sameMove(move, killer[color][ply][0])) {
         killer[color][ply][1] = killer[color][ply][0];
         killer[color][ply][0] = move;
     }
 }
+
 /*
  * Is killer?
  */
-int SearchData::isKiller(Move move, Depth ply, Color color) { 
-    if (sameMove(move, killer[color][ply][0])) 
+int SearchData::isKiller(Move move, Depth ply, Color color) {
+    if (sameMove(move, killer[color][ply][0]))
         return 2;
     return sameMove(move, killer[color][ply][1]);
 }
@@ -103,7 +107,10 @@ int SearchData::isKiller(Move move, Depth ply, Color color) {
 /*
  * Set historic eval
  */
-void SearchData::setHistoricEval(Score ev, Color color, Depth ply) { eval[color][ply] = ev; }
+void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
+    eval[color][ply] = ev;
+}
+
 /*
  * Is improving
  */
