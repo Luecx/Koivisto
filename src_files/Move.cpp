@@ -29,7 +29,7 @@ using namespace move;
  * @param movingPiece
  * @return
  */
-Move move::genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece) {
+Move move::genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece) {
 
     Move m {0};
     setSquareFrom(m, from);
@@ -48,7 +48,7 @@ Move move::genMove(const bb::Square &from, const bb::Square &to, const Type &typ
  * @param movingPiece
  * @return
  */
-Move move::genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece,
+Move move::genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece,
                    const bb::Piece &capturedPiece) {
 
     Move m {0};
@@ -112,51 +112,6 @@ void move::printMoveBits(Move move, bool bitInfo) {
         std::cout << std::endl;
     }
 }
-
-/**
- * checks if the given move is a doubled pawn push
- * @param move
- * @return
- */
-bool move::isDoubledPawnPush(const Move move) { return getType(move) == DOUBLED_PAWN_PUSH; }
-
-/**
- * checks if the given move is a capture
- * @param move
- * @return
- */
-bool move::isCapture(Move move) { return move & 0x4000; }
-
-/**
- * checks if the given move castles
- * @param move
- * @return
- */
-bool move::isCastle(Move move) {
-    Type t = getType(move);
-    return t == KING_CASTLE || t == QUEEN_CASTLE;
-}
-
-/**
- * checks if the given move captures e.p.
- * @param move
- * @return
- */
-bool move::isEnPassant(Move move) { return getType(move) == EN_PASSANT; }
-
-/**
- * checks if the given move is a promotion
- * @param move
- * @return
- */
-bool move::isPromotion(Move move) { return move & 0x8000; }
-
-/**
- * returns the piece that has been promoted to.
- * @param move
- * @return
- */
-bb::Piece move::promotionPiece(Move move) { return ((move & 0x3000) >> SHIFT_TYPE) + getMovingPiece(move) + 1; }
 
 /**
  * returns a string used for uci-output of the given move like: a2e3

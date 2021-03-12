@@ -436,7 +436,7 @@ void uci_position_fen(std::string fen, std::string moves) {
 
         assert(moving >= 0);
 
-        Type type;
+        MoveType type;
 
         if (s.size() > 4) {
 

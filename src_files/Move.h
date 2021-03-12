@@ -49,7 +49,7 @@ namespace move {
  */
 
 typedef uint32_t Move;
-typedef uint8_t  Type;
+typedef uint8_t  MoveType;
 typedef uint32_t MoveScore;
 
 constexpr Move MASK_4  = 15;
@@ -65,26 +65,32 @@ constexpr int SHIFT_CAPTURED_PIECE = 20;
 constexpr int SHIFT_SCORE_INFO     = 24;
 
 // https://www.chessprogramming.org/Encoding_Moves
-constexpr Type QUIET                    = 0;
-constexpr Type DOUBLED_PAWN_PUSH        = 1;
-constexpr Type KING_CASTLE              = 2;
-constexpr Type QUEEN_CASTLE             = 3;
-constexpr Type CAPTURE                  = 4;
-constexpr Type EN_PASSANT               = 5;
-constexpr Type KNIGHT_PROMOTION         = 8;
-constexpr Type BISHOP_PROMOTION         = 9;
-constexpr Type ROOK_PROMOTION           = 10;
-constexpr Type QUEEN_PROMOTION          = 11;
-constexpr Type KNIGHT_PROMOTION_CAPTURE = 12;
-constexpr Type BISHOP_PROMOTION_CAPTURE = 13;
-constexpr Type ROOK_PROMOTION_CAPTURE   = 14;
-constexpr Type QUEEN_PROMOTION_CAPTURE  = 15;
+enum MoveTypes{
+    QUIET                    = 0,
+    DOUBLED_PAWN_PUSH        = 1,
+    KING_CASTLE              = 2,
+    QUEEN_CASTLE             = 3,
+    CAPTURE                  = 4,
+    EN_PASSANT               = 5,
+    KNIGHT_PROMOTION         = 8,
+    BISHOP_PROMOTION         = 9,
+    ROOK_PROMOTION           = 10,
+    QUEEN_PROMOTION          = 11,
+    KNIGHT_PROMOTION_CAPTURE = 12,
+    BISHOP_PROMOTION_CAPTURE = 13,
+    ROOK_PROMOTION_CAPTURE   = 14,
+    QUEEN_PROMOTION_CAPTURE  = 15,
+};
 
-// Move genMove(const std::string str);
+enum MoveTypeMasks{
+    PROMOTION_MASK           = 0x8,
+    CAPTURE_MASK             = 0x4,
+    SPECIAL_MASK             = 0x3,
+};
 
-Move genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece);
+Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece);
 
-Move genMove(const bb::Square &from, const bb::Square &to, const Type &type, const bb::Piece &movingPiece,
+Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece,
              const bb::Piece &capturedPiece);
 
 inline bool sameMove(const Move& m1, const Move& m2) {
@@ -103,7 +109,7 @@ inline bb::Square getSquareFrom(const Move& move) { return ((move >> SHIFT_FROM)
 
 inline bb::Square getSquareTo(const Move& move) { return ((move >> SHIFT_TO) & MASK_6); }
 
-inline Type getType(const Move& move) { return ((move >> SHIFT_TYPE) & MASK_4); }
+inline MoveType getType(const Move& move) { return ((move >> SHIFT_TYPE) & MASK_4); }
 
 inline bb::Piece getMovingPiece(const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & MASK_4); }
 
@@ -119,7 +125,7 @@ inline void setSquareTo(Move& move, const bb::Square to) {
     move |= (to << SHIFT_TO);
 }
 
-inline void setType(Move& move, const Type type) {
+inline void setType(Move& move, const MoveType type) {
     // move = (move & ~(MASK_6 << SHIFT_TYPE));  //clearing
     move |= (type << SHIFT_TYPE);
 }
@@ -134,17 +140,31 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
 
-bool isDoubledPawnPush(Move move);
+inline bool isDoubledPawnPush(Move move){
+    
+    return getType(move) == DOUBLED_PAWN_PUSH;
+}
 
-bool isCapture(Move move);
+inline bool isCapture(Move move){
+    return move & 0x4000;
+}
 
-bool isCastle(Move move);
+inline bool isCastle(Move move){
+    MoveType t = getType(move);
+    return t == KING_CASTLE || t == QUEEN_CASTLE;
+}
 
-bool isEnPassant(Move move);
+inline bool isEnPassant(Move move){
+    return getType(move) == EN_PASSANT;
+}
 
-bool isPromotion(Move move);
+inline bool isPromotion(Move move){
+    return move & 0x8000;
+}
 
-bb::Piece promotionPiece(Move move);
+inline bb::Piece promotionPiece(Move move){
+    return ((move & 0x3000) >> SHIFT_TYPE) + getMovingPiece(move) + 1;
+}
 
 std::string toString(const Move &move);
 

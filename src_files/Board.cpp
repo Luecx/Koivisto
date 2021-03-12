@@ -391,7 +391,7 @@ void Board::move(Move m) {
     Square sqFrom = getSquareFrom(m);
     Square sqTo   = getSquareTo(m);
     Piece  pFrom  = getMovingPiece(m);
-    Type   mType  = getType(m);
+    MoveType mType  = getType(m);
     Color  color  = getActivePlayer();
     int    factor = getActivePlayer() == 0 ? 1 : -1;
 
@@ -539,7 +539,7 @@ void Board::undoMove() {
     Square sqFrom   = getSquareFrom(m);
     Square sqTo     = getSquareTo(m);
     Piece  pFrom    = getMovingPiece(m);
-    Type   mType    = getType(m);
+    MoveType mType    = getType(m);
     Piece  captured = getCapturedPiece(m);
     bool   isCap    = isCapture(m);
     Color  color    = getActivePlayer();
@@ -1530,7 +1530,7 @@ bool Board::isLegal(Move m) {
 
         U64 secure = ZERO;
 
-        Type t = getType(m);
+        MoveType t = getType(m);
         if (this->getActivePlayer() == WHITE) {
             secure = (t == QUEEN_CASTLE) ? bb::CASTLING_WHITE_QUEENSIDE_SAFE : bb::CASTLING_WHITE_KINGSIDE_SAFE;
             return (getAttackedSquares<BLACK>() & secure) == 0;
@@ -1655,12 +1655,6 @@ Square Board::getEnPassantSquare() {
 Color Board::getActivePlayer() { return m_activePlayer; }
 
 /**
- * returns a pointer to the board status which is used internally.
- * @return
- */
-BoardStatus* Board::getBoardStatus() { return &m_boardStatusHistory.back(); }
-
-/**
  * writes the board object to the given stream
  */
 std::ostream& operator<<(std::ostream& os, Board& board) {
@@ -1694,40 +1688,6 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
     os << "fen: " << board.fen() << std::endl;
     return os;
 }
-
-/**
- * returns a pointer to a bitboard which highlights all occupied squares by all pieces on the board
- * @return
- */
-U64* Board::getOccupiedBB() { return &m_occupiedBB; }
-
-/**
- * returns an array (pointer to the first element) which contains a bitboard for each piece on the board (12)
- * @return
- */
-const U64* Board::getPieceBB() const { return m_piecesBB; }
-
-/**
- * returns an array (pointer to the first element) which contains a bitboard for both teams.
- * @return
- */
-const U64* Board::getTeamOccupiedBB() const { return m_teamOccupiedBB; }
-
-/**
- * does the same as getPieceBB() although this only returns a single bitboard for the given piece type.
- * @param color
- * @param piece
- * @return
- */
-U64 Board::getPieceBB(Color color, Piece piece) { return m_piecesBB[color * 6 + piece]; }
-
-/**
- * does the same as getPieceBB() although this only returns a single bitboard for the given piece type.
- * @param color
- * @param piece
- * @return
- */
-template<Color color> U64 Board::getPieceBB(Piece piece) { return m_piecesBB[color * 6 + piece]; }
 
 /**
  * returns a bitboard of all pinned pieces of the given color.

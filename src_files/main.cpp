@@ -26,6 +26,7 @@
 
 #include <iomanip>
 #include "gradient.h"
+#include "movegen.h"
 
 using namespace std;
 using namespace bb;
@@ -34,6 +35,24 @@ using namespace move;
 
 int main(int argc, char *argv[]) {
 
+    
+//    bb_init();
+//
+//    Board b{"rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"};
+//    SearchData sd{};
+//    Depth ply = 0;
+//    MoveList mv{};
+//
+//    generateMoves(&b, &mv, 0, &sd, ply);
+//
+//    MoveList oldMV{};
+//    b.getPseudoLegalMoves(&oldMV);
+//
+//    std::cout << mv.getSize() << std::endl;
+//    for(int i = 0; i< mv.getSize(); i++){
+//
+//        std::cout << toString(mv.getMove(i)) << "  " << toString(oldMV.getMove(i)) << "   " << (mv.getMove(i) == oldMV.getMove(i)) << std::endl;
+//    }
 
     if (argc == 1) {
         uci_loop(false);
