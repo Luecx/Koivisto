@@ -21,6 +21,7 @@
 
 #include "History.h"
 #include "TimeManager.h"
+#include "movegen.h"
 #include "syzygy/tbprobe.h"
 
 #include <thread>
@@ -754,9 +755,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     b->getPseudoLegalMoves(mv);
     
     // create a moveorderer and assign the movelist to score the moves.
-    MoveOrderer moveOrderer {};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-    
+    generateMoves(b, mv, hashMove, sd, ply);
+    MoveOrderer moveOrderer {mv};
+
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
@@ -824,7 +825,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
-            
+
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
@@ -840,9 +841,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 if (score>=beta)
                     return score;
             }
-            b->getPseudoLegalMoves(mv);
-            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-            
+            generateMoves(b, mv, hashMove, sd, ply);
+            moveOrderer = {mv};
+
             m = moveOrderer.next();
         }
         
@@ -1051,8 +1052,8 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     b->getNonQuietMoves(mv);
     
     // create a moveorderer to sort the moves during the search
-    MoveOrderer moveOrderer {};
-    moveOrderer.setMovesQSearch(mv, b);
+    generateNonQuietMoves(b, mv);
+    MoveOrderer moveOrderer {mv};
     
     // keping track of the best move for the trasnpositions
     Move  bestMove  = 0;

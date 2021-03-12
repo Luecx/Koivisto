@@ -38,20 +38,28 @@ int main(int argc, char *argv[]) {
     
 //    bb_init();
 //
-//    Board b{"rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"};
+//    Board b{"r1b1k2r/p1q2p1p/np1bpn2/2pp1Np1/2B1P1Q1/2N1B3/PPP2PPP/R4RK1 w Qkq - 0 1"};
 //    SearchData sd{};
 //    Depth ply = 0;
 //    MoveList mv{};
 //
-//    generateMoves(&b, &mv, 0, &sd, ply);
+//    generateNonQuietMoves(&b, &mv, 0, &sd, ply);
 //
 //    MoveList oldMV{};
-//    b.getPseudoLegalMoves(&oldMV);
+//    b.getNonQuietMoves(&oldMV);
+//
+//    MoveOrderer orderer{&oldMV};
+//    orderer.setMovesQSearch(&oldMV,&b);// 0, &sd, &b, ply);
 //
 //    std::cout << mv.getSize() << std::endl;
 //    for(int i = 0; i< mv.getSize(); i++){
 //
-//        std::cout << toString(mv.getMove(i)) << "  " << toString(oldMV.getMove(i)) << "   " << (mv.getMove(i) == oldMV.getMove(i)) << std::endl;
+//        if(mv.getScore(i) != oldMV.getScore(i)){
+//            std::cerr << mv.getScore(i) << " " << oldMV.getScore(i) << std::endl;
+//        }
+//        std::cout << toString(mv.getMove(i)) << "  " << toString(oldMV.getMove(i)) << "   " << (mv.getMove(i) == oldMV.getMove(i)) <<
+//            "      " << mv.getScore(i) << " " << oldMV.getScore(i) <<
+//            std::endl;
 //    }
 
     if (argc == 1) {

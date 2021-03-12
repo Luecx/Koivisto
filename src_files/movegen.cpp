@@ -30,31 +30,31 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         // scoring for moves when all moves are generated
         
         if constexpr (isCapture){
-            Score     SEE    = board->staticExchangeEvaluation(m);
-            MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
-                               + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
+            Score     SEE    = board->staticExchangeEvaluation(move);
+            MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 6) - 10 * (getMovingPiece(move) % 6)
+                               + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
             if (SEE >= 0) {
                 if (mvvLVA == 0) {
-                    mv->scoreMove(idx, 50000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+                    mv->scoreMove(idx, 50000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
                 } else {
-                    mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+                    mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
                 }
             } else {
-                mv->scoreMove(idx, 10000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+                mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
         } else if constexpr (isPromotion){
-            MoveScore mvvLVA = (getCapturedPiece(m) % 6) - (getMovingPiece(m) % 6);
-            mv->scoreMove(idx, 40000 + mvvLVA + promotionPiece(m));
+            MoveScore mvvLVA = (getCapturedPiece(move) % 6) - (getMovingPiece(move) % 6);
+            mv->scoreMove(idx, 40000 + mvvLVA + promotionPiece(move));
         } else if (sd->isKiller(move, ply, c)){
-            mv->scoreMove(idx, 30001);
+            mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
         } else{
-            mv->scoreMove(idx, 20000 + sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove()));
+            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
         }
         
     }else if constexpr (m == GENERATE_NON_QUIET){
         // scoring when only non quiet moves are generated
-        MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
-                           + (getSquareTo(board->getPreviousMove()) == getSquareTo(m));
+        MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 6) - 10 * (getMovingPiece(move) % 6)
+                           + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
         mv->scoreMove(idx, 240 + mvvLVA);
         
     }
@@ -91,9 +91,9 @@ void generatePawnMoves(
     const Piece movingPiece = us * 6 + PAWN;
     
     U64 nonPromoAttacks = opponents & ~relative_rank_8_bb;
+    Square target;
     
     U64 attacks = pawnsLeft & nonPromoAttacks;
-    Square target;
     while (attacks) {
         target = bitscanForward(attacks);
         mv->add(genMove(target - left, target, CAPTURE, movingPiece, b->getPiece(target)));
@@ -109,22 +109,23 @@ void generatePawnMoves(
         attacks = lsbReset(attacks);
     }
     
-    U64 pawnPushes = pawnsCenter & ~relative_rank_8_bb;
-    
-    attacks = pawnPushes;
-    while (attacks) {
-        target = bitscanForward(attacks);
-        mv->add(genMove(target - forward, target, QUIET, movingPiece));
-        if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
-        attacks = lsbReset(attacks);
-    }
-    
-    attacks = (c == WHITE ? shiftNorth(pawnPushes) : shiftSouth(pawnPushes)) & relative_rank_4_bb & ~occupied;
-    while (attacks) {
-        target = bitscanForward(attacks);
-        mv->add(genMove(target - forward * 2, target, DOUBLED_PAWN_PUSH, movingPiece));
-        if constexpr (score) scoreMove<c, DOUBLED_PAWN_PUSH, m>(b, mv, hashMove, sd, ply);
-        attacks = lsbReset(attacks);
+    if constexpr (m != GENERATE_NON_QUIET){
+        U64 pawnPushes = pawnsCenter & ~relative_rank_8_bb;
+        attacks = pawnPushes;
+        while (attacks) {
+            target = bitscanForward(attacks);
+            mv->add(genMove(target - forward, target, QUIET, movingPiece));
+            if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
+            attacks = lsbReset(attacks);
+        }
+        
+        attacks = (c == WHITE ? shiftNorth(pawnPushes) : shiftSouth(pawnPushes)) & relative_rank_4_bb & ~occupied;
+        while (attacks) {
+            target = bitscanForward(attacks);
+            mv->add(genMove(target - forward * 2, target, DOUBLED_PAWN_PUSH, movingPiece));
+            if constexpr (score) scoreMove<c, DOUBLED_PAWN_PUSH, m>(b, mv, hashMove, sd, ply);
+            attacks = lsbReset(attacks);
+        }
     }
     
     if (pawnsLeft & b->getBoardStatus()->enPassantTarget) {
@@ -140,6 +141,7 @@ void generatePawnMoves(
     }
  
     if (pawns & RANK_7_BB) {
+        
         attacks = pawnsCenter & RANK_8_BB;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -153,7 +155,7 @@ void generatePawnMoves(
             if constexpr (score) scoreMove<c, KNIGHT_PROMOTION, m>(b, mv, hashMove, sd, ply);
             attacks = lsbReset(attacks);
         }
-
+        
         attacks = pawnsLeft & RANK_8_BB & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -230,20 +232,29 @@ void generatePieceMoves(
                 
             }
             attacks &= ~friendly;
-            
-            U64 quiets   = attacks & ~opponents;
-            while(quiets){
-                Square target = bitscanForward(quiets);
-                mv->add(genMove(square, target, QUIET, movingPiece));
-                if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
-                quiets = lsbReset(quiets);
-            }
-            attacks &= opponents;
+
+//            if constexpr (m != GENERATE_NON_QUIET){
+//                U64 quiets   = attacks & ~opponents;
+//                while(quiets){
+//                    Square target = bitscanForward(quiets);
+//                    mv->add(genMove(square, target, QUIET, movingPiece));
+//                    if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
+//                    quiets = lsbReset(quiets);
+//                }
+//            }
+           
+//            attacks &= opponents;
             while(attacks){
                 Square target = bitscanForward(attacks);
-                mv->add(genMove(square, target, CAPTURE, movingPiece, b->getPiece(target)));
-                if constexpr (score) scoreMove<c, CAPTURE, m>(b, mv, hashMove, sd, ply);
+                if(b->getPiece(target) != -1){
+                    mv->add(genMove(square, target, CAPTURE, movingPiece, b->getPiece(target)));
+                    if constexpr (score) scoreMove<c, CAPTURE, m>(b, mv, hashMove, sd, ply);
+                }else if constexpr (m != GENERATE_NON_QUIET){
+                    mv->add(genMove(square, target, QUIET, movingPiece));
+                    if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
+                }
                 attacks = lsbReset(attacks);
+               
             }
             
             pieceOcc = lsbReset(pieceOcc);
@@ -282,37 +293,41 @@ void generateKingMoves(
                 mv->add(genMove(s, target, CAPTURE, movingPiece, b->getPiece(target)));
                 if constexpr (score) scoreMove<c, CAPTURE, m>(b, mv, hashMove, sd, ply);
             } else {
-                mv->add(genMove(s, target, QUIET, movingPiece));
-                if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
+                if constexpr (m != GENERATE_NON_QUIET) {
+                    mv->add(genMove(s, target, QUIET, movingPiece));
+                    if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
+                }
             }
             
             attacks = lsbReset(attacks);
         }
-        
-        if constexpr (c == WHITE) {
-            
-            if (b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
-                && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
-                mv->add(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
-                if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
-            }
-            if (b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING) && b->getPiece(H1) == WHITE_ROOK
-                && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
-                mv->add(genMove(E1, G1, KING_CASTLE, WHITE_KING));
-                if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
-            }
-            
-        } else {
-            
-            if (b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
-                && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
-                mv->add(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
-                if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
-            }
-            if (b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING) && b->getPiece(H8) == BLACK_ROOK
-                && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
-                mv->add(genMove(E8, G8, KING_CASTLE, BLACK_KING));
-                if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
+    
+    
+        if constexpr (m != GENERATE_NON_QUIET) {
+            if constexpr (c == WHITE) {
+                if (b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
+                    && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
+                    mv->add(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
+                    if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
+                }
+                if (b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING) && b->getPiece(H1) == WHITE_ROOK
+                    && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
+                    mv->add(genMove(E1, G1, KING_CASTLE, WHITE_KING));
+                    if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
+                }
+                
+            } else {
+                
+                if (b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
+                    && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
+                    mv->add(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
+                    if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
+                }
+                if (b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING) && b->getPiece(H8) == BLACK_ROOK
+                    && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
+                    mv->add(genMove(E8, G8, KING_CASTLE, BLACK_KING));
+                    if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
+                }
             }
         }
         kings = lsbReset(kings);

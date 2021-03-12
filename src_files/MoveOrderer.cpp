@@ -22,20 +22,25 @@
 
 using namespace move;
 
-MoveOrderer::MoveOrderer() {}
+MoveOrderer::MoveOrderer(move::MoveList* p_moves) {
+    this->moves     = p_moves;
+    this->counter   = 0;
+    this->skip      = false;
+}
 
 MoveOrderer::~MoveOrderer() {}
 
+
 void MoveOrderer::setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove, SearchData* sd, Board* board,
                                    Depth ply) {
-
+    
     this->moves   = p_moves;
     this->counter = 0;
     this->skip    = false;
-
+    
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
-
+        
         if (sameMove(m, hashMove)) {
             moves->scoreMove(i, 1e6);
         } else if (isCapture(m)) {
@@ -67,10 +72,10 @@ void MoveOrderer::setMovesQSearch(move::MoveList* p_moves, Board* b) {
     this->moves   = p_moves;
     this->counter = 0;
     this->skip    = false;
-
+    
     for (int i = 0; i < moves->getSize(); i++) {
         move::Move m = moves->getMove(i);
-
+        
         MoveScore mvvLVA = 100 * (getCapturedPiece(m) % 6) - 10 * (getMovingPiece(m) % 6)
                            + (getSquareTo(b->getPreviousMove()) == getSquareTo(m));
         moves->scoreMove(i, 240 + mvvLVA);
