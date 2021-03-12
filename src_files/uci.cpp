@@ -455,7 +455,7 @@ void uci_position_fen(std::string fen, std::string moves) {
             }
 
         } else {
-            if ((moving % 6) == KING) {
+            if ((moving % 8) == KING) {
                 if (abs(s2 - s1) == 2) {
                     if (s2 > s1) {
                         type = KING_CASTLE;
@@ -469,7 +469,7 @@ void uci_position_fen(std::string fen, std::string moves) {
                         type = QUIET;
                     }
                 }
-            } else if ((moving % 6) == PAWN) {
+            } else if ((moving % 8) == PAWN) {
                 if (abs(s2 - s1) == 16) {
                     type = DOUBLED_PAWN_PUSH;
                 } else if (abs(s2 - s1) != 8) {

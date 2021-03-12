@@ -1011,16 +1011,16 @@ bool Board::isLegal(Move m) {
     if (getPieceType(getMovingPiece(m)) == KING) {
         thisKing = sqTo;
     }
-
+    
     if (isCap) {
         Piece captured = getCapturedPiece(m);
 
         unsetBit(this->m_piecesBB[captured], sqTo);
-        isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
+        isAttacked = isUnderAttack(thisKing, !this->getActivePlayer());
         setBit(this->m_piecesBB[captured], sqTo);
 
     } else {
-        isAttacked = isUnderAttack(thisKing, 1 - this->getActivePlayer());
+        isAttacked = isUnderAttack(thisKing, !this->getActivePlayer());
     }
 
     m_occupiedBB = occCopy;
