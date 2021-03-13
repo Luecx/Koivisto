@@ -34,7 +34,6 @@ bool MoveOrderer::hasNext() { return counter < moves->getSize(); }
 
 move::Move MoveOrderer::next() {
     if (skip) {
-        moves->scoreMove(counter, 0);
         return moves->getMove(counter++);
     }
     int bestIndex = counter;
@@ -44,7 +43,6 @@ move::Move MoveOrderer::next() {
             bestIndex = i;
         }
     }
-    moves->scoreMove(bestIndex, 0);
     moves->swap(bestIndex, counter);
     return moves->getMove(counter++);
 }
