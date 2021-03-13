@@ -21,6 +21,7 @@
 
 #include "History.h"
 #include "TimeManager.h"
+#include "movegen.h"
 #include "syzygy/tbprobe.h"
 
 #include <thread>
@@ -131,7 +132,7 @@ void search_stop() {
  */
 bool hasOnlyPawns(Board* board, Color color) {
     return board->getTeamOccupiedBB()[color]
-           == ((board->getPieceBB()[PAWN + color * 6] | board->getPieceBB()[KING + color * 6]));
+           == ((board->getPieceBB()[PAWN + color * 8] | board->getPieceBB()[KING + color * 8]));
 }
 
 /**
@@ -201,7 +202,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
         // get a movelist which can be used to store all pseudo legal moves
         MoveList mvStorage;
         // extract pseudo legal moves
-        b->getPseudoLegalMoves(&mvStorage);
+        generatePerftMoves(b, &mvStorage);
         
         bool moveContained = false;
         // check if the move is actually valid for the position
@@ -296,8 +297,8 @@ Score getWDL(Board* board) {
         board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
         board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
         board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingChance(0) | board->getCastlingChance(1) | board->getCastlingChance(2)
-        | board->getCastlingChance(3),
+        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
+        | board->getCastlingRights(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE);
     
     // if the result failed, we return the max_mate_score internally. This is not used within the search and will be
@@ -342,8 +343,8 @@ Move getDTZMove(Board* board) {
         board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
         board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
         board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingChance(0) | board->getCastlingChance(1) | board->getCastlingChance(2)
-        | board->getCastlingChance(3),
+        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
+        | board->getCastlingRights(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE, NULL);
     
     // if the result failed for some reason or the game is over, dont do anything
@@ -381,7 +382,7 @@ Move getDTZMove(Board* board) {
     
     // we generate all pseudo legal moves and check for equality between the moves to make sure the bits are correct.
     MoveList* mv = new MoveList();
-    board->getPseudoLegalMoves(mv);
+    generatePerftMoves(board, mv);
     
     for (int i = 0; i < mv->getSize(); i++) {
         // get the current move from the movelist
@@ -389,7 +390,7 @@ Move getDTZMove(Board* board) {
         
         // check if its the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && promotionPiece(m) % 6 == promo)) {
+            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && promotionPiece(m) % 8 == promo)) {
                 
                 std::cout << "info"
                              " depth "
@@ -750,13 +751,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // we reuse movelists for memory reasons.
     MoveList* mv = sd->moves[ply];
     
-    // store all the moves inside the movelist
-    b->getPseudoLegalMoves(mv);
-    
     // create a moveorderer and assign the movelist to score the moves.
-    MoveOrderer moveOrderer {};
-    moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-    
+    generateMoves(b, mv, hashMove, sd, ply);
+    MoveOrderer moveOrderer {mv};
+
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
@@ -800,7 +798,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
             // consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)
+            if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
@@ -811,7 +809,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
-        if (isCapture(m) && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6)) {
+        if (isCapture(m) && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
         
@@ -824,7 +822,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
-            
+
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
@@ -840,9 +838,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 if (score>=beta)
                     return score;
             }
-            b->getPseudoLegalMoves(mv);
-            moveOrderer.setMovesPVSearch(mv, hashMove, sd, b, ply);
-            
+            generateMoves(b, mv, hashMove, sd, ply);
+            moveOrderer = {mv};
+
             m = moveOrderer.next();
         }
         
@@ -863,7 +861,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (isPromotion && (promotionPiece(m) % 6 == QUEEN)))
+                     || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
@@ -975,6 +973,44 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     return alpha;
 }
 
+void compare(MoveList* mv1, MoveList* mv2){
+    if(mv1->getSize() != mv2->getSize()){
+        std::cout << "size not matching:" << mv1->getSize() << " " << mv2->getSize() << std::endl;
+        exit(-1);
+    }
+    bool similar = true;
+    for(int i = 0; i< mv1->getSize(); i++){
+        
+        if(mv1->getMove(i) != mv2->getMove(i)){
+//            std::cerr << mv1->getMove(i) << " " << mv2->getMove(i) << std::endl;
+//            exit(-1);
+similar = false;
+        }
+        
+        if(mv1->getScore(i) != mv2->getScore(i)){
+//            std::cerr << mv1->getScore(i) << " " << mv2->getScore(i) << std::endl;
+            similar = false;
+        }
+    }
+    
+    if(!similar){
+        for(int i = 0; i< mv1->getSize(); i++){
+
+//        if(mv1->getMove(i) != mv2->getMove(i)){
+            std::cerr << toString(mv1->getMove(i)) << " " << toString(mv2->getMove(i)) << std::endl;
+//            exit(-1);
+//        }
+
+//        if(mv1->getScore(i) != mv2->getScore(i)){
+            std::cerr << mv1->getScore(i) << " " << mv2->getScore(i) << std::endl;
+//            exit(-1);
+//        }
+        }
+        exit(-1);
+    }
+    
+}
+
 /**
  * a more selective search than pv-search in which we only consider captures and promitions.
  *
@@ -1048,13 +1084,12 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // getNonQuietMoves() although they are not quiet.
     //
     MoveList* mv = sd->moves[ply];
-    b->getNonQuietMoves(mv);
     
     // create a moveorderer to sort the moves during the search
-    MoveOrderer moveOrderer {};
-    moveOrderer.setMovesQSearch(mv, b);
+    generateNonQuietMoves(b, mv);
+    MoveOrderer moveOrderer {mv};
     
-    // keping track of the best move for the trasnpositions
+    // keping track of the best move for the transpositions
     Move  bestMove  = 0;
     Score bestScore = -MAX_MATE_SCORE;
 
@@ -1071,7 +1106,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
         // consider this quiet move as well.
         // **********************************************************************************************************
-        if (!inCheck && (getCapturedPiece(m) % 6) < (getMovingPiece(m) % 6) && b->staticExchangeEvaluation(m) < 0)
+        if (!inCheck && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
             continue;
             
         b->move(m);

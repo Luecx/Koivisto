@@ -26,6 +26,7 @@
 
 #include <iomanip>
 #include "gradient.h"
+#include "movegen.h"
 
 using namespace std;
 using namespace bb;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         uci_loop(true);
     }
-
+    
 //
 //using namespace tuning;
 //
