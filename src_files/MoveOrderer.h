@@ -32,15 +32,11 @@ class MoveOrderer {
 
     public:
     bool skip;
-
-    MoveOrderer();
+    
+    MoveOrderer(move::MoveList* p_moves);
 
     virtual ~MoveOrderer();
-
-    void setMovesPVSearch(move::MoveList* p_moves, move::Move hashMove, SearchData* sd, Board* board, Depth ply);
-
-    void setMovesQSearch(move::MoveList* p_moves, Board* b);
-
+    
     bool hasNext();
 
     move::Move next();

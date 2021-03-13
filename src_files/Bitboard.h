@@ -44,6 +44,7 @@ typedef int8_t   Direction;
 typedef int8_t  File;
 typedef int8_t  Rank;
 typedef int8_t  Piece;
+typedef int8_t  PieceType;
 typedef bool    Color;
 
 typedef uint8_t Depth;
@@ -88,13 +89,13 @@ enum Pieces{
     WHITE_ROOK   = 3,
     WHITE_QUEEN  = 4,
     WHITE_KING   = 5,
-    BLACK_PAWN   = 6,
-    BLACK_KNIGHT = 7,
-    BLACK_BISHOP = 8,
-    BLACK_ROOK   = 9,
-    BLACK_QUEEN  = 10,
-    BLACK_KING   = 11,
-    N_PIECES     = 12
+    BLACK_PAWN   = 8,
+    BLACK_KNIGHT = 9,
+    BLACK_BISHOP = 10,
+    BLACK_ROOK   = 11,
+    BLACK_QUEEN  = 12,
+    BLACK_KING   = 13,
+    N_PIECES     = 14
 };
 
 enum Squares{
@@ -153,7 +154,7 @@ constexpr char const* SQUARE_IDENTIFIER[] {
     "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 };
 
-constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
+constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K',' ' ,' ','p', 'n', 'b', 'r', 'q', 'k'};
 
 
 
@@ -409,9 +410,6 @@ template<class T> inline T max(const T a, const T b) {
     return (a < b) ? b : a;    // or: return comp(a,b)?b:a; for version (2)
 }
 
-void generateData();
-
-U64 generateSlidingAttacks(Square sq, Direction direction, U64 occ);
 
 inline Rank rankIndex(Square square_index) { return square_index >> 3; }
 
@@ -438,6 +436,18 @@ inline AntiDiagonal antiDiagonalIndex(const Square& square_index) {
 inline Diagonal diagonalIndex(Rank rank, File file) { return 7 + rank - file; }
 
 inline AntiDiagonal antiDiagonalIndex(Rank rank, File file) { return rank + file; }
+
+inline Color getPieceColor(Piece p){
+    return p & 0x8;
+}
+
+inline PieceType getPieceType(Piece p){
+    return p & 0x7;
+}
+
+inline Piece getPiece(Color c, PieceType pt){
+    return c * 8 + pt;
+}
 
 /**
  * toggles the bit
@@ -691,6 +701,15 @@ void generateZobristKeys();
 U64 populateMask(U64 mask, U64 index);
 
 /**
+ * generate sliding attacks
+ * @param sq
+ * @param direction
+ * @param occ
+ * @return
+ */
+U64 generateSlidingAttacks(Square sq, Direction direction, U64 occ);
+
+/**
  * Generates all attackable squares by a rook from the given square considering the occupied squares.
  * Assumes that the occupied squares can be captured.
  * @param sq
@@ -709,6 +728,11 @@ U64 generateRookAttack(Square sq, U64 occupied);
 U64 generateBishopAttack(Square sq, U64 occupied);
 
 /**
+ * generates some relevant data
+ */
+void generateData();
+
+/**
  * initiates the entries for fancy magic bitboard and zobrist hash values.
  */
 void bb_init();
@@ -718,8 +742,18 @@ void bb_init();
  */
 void bb_cleanUp();
 
+/**
+ * generates a random Bitboard
+ * @return
+ */
 U64 randU64();
 
+/**
+ * generates a random double between min and max
+ * @param min
+ * @param max
+ * @return
+ */
 double randDouble(double min = 0, double max = 1);
 
 /**

@@ -210,10 +210,10 @@ void bb::generateZobristKeys() {
     all_hashes = new U64*[N_PIECES];
     for (int i = 0; i < 6; i++) {
         all_hashes[i]     = new U64[64];
-        all_hashes[i + 6] = new U64[64];
+        all_hashes[i + 8] = new U64[64];
         for (int n = 0; n < 64; n++) {
             all_hashes[i][n]     = randU64();
-            all_hashes[i + 6][n] = randU64();
+            all_hashes[i + 8][n] = randU64();
         }
     }
 }
