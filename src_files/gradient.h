@@ -152,11 +152,11 @@ namespace tuning {
         void init(Board *b) {
             phase =
                     (24.0f + phaseValues[5] -
-                     phaseValues[0] * bitCount(b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])
-                     - phaseValues[1] * bitCount(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[BLACK_KNIGHT])
-                     - phaseValues[2] * bitCount(b->getPieces()[WHITE_BISHOP] | b->getPieces()[BLACK_BISHOP])
-                     - phaseValues[3] * bitCount(b->getPieces()[WHITE_ROOK] | b->getPieces()[BLACK_ROOK])
-                     - phaseValues[4] * bitCount(b->getPieces()[WHITE_QUEEN] | b->getPieces()[BLACK_QUEEN]))
+                     phaseValues[0] * bitCount  (b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
+                     - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
+                     - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
+                     - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
+                     - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
                     / 24.0f;
 
             if (phase > 1)
@@ -188,13 +188,13 @@ namespace tuning {
 
         void init(Board *b) {
 
-            bool wKSide = (fileIndex(bitscanForward(b->getPieces(WHITE, KING))) > 3 ? 0 : 1);
-            bool bKSide = (fileIndex(bitscanForward(b->getPieces(BLACK, KING))) > 3 ? 0 : 1);
+            bool wKSide = (fileIndex(bitscanForward(b->getPieceBB(WHITE, KING))) > 3 ? 0 : 1);
+            bool bKSide = (fileIndex(bitscanForward(b->getPieceBB(BLACK, KING))) > 3 ? 0 : 1);
             sameside_castle = wKSide == bKSide;
 
             for (Piece p = PAWN; p <= KING; p++) {
-                for (Color c = WHITE; c <= BLACK; c++) {
-                    U64 k = b->getPieces(c, p);
+                for (Color c: {WHITE, BLACK}) {
+                    U64 k = b->getPieceBB(c, p);
                     while (k) {
                         Square s = bitscanForward(k);
 
@@ -291,12 +291,12 @@ namespace tuning {
 
         void init(Board *b) {
 
-            Square wKingSq = bitscanForward(b->getPieces(WHITE, KING));
-            Square bKingSq = bitscanForward(b->getPieces(BLACK, KING));
+            Square wKingSq = bitscanForward(b->getPieceBB(WHITE, KING));
+            Square bKingSq = bitscanForward(b->getPieceBB(BLACK, KING));
 
             for (Piece p = PAWN; p <= PAWN; p++) {
-                for (Color c = WHITE; c <= BLACK; c++) {
-                    U64 k = b->getPieces(c, p);
+                for (Color c: {WHITE, BLACK}) {
+                    U64 k = b->getPieceBB(c, p);
                     while (k) {
                         Square s = bitscanForward(k);
 
@@ -389,12 +389,12 @@ namespace tuning {
             U64 k;
             Square square;
             U64 attacks;
-            U64 occupied = *(b->getOccupied());
+            U64 occupied = *(b->getOccupiedBB());
 
             static int factors[6] = {0, 2, 2, 3, 4};
 
-            Square whiteKingSquare = bitscanForward(b->getPieces(WHITE, KING));
-            Square blackKingSquare = bitscanForward(b->getPieces(BLACK, KING));
+            Square whiteKingSquare = bitscanForward(b->getPieceBB(WHITE, KING));
+            Square blackKingSquare = bitscanForward(b->getPieceBB(BLACK, KING));
 
             U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
             U64 blackKingZone = KING_ATTACKS[blackKingSquare];
@@ -406,8 +406,8 @@ namespace tuning {
             int bkingSafety_valueOfAttacks = 0;
 
             for (Piece p = KNIGHT; p <= QUEEN; p++) {
-                for (Color c = WHITE; c <= BLACK; c++) {
-                    k = b->getPieces(c, p);
+                for (Color c: {WHITE, BLACK}) {
+                    k = b->getPieceBB(c, p);
                     while (k) {
                         square = bitscanForward(k);
                         attacks = ZERO;
@@ -417,18 +417,18 @@ namespace tuning {
                                 break;
                             case BISHOP:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, QUEEN));
+                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
                                 break;
                             case QUEEN:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, BISHOP)) |
-                                        lookUpRookAttack    (square, occupied &~b->getPieces(c, ROOK));
+                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, BISHOP)) |
+                                        lookUpRookAttack    (square, occupied &~b->getPieceBB(c, ROOK));
                                 break;
                             case ROOK:
                                 attacks =
                                         lookUpRookAttack    (square,occupied &
-                                                                    ~b->getPieces(c, QUEEN)&
-                                                                    ~b->getPieces(c, ROOK));
+                                                                    ~b->getPieceBB(c, QUEEN)&
+                                                                    ~b->getPieceBB(c, ROOK));
                                 break;
                         }
                         if (c == WHITE) {
@@ -476,26 +476,26 @@ namespace tuning {
             U64 k;
             Square square;
 
-            U64 whitePawns = b->getPieces(WHITE, PAWN);
-            U64 blackPawns = b->getPieces(BLACK, PAWN);
+            U64 whitePawns = b->getPieceBB(WHITE, PAWN);
+            U64 blackPawns = b->getPieceBB(BLACK, PAWN);
 
-            k = b->getPieces()[WHITE_BISHOP];
+            k = b->getPieceBB()[WHITE_BISHOP];
             while (k) {
                 square = bitscanForward(k);
                 count_e[bitCount(
-                        blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += 1;
+                        blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
                 count_o[bitCount(
-                        whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] += 1;
+                        whitePawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
                 k = lsbReset(k);
             }
 
-            k = b->getPieces()[BLACK_BISHOP];
+            k = b->getPieceBB()[BLACK_BISHOP];
             while (k) {
                 square = bitscanForward(k);
                 count_e[bitCount(
-                        whitePawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] -= 1;
+                        whitePawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] -= 1;
                 count_o[bitCount(
-                        blackPawns & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES))] -= 1;
+                        blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] -= 1;
                 k = lsbReset(k);
             }
         }
@@ -534,11 +534,11 @@ namespace tuning {
         int8_t count[16]{};
 
         void init(Board *b) {
-            U64 whiteTeam = b->getTeamOccupied()[WHITE];
-            U64 blackTeam = b->getTeamOccupied()[BLACK];
+            U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
+            U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
 
-            U64 whitePawns = b->getPieces()[WHITE_PAWN];
-            U64 blackPawns = b->getPieces()[BLACK_PAWN];
+            U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
+            U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
 
             U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
             U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
@@ -586,14 +586,14 @@ namespace tuning {
             U64 k, attacks;
             Square square;
 
-            Square whiteKingSquare = bitscanForward(b->getPieces(WHITE, KING));
-            Square blackKingSquare = bitscanForward(b->getPieces(BLACK, KING));
+            Square whiteKingSquare = bitscanForward(b->getPieceBB(WHITE, KING));
+            Square blackKingSquare = bitscanForward(b->getPieceBB(BLACK, KING));
 
-            U64 whitePawns = b->getPieces()[WHITE_PAWN];
-            U64 blackPawns = b->getPieces()[BLACK_PAWN];
+            U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
+            U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
 
-            U64 whiteTeam = b->getTeamOccupied()[WHITE];
-            U64 blackTeam = b->getTeamOccupied()[BLACK];
+            U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
+            U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
 
             // all passed pawns for white/black
             U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
@@ -626,7 +626,7 @@ namespace tuning {
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     
-            U64 occupied = *b->getOccupied();
+            U64 occupied = *b->getOccupiedBB();
             U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
             U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied)  & ~whiteTeam;
             U64 wKingRookAttacks   = lookUpRookAttack  (whiteKingSquare, occupied)  & ~blackTeam;
@@ -662,12 +662,12 @@ namespace tuning {
                     +bitCount(whiteBlockedPawns)
                     - bitCount(blackBlockedPawns));
             count[I_MINOR_BEHIND_PAWN] += (
-                    +bitCount(shiftNorth(b->getPieces()[WHITE_KNIGHT] | b->getPieces()[WHITE_BISHOP]) &
-                              (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN]))
-                    - bitCount(shiftSouth(b->getPieces()[BLACK_KNIGHT] | b->getPieces()[BLACK_BISHOP]) &
-                               (b->getPieces()[WHITE_PAWN] | b->getPieces()[BLACK_PAWN])));
+                    +bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[WHITE_BISHOP]) &
+                              (b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN]))
+                    - bitCount(shiftSouth(b->getPieceBB()[BLACK_KNIGHT] | b->getPieceBB()[BLACK_BISHOP]) &
+                               (b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])));
 
-            k = b->getPieces()[WHITE_KNIGHT];
+            k = b->getPieceBB()[WHITE_KNIGHT];
             while (k) {
                 square = bitscanForward(k);
                 attacks = KNIGHT_ATTACKS[square];
@@ -677,7 +677,7 @@ namespace tuning {
                 k = lsbReset(k);
             }
 
-            k = b->getPieces()[BLACK_KNIGHT];
+            k = b->getPieceBB()[BLACK_KNIGHT];
             while (k) {
                 square = bitscanForward(k);
                 attacks = KNIGHT_ATTACKS[square];
@@ -688,12 +688,12 @@ namespace tuning {
             }
 
 
-            k = b->getPieces()[WHITE_BISHOP];
+            k = b->getPieceBB()[WHITE_BISHOP];
             while (k) {
                 square = bitscanForward(k);
-                attacks = lookUpBishopAttack(square, occupied & ~b->getPieces()[WHITE_QUEEN]);
+                attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_QUEEN]);
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] +=
-                        bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+                        bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                 count[I_BISHOP_FIANCHETTO] +=
                         (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
                          && whitePawns & (ONE << G3 | ONE << G4));
@@ -704,12 +704,12 @@ namespace tuning {
                 k = lsbReset(k);
             }
 
-            k = b->getPieces()[BLACK_BISHOP];
+            k = b->getPieceBB()[BLACK_BISHOP];
             while (k) {
                 square = bitscanForward(k);
-                attacks = lookUpBishopAttack(square, occupied & ~b->getPieces()[BLACK_QUEEN]);
+                attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_QUEEN]);
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] -=
-                        bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES) ? WHITE_SQUARES : BLACK_SQUARES));
+                        bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                 count[I_BISHOP_FIANCHETTO] -=
                         (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
                          && blackPawns & (ONE << G6 | ONE << G5));
@@ -721,23 +721,23 @@ namespace tuning {
                 k = lsbReset(k);
             }
             count[I_BISHOP_DOUBLED] += (
-                    +(bitCount(b->getPieces()[WHITE_BISHOP]) == 2)
-                    - (bitCount(b->getPieces()[BLACK_BISHOP]) == 2));
+                    +(bitCount(b->getPieceBB()[WHITE_BISHOP]) == 2)
+                    - (bitCount(b->getPieceBB()[BLACK_BISHOP]) == 2));
     
     
-            k = b->getPieces()[WHITE_ROOK];
+            k = b->getPieceBB()[WHITE_ROOK];
             while (k) {
                 square  = bitscanForward(k);
-                attacks = lookUpRookAttack(square, occupied & ~b->getPieces()[WHITE_ROOK] & ~b->getPieces()[WHITE_QUEEN]);
+                attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[WHITE_ROOK] & ~b->getPieceBB()[WHITE_QUEEN]);
                 count[I_SAFE_ROOK_CHECK] += bitCount(bKingRookAttacks & attacks & ~blackPawnCover);
 
                 k = lsbReset(k);
             }
     
-            k = b->getPieces()[BLACK_ROOK];
+            k = b->getPieceBB()[BLACK_ROOK];
             while (k) {
                 square  = bitscanForward(k);
-                attacks = lookUpRookAttack(square, occupied & ~b->getPieces()[BLACK_ROOK] & ~b->getPieces()[BLACK_QUEEN]);
+                attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[BLACK_ROOK] & ~b->getPieceBB()[BLACK_QUEEN]);
     
                 count[I_SAFE_ROOK_CHECK] -= bitCount(wKingRookAttacks & attacks & ~whitePawnCover);
 
@@ -745,37 +745,37 @@ namespace tuning {
             }
 
             count[I_ROOK_KING_LINE] += (
-                    +bitCount(lookUpRookAttack(blackKingSquare, *b->getOccupied()) & b->getPieces(WHITE, ROOK))
-                    - bitCount(lookUpRookAttack(whiteKingSquare, *b->getOccupied()) & b->getPieces(BLACK, ROOK)));
+                    + bitCount(lookUpRookAttack(blackKingSquare, *b->getOccupiedBB()) & b->getPieceBB(WHITE, ROOK))
+                    - bitCount(lookUpRookAttack(whiteKingSquare, *b->getOccupiedBB()) & b->getPieceBB(BLACK, ROOK)));
             count[I_ROOK_OPEN_FILE] += (
-                    +bitCount(openFiles & b->getPieces(WHITE, ROOK))
-                    - bitCount(openFiles & b->getPieces(BLACK, ROOK)));
+                    + bitCount(openFiles & b->getPieceBB(WHITE, ROOK))
+                    - bitCount(openFiles & b->getPieceBB(BLACK, ROOK)));
             count[I_ROOK_HALF_OPEN_FILE] += (
-                    +bitCount(openFilesBlack & ~openFiles & b->getPieces(WHITE, ROOK))
-                    - bitCount(openFilesWhite & ~openFiles & b->getPieces(BLACK, ROOK)));
+                    + bitCount(openFilesBlack & ~openFiles & b->getPieceBB(WHITE, ROOK))
+                    - bitCount(openFilesWhite & ~openFiles & b->getPieceBB(BLACK, ROOK)));
 
 
-            k = b->getPieces()[WHITE_QUEEN];
+            k = b->getPieceBB()[WHITE_QUEEN];
             while (k) {
                 square = bitscanForward(k);
-                attacks = lookUpRookAttack  (square,    occupied & ~b->getPieces()[WHITE_ROOK])
-                        | lookUpBishopAttack(square,    occupied & ~b->getPieces()[WHITE_BISHOP]);
+                attacks = lookUpRookAttack  (square,    occupied & ~b->getPieceBB()[WHITE_ROOK])
+                        | lookUpBishopAttack(square,    occupied & ~b->getPieceBB()[WHITE_BISHOP]);
                 count[I_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
                 count[I_SAFE_QUEEN_CHECK]          += bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~blackPawnCover);
                 k = lsbReset(k);
             }
 
-            k = b->getPieces()[BLACK_QUEEN];
+            k = b->getPieceBB()[BLACK_QUEEN];
             while (k) {
                 square = bitscanForward(k);
-                attacks = lookUpRookAttack  (square,    occupied & ~b->getPieces()[BLACK_ROOK])
-                        | lookUpBishopAttack(square,    occupied & ~b->getPieces()[BLACK_BISHOP]);
+                attacks = lookUpRookAttack  (square,    occupied & ~b->getPieceBB()[BLACK_ROOK])
+                        | lookUpBishopAttack(square,    occupied & ~b->getPieceBB()[BLACK_BISHOP]);
                 count[I_QUEEN_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
                 count[I_SAFE_QUEEN_CHECK]          -= bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~whitePawnCover);
                 k = lsbReset(k);
             }
 
-            k = b->getPieces()[WHITE_KING];
+            k = b->getPieceBB()[WHITE_KING];
             while (k) {
                 square = bitscanForward(k);
                 count[I_KING_PAWN_SHIELD] += bitCount(KING_ATTACKS[square] & whitePawns);
@@ -783,7 +783,7 @@ namespace tuning {
                 k = lsbReset(k);
             }
 
-            k = b->getPieces()[BLACK_KING];
+            k = b->getPieceBB()[BLACK_KING];
             while (k) {
                 square = bitscanForward(k);
                 count[I_KING_PAWN_SHIELD] -= bitCount(KING_ATTACKS[square] & blackPawns);
@@ -792,10 +792,10 @@ namespace tuning {
             }
 
             count[I_CASTLING_RIGHTS] += (
-                    +b->getCastlingChance(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
-                    + b->getCastlingChance(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
-                    - b->getCastlingChance(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-                    - b->getCastlingChance(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                    + b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
+                    + b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
+                    - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
+                    - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
             count[I_SIDE_TO_MOVE] += (b->getActivePlayer() == WHITE ? 1 : -1);
         }
 
@@ -822,22 +822,22 @@ namespace tuning {
         void init(Board *b) {
 
 
-            for (Color color = WHITE; color <= BLACK; color++) {
+            for (Color color: {WHITE, BLACK}) {
 
                 Color us = color;
                 Color them = 1 - color;
 
                 // figure out where the opponent has pieces
-                U64 opponentOcc = b->getTeamOccupied()[them];
-                U64 ourOcc = b->getTeamOccupied()[us];
+                U64 opponentOcc = b->getTeamOccupiedBB()[them];
+                U64 ourOcc = b->getTeamOccupiedBB()[us];
 
                 // get the pieces which can pin our king
-                U64 bishops = b->getPieces(them, BISHOP);
-                U64 rooks = b->getPieces(them, ROOK);
-                U64 queens = b->getPieces(them, QUEEN);
+                U64 bishops = b->getPieceBB(them, BISHOP);
+                U64 rooks = b->getPieceBB(them, ROOK);
+                U64 queens = b->getPieceBB(them, QUEEN);
 
                 // get the king positions
-                Square kingSq = bitscanForward(b->getPieces(us, KING));
+                Square kingSq = bitscanForward(b->getPieceBB(us, KING));
 
                 // get the potential pinners for rook/bishop attacks
                 U64 rookAttacks = lookUpRookAttack(kingSq, opponentOcc) & (rooks | queens);
@@ -866,9 +866,9 @@ namespace tuning {
 
                     // normalise the values (black pieces will be made to white pieces)
                     if (us == WHITE) {
-                        pinnerPiece -= 6;
+                        pinnerPiece -= 8;
                     } else {
-                        pinnedPiece -= 6;
+                        pinnedPiece -= 8;
                     }
 
 
@@ -902,13 +902,13 @@ namespace tuning {
         int8_t count[5]{};
 
         void init(Board *b) {
-            U64 WnotAttacked = ~b->getAttackedSquares(WHITE);
-            U64 BnotAttacked = ~b->getAttackedSquares(BLACK);
+            U64 WnotAttacked = ~b->getAttackedSquares<WHITE>();
+            U64 BnotAttacked = ~b->getAttackedSquares<BLACK>();
 
             for (int i = PAWN; i <= QUEEN; i++) {
                 count[i] =
-                        +bitCount(b->getPieces(WHITE, i) & WnotAttacked)
-                        - bitCount(b->getPieces(BLACK, i) & BnotAttacked);
+                        +bitCount(b->getPieceBB(WHITE, i) & WnotAttacked)
+                        - bitCount(b->getPieceBB(BLACK, i) & BnotAttacked);
             }
         }
 
@@ -938,18 +938,26 @@ namespace tuning {
 
             U64 k, attacks;
             Square square;
+        
+            U64 whitePawns = b->getPieceBB(WHITE, PAWN);
+            U64 blackPawns = b->getPieceBB(BLACK, PAWN);
 
-            U64 whitePawnCover = shiftNorthEast(b->getPieces(WHITE, PAWN)) | shiftNorthWest(b->getPieces(WHITE, PAWN));
-            U64 blackPawnCover = shiftSouthEast(b->getPieces(BLACK, PAWN)) | shiftSouthWest(b->getPieces(BLACK, PAWN));
+            U64 whitePawnCover = shiftNorthEast(b->getPieceBB(WHITE, PAWN)) | shiftNorthWest(b->getPieceBB(WHITE, PAWN));
+            U64 blackPawnCover = shiftSouthEast(b->getPieceBB(BLACK, PAWN)) | shiftSouthWest(b->getPieceBB(BLACK, PAWN));
 
-            U64 mobilitySquaresWhite = ~(b->getTeamOccupied()[WHITE]) & ~(blackPawnCover);
-            U64 mobilitySquaresBlack = ~(b->getTeamOccupied()[BLACK]) & ~(whitePawnCover);
+            U64 mobilitySquaresWhite = ~(b->getTeamOccupiedBB()[WHITE]) & ~(blackPawnCover);
+            U64 mobilitySquaresBlack = ~(b->getTeamOccupiedBB()[BLACK]) & ~(whitePawnCover);
 
-            U64 occupied = *b->getOccupied();
+            U64 occupied = *b->getOccupiedBB();
+    
+            indices_white[PAWN][0] = 1;
+            indices_black[PAWN][0] = 1;
+            indices_white[PAWN][1] = bitCount(shiftNorth(whitePawns) & ~occupied) + bitCount(whitePawnCover & ~b->getTeamOccupiedBB<BLACK>());
+            indices_black[PAWN][1] = bitCount(shiftNorth(blackPawns) & ~occupied) + bitCount(blackPawnCover & ~b->getTeamOccupiedBB<WHITE>());
 
             for (Piece p = KNIGHT; p <= QUEEN; p++) {
-                for (Color c = WHITE; c <= BLACK; c++) {
-                    k = b->getPieces(c, p);
+                for (Color c: {WHITE, BLACK}) {
+                    k = b->getPieceBB(c, p);
                     while (k) {
                         square = bitscanForward(k);
                         attacks = ZERO;
@@ -959,18 +967,18 @@ namespace tuning {
                                 break;
                             case BISHOP:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, QUEEN));
+                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
                                 break;
                             case QUEEN:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieces(c, BISHOP)) |
-                                        lookUpRookAttack    (square, occupied &~b->getPieces(c, ROOK));
+                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, BISHOP)) |
+                                        lookUpRookAttack    (square, occupied &~b->getPieceBB(c, ROOK));
                                 break;
                             case ROOK:
                                 attacks =
                                         lookUpRookAttack    (square,occupied &
-                                                ~b->getPieces(c, QUEEN)&
-                                                ~b->getPieces(c, ROOK));
+                                                ~b->getPieceBB(c, QUEEN)&
+                                                ~b->getPieceBB(c, ROOK));
                                 break;
                         }
                         if (c == WHITE) {
@@ -1633,16 +1641,17 @@ namespace tuning {
         // --------------------------------- mobility ---------------------------------
 
         const static std::string mobility_names[]{
+                "EvalScore mobilityPawns[24] = {",
                 "EvalScore mobilityKnight[9] = {",
                 "EvalScore mobilityBishop[14] = {",
                 "EvalScore mobilityRook[15] = {",
                 "EvalScore mobilityQueen[28] = {",};
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             std::cout << mobility_names[i];
-            for (int n = 0; n < mobEntryCount[i + 1]; n++) {
+            for (int n = 0; n < mobEntryCount[i]; n++) {
                 if (n % 5 == 0) std::cout << std::endl << "\t";
-                std::cout << threadData[0].w_mobility[i + 1][n] << ", ";
+                std::cout << threadData[0].w_mobility[i][n] << ", ";
             }
             std::cout << "};\n" << std::endl;
         }
