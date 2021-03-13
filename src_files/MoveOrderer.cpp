@@ -44,7 +44,6 @@ move::Move MoveOrderer::next() {
             bestIndex = i;
         }
     }
-    moves->scoreMove(bestIndex, 0);
     moves->swap(bestIndex, counter);
     return moves->getMove(counter++);
 }

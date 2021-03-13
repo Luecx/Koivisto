@@ -766,8 +766,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Move m = moveOrderer.next();
         
         // if the move is the move we want to skip, skip this move (used for extensions)
-        if (sameMove(m, skipMove))
+        if (sameMove(m, skipMove)) {
+            moveOrderer.moves->scoreMove(moveOrderer.counter-1, 0);
             continue;
+        }
         
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
@@ -786,9 +788,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth]) {
                     moveOrderer.skip = true;
+                    moveOrderer.moves->scoreMove(moveOrderer.counter-1, 0);
                     continue;
                 }
                 if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 200-30*(depth*depth)){
+                    moveOrderer.moves->scoreMove(moveOrderer.counter-1, 0);
                     continue;
                 }
             }
@@ -799,13 +803,17 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth)) {
+                moveOrderer.moves->scoreMove(moveOrderer.counter-1, 0);
                 continue;
+            }
         }
 
         // dont search illegal moves
-        if (!b->isLegal(m))
+        if (!b->isLegal(m)) {
+            moveOrderer.moves->scoreMove(moveOrderer.counter-1, 0);
             continue;
+        }
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
