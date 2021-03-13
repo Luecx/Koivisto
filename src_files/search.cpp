@@ -132,7 +132,7 @@ void search_stop() {
  */
 bool hasOnlyPawns(Board* board, Color color) {
     return board->getTeamOccupiedBB()[color]
-           == ((board->getPieceBB()[PAWN + color * 6] | board->getPieceBB()[KING + color * 6]));
+           == ((board->getPieceBB()[PAWN + color * 8] | board->getPieceBB()[KING + color * 8]));
 }
 
 /**
