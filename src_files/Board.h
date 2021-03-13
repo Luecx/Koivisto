@@ -190,13 +190,7 @@ class Board {
 
     // undoes a null-move
     void undoMove_null();
-
-    // returns ALL pseudo legal moves. this contains illegal moves.
-    void getPseudoLegalMoves(MoveList* moves);
-
-    // returns non-quiet moves. this contains captures and promotions. we do not consider checks as non-quiet moves.
-    void getNonQuietMoves(MoveList* moves);
-
+    
     // returns the previous move which lead to the current position. this is stored within the meta information.
     Move getPreviousMove();
 
@@ -233,11 +227,11 @@ class Board {
 
     // returns the castling rights for the given index. note that no square is required but an index.
     // for the indices, look at the start of Board.h
-    bool getCastlingChance(Square index);
+    bool getCastlingRights(int index);
 
     // sets the castling rights.  Note that no square is required but an index.
     // for the indices, look at the start of Board.h
-    void setCastlingChance(Square index, bool val);
+    void setCastlingRights(int index, bool val);
 
     // returns how many times this position has occurred in the history of the board.
     int getCurrentRepetitionCount();
@@ -252,23 +246,30 @@ class Board {
     void setEnPassantSquare(Square square);
 
     // returns the entire meta information about the board.
-    [[nodiscard]] BoardStatus* getBoardStatus();
+    [[nodiscard]] inline BoardStatus* getBoardStatus(){ return &m_boardStatusHistory.back();}
 
     // returns all occupied squares.
-    [[nodiscard]] U64* getOccupiedBB();
+    [[nodiscard]] inline const U64* getOccupiedBB(){return &m_occupiedBB;}
 
     // returns all occupied squares by both teams (arrays with 2 entries).
-    [[nodiscard]] const U64* getTeamOccupiedBB() const;
+    [[nodiscard]] inline const U64* getTeamOccupiedBB() const {return m_teamOccupiedBB;}
+    
+    // returns all occupied squares by the team
+    [[nodiscard]] inline const U64 getTeamOccupiedBB(Color color) const {return m_teamOccupiedBB[color];}
+    
+    // returns all occupied squares by the team
+    template<Color color>
+    [[nodiscard]] inline const U64 getTeamOccupiedBB() const {return m_teamOccupiedBB[color];}
 
-    // returns the occupied squares by each piece (array with 12 entries).
-    [[nodiscard]] const U64* getPieceBB() const;
+    // returns the occupied squares by each piece (array with 14 entries).
+    [[nodiscard]] inline const U64* getPieceBB() const {return m_piecesBB;};
 
     // does the same as getPieceBB() above yet this only returns a single bitboard.
-    [[nodiscard]] U64 getPieceBB(Color color, Piece piece);
+    [[nodiscard]] inline U64 getPieceBB(Color color, Piece piece) const { return m_piecesBB[color * 8 + piece];}
     
     // does the same as getPieceBB() above yet this only returns a single bitboard.
     template<Color color>
-    [[nodiscard]] U64 getPieceBB(Piece piece);
+    [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 8 + piece];}
     
 };
 

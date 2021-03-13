@@ -383,7 +383,7 @@ EvalScore piece_square_table[6][2][64]{
 };
 
 // indexed by wking, bking, piece, square
-EvalScore piece_kk_square_tables[64][64][12][64];
+EvalScore piece_kk_square_tables[64][64][14][64];
 
 void psqt_init() {
     for(Square wKingSq = 0; wKingSq < 64; wKingSq++){
@@ -403,7 +403,7 @@ void psqt_init() {
                           + piece_our_king_square_table     [p]     [pst_index_relative_white(sq, wKingSq)]
                           + piece_opp_king_square_table     [p]     [pst_index_relative_white(sq, bKingSq)];
 
-                    piece_kk_square_tables[wKingSq][bKingSq][p+6][sq] =
+                    piece_kk_square_tables[wKingSq][bKingSq][p+8][sq] =
                           - piece_square_table              [p][!sameSideCastle][pst_index_black(sq, bKSide)]
                           - piece_values                    [p]
                           - piece_our_king_square_table     [p]     [pst_index_relative_black(sq, bKingSq)]

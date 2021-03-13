@@ -18,6 +18,8 @@
  ****************************************************************************************************/
 #include "Perft.h"
 
+#include "movegen.h"
+
 using namespace std;
 
 MoveList**          perft_mvlist_buffer;
@@ -92,7 +94,10 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     if (depth == 0)
         return 1;
 
-    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
+    
+//    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
+    generatePerftMoves(b, perft_mvlist_buffer[depth]);
+    
     //    generations ++;
 
     for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
@@ -107,7 +112,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         if (d1 && depth == 1) {
             nodes += 1;
         } else {
-
+            
             b->move(m);
 
             U64 np = perft(b, depth - 1, false, d1, hash, ply + 1);

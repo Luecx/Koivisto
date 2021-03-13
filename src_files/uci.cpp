@@ -365,7 +365,7 @@ void uci_set_option(std::string& name, std::string& value) {
         strcpy(path, value.c_str());
         tb_init(path);
 
-        std::cout << "using syzygy table with " << TB_LARGEST << " m_piecesBB" << std::endl;
+        std::cout << "using syzygy table with " << TB_LARGEST << " pieces" << std::endl;
 
         /*
          * only use TB if loading was successful
@@ -436,7 +436,7 @@ void uci_position_fen(std::string fen, std::string moves) {
 
         assert(moving >= 0);
 
-        Type type;
+        MoveType type;
 
         if (s.size() > 4) {
 
@@ -455,7 +455,7 @@ void uci_position_fen(std::string fen, std::string moves) {
             }
 
         } else {
-            if ((moving % 6) == KING) {
+            if ((moving % 8) == KING) {
                 if (abs(s2 - s1) == 2) {
                     if (s2 > s1) {
                         type = KING_CASTLE;
@@ -469,7 +469,7 @@ void uci_position_fen(std::string fen, std::string moves) {
                         type = QUIET;
                     }
                 }
-            } else if ((moving % 6) == PAWN) {
+            } else if ((moving % 8) == PAWN) {
                 if (abs(s2 - s1) == 16) {
                     type = DOUBLED_PAWN_PUSH;
                 } else if (abs(s2 - s1) != 8) {
@@ -527,7 +527,6 @@ void uci_bench() {
     // positions from Ethereal
     static const char* Benchmarks[] = {
 #include "bench.csv"
-
         ""};
 
     int nodes = 0;
@@ -552,7 +551,8 @@ void uci_bench() {
 
         search_clearHash();
     }
+    printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
+    std::cout << std::flush;
     search_enable_infoStrings();
 
-    printf("OVERALL: %53d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
 }
