@@ -527,7 +527,6 @@ void uci_bench() {
     // positions from Ethereal
     static const char* Benchmarks[] = {
 #include "bench.csv"
-
         ""};
 
     int nodes = 0;
@@ -552,7 +551,8 @@ void uci_bench() {
 
         search_clearHash();
     }
+    printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
+    std::cout << std::flush;
     search_enable_infoStrings();
 
-    printf("OVERALL: %53d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
 }

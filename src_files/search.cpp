@@ -203,7 +203,6 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
         MoveList mvStorage;
         // extract pseudo legal moves
         generatePerftMoves(b, &mvStorage);
-//        b->getPseudoLegalMoves(&mvStorage);
         
         bool moveContained = false;
         // check if the move is actually valid for the position

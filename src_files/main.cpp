@@ -35,30 +35,7 @@ using namespace move;
 
 int main(int argc, char *argv[]) {
 
-    
-//    bb_init();
-//    psqt_init();
-//    search_init(16);
-//
-//    Board b{"rnbqkbnr/pppppppp/8/8/8/P7/1PPPPPPP/RNBQKBNR b QKqk - 0 1"};
-//    MoveList mv{};
-//    generatePerftMoves(&b, &mv);
-//
-//    for(int i = 0; i < mv.getSize(); i++){
-//        std::cout << toString(mv.getMove(i)) << std::endl;
-//        std::cout << b << std::endl;
-//        b.move(mv.getMove(i));
-//        std::cout << b << std::endl;
-//        b.undoMove();
-//        std::cout << b << std::endl;
-//        printMoveBits(mv.getMove(i), false);
-//        exit(1);
-//    }
-//
-//
-//
-//    bb_cleanUp();
-    
+
     if (argc == 1) {
         uci_loop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
