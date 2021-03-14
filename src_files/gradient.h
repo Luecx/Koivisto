@@ -950,10 +950,15 @@ namespace tuning {
 
             U64 occupied = *b->getOccupiedBB();
     
-            indices_white[PAWN][0] = 1;
-            indices_black[PAWN][0] = 1;
-            indices_white[PAWN][1] = bitCount(shiftNorth(whitePawns) & ~occupied) + bitCount(whitePawnCover & ~b->getTeamOccupiedBB<BLACK>());
-            indices_black[PAWN][1] = bitCount(shiftNorth(blackPawns) & ~occupied) + bitCount(blackPawnCover & ~b->getTeamOccupiedBB<WHITE>());
+            int wPawnCount = bitCount(whitePawns);
+            int bPawnCount = bitCount(blackPawns);
+            if(wPawnCount > bPawnCount){
+                indices_white[PAWN][0] = 1;
+                indices_white[PAWN][1] = wPawnCount - bPawnCount;
+            }else if(bPawnCount > wPawnCount){
+                indices_black[PAWN][0] = 1;
+                indices_black[PAWN][1] = bPawnCount - wPawnCount;
+            }
 
             for (Piece p = KNIGHT; p <= QUEEN; p++) {
                 for (Color c: {WHITE, BLACK}) {
@@ -1575,7 +1580,7 @@ namespace tuning {
             startMeasure();
             std::cout << left;
             std::cout << "loss= " << setw(20) << compute_loss(K)
-                      << " eps= " << setw(20) << positions.size() / stopMeasure() * 1000 << std::endl;
+                      << " eps= " << setw(20) << positions.size() / (stopMeasure()+1) * 1000 << std::endl;
             adjust_weights(eta);
         }
     }
@@ -1641,7 +1646,7 @@ namespace tuning {
         // --------------------------------- mobility ---------------------------------
 
         const static std::string mobility_names[]{
-                "EvalScore mobilityPawns[24] = {",
+                "EvalScore pawnDifferenceBonus[9] = {",
                 "EvalScore mobilityKnight[9] = {",
                 "EvalScore mobilityBishop[14] = {",
                 "EvalScore mobilityRook[15] = {",
