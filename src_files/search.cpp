@@ -336,15 +336,18 @@ Move getDTZMove(Board* board) {
         return 0;
     
     unsigned result = tb_probe_root(
-        board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
-        board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
-        board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
-        board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
-        board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
-        board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
-        board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
-        | board->getCastlingRights(3),
+        board->getTeamOccupiedBB()  [WHITE]         , board->getTeamOccupiedBB()[BLACK],
+        board->getPieceBB()         [WHITE_KING]    | board->getPieceBB()       [BLACK_KING],
+        board->getPieceBB()         [WHITE_QUEEN]   | board->getPieceBB()       [BLACK_QUEEN],
+        board->getPieceBB()         [WHITE_ROOK]    | board->getPieceBB()       [BLACK_ROOK],
+        board->getPieceBB()         [WHITE_BISHOP]  | board->getPieceBB()       [BLACK_BISHOP],
+        board->getPieceBB()         [WHITE_KNIGHT]  | board->getPieceBB()       [BLACK_KNIGHT],
+        board->getPieceBB()         [WHITE_PAWN]    | board->getPieceBB()       [BLACK_PAWN],
+        board->getCurrent50MoveRuleCount(),
+        board->getCastlingRights(0) |
+            board->getCastlingRights(1) |
+            board->getCastlingRights(2) |
+            board->getCastlingRights(3),
         board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE, NULL);
     
     // if the result failed for some reason or the game is over, dont do anything
@@ -374,7 +377,7 @@ Move getDTZMove(Board* board) {
     }
     
     // get the promotion piece if the target move is a promotion (this does not yet work the way it should)
-    Piece promo = 6 - TB_GET_PROMOTES(result);
+    Piece promo = KING - TB_GET_PROMOTES(result);
     
     // gets the square from and square to for the move which should be played
     Square sqFrom = TB_GET_FROM(result);
@@ -393,19 +396,14 @@ Move getDTZMove(Board* board) {
             if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && promotionPiece(m) % 8 == promo)) {
                 
                 std::cout << "info"
-                             " depth "
-                          << static_cast<int>(dtz) << " seldepth " << static_cast<int>(selDepth());
+                          << " depth " << static_cast<int>(dtz) << " seldepth " << static_cast<int>(selDepth());
                 
                 std::cout << " score cp " << s;
-                
-                if (tbHits() != 0) {
-                    std::cout << " tbhits " << 1;
-                }
-                
-                std::cout <<
-                
-                          " nodes " << 1 << " nps " << 1 << " time " << search_timeManager->elapsedTime() << " hashfull "
-                          << static_cast<int>(table->usage() * 1000);
+                std::cout << " tbhits " << 1;
+                std::cout << " nodes " << 1
+                          << " nps " << 1
+                          << " time " << search_timeManager->elapsedTime()
+                          << " hashfull " << static_cast<int>(table->usage() * 1000);
                 std::cout << std::endl;
                 
                 return m;
@@ -442,9 +440,11 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     if (threadId == 0) {
         
         // if there is a dtz move available, do not start any threads or search at all. just do the dtz move
-        Move dtzMove = getDTZMove(b);
-        if (dtzMove != 0)
-            return dtzMove;
+        if(timeManager->getMode() == TOURNAMENT){
+            Move dtzMove = getDTZMove(b);
+            if (dtzMove != 0)
+                return dtzMove;
+        }
         
         // make sure that the given depth isnt too large
         if (maxDepth > MAX_PLY)

@@ -140,7 +140,14 @@ Board::Board(std::string fen) {
         }
     }
 
-    // note that we do not read information about move counts. This is usually not required for playing games.
+    // parse move counts
+    if (split.size() >= 5){
+        getBoardStatus()->fiftyMoveCounter = stoi(split[4]);
+    }
+    
+    if (split.size() >= 6){
+        getBoardStatus()->moveCounter      = stoi(split[5]);
+    }
 }
 
 /**
