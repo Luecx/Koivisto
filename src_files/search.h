@@ -57,11 +57,11 @@ struct SearchOverview {
     Move  move;
 };
 
-void           initLmr();
-Score          getWDL(Board* board);
 void           search_stop();
 void           search_setHashSize(int hashSize);
+void           search_setThreads(int threads);
 void           search_clearHash();
+void           search_clearHistory();
 void           search_useTB(bool val);
 void           search_init(int hashSize);    // used to create arrays, movelists etc
 void           search_cleanUp();             // used to clean up the memory

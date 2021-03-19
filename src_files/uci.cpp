@@ -150,6 +150,7 @@ void uci_processCommand(std::string str) {
 
     if (split.at(0) == "ucinewgame") {
         search_clearHash();
+        search_clearHistory();
     }
     if (split.at(0) == "uci") {
         uci_uci();
@@ -382,8 +383,8 @@ void uci_set_option(std::string& name, std::string& value) {
             count = 1;
         if (count > MAX_THREADS)
             count = MAX_THREADS;
-
-        threadCount = count;
+        
+        search_setThreads(count);
     }
 }
 

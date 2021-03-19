@@ -136,3 +136,4 @@ SearchData::SearchData() {
 }
 
 ThreadData::ThreadData(int threadId) : threadID(threadId) {}
+ThreadData::ThreadData() {}
