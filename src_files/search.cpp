@@ -877,7 +877,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = 0;
             }
             if (lmr > depth - 2) {
-                lmr = depth - 2;
+                if (inCheck || isCapture(m) || staticEval > alpha) {
+                    lmr = depth - 2;
+                }
+                else continue;
+                
             }
         }
         
