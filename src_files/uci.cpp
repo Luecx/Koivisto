@@ -551,6 +551,7 @@ void uci_bench() {
         std::cout << std::endl;
 
         search_clearHash();
+        search_clearHistory();
     }
     printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
