@@ -26,7 +26,7 @@
 
 #include <thread>
 
-TranspositionTable*      table;
+TranspositionTable*      table = nullptr;
 TimeManager*             search_timeManager;
 std::vector<std::thread> runningThreads;
 int                      threadCount = 1;
@@ -38,14 +38,14 @@ SearchOverview overview;
 int lmrReductions[256][256];
 
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
-ThreadData** tds = new ThreadData*[MAX_THREADS];
+ThreadData tds[MAX_THREADS]{};
 
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
-void initLmr() {
+void initLMR() {
     int d, m;
     
     for (d = 0; d < 256; d++)
@@ -69,7 +69,7 @@ int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
 U64 totalNodes() {
     U64 tn = 0;
     for (int i = 0; i < threadCount; i++) {
-        tn += tds[i]->nodes;
+        tn += tds[i].nodes;
     }
     return tn;
 }
@@ -81,7 +81,7 @@ U64 totalNodes() {
 int selDepth() {
     int maxSd = 0;
     for (int i = 0; i < threadCount; i++) {
-        maxSd = tds[i]->seldepth > maxSd ? tds[i]->seldepth : maxSd;
+        maxSd = tds[i].seldepth > maxSd ? tds[i].seldepth : maxSd;
     }
     return maxSd;
 }
@@ -93,7 +93,7 @@ int selDepth() {
 int tbHits() {
     int th = 0;
     for (int i = 0; i < threadCount; i++) {
-        th += tds[i]->tbhits;
+        th += tds[i].tbhits;
     }
     return th;
 }
@@ -111,7 +111,22 @@ void search_disable_infoStrings() { printInfo = false; }
 /**
  * clears the hash of the transposition table which is used for searches.
  */
-void search_clearHash() { table->clear(); }
+void search_clearHash() {
+    table->clear();
+    
+}
+
+/**
+ * clears the history table of all the active threads
+ */
+void search_clearHistory() {
+    for(int i = 0; i < threadCount; i++){
+        if(tds[i].searchData != nullptr){
+            delete tds[i].searchData;
+        }
+        tds[i].searchData = new SearchData();
+    }
+}
 
 /**
  * enables/disables tb probing during search
@@ -155,16 +170,37 @@ void search_setHashSize(int hashSize) {
     table->setSize(hashSize);
 }
 
+void search_setThreads(int threads){
+    int processor_count = (int) std::thread::hardware_concurrency();
+    if (processor_count == 0)
+        processor_count = MAX_THREADS;
+    if (processor_count < threads)
+        threads = processor_count;
+    if (threads < 1)
+        threads = 1;
+    if (threads > MAX_THREADS)
+        threads = MAX_THREADS;
+    threadCount = threads;
+    for(int i = 0; i < threadCount; i++){
+        if(tds[i].searchData != nullptr){
+            delete tds[i].searchData;
+        }
+        tds[i].searchData = new SearchData();
+    }
+}
+
 /**
  * called at the start of the program
  */
 void search_init(int hashSize) {
+    if(table != nullptr) delete table;
     table = new TranspositionTable(hashSize);
-    initLmr();
+    initLMR();
     
     for (int i = 0; i < MAX_THREADS; i++) {
-        tds[i] = new ThreadData(i);
+        tds[i].threadID = i;
     }
+    tds[0].searchData = new SearchData();
 }
 
 /**
@@ -175,7 +211,10 @@ void search_cleanUp() {
     table = nullptr;
     
     for (int i = 0; i < MAX_THREADS; i++) {
-        delete tds[i];
+        if(tds[i].searchData != nullptr){
+            delete tds[i].searchData;
+            tds[i].searchData = nullptr;
+        }
     }
 }
 
@@ -459,10 +498,10 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         // for each thread, we will generate a new search data object
         for (int i = 0; i < threadCount; i++) {
             // reseting the thread data
-            tds[i]->threadID = i;
-            tds[i]->tbhits   = 0;
-            tds[i]->nodes    = 0;
-            tds[i]->seldepth = 0;
+            tds[i].threadID = i;
+            tds[i].tbhits   = 0;
+            tds[i].nodes    = 0;
+            tds[i].seldepth = 0;
         }
         
         // we will call this function for the other threads which will skip this part and jump straight to the part
@@ -473,10 +512,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     }
     
     // the thread id starts at 0 for the first thread
-    ThreadData* td = tds[threadId];
-    
-    SearchData* sd = new SearchData();
-    td->searchData = sd;
+    ThreadData* td = &tds[threadId];
     
     // start the basic search on all threads
     Depth d = 1;
@@ -534,9 +570,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         runningThreads.clear();
         
         // retrieve the best move from the search
-        Move best = sd->bestMove;
-        
-        delete sd;
+        Move best = td->searchData->bestMove;
         
         // collect some information which can be used for benching
         overview.nodes = totalNodes();
@@ -548,9 +582,6 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         // return the best move if its the main thread
         return best;
     }
-    
-    delete sd;
-    
     // return nothing (doesnt matter)
     return 0;
 }
@@ -971,44 +1002,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     }
     
     return alpha;
-}
-
-void compare(MoveList* mv1, MoveList* mv2){
-    if(mv1->getSize() != mv2->getSize()){
-        std::cout << "size not matching:" << mv1->getSize() << " " << mv2->getSize() << std::endl;
-        exit(-1);
-    }
-    bool similar = true;
-    for(int i = 0; i< mv1->getSize(); i++){
-        
-        if(mv1->getMove(i) != mv2->getMove(i)){
-//            std::cerr << mv1->getMove(i) << " " << mv2->getMove(i) << std::endl;
-//            exit(-1);
-similar = false;
-        }
-        
-        if(mv1->getScore(i) != mv2->getScore(i)){
-//            std::cerr << mv1->getScore(i) << " " << mv2->getScore(i) << std::endl;
-            similar = false;
-        }
-    }
-    
-    if(!similar){
-        for(int i = 0; i< mv1->getSize(); i++){
-
-//        if(mv1->getMove(i) != mv2->getMove(i)){
-            std::cerr << toString(mv1->getMove(i)) << " " << toString(mv2->getMove(i)) << std::endl;
-//            exit(-1);
-//        }
-
-//        if(mv1->getScore(i) != mv2->getScore(i)){
-            std::cerr << mv1->getScore(i) << " " << mv2->getScore(i) << std::endl;
-//            exit(-1);
-//        }
-        }
-        exit(-1);
-    }
-    
 }
 
 /**

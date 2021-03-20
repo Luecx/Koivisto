@@ -75,8 +75,10 @@ struct ThreadData {
     int seldepth = 0;
     int tbhits   = 0;
  
-    SearchData* searchData;
+    SearchData* searchData = nullptr;
     char padding[1024 * 128];
+
+    ThreadData();
 
     ThreadData(int threadId);
 };
