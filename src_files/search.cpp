@@ -32,6 +32,7 @@ std::vector<std::thread> runningThreads;
 int                      threadCount = 1;
 bool                     useTB       = false;
 bool                     printInfo   = true;
+bool                     rootProveColor;
 
 SearchOverview overview;
 
@@ -588,18 +589,19 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // check if the active player is in check. used for various pruning decisions.
     bool inCheck = b->isInCheck(b->getActivePlayer());
     
+    SearchData* sd            = td->searchData;
+
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
-    if (depth == 0 || depth > MAX_PLY) {
+    if (depth-(rootProveColor != b->getActivePlayer()) <= 0 || depth-(rootProveColor != b->getActivePlayer()) > MAX_PLY) {
         // Don't drop into qsearch if in check
         if (inCheck) {
-            depth++;
+            depth=1;
         } else {
             return qSearch(b, alpha, beta, ply, td);
         }
     }
     
     // we extract a lot of information about various things.
-    SearchData* sd            = td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
     Score       originalAlpha = alpha;
@@ -855,6 +857,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 sd->reduce = true;
             }
         }
+
+        if (ply == 0) {
+            rootProveColor = !b->getActivePlayer();
+            if (legalMoves == 0) {
+                rootProveColor = b->getActivePlayer();
+            }
+        }
         
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
@@ -895,6 +904,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
             if (pv) sd->reduce = true;
+            if (ply == 0) {
+                rootProveColor = !b->getActivePlayer();
+            }
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
