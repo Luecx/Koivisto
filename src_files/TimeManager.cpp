@@ -29,14 +29,17 @@ auto startTime =
  * This means that we do not want to extend the time in critical positions and want to stop the search exactly after
  * movetime milliseconds.
  */
-TimeManager::TimeManager(int moveTime) {
-    isSafeToStop = true;
-    ignorePV     = true;
-    forceStop    = false;
-
-    timeToUse      = moveTime;
-    upperTimeBound = moveTime;
-    mode           = MOVETIME;
+TimeManager::TimeManager(int moveTime) : 
+    mode(MOVETIME), 
+    timeToUse(moveTime), 
+    upperTimeBound(moveTime), 
+    ignorePV(true), 
+    isSafeToStop(true), 
+    forceStop(), 
+    historyCount(), 
+    moveHistory(), 
+    scoreHistory(), 
+    depthHistory() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -47,14 +50,17 @@ TimeManager::TimeManager(int moveTime) {
  * If the depth is specified, we use this constructor.
  * No constraints about time are made and the search wont be stopped by the time manager.
  */
-TimeManager::TimeManager() {
-    isSafeToStop = true;
-    ignorePV     = true;
-    forceStop    = false;
-
-    timeToUse      = 1 << 30;
-    upperTimeBound = 1 << 30;
-    mode           = DEPTH;
+TimeManager::TimeManager() : 
+    mode(DEPTH), 
+    timeToUse(1 << 30), 
+    upperTimeBound(1 << 30), 
+    ignorePV(true), 
+    isSafeToStop(true), 
+    forceStop(), 
+    historyCount(), 
+    moveHistory(), 
+    scoreHistory(), 
+    depthHistory() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
