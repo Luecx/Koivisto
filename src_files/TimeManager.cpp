@@ -73,15 +73,17 @@ TimeManager::TimeManager() {
  * @param movesToGo
  * @param board
  */
-TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) {
-    moveHistory  = new Move[256];
-    scoreHistory = new Score[256];
-    depthHistory = new Depth[256];
-    historyCount = 0;
-    isSafeToStop = true;
-    ignorePV     = false;
-    forceStop    = false;
-    mode         = TOURNAMENT;
+TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) : 
+    mode(TOURNAMENT), 
+    timeToUse(), 
+    upperTimeBound(), 
+    ignorePV(), 
+    isSafeToStop(true), 
+    forceStop(), 
+    historyCount(), 
+    moveHistory(), 
+    scoreHistory(), 
+    depthHistory() {
 
     double division = movesToGo+1;
 
@@ -116,13 +118,6 @@ int TimeManager::elapsedTime() {
  * a destructor for the sake of completeness.
  */
 TimeManager::~TimeManager() {
-
-    if (ignorePV)
-        return;
-
-    delete[] moveHistory;
-    delete[] scoreHistory;
-    delete[] depthHistory;
 }
 
 /**
