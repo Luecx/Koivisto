@@ -5,7 +5,7 @@
 </h1>
 
 
-Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and Eugenio Bruno (retired).
+Koivisto is an AB-engine for chess written in C++ by Kim Kåhre and Finn Eggers.
 
 ### Supported UCI settings:
 - Hash
