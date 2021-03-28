@@ -29,14 +29,17 @@ auto startTime =
  * This means that we do not want to extend the time in critical positions and want to stop the search exactly after
  * movetime milliseconds.
  */
-TimeManager::TimeManager(int moveTime) {
-    isSafeToStop = true;
-    ignorePV     = true;
-    forceStop    = false;
-
-    timeToUse      = moveTime;
-    upperTimeBound = moveTime;
-    mode           = MOVETIME;
+TimeManager::TimeManager(int moveTime) : 
+    mode(MOVETIME), 
+    timeToUse(moveTime), 
+    upperTimeBound(moveTime), 
+    ignorePV(true), 
+    isSafeToStop(true), 
+    forceStop(), 
+    historyCount(), 
+    moveHistory(), 
+    scoreHistory(), 
+    depthHistory() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -47,14 +50,17 @@ TimeManager::TimeManager(int moveTime) {
  * If the depth is specified, we use this constructor.
  * No constraints about time are made and the search wont be stopped by the time manager.
  */
-TimeManager::TimeManager() {
-    isSafeToStop = true;
-    ignorePV     = true;
-    forceStop    = false;
-
-    timeToUse      = 1 << 30;
-    upperTimeBound = 1 << 30;
-    mode           = DEPTH;
+TimeManager::TimeManager() : 
+    mode(DEPTH), 
+    timeToUse(1 << 30), 
+    upperTimeBound(1 << 30), 
+    ignorePV(true), 
+    isSafeToStop(true), 
+    forceStop(), 
+    historyCount(), 
+    moveHistory(), 
+    scoreHistory(), 
+    depthHistory() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -73,15 +79,17 @@ TimeManager::TimeManager() {
  * @param movesToGo
  * @param board
  */
-TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) {
-    moveHistory  = new Move[256];
-    scoreHistory = new Score[256];
-    depthHistory = new Depth[256];
-    historyCount = 0;
-    isSafeToStop = true;
-    ignorePV     = false;
-    forceStop    = false;
-    mode         = TOURNAMENT;
+TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) : 
+    mode(TOURNAMENT), 
+    timeToUse(), 
+    upperTimeBound(), 
+    ignorePV(), 
+    isSafeToStop(true), 
+    forceStop(), 
+    historyCount(), 
+    moveHistory(), 
+    scoreHistory(), 
+    depthHistory() {
 
     double division = movesToGo+1;
 
@@ -116,13 +124,6 @@ int TimeManager::elapsedTime() {
  * a destructor for the sake of completeness.
  */
 TimeManager::~TimeManager() {
-
-    if (ignorePV)
-        return;
-
-    delete[] moveHistory;
-    delete[] scoreHistory;
-    delete[] depthHistory;
 }
 
 /**

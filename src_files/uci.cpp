@@ -26,9 +26,9 @@
 #include <thread>
 
 
-TimeManager* timeManager;
-Board*       board;
-std::thread* searchThread = nullptr;
+TimeManager timeManager;
+Board*      board;
+std::thread searchThread;
 
 /**
  * the Main loop for received inputs from the user. Prints information about the engine (version, authors)
@@ -101,19 +101,6 @@ std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
 }
 
 /**
- * stops and deallocates the running thread. This can be used to abruptly stop the search although this usage
- * will not display uci info strings. On the other hand, once the search is finished, this function will be called.
- */
-void uci_endThread() {
-    if (searchThread != nullptr) {
-        delete searchThread;
-        searchThread = nullptr;
-        delete timeManager;
-        timeManager = nullptr;
-    }
-}
-
-/**
  * this function will invoke the search with a given max depth and a time manager.
  * If no depth has been specified, it will be set to the maximum depth and the time manager will handle
  * all stop-management.
@@ -124,7 +111,6 @@ void uci_endThread() {
 void uci_searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
     Move m = bestMove(board, maxDepth, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
-    uci_endThread();
 }
 
 /**
@@ -269,14 +255,11 @@ void uci_go_perft(int depth, bool hash) {
  */
 void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth) {
 
-    if (searchThread != nullptr) {
-        return;
-    }
+    uci_stop();
 
-    timeManager = new TimeManager(wtime, btime, winc, binc, movesToGo, board);
+    timeManager = TimeManager(wtime, btime, winc, binc, movesToGo, board);
 
-    searchThread = new std::thread(uci_searchAndPrint, depth, timeManager);
-    searchThread->detach();
+    searchThread = std::thread(uci_searchAndPrint, depth, &timeManager);
 }
 
 /**
@@ -286,14 +269,11 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int d
  */
 void uci_go_depth(int depth) {
 
-    if (searchThread != nullptr) {
-        return;
-    }
+    uci_stop();
 
-    timeManager = new TimeManager();
+    timeManager = TimeManager();
 
-    searchThread = new std::thread(uci_searchAndPrint, depth, timeManager);
-    searchThread->detach();
+    searchThread = std::thread(uci_searchAndPrint, depth, &timeManager);
 }
 
 /**
@@ -313,14 +293,12 @@ void uci_go_nodes(int nodes) {
  * @param depth
  */
 void uci_go_time(int movetime) {
-    if (searchThread != nullptr) {
-        return;
-    }
 
-    timeManager = new TimeManager(movetime);
+    uci_stop();
 
-    searchThread = new std::thread(uci_searchAndPrint, MAX_PLY, timeManager);
-    searchThread->detach();
+    timeManager = TimeManager(movetime);
+
+    searchThread = std::thread(uci_searchAndPrint, MAX_PLY, &timeManager);
 }
 
 /**
@@ -344,7 +322,12 @@ void uci_go_mate(int depth) {
  * parses the uci command: stop
  * stops the current search. This will usually print a last info string and the best move.
  */
-void uci_stop() { search_stop(); }
+void uci_stop() {
+    search_stop();
+    if (searchThread.joinable()) {
+        searchThread.join();
+    }
+}
 
 /**
  * parses the uci command: setoption name [name] value [value]
@@ -512,6 +495,8 @@ void uci_position_startpos(std::string moves) {
  * cleans up all allocated data
  */
 void uci_quit() {
+
+    uci_stop();
 
     delete board;
     board = nullptr;
