@@ -65,8 +65,6 @@ void uci_loop(bool bench) {
             }
         }
     }
-
-    uci_stop();
 }
 
 /**
@@ -497,6 +495,8 @@ void uci_position_startpos(std::string moves) {
  * cleans up all allocated data
  */
 void uci_quit() {
+
+    uci_stop();
 
     delete board;
     board = nullptr;
