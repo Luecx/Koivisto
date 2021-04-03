@@ -609,7 +609,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // if its a draw by 3-fold or 50-move rule, we return 0
     if (b->isDraw() && ply > 0) {
         // To-Do. Idea originated in Stockfish.
-        return 1 - (td->nodes & 2);
+        return 8 - (td->nodes & MASK_4);
     }
 
     // beside keeping track of the nodes, we need to keep track of the selective depth for this thread.
