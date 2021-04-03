@@ -608,7 +608,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // if its a draw by 3-fold or 50-move rule, we return 0
     if (b->isDraw() && ply > 0) {
-        // To-Do. Idea originated in Stockfish.
+        // The idea of draw randomization originated in sf. According to conventional wisdom the key point is to force
+        // the search to explore different variations. For example in Stockfish and Ethereal the evaluation is 
+        // increased / decreased by 1 score grain.
+        // The implementation in Koivisto is based on a different idea, namely the Beal effect.
+        // (see https://www.chessprogramming.org/Search_with_Random_Leaf_Values).
         return 8 - (td->nodes & MASK_4);
     }
 
@@ -849,7 +853,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         int extension = 0;
         
         // *********************************************************************************************************
-        // singular extensions:
+        // singular extensions
+        // standard implementation apart from the fact that we cancel lmr of parent node in-case the node turns 
+        // out to be singular.
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
