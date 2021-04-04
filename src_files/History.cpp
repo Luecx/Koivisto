@@ -58,7 +58,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                 -(depth * depth + 5 * depth)
                 - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)]
                       / MAX_HISTORY_SCORE;
-        } else {
+        } else if (!isCapture(m)) {
             history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
                 - (depth * depth + 5 * depth) * history[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
