@@ -924,7 +924,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
         // work 100%
-        if (extension == 0 && depth < 10 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && depth > 6 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
         // principal variation search recursion.
