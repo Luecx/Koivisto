@@ -675,7 +675,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             staticEval = en.score;
         }
         
-        if (!pv && en.depth >= depth) {
+        if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta)*100 >= depth) {
             if (en.type == PV_NODE) {
                 return en.score;
             } else if (en.type == CUT_NODE) {
