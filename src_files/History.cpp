@@ -20,7 +20,7 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
+void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move skipMove) {
     if (depth > 20)
         return;
     Move m2;
@@ -34,7 +34,9 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
 
         Piece  movingPiece = getMovingPiece(m2) % 8;
         Square squareTo    = getSquareTo(m2);
-
+        if (sameMove(skipMove, m2)) {
+            continue;
+        }
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
                 captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=

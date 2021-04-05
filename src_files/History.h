@@ -52,7 +52,7 @@ struct SearchData {
 
     virtual ~SearchData();
 
-    void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
+    void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move skipMove);
 
     int getHistories(Move m, Color side, Move previous);
     
