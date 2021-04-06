@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "uci.h"
+#include "search.h"
 
 #include "syzygy/tbprobe.h"
 
@@ -194,6 +195,7 @@ void uci_processCommand(std::string str) {
         }
         if (str.find("LMR_DIV") != string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
+            initLMR();
         }
     } else if (split.at(0) == "position") {
 
