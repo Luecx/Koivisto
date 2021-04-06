@@ -56,8 +56,7 @@ void uci_loop(bool bench) {
         std::atexit(uci_quit);
         std::string line;
 
-        while (true) {
-            getline(cin, line);
+        while (getline(cin, line)) {
 
             if (line == "quit") {
                 exit(0);
