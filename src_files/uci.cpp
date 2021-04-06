@@ -197,6 +197,13 @@ void uci_processCommand(std::string str) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
             initLMR();
         }
+        if (str.find("LMR_BONUS") != string::npos) {
+            LMR_BONUS = stof(uci_getValue(split, "LMR_BONUS"));
+            initLMR();
+        }
+        if (str.find("HISTORY_DIV") != string::npos) {
+            HISTORY_DIV = stoi(uci_getValue(split, "HISTORY_DIV"));
+        }
     } else if (split.at(0) == "position") {
 
         auto fenPos  = str.find("fen");
