@@ -1096,7 +1096,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // keping track of the best move for the transpositions
     Move  bestMove  = 0;
-    Score bestScore = -MAX_MATE_SCORE;
 
     for (int i = 0; i < mv->getSize(); i++) {
         
@@ -1122,12 +1121,12 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         
         b->undoMove();
         
-        if (score > bestScore) {
-            bestScore = score;
+        if (score > stand_pat) {
+            stand_pat = score;
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                table->put(zobrist, stand_pat, m, ttNodeType, !inCheckOpponent);
                 return beta;
             }
             if (score > alpha) {
@@ -1139,7 +1138,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+        table->put(zobrist, stand_pat, bestMove, ttNodeType, 0);
     return alpha;
     
     //    return 0;
