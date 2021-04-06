@@ -37,23 +37,20 @@ SearchOverview overview;
 
 int lmrReductions[256][256];
 
+int lmp[2][8] = {};
+
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData tds[MAX_THREADS]{};
 
-int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 92;
-int SE_MARGIN_STATIC = 0;
-int LMR_DIV          = 215;
-
-void initLMR() {
-    int d, m;
-    
-    for (d = 0; d < 256; d++)
-        for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
-}
-
-int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
+int RAZOR_MARGIN        = 198;
+int FUTILITY_MARGIN     = 92;
+int SE_MARGIN_STATIC    = 0;
+int LMR_DIV             = 215;
+// using A / 100 + B / 100 * depth * depth
+int LMP_IMPROVING_A     = 146;
+int LMP_IMPROVING_B     =  27;
+int LMP_NOT_IMPROVING_A = 156;
+int LMP_NOT_IMPROVING_B = 46;
 
 /**
  * =================================================================================
@@ -195,12 +192,26 @@ void search_setThreads(int threads){
 void search_init(int hashSize) {
     if(table != nullptr) delete table;
     table = new TranspositionTable(hashSize);
-    initLMR();
+    search_computeSearchTables();
     
     for (int i = 0; i < MAX_THREADS; i++) {
         tds[i].threadID = i;
     }
     tds[0].searchData = new SearchData();
+}
+
+/**
+ * (re)computes the tables for lmr div etc
+ */
+void search_computeSearchTables(){
+    for (int d = 0; d < 256; d++)
+        for (int m = 0; m < 256; m++)
+            lmrReductions[d][m] = 0.75+log(d) * log(m) * 100 / LMR_DIV;
+    
+    for(int i = 0; i < 8; i++){
+        lmp[1][i] = LMP_IMPROVING_A     /100 + LMP_IMPROVING_B     *i*i / 100;
+        lmp[0][i] = LMP_NOT_IMPROVING_A /100 + LMP_NOT_IMPROVING_B *i*i / 100;
+    }
 }
 
 /**

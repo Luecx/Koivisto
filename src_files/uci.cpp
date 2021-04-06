@@ -183,18 +183,31 @@ void uci_processCommand(std::string str) {
     } else if (split.at(0) == "debug") {
         uci_debug(uci_getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
-        if (str.find("FUTILITY_MARGIN") != string::npos) {
+        if (str.find("FUTILITY_MARGIN")     != string::npos) {
             FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
         }
-        if (str.find("RAZOR_MARGIN") != string::npos) {
+        if (str.find("RAZOR_MARGIN")        != string::npos) {
             RAZOR_MARGIN = stoi(uci_getValue(split, "RAZOR_MARGIN"));
         }
-        if (str.find("SE_MARGIN_STATIC") != string::npos) {
+        if (str.find("SE_MARGIN_STATIC")    != string::npos) {
             SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
         }
-        if (str.find("LMR_DIV") != string::npos) {
+        if (str.find("LMR_DIV")             != string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
         }
+        if (str.find("LMP_IMPROVING_A")     != string::npos) {
+            LMP_IMPROVING_A = stoi(uci_getValue(split, "LMP_IMPROVING_A"));
+        }
+        if (str.find("LMP_IMPROVING_B")     != string::npos) {
+            LMP_IMPROVING_B = stoi(uci_getValue(split, "LMP_IMPROVING_B"));
+        }
+        if (str.find("LMP_NOT_IMPROVING_A") != string::npos) {
+            LMP_NOT_IMPROVING_A = stoi(uci_getValue(split, "LMP_NOT_IMPROVING_A"));
+        }
+        if (str.find("LMP_NOT_IMPROVING_B") != string::npos) {
+            LMP_NOT_IMPROVING_B = stoi(uci_getValue(split, "LMP_NOT_IMPROVING_B"));
+        }
+        search_computeSearchTables();
     } else if (split.at(0) == "position") {
 
         auto fenPos  = str.find("fen");

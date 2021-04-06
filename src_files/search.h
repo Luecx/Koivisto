@@ -37,14 +37,19 @@
 #include <string>
 #include <tgmath.h>
 
+#define MAX_THREADS 256
+
 extern int threadCount;
 
 extern int RAZOR_MARGIN;
 extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
+extern int LMP_IMPROVING_A;
+extern int LMP_IMPROVING_B;
+extern int LMP_NOT_IMPROVING_A;
+extern int LMP_NOT_IMPROVING_B;
 extern TranspositionTable* table;
-#define MAX_THREADS 256
 
 /**
  * used to store information about a search
@@ -64,6 +69,7 @@ void           search_clearHash();
 void           search_clearHistory();
 void           search_useTB(bool val);
 void           search_init(int hashSize);    // used to create arrays, movelists etc
+void           search_computeSearchTables(); // used to (re)compute lmr, lmp tables
 void           search_cleanUp();             // used to clean up the memory
 SearchOverview search_overview();            // used to get information about the latest search
 void           search_enable_infoStrings();
