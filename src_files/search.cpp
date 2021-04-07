@@ -48,10 +48,10 @@ int FUTILITY_MARGIN     = 92;
 int SE_MARGIN_STATIC    = 0;
 int LMR_DIV             = 215;
 // using A / 100 + B / 100 * depth * depth
-int LMP_IMPROVING_A     = 146;
-int LMP_IMPROVING_B     =  27;
-int LMP_NOT_IMPROVING_A = 156;
-int LMP_NOT_IMPROVING_B = 46;
+int LMP_IMPROVING_A     = 190;
+int LMP_IMPROVING_B     =  60;
+int LMP_NOT_IMPROVING_A = 120;
+int LMP_NOT_IMPROVING_B = 43;
 
 /**
  * =================================================================================
