@@ -763,8 +763,46 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 return beta;
             }
         }
-    }
     
+        // **********************************************************************************************************
+        // probability cut:
+        // if the evaluation from a very shallow search after doing a capture is still above FUTILIT_MARGIN+BETA
+        // we asume well get a cutoff anyway as the capture is likely good
+        // see https://www.chessprogramming.org/ProbCut.
+        // **********************************************************************************************************
+        if (depth >= 5 && staticEval >= beta) {
+            // we reuse movelists for memory reasons.
+            MoveList* mv = sd->moves[ply];
+            generateNonQuietMoves(b, mv);
+            // create a moveorderer to sort the moves during the search
+            MoveOrderer moveOrderer {mv};
+            Score betaCut = beta + FUTILITY_MARGIN;
+
+            for (int i = 0; i < mv->getSize(); i++) {
+
+                Move m = moveOrderer.next();
+
+                if (!b->isLegal(m))
+                    continue;
+
+                if ((getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
+                    continue;
+
+                b->move(m);
+
+                Score score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
+
+                if (score >= betaCut)
+                    score = -pvSearch(b, -betaCut, -betaCut+1, depth-4, ply+1, td, 0);
+
+                b->undoMove();
+
+                if (score>=betaCut)
+                    return score;
+            }
+        }
+    }
+
     // **********************************************************************************************************
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
