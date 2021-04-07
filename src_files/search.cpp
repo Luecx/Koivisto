@@ -1128,6 +1128,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
                 table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                sd->updateHistories(m, 1, mv, b->getActivePlayer(), b->getPreviousMove());
                 return beta;
             }
             if (score > alpha) {
