@@ -790,9 +790,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
                 b->move(m);
 
-                Score score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
+                Score score = -MAX_MATE_SCORE;
 
-                if (score >= betaCut)
+                if (depth > 7) score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
+
+                if (score >= betaCut || depth <= 7)
                     score = -pvSearch(b, -betaCut, -betaCut+1, depth-4, ply+1, td, 0);
 
                 b->undoMove();
