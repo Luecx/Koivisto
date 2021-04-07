@@ -770,37 +770,31 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we asume well get a cutoff anyway as the capture is likely good
         // see https://www.chessprogramming.org/ProbCut.
         // **********************************************************************************************************
-        if (depth >= 5 && staticEval >= beta) {
+        if (depth >= 5 && staticEval >= beta && isCapture(hashMove) && en.type == CUT_NODE) {
             // we reuse movelists for memory reasons.
             MoveList* mv = sd->moves[ply];
-            generateNonQuietMoves(b, mv);
+            generateNonQuietMoves(b, mv, hashMove);
             // create a moveorderer to sort the moves during the search
             MoveOrderer moveOrderer {mv};
             Score betaCut = beta + FUTILITY_MARGIN;
-
-            for (int i = 0; i < mv->getSize(); i++) {
+            for (int i = 0; i < ((1 > mv->getSize()) ? mv->getSize() : 1); i++) {
 
                 Move m = moveOrderer.next();
 
                 if (!b->isLegal(m))
                     continue;
-
-                if ((getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
-                    continue;
-
                 b->move(m);
 
-                Score score = -MAX_MATE_SCORE;
+                Score score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
 
-                if (depth > 7) score = -qSearch(b, -betaCut, -betaCut+1, ply+1, td);
-
-                if (score >= betaCut || depth <= 7)
+                if (score >= betaCut)
                     score = -pvSearch(b, -betaCut, -betaCut+1, depth-4, ply+1, td, 0);
 
                 b->undoMove();
 
-                if (score>=betaCut)
+                if (score>=betaCut) {
                     return score;
+                }
             }
         }
     }
