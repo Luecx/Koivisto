@@ -35,11 +35,7 @@ TimeManager::TimeManager(int moveTime) :
     upperTimeBound(moveTime), 
     ignorePV(true), 
     isSafeToStop(true), 
-    forceStop(), 
-    historyCount(), 
-    moveHistory(), 
-    scoreHistory(), 
-    depthHistory() {
+    forceStop() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -56,11 +52,7 @@ TimeManager::TimeManager() :
     upperTimeBound(1 << 30), 
     ignorePV(true), 
     isSafeToStop(true), 
-    forceStop(), 
-    historyCount(), 
-    moveHistory(), 
-    scoreHistory(), 
-    depthHistory() {
+    forceStop() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -85,11 +77,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     upperTimeBound(), 
     ignorePV(), 
     isSafeToStop(true), 
-    forceStop(), 
-    historyCount(), 
-    moveHistory(), 
-    scoreHistory(), 
-    depthHistory() {
+    forceStop() {
 
     double division = movesToGo+1;
 
@@ -138,13 +126,6 @@ void TimeManager::updatePV(Move move, Score score, Depth depth) {
     // dont keep track of pv changes if timing doesnt matter
     if (ignorePV)
         return;
-
-    // store the move,score,depth in the arrays
-    moveHistory[historyCount]  = move;
-    scoreHistory[historyCount] = score;
-    depthHistory[historyCount] = depth;
-
-    historyCount++;
 }
 
 /**
