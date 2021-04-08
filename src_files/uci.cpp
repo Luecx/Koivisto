@@ -194,7 +194,6 @@ void uci_processCommand(std::string str) {
         }
         if (str.find("LMR_DIV")             != string::npos) {
             LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
-            initLMR();
         }
         if (str.find("LMP_IMPROVING_A")     != string::npos) {
             LMP_IMPROVING_A = stoi(uci_getValue(split, "LMP_IMPROVING_A"));
