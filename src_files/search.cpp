@@ -533,7 +533,6 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             Score window = 10;
             Score alpha  = s - window;
             Score beta   = s + window;
-            
             while (isTimeLeft()) {
                 s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
                 
@@ -645,18 +644,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
-    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
-    // simply adjust the tempo-bonus.
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply in case of nullmove
-        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    }
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+
     
     // **************************************************************************************************************
     // transposition table probing:
@@ -668,15 +656,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     if (en.zobrist == zobrist && !skipMove) {
         hashMove = en.move;
-        
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type == ALL_NODE && staticEval > en.score)) {
-            
-            staticEval = en.score;
-        }
-        
-
         // We treat child nodes of null moves differently. The reason a null move
         // search has to be searched to great depth is to make sure that we dont
         // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
@@ -694,6 +673,27 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 }
             }
         }
+    }
+
+    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
+    // simply adjust the tempo-bonus.
+    if (b->getPreviousMove() == 0 && ply != 0) {
+        // reuse static evaluation from previous ply in case of nullmove
+        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+    } else {
+        staticEval =
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
+
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+
+    // adjusting eval
+    if (hashMove && ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+        || (en.type == ALL_NODE && staticEval > en.score))) {
+            
+        staticEval = en.score;
     }
     
     // **************************************************************************************************************
