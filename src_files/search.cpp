@@ -756,7 +756,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
-        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
+        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer()) && (depth > 1 || staticEval - beta > 50)) {
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
@@ -820,6 +820,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
             
+            if (skipMove && legalMoves > 6) break;
+
             if (quiet) {
                 quiets++;
                 // **************************************************************************************************
@@ -868,7 +870,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
+            score         = pvSearch(b, betaCut - 1, betaCut, (depth >> 1)+1, ply, td, m);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -878,7 +880,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
-                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m);
+                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+2, ply, td, m);
                 if (score>=beta)
                     return score;
             }
