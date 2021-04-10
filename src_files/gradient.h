@@ -1478,7 +1478,7 @@ namespace tuning {
 
     void load_positions(const std::string &path, int count, int start=0) {
 
-        positions.reserve(30000000);
+        positions.reserve(positions.size() + count);
         fstream newfile;
         newfile.open(path, ios::in);
         Evaluator evaluator{};
