@@ -653,41 +653,22 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Score       originalAlpha = alpha;
     Score       highestScore  = -MAX_MATE_SCORE;
     Score       score         = -MAX_MATE_SCORE;
+    Entry       en = table->get(zobrist);
+    bool        ttHit         = zobrist == en.zobrist;
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
-    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
-    // simply adjust the tempo-bonus.
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply in case of nullmove
-        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    }
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-    
+
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
     // position. First, we adjust the static evaluation and second, we might be able to return the tablebase score if
     // the depth of that entry is larger than our current depth.
     // **************************************************************************************************************
-    Entry en = table->get(zobrist);
     
-    if (en.zobrist == zobrist && !skipMove) {
+    if (ttHit && !skipMove) {
         hashMove = en.move;
         
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type == ALL_NODE && staticEval > en.score)) {
-            
-            staticEval = en.score;
-        }
-        
-
         // We treat child nodes of null moves differently. The reason a null move
         // search has to be searched to great depth is to make sure that we dont
         // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
@@ -706,7 +687,24 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
     }
+    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
+    // simply adjust the tempo-bonus.
+    if (b->getPreviousMove() == 0 && ply != 0) {
+        // reuse static evaluation from previous ply in case of nullmove
+        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+    } else {
+        staticEval =
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
     
+    // adjusting eval
+    if (ttHit && ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+        || (en.type == ALL_NODE && staticEval > en.score))) {
+        staticEval = en.score;
+    }
     // **************************************************************************************************************
     // tablebase probing:
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
@@ -781,7 +779,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
     // **********************************************************************************************************
-    if (depth >= 4 && !hashMove)
+    if (depth >= 4 && !ttHit)
         depth--;
     
     // **********************************************************************************************************
