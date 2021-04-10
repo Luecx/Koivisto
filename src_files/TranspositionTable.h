@@ -38,6 +38,19 @@ constexpr NodeType PV_NODE  = 0;
 constexpr NodeType CUT_NODE = 1;
 constexpr NodeType ALL_NODE = 2;
 
+
+constexpr U64 MASK_32 = ((U64) 1 << 32) - 1;
+
+inline bool keyEquals64v32(U64 hash, uint32_t key) {
+   return (hash & MASK_32) == key;
+}
+inline uint32_t hashTo32(U64 hash) {
+    return hash & MASK_32;
+}
+inline uint32_t getIndex(U64 hash, U64 mask) {
+    return ((hash & mask) >> 32) & MASK_32;
+}
+
 struct Entry {
 
     //    Entry() = default;
@@ -49,19 +62,21 @@ struct Entry {
         return os;
     }
 
-    void set(U64 p_zobrist, Score p_score, Move p_move, NodeType p_type, Depth p_depth) {
-        this->zobrist = p_zobrist;
+    void set(U64 p_zobrist, Score p_score, Move p_move, NodeType p_type, Depth p_depth, Score p_eval) {
+        this->zobrist = hashTo32(p_zobrist);
         this->score   = p_score;
         this->move    = p_move;
         this->type    = p_type;
         this->depth   = p_depth;
+        this->eval    = p_eval;
     }
 
     NodeAge getAge() { return getScore(move); }
 
     void setAge(NodeAge p_age) { setScore(move, p_age); }
 
-    U64      zobrist;    // 64 bit
+    uint32_t zobrist;    // 32 bit. Note that index is used for some extra bits.
+    Score    eval;       // 16 bit
     Move     move;       // 32 bit  (using the 8 msb for age)
     Depth    depth;      // 8 bit
     NodeType type;       // 8 bit
@@ -90,7 +105,7 @@ class TranspositionTable {
 
     Entry get(U64 zobrist);
 
-    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
+    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval);
 
     void incrementAge();
 

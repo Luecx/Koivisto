@@ -127,7 +127,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     }
 
     if (hash) {
-        perft_tt->put(zob, 0, nodes, 0, depth);
+        perft_tt->put(zob, 0, nodes, 0, depth, 0);
     }
 
     return nodes;

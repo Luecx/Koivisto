@@ -523,7 +523,7 @@ void Board::move(Move m) {
     this->changeActivePlayer();
     this->computeNewRepetition();
 
-    __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist&table->m_mask]);
+    __builtin_prefetch(&table->m_entries[getIndex(getBoardStatus()->zobrist,table->m_mask)]);
 
 }
 

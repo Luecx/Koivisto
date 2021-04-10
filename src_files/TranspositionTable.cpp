@@ -39,6 +39,8 @@ void TranspositionTable::init(U64 MB) {
     m_size /= 2;
     m_mask = m_size - 1;
 
+    m_mask = m_mask << 32;
+
     m_entries = (Entry*) (calloc(m_size, sizeof(Entry)));
     clear();
 
@@ -101,7 +103,7 @@ double TranspositionTable::usage() {
  */
 Entry TranspositionTable::get(U64 zobrist) {
 
-    U64 index = zobrist & m_mask;
+    uint32_t index = getIndex(zobrist, m_mask);
 
     Entry enP = m_entries[index];
 
@@ -123,19 +125,19 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
+bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval) {
 
-    U64 index = zobrist & m_mask;
+    uint32_t index = getIndex(zobrist, m_mask);
 
     Entry* enP = &m_entries[index];
 
     if (enP->zobrist == 0) {
-        enP->set(zobrist, score, move, type, depth);
+        enP->set(zobrist, score, move, type, depth, eval);
         enP->setAge(m_currentAge);
         return true;
     } else {
-        if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE||enP->zobrist == zobrist) && enP->depth <= depth)) {
-            enP->set(zobrist, score, move, type, depth);
+        if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE|| keyEquals64v32(zobrist, enP->zobrist)) && enP->depth <= depth)) {
+            enP->set(zobrist, score, move, type, depth, eval);
             enP->setAge(m_currentAge);
             return true;
         }

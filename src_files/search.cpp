@@ -233,7 +233,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
     
     U64   zob = b->zobrist();
     Entry en  = table->get(zob);
-    if (en.zobrist == zob && en.type == PV_NODE) {
+    if (keyEquals64v32(zob, en.zobrist) && en.type == PV_NODE) {
         
         // extract the move from the table
         Move mov = en.move;
@@ -656,6 +656,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
+    Entry en = table->get(zobrist);
+
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
@@ -663,7 +665,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
         staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : (keyEquals64v32(zobrist, en.zobrist) ? en.eval : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1));
     }
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -675,9 +677,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // position. First, we adjust the static evaluation and second, we might be able to return the tablebase score if
     // the depth of that entry is larger than our current depth.
     // **************************************************************************************************************
-    Entry en = table->get(zobrist);
     
-    if (en.zobrist == zobrist && !skipMove) {
+    if (keyEquals64v32(zobrist, en.zobrist) && !skipMove) {
         hashMove = en.move;
         
         // adjusting eval
@@ -875,7 +876,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // out to be singular.
         // *********************************************************************************************************
         if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && keyEquals64v32(zobrist, en.zobrist) && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
@@ -977,7 +978,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                table->put(zobrist, score, m, CUT_NODE, depth, staticEval);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -1019,9 +1020,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth, staticEval);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth, staticEval);
         }
     }
     
@@ -1053,7 +1054,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
     // position. As we have no information about the depth, we will allways use the perft_tt entry.
     // **************************************************************************************************************
-    if (en.zobrist == zobrist) {
+    if (keyEquals64v32(zobrist, en.zobrist)) {
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -1075,11 +1076,11 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
         stand_pat =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : (keyEquals64v32(zobrist, en.zobrist) ? en.eval : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1));
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.
-    if (en.zobrist == zobrist) {
+    if (keyEquals64v32(zobrist, en.zobrist)) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type == ALL_NODE && stand_pat > en.score)) {
@@ -1139,7 +1140,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
                 return beta;
             }
             if (score > alpha) {
@@ -1151,7 +1152,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+        table->put(zobrist, bestScore, bestMove, ttNodeType, 0, stand_pat);
     return alpha;
     
     //    return 0;
