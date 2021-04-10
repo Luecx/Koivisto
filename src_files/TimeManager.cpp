@@ -49,7 +49,8 @@ TimeManager::TimeManager(int moveTime) :
 TimeManager::TimeManager() : 
     mode(DEPTH), 
     timeToUse(1 << 30), 
-    upperTimeBound(1 << 30), 
+    upperTimeBound(1 << 30),
+    nodesToUse(-1),
     ignorePV(true), 
     isSafeToStop(true), 
     forceStop() {
@@ -73,10 +74,11 @@ TimeManager::TimeManager() :
  */
 TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) : 
     mode(TOURNAMENT), 
-    timeToUse(), 
+    timeToUse(),
+    nodesToUse(-1),
     upperTimeBound(), 
     ignorePV(), 
-    isSafeToStop(true), 
+    isSafeToStop(true),
     forceStop() {
 
     double division = movesToGo+1;
@@ -139,11 +141,12 @@ void TimeManager::stopSearch() { forceStop = true; }
  */
 bool TimeManager::isTimeLeft() {
 
-    int elapsed = elapsedTime();
 
     // stop the search if requested
     if (forceStop)
         return false;
+    
+    int elapsed = elapsedTime();
 
     // if we are above the maximum allowed time, stop
     if (elapsed >= upperTimeBound)
@@ -180,3 +183,28 @@ bool TimeManager::rootTimeLeft() {
  * @return
  */
 TimeMode TimeManager::getMode() const { return mode; }
+
+/**
+ * sets the node limit for the search
+ * @param maxNodes
+ */
+void     TimeManager::setNodeLimit(U64 maxNodes) {
+    this->nodesToUse = maxNodes;
+}
+
+/**
+ * checks if the search is stopped by force
+ * @return
+ */
+bool TimeManager::isForceStopped() {
+    return forceStop;
+}
+
+/**
+ * gets the node limit for the search
+ * @return
+ */
+U64  TimeManager::getNodeLimit() {
+    return nodesToUse;
+}
+

@@ -1,14 +1,8 @@
-//
-// Created by finne on 5/15/2020.
-//
-
-#ifndef CHESSCOMPUTER_MOVE_H
-#define CHESSCOMPUTER_MOVE_H
 
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -22,7 +16,11 @@
  *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
  *                                                                                                  *
  ****************************************************************************************************/
- 
+
+#ifndef CHESSCOMPUTER_MOVE_H
+#define CHESSCOMPUTER_MOVE_H
+
+
 #include "Bitboard.h"
 
 #include <cstdint>

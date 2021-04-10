@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -283,8 +283,13 @@ void uci_go_depth(int depth) {
  * @param nodes
  */
 void uci_go_nodes(int nodes) {
-    // TODO implement node limit
-    std::cout << "go nodes " << nodes << " not supported" << std::endl;
+    uci_stop();
+    
+    timeManager = TimeManager();
+    timeManager.setNodeLimit(nodes);
+    
+    searchThread = std::thread(uci_searchAndPrint, MAX_PLY, &timeManager);
+    
 }
 
 /**
