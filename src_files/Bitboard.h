@@ -812,7 +812,7 @@ inline U64 lookUpBishopXRayAttack(Square index, U64 occupied, U64 opponent) {
  * @return
  */
 inline Square bitscanForward(U64 bb) {
-    //    assert(bb != 0);
+    //    UCI_ASSERT(bb != 0);
     return __builtin_ctzll(bb);
 }
 
@@ -822,7 +822,7 @@ inline Square bitscanForward(U64 bb) {
  * @return
  */
 inline Square bitscanReverse(U64 bb) {
-    //    assert(bb != 0);
+    //    UCI_ASSERT(bb != 0);
     return __builtin_clzll(bb) ^ 63;
 }
 
