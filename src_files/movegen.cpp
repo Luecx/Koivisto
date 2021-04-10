@@ -17,6 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "movegen.h"
+#include "UCIAssert.h"
 
 
 // check if all moves should be generated or only quiet moves
@@ -83,6 +84,8 @@ void generatePawnMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -213,7 +216,8 @@ void generatePieceMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
-    
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -287,6 +291,8 @@ void generateKingMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -356,6 +362,8 @@ template<MoveGenConfig config, bool score> void generate(
     Move hashMove = 0,
     SearchData* sd = nullptr,
     Depth ply = 0) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     mv->clear();
     
@@ -372,11 +380,18 @@ template<MoveGenConfig config, bool score> void generate(
 }
 
 void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
+    UCI_ASSERT(sd);
     generate<GENERATE_ALL, true>(b, mv, hashMove, sd, ply);
 }
 void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
 }
 void generatePerftMoves(Board* b, MoveList* mv) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     generate<GENERATE_ALL, false>(b, mv);
 }
