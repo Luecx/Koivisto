@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -29,42 +29,30 @@ using namespace bb;
 enum TimeMode{
     DEPTH,
     MOVETIME,
-    TOURNAMENT
+    TOURNAMENT,
 };
 
 class TimeManager {
 
     private:
-    //        int white;
-    //        int black;
-    //        int whiteInc;
-    //        int blackInc;
-    //        int movesToGo;
+    
     TimeMode mode;
 
     int timeToUse;
+    U64 nodesToUse;
     int upperTimeBound;
 
     bool ignorePV;
     bool isSafeToStop;
     bool forceStop;
-
-    int   historyCount;
-    Move  moveHistory[256];
-    Score scoreHistory[256];
-    Depth depthHistory[256];
-
-    /**
-     * updates isSafeToStop
-     */
-
+    
     public:
     TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board);
 
     TimeManager();
 
     TimeManager(int moveTime);
-
+    
     virtual ~TimeManager();
 
     /**
@@ -90,7 +78,11 @@ class TimeManager {
      * @return
      */
     bool isTimeLeft();
-
+    
+    /**
+     * checks if time at the root is left
+     * @return
+     */
     bool rootTimeLeft();
     
     /**
@@ -98,6 +90,21 @@ class TimeManager {
      * @return
      */
     TimeMode getMode() const;
+    
+    /**
+     * set a node limit for the search
+     */
+    void setNodeLimit(U64 maxNodes=-1);
+    
+    /**
+     * check if the search shall be stopped by force
+     */
+    bool isForceStopped();
+    
+    /**
+     * returns the node limit for the search
+     */
+    U64 getNodeLimit();
 };
 
 #endif    // KOIVISTO_TIMEMANAGER_H

@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -525,7 +525,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     // will have a random position from the tree. Using this would lead to an illegal/not existing pv
     Board searchBoard{b};
     Board printBoard {b};
-    
+    td->dropOut = false;
     for (d = 1; d <= maxDepth; d++) {
         
         if (d < 6) {
@@ -601,9 +601,21 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // increment the node counter for the current thread
     td->nodes++;
     
+    // force a stop when enough nodes have been searched
+    if(search_timeManager->getNodeLimit() <= td->nodes){
+        search_timeManager->stopSearch();
+    }
+    
+    // check if a stop is forced
+    if(search_timeManager->isForceStopped()){
+        td->dropOut = true;
+        return beta;
+    }
+    
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock too often for speed
     // reasons so we only apply this when the depth is larger than 10.
-    if (depth > 6 && !isTimeLeft()) {
+    if ((depth > 6 && !isTimeLeft())) {
+        td->dropOut = true;
         return beta;
     }
     
@@ -964,7 +976,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // beta -cutoff
         if (score >= beta) {
-            if (!skipMove) {
+            if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
@@ -1006,7 +1018,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // we need to write the current score/position into the transposition table if and only if we havent skipped a move
     // due to our extension policy.
-    if (!skipMove) {
+    if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {

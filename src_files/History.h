@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -74,7 +74,7 @@ struct ThreadData {
     U64 nodes    = 0;
     int seldepth = 0;
     int tbhits   = 0;
- 
+    bool dropOut = false;
     SearchData* searchData = nullptr;
     char padding[1024 * 128];
 

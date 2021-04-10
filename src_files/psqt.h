@@ -1,6 +1,21 @@
-//
-// Created by Luecx on 06.12.2020.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 
 #ifndef KOIVISTO_PSQT_H
 #define KOIVISTO_PSQT_H
@@ -20,9 +35,6 @@ using namespace bb;
 #define pst_index_relative_white(pieceSquare, kingSquare)  (   (rankIndex(kingSquare)-rankIndex(pieceSquare)+7))*15+(fileIndex(kingSquare)-fileIndex(pieceSquare)+7)
 #define pst_index_relative_black(pieceSquare, kingSquare)  (14-(rankIndex(kingSquare)-rankIndex(pieceSquare)+7))*15+(fileIndex(kingSquare)-fileIndex(pieceSquare)+7)
 
-#define psqt_kingside_indexing(wkingside, bkingside) (wkingside) * 2 + (bkingside)
-
-#define PSQT(wKing, bKing, piece, square) piece_kk_square_tables[wKing][bKing][piece][square]
 
 // indexed by piece
 extern EvalScore piece_values[6];
