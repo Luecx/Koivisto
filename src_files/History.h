@@ -34,8 +34,8 @@ struct SearchData {
     MoveList** moves;
     Evaluator  evaluator {};
     
-    // capture history table (side-from-to)
-    int   captureHistory[N_COLORS][N_SQUARES][N_SQUARES] = {0};
+    // capture history table (side-piece-piece-square)
+    int   captureHistory[N_COLORS][N_PIECE_TYPES][N_PIECE_TYPES][N_SQUARES] = {0};
     // history table (side-from-to)
     int   history       [N_COLORS][N_SQUARES][N_SQUARES] = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
