@@ -836,7 +836,6 @@ namespace tuning {
 
         void init(Board *b) {
 
-
             for (int color= 0; color <= 1; color++) {
 
                 Color us = color;
@@ -881,9 +880,9 @@ namespace tuning {
 
                     // normalise the values (black pieces will be made to white pieces)
                     if (us == WHITE) {
-                        pinnerPiece -= 6;
+                        pinnerPiece -= 8;
                     } else {
-                        pinnedPiece -= 6;
+                        pinnedPiece -= 8;
                     }
 
 
@@ -902,6 +901,7 @@ namespace tuning {
                 midgame += count[i] * td->w_pinned[i].midgame.value;
                 endgame += count[i] * td->w_pinned[i].endgame.value;
             }
+            
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
@@ -1066,6 +1066,7 @@ namespace tuning {
         double evaluate(int threadID = 0) {
             float midgame = 0;
             float endgame = 0;
+    
 
             features.evaluate(midgame, endgame, &threadData[threadID]);
             mobility.evaluate(midgame, endgame, &threadData[threadID]);
@@ -1084,15 +1085,15 @@ namespace tuning {
         }
 
         void gradient(float lossgrad, int threadID) {
-            features.gradient(&meta, lossgrad, &threadData[threadID]);
-            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
-            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+//            features.gradient(&meta, lossgrad, &threadData[threadID]);
+//            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
+//            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
+//            passed.gradient(&meta, lossgrad, &threadData[threadID]);
+//            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
+//            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
+//            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
