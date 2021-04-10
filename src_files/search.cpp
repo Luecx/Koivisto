@@ -656,21 +656,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
-    Entry en = table->get(zobrist);
+    Entry       en            = table->get(zobrist);
+    bool        ttHit         = keyEquals64v32(zobrist, en.zobrist);
 
-    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
-    // simply adjust the tempo-bonus.
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply in case of nullmove
-        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : (keyEquals64v32(zobrist, en.zobrist) ? en.eval : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1));
-    }
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-    
+
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
@@ -678,16 +667,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // the depth of that entry is larger than our current depth.
     // **************************************************************************************************************
     
-    if (keyEquals64v32(zobrist, en.zobrist) && !skipMove) {
+    if (ttHit && !skipMove) {
         hashMove = en.move;
-        
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type == ALL_NODE && staticEval > en.score)) {
-            
-            staticEval = en.score;
-        }
-        
 
         // We treat child nodes of null moves differently. The reason a null move
         // search has to be searched to great depth is to make sure that we dont
@@ -707,6 +688,28 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
     }
+
+    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
+    // simply adjust the tempo-bonus.
+    if (b->getPreviousMove() == 0 && ply != 0) {
+        // reuse static evaluation from previous ply in case of nullmove
+        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+    } else {
+        staticEval =
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
+
+    staticEval;
+
+    // adjusting eval
+    if (ttHit && ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+        || (en.type == ALL_NODE && staticEval > en.score))) {
+        staticEval = en.score;
+    }
+
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
     
     // **************************************************************************************************************
     // tablebase probing:
@@ -978,7 +981,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth, staticEval);
+                table->put(zobrist, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -1020,9 +1023,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth, staticEval);
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth, staticEval);
+            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
         }
     }
     
@@ -1047,14 +1050,16 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     SearchData* sd         = td->searchData;
     U64         zobrist    = b->zobrist();
     Entry       en         = table->get(b->zobrist());
+    bool        ttHit      = keyEquals64v32(zobrist, en.zobrist);
     NodeType    ttNodeType = ALL_NODE;
-    
+    Move  bestMove         = 0;
+    Score bestScore;
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
     // position. As we have no information about the depth, we will allways use the perft_tt entry.
     // **************************************************************************************************************
-    if (keyEquals64v32(zobrist, en.zobrist)) {
+    if (ttHit) {
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -1070,29 +1075,28 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
-    Score stand_pat;
+    Score staticEval;
     if (b->getPreviousMove() == 0 && ply != 0) {
         // reuse static evaluation from previous ply incase of nullmove
-        stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        bestScore = staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
-        stand_pat =
-            inCheck ? -MAX_MATE_SCORE + ply : (keyEquals64v32(zobrist, en.zobrist) ? en.eval : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1));
-    }
-    
-    //we can also use the perft_tt entry to adjust the evaluation.
-    if (keyEquals64v32(zobrist, en.zobrist)) {
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
-            || (en.type == ALL_NODE && stand_pat > en.score)) {
-            
-            stand_pat = en.score;
+        if (inCheck) {
+            bestScore = staticEval = -MAX_MATE_SCORE + ply;
+        } else {
+            bestScore = staticEval = ttHit ? en.eval :  sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        }
+        if (ttHit) {
+            // adjusting eval
+            if ((en.type == PV_NODE) || (en.type == CUT_NODE && bestScore < en.score)
+                || (en.type == ALL_NODE && bestScore > en.score)) {
+                bestScore = en.score;
+            }
         }
     }
-    
-    if (stand_pat >= beta)
+    if (bestScore >= beta)
         return beta;
-    if (alpha < stand_pat)
-        alpha = stand_pat;
+    if (alpha < bestScore)
+        alpha = bestScore;
     
     // extract all:
     //- captures (including e.p.)
@@ -1106,10 +1110,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // create a moveorderer to sort the moves during the search
     generateNonQuietMoves(b, mv);
     MoveOrderer moveOrderer {mv};
-    
-    // keping track of the best move for the transpositions
-    Move  bestMove  = 0;
-    Score bestScore = -MAX_MATE_SCORE;
 
     for (int i = 0; i < mv->getSize(); i++) {
         
@@ -1140,7 +1140,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, staticEval);
                 return beta;
             }
             if (score > alpha) {
@@ -1152,7 +1152,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0, stand_pat);
+        table->put(zobrist, bestScore, bestMove, ttNodeType, 0, staticEval);
     return alpha;
     
     //    return 0;
