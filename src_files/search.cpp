@@ -964,6 +964,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if we got a new best score for this node, update the highest score and keep track of the best move
         if (score > highestScore) {
             highestScore = score;
+        }
+        
+        // we consider this seperate to having a new best score for simplicity
+        if (score > alpha) {
+            // increase alpha
+            alpha = score;
             bestMove     = m;
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
@@ -972,7 +978,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 search_timeManager->updatePV(m, score, depth);
             }
         }
-        
+
         // beta -cutoff
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
@@ -987,12 +993,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
             
             return beta;
-        }
-        
-        // we consider this seperate to having a new best score for simplicity
-        if (score > alpha) {
-            // increase alpha
-            alpha = score;
         }
         
         // if this loop finished, we can increment the legal move counter by one which is important for detecting mates
@@ -1025,7 +1025,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
-    return alpha;
+    return highestScore;
 }
 
 /**
@@ -1108,7 +1108,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // keping track of the best move for the transpositions
     Move  bestMove  = 0;
-    Score bestScore = -MAX_MATE_SCORE;
+    Score bestScore = stand_pat;
 
     for (int i = 0; i < mv->getSize(); i++) {
         
@@ -1152,7 +1152,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // store the current position inside the transposition table
     if (bestMove)
         table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
-    return alpha;
+    return bestScore;
     
     //    return 0;
 }
