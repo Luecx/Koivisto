@@ -49,10 +49,9 @@ using namespace tuning;
 
     load_weights();
 
-    load_positions("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
-    load_positions("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
-    load_positions("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
-    double K = compute_K(2.48617, 100, 1e-7);
+    load_positions("../resources/make_fens_from_lichess_pgn/output/0.epd", 25000000);
+    load_positions("../resources/make_fens_from_lichess_pgn/output/1.epd", 25000000);
+    double K = compute_K(1.9, 200, 1e-7);
     for(int i = 0; i < 10; i++){
         train(50, K, 0.001 * sqrt(positions.size()));
         display_params();
