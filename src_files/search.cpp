@@ -44,8 +44,8 @@ int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
-int SEE_QUIET        = 10;
-int SEE_NOISY        = 80;
+int SEE_QUIET        = 15;
+int SEE_NOISY        = 82;
 
 void initLMR() {
     int d, m;
