@@ -1131,10 +1131,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         
         Move m = moveOrderer.next();
         
-        // do not consider illegal moves
-        if (!b->isLegal(m))
-            continue;
-        
         // **********************************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
@@ -1143,6 +1139,10 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         if (!inCheck && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
             continue;
             
+        // do not consider illegal moves
+        if (!b->isLegal(m))
+            continue;
+    
         b->move(m);
         
         bool inCheckOpponent = b->isInCheck(b->getActivePlayer());
