@@ -1136,7 +1136,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
         // consider this quiet move as well.
         // **********************************************************************************************************
-        if (!inCheck && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
+        if (!inCheck && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < alpha - stand_pat - 100)
             continue;
             
         // do not consider illegal moves
