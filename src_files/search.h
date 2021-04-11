@@ -44,6 +44,8 @@ extern int FUTILITY_MARGIN;
 extern int SE_MARGIN_STATIC;
 extern int LMR_DIV;
 extern TranspositionTable* table;
+extern int SEE_QUIET;
+extern int SEE_NOISY;
 #define MAX_THREADS 256
 
 /**

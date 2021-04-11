@@ -183,6 +183,12 @@ void uci_processCommand(std::string str) {
     } else if (split.at(0) == "debug") {
         uci_debug(uci_getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
+        if (str.find("SEE_QUIET") != string::npos) {
+            SEE_QUIET = stoi(uci_getValue(split, "SEE_QUIET"));
+        }
+        if (str.find("SEE_NOISY") != string::npos) {
+            SEE_NOISY = stoi(uci_getValue(split, "SEE_NOISY"));
+        }
         if (str.find("FUTILITY_MARGIN") != string::npos) {
             FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
         }

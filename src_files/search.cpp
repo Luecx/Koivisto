@@ -44,6 +44,8 @@ int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
+int SEE_QUIET        = 10;
+int SEE_NOISY        = 80;
 
 void initLMR() {
     int d, m;
@@ -851,8 +853,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
             // consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
+            if (quiets && b->staticExchangeEvaluation(m) <= (quiet ? 25-SEE_QUIET*moveDepth*moveDepth : SEE_NOISY * depth))
                 continue;
         }
 
