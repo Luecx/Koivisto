@@ -20,6 +20,7 @@
 #include <algorithm>
 #include "TimeManager.h"
 #include "Board.h"
+#include "UCIAssert.h"
 
 auto startTime =
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -80,6 +81,10 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     ignorePV(), 
     isSafeToStop(true),
     forceStop() {
+    UCI_ASSERT(board);
+    UCI_ASSERT(white > 0);
+    UCI_ASSERT(black > 0);
+    UCI_ASSERT(movesToGo >= 0);
 
     double division = movesToGo+1;
 

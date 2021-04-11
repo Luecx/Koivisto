@@ -19,6 +19,7 @@
 
 #include "uci.h"
 #include "search.h"
+#include "UCIAssert.h"
 
 #include "syzygy/tbprobe.h"
 
@@ -424,8 +425,6 @@ void uci_position_fen(std::string fen, std::string moves) {
         Piece moving   = board->getPiece(s1);
         Piece captured = board->getPiece(s2);
 
-        assert(moving >= 0);
-
         MoveType type;
 
         if (s.size() > 4) {
@@ -481,7 +480,7 @@ void uci_position_fen(std::string fen, std::string moves) {
         }
         Move m = genMove(s1, s2, type, moving, captured);
 
-        assert(board->isLegal(m));
+        UCI_ASSERT(board->isLegal(m));
         board->move(m);
     }
 }

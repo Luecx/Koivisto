@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 #include "Perft.h"
 
+#include "UCIAssert.h"
 #include "movegen.h"
 
 using namespace std;
@@ -73,6 +74,7 @@ void perft_res() {}
  * @return
  */
 U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
+    UCI_ASSERT(b);
 
     U64 zob = ZERO;
     if (hash) {

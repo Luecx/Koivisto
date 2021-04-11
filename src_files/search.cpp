@@ -19,6 +19,7 @@
 
 #include "search.h"
 
+#include "UCIAssert.h"
 #include "History.h"
 #include "TimeManager.h"
 #include "movegen.h"
@@ -146,6 +147,8 @@ void search_stop() {
  * @return
  */
 bool hasOnlyPawns(Board* board, Color color) {
+    UCI_ASSERT(board);
+
     return board->getTeamOccupiedBB()[color]
            == ((board->getPieceBB()[PAWN + color * 8] | board->getPieceBB()[KING + color * 8]));
 }
@@ -227,6 +230,8 @@ void search_cleanUp() {
  * @param mvList
  */
 void extractPV(Board* b, MoveList* mvList, Depth depth) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mvList);
     
     if (depth <= 0)
         return;
@@ -282,6 +287,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
  * @param score
  */
 void printInfoString(Board* b, Depth d, Score score) {
+    UCI_ASSERT(b);
     
     if (!printInfo)
         return;
@@ -322,6 +328,7 @@ void printInfoString(Board* b, Depth d, Score score) {
  * probes the wdl tables if tablebases can be used.
  */
 Score getWDL(Board* board) {
+    UCI_ASSERT(board);
     
     // we cannot prove the tables if there are too many pieces on the board
     if (bitCount(*board->getOccupiedBB()) > (signed) TB_LARGEST)
@@ -370,6 +377,7 @@ Score getWDL(Board* board) {
  * The displayed depth is usually the distance to zero which is the distance until the 50-move rule is reset.
  */
 Move getDTZMove(Board* board) {
+    UCI_ASSERT(board);
     
     if (bitCount(*board->getOccupiedBB()) > (signed) TB_LARGEST)
         return 0;
@@ -476,6 +484,8 @@ SearchOverview search_overview() { return overview; }
  * @return
  */
 Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(timeManager);
     
     // if the main thread calls this function, we need to generate the search data for all the threads first
     if (threadId == 0) {
@@ -596,6 +606,10 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @return
  */
 Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, Depth* lmrFactor) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(td);
+    UCI_ASSERT(beta > alpha);
+    UCI_ASSERT(ply >= 0);
     
     // increment the node counter for the current thread
     td->nodes++;
@@ -1038,6 +1052,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
  * @return
  */
 Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(td);
+    UCI_ASSERT(beta > alpha);
     
     // increase the nodes for this thread
     td->nodes++;
