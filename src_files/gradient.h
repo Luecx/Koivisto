@@ -40,9 +40,9 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
-#define N_THREAD 12
+#define N_THREAD 4
 
 namespace tuning {
 
@@ -88,6 +88,10 @@ namespace tuning {
         I_SAFE_ROOK_CHECK,
         I_SAFE_BISHOP_CHECK,
         I_SAFE_KNIGHT_CHECK,
+
+        I_PAWN_ATTACK_MINOR,
+        I_PAWN_ATTACK_ROOK,
+        I_PAWN_ATTACK_QUEEN,
         
         // always have this at the end
         I_END,
@@ -641,6 +645,11 @@ namespace tuning {
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     
+            count[I_PAWN_ATTACK_MINOR] = (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))-bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
+            count[I_PAWN_ATTACK_ROOK] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
+            count[I_PAWN_ATTACK_QUEEN] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
+
+
             U64 occupied = *b->getOccupiedBB();
             U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
             U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied)  & ~whiteTeam;
@@ -1638,7 +1647,11 @@ namespace tuning {
                 "SAFE_QUEEN_CHECK",
                 "SAFE_ROOK_CHECK",
                 "SAFE_BISHOP_CHECK",
-                "SAFE_KNIGHT_CHECK",};
+                "SAFE_KNIGHT_CHECK",
+                "I_PAWN_ATTACK_MINOR",
+                "I_PAWN_ATTACK_ROOK",
+                "I_PAWN_ATTACK_QUEEN",
+                };
 
         for (int i = 0; i < I_END; i++) {
             std::cout << "EvalScore " << left << setw(30) << feature_names[i] << right << "= ";
