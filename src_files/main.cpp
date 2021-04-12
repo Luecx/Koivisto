@@ -49,7 +49,7 @@ using namespace tuning;
 
     load_weights();
 
-    load_positions("../resources/other/E12.33-1M-D12-Resolved.book", 1000000);
+    load_positions("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
     load_positions("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
     load_positions("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
     double K = compute_K(2.48617, 100, 1e-7);

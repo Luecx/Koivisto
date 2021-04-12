@@ -1085,15 +1085,15 @@ namespace tuning {
         }
 
         void gradient(float lossgrad, int threadID) {
-//            features.gradient(&meta, lossgrad, &threadData[threadID]);
-//            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-//            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-//            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-//            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
-//            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-//            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+            features.gradient(&meta, lossgrad, &threadData[threadID]);
+            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
+            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
+            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
+            passed.gradient(&meta, lossgrad, &threadData[threadID]);
+            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
+            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
+            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
+            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
