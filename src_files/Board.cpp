@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -19,6 +19,7 @@
 
 #include "Board.h"
 #include "search.h"
+#include "UCIAssert.h"
 
 using namespace bb;
 
@@ -149,6 +150,7 @@ Board::Board(std::string fen) {
  * @param board
  */
 Board::Board(Board* board) {
+    UCI_ASSERT(board);
 
     // we need to copy occupancy bitboards for the teams
     m_teamOccupiedBB[WHITE] = board->getTeamOccupiedBB()[WHITE];
@@ -319,6 +321,7 @@ void Board::setPiece(Square sq, Piece piece) {
  * @param sq
  */
 void Board::unsetPiece(Square sq) {
+    UCI_ASSERT(0 <= sq && sq <= 63);
 
     // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);

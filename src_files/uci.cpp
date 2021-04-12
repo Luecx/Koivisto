@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -19,6 +19,7 @@
 
 #include "uci.h"
 #include "search.h"
+#include "UCIAssert.h"
 
 #include "syzygy/tbprobe.h"
 
@@ -283,8 +284,13 @@ void uci_go_depth(int depth) {
  * @param nodes
  */
 void uci_go_nodes(int nodes) {
-    // TODO implement node limit
-    std::cout << "go nodes " << nodes << " not supported" << std::endl;
+    uci_stop();
+    
+    timeManager = TimeManager();
+    timeManager.setNodeLimit(nodes);
+    
+    searchThread = std::thread(uci_searchAndPrint, MAX_PLY, &timeManager);
+    
 }
 
 /**
@@ -419,8 +425,6 @@ void uci_position_fen(std::string fen, std::string moves) {
         Piece moving   = board->getPiece(s1);
         Piece captured = board->getPiece(s2);
 
-        assert(moving >= 0);
-
         MoveType type;
 
         if (s.size() > 4) {
@@ -476,7 +480,7 @@ void uci_position_fen(std::string fen, std::string moves) {
         }
         Move m = genMove(s1, s2, type, moving, captured);
 
-        assert(board->isLegal(m));
+        UCI_ASSERT(board->isLegal(m));
         board->move(m);
     }
 }

@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -22,7 +22,6 @@
 
 //#define TUNE_PST
 
-#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -813,7 +812,7 @@ inline U64 lookUpBishopXRayAttack(Square index, U64 occupied, U64 opponent) {
  * @return
  */
 inline Square bitscanForward(U64 bb) {
-    //    assert(bb != 0);
+    //    UCI_ASSERT(bb != 0);
     return __builtin_ctzll(bb);
 }
 
@@ -823,7 +822,7 @@ inline Square bitscanForward(U64 bb) {
  * @return
  */
 inline Square bitscanReverse(U64 bb) {
-    //    assert(bb != 0);
+    //    UCI_ASSERT(bb != 0);
     return __builtin_clzll(bb) ^ 63;
 }
 

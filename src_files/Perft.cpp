@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 #include "Perft.h"
 
+#include "UCIAssert.h"
 #include "movegen.h"
 
 using namespace std;
@@ -73,6 +74,7 @@ void perft_res() {}
  * @return
  */
 U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
+    UCI_ASSERT(b);
 
     U64 zob = ZERO;
     if (hash) {

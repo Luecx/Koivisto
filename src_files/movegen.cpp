@@ -1,7 +1,23 @@
-//
-// Created by Luecx on 12.03.2021.
-//
+
+/****************************************************************************************************
+ *                                                                                                  *
+ *                                     Koivisto UCI Chess engine                                    *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
+ *                                                                                                  *
+ *                 Koivisto is free software: you can redistribute it and/or modify                 *
+ *               it under the terms of the GNU General Public License as published by               *
+ *                 the Free Software Foundation, either version 3 of the License, or                *
+ *                                (at your option) any later version.                               *
+ *                    Koivisto is distributed in the hope that it will be useful,                   *
+ *                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+ *                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+ *                           GNU General Public License for more details.                           *
+ *                 You should have received a copy of the GNU General Public License                *
+ *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+ *                                                                                                  *
+ ****************************************************************************************************/
 #include "movegen.h"
+#include "UCIAssert.h"
 
 
 // check if all moves should be generated or only quiet moves
@@ -68,6 +84,8 @@ void generatePawnMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -198,7 +216,8 @@ void generatePieceMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
-    
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -272,6 +291,8 @@ void generateKingMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -341,6 +362,8 @@ template<MoveGenConfig config, bool score> void generate(
     Move hashMove = 0,
     SearchData* sd = nullptr,
     Depth ply = 0) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     mv->clear();
     
@@ -357,11 +380,18 @@ template<MoveGenConfig config, bool score> void generate(
 }
 
 void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
+    UCI_ASSERT(sd);
     generate<GENERATE_ALL, true>(b, mv, hashMove, sd, ply);
 }
 void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
 }
 void generatePerftMoves(Board* b, MoveList* mv) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     generate<GENERATE_ALL, false>(b, mv);
 }

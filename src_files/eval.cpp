@@ -2,7 +2,7 @@
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
- *                           by. Kim Kahre, Finn Eggers and Eugenio Bruno                           *
+ *                                   by. Kim Kahre and Finn Eggers                                  *
  *                                                                                                  *
  *                 Koivisto is free software: you can redistribute it and/or modify                 *
  *               it under the terms of the GNU General Public License as published by               *
@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "eval.h"
+#include "UCIAssert.h"
 
 #include <immintrin.h>
 #include <iomanip>
@@ -179,6 +180,8 @@ EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, m
  */
 
 bool hasMatingMaterial(Board* b, bool side) {
+    UCI_ASSERT(b);
+
     if ((b->getPieceBB()[QUEEN + side * 8] | b->getPieceBB()[ROOK + side * 8] | b->getPieceBB()[PAWN + side * 8])
         || (bitCount(b->getPieceBB()[BISHOP + side * 8] | b->getPieceBB()[KNIGHT + side * 8]) > 1
             && b->getPieceBB()[BISHOP + side * 8]))
@@ -213,6 +216,8 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
 
 
 bb::Score Evaluator::evaluateTempo(Board* b){
+    UCI_ASSERT(b);
+
     phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
         - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
         - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
@@ -229,6 +234,8 @@ bb::Score Evaluator::evaluateTempo(Board* b){
 }
 
 EvalScore Evaluator::computeHangingPieces(Board* b) {
+    UCI_ASSERT(b);
+
     U64 WnotAttacked = ~b->getAttackedSquares<WHITE>();
     U64 BnotAttacked = ~b->getAttackedSquares<BLACK>();
 
@@ -242,7 +249,7 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
 }
 
 EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
-    
+    UCI_ASSERT(b);
     
     EvalScore result = 0;
     
@@ -309,6 +316,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
  * @return
  */
 bb::Score Evaluator::evaluate(Board* b) {
+    UCI_ASSERT(b);
 
     Score res = 0;
 
@@ -704,6 +712,7 @@ bb::Score Evaluator::evaluate(Board* b) {
 }
 
 void printEvaluation(Board* board) {
+    UCI_ASSERT(board);
 
     using namespace std;
 

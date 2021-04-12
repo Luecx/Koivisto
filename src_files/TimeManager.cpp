@@ -20,6 +20,7 @@
 #include <algorithm>
 #include "TimeManager.h"
 #include "Board.h"
+#include "UCIAssert.h"
 
 auto startTime =
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -35,11 +36,7 @@ TimeManager::TimeManager(int moveTime) :
     upperTimeBound(moveTime), 
     ignorePV(true), 
     isSafeToStop(true), 
-    forceStop(), 
-    historyCount(), 
-    moveHistory(), 
-    scoreHistory(), 
-    depthHistory() {
+    forceStop() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -53,14 +50,11 @@ TimeManager::TimeManager(int moveTime) :
 TimeManager::TimeManager() : 
     mode(DEPTH), 
     timeToUse(1 << 30), 
-    upperTimeBound(1 << 30), 
+    upperTimeBound(1 << 30),
+    nodesToUse(-1),
     ignorePV(true), 
     isSafeToStop(true), 
-    forceStop(), 
-    historyCount(), 
-    moveHistory(), 
-    scoreHistory(), 
-    depthHistory() {
+    forceStop() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -81,15 +75,16 @@ TimeManager::TimeManager() :
  */
 TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) : 
     mode(TOURNAMENT), 
-    timeToUse(), 
+    timeToUse(),
+    nodesToUse(-1),
     upperTimeBound(), 
     ignorePV(), 
-    isSafeToStop(true), 
-    forceStop(), 
-    historyCount(), 
-    moveHistory(), 
-    scoreHistory(), 
-    depthHistory() {
+    isSafeToStop(true),
+    forceStop() {
+    UCI_ASSERT(board);
+    UCI_ASSERT(white > 0);
+    UCI_ASSERT(black > 0);
+    UCI_ASSERT(movesToGo >= 0);
 
     double division = movesToGo+1;
 
@@ -138,13 +133,6 @@ void TimeManager::updatePV(Move move, Score score, Depth depth) {
     // dont keep track of pv changes if timing doesnt matter
     if (ignorePV)
         return;
-
-    // store the move,score,depth in the arrays
-    moveHistory[historyCount]  = move;
-    scoreHistory[historyCount] = score;
-    depthHistory[historyCount] = depth;
-
-    historyCount++;
 }
 
 /**
@@ -158,11 +146,12 @@ void TimeManager::stopSearch() { forceStop = true; }
  */
 bool TimeManager::isTimeLeft() {
 
-    int elapsed = elapsedTime();
 
     // stop the search if requested
     if (forceStop)
         return false;
+    
+    int elapsed = elapsedTime();
 
     // if we are above the maximum allowed time, stop
     if (elapsed >= upperTimeBound)
@@ -199,3 +188,28 @@ bool TimeManager::rootTimeLeft() {
  * @return
  */
 TimeMode TimeManager::getMode() const { return mode; }
+
+/**
+ * sets the node limit for the search
+ * @param maxNodes
+ */
+void     TimeManager::setNodeLimit(U64 maxNodes) {
+    this->nodesToUse = maxNodes;
+}
+
+/**
+ * checks if the search is stopped by force
+ * @return
+ */
+bool TimeManager::isForceStopped() {
+    return forceStop;
+}
+
+/**
+ * gets the node limit for the search
+ * @return
+ */
+U64  TimeManager::getNodeLimit() {
+    return nodesToUse;
+}
+
