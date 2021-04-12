@@ -17,6 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "movegen.h"
+#include "psqt.h"
 #include "UCIAssert.h"
 
 
@@ -47,14 +48,9 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
         if constexpr (isCapture){
             Score     SEE    = board->staticExchangeEvaluation(move);
-            MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
-                               + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
+            MoveScore mvvLVA = MgScore(piece_values[(getCapturedPiece(move) % 8)]);
             if (SEE >= 0) {
-                if (mvvLVA == 0) {
-                    mv->scoreMove(idx, 50000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
-                } else {
-                    mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
-                }
+                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
