@@ -1648,9 +1648,9 @@ namespace tuning {
                 "SAFE_ROOK_CHECK",
                 "SAFE_BISHOP_CHECK",
                 "SAFE_KNIGHT_CHECK",
-                "I_PAWN_ATTACK_MINOR",
-                "I_PAWN_ATTACK_ROOK",
-                "I_PAWN_ATTACK_QUEEN",
+                "PAWN_ATTACK_MINOR",
+                "PAWN_ATTACK_ROOK",
+                "PAWN_ATTACK_QUEEN",
                 };
 
         for (int i = 0; i < I_END; i++) {
