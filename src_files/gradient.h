@@ -40,9 +40,9 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
-#define N_THREAD 12
+#define N_THREAD 4
 
 namespace tuning {
 
@@ -75,6 +75,7 @@ namespace tuning {
         I_BISHOP_DOUBLED,
         I_BISHOP_FIANCHETTO,
         I_BISHOP_PIECE_SAME_SQUARE_E,
+        I_BISHOP_OUTPOST,
 
         I_QUEEN_DISTANCE_ENEMY_KING,
 
@@ -707,6 +708,7 @@ namespace tuning {
             while (k) {
                 square = bitscanForward(k);
                 attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_QUEEN]);
+                count[I_BISHOP_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] +=
                         bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                 count[I_BISHOP_FIANCHETTO] +=
@@ -723,6 +725,7 @@ namespace tuning {
             while (k) {
                 square = bitscanForward(k);
                 attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_QUEEN]);
+                count[I_BISHOP_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] -=
                         bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                 count[I_BISHOP_FIANCHETTO] -=
@@ -1630,6 +1633,7 @@ namespace tuning {
                 "BISHOP_DOUBLED",
                 "BISHOP_FIANCHETTO",
                 "BISHOP_PIECE_SAME_SQUARE_E",
+                "BISHOP_OUTPOST",
                 "QUEEN_DISTANCE_ENEMY_KING",
                 "KING_CLOSE_OPPONENT",
                 "KING_PAWN_SHIELD",
