@@ -17,6 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "movegen.h"
+#include "psqt.h"
+#include "UCIAssert.h"
 
 
 // check if all moves should be generated or only quiet moves
@@ -46,14 +48,9 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
         if constexpr (isCapture){
             Score     SEE    = board->staticExchangeEvaluation(move);
-            MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
-                               + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
+            MoveScore mvvLVA = MgScore(piece_values[(getCapturedPiece(move) % 8)]);
             if (SEE >= 0) {
-                if (mvvLVA == 0) {
-                    mv->scoreMove(idx, 50000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
-                } else {
-                    mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
-                }
+                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
@@ -83,6 +80,8 @@ void generatePawnMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -213,7 +212,8 @@ void generatePieceMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
-    
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -287,6 +287,8 @@ void generateKingMoves(
     Move hashMove=0,
     SearchData* sd= nullptr,
     Depth ply=0){
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
     constexpr Color them = !c;
@@ -356,6 +358,8 @@ template<MoveGenConfig config, bool score> void generate(
     Move hashMove = 0,
     SearchData* sd = nullptr,
     Depth ply = 0) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     
     mv->clear();
     
@@ -372,11 +376,18 @@ template<MoveGenConfig config, bool score> void generate(
 }
 
 void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
+    UCI_ASSERT(sd);
     generate<GENERATE_ALL, true>(b, mv, hashMove, sd, ply);
 }
 void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
 }
 void generatePerftMoves(Board* b, MoveList* mv) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mv);
     generate<GENERATE_ALL, false>(b, mv);
 }

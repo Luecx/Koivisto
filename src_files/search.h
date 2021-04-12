@@ -28,7 +28,6 @@
 #include "TranspositionTable.h"
 #include "eval.h"
 
-#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <ctime>
