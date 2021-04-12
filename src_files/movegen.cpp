@@ -50,6 +50,11 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             Score     SEE    = board->staticExchangeEvaluation(move);
             MoveScore mvvLVA = MgScore(piece_values[(getCapturedPiece(move) % 8)]);
             if (SEE >= 0) {
+                if (SEE > 0) {
+                    mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                } else {
+                    mv->scoreMove(idx, 50000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                }
                 mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
