@@ -50,7 +50,7 @@ int LMR_DIV             = 215;
 // using A / 100 + B / 100 * depth * depth
 int LMP_IMPROVING_A     = 300;
 int LMP_IMPROVING_B     =  28;
-int LMP_NOT_IMPROVING_A = -10;
+int LMP_NOT_IMPROVING_A = -28;
 int LMP_NOT_IMPROVING_B =  36;
 
 /**
