@@ -50,11 +50,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
                                + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
             if (SEE >= 0) {
-                if (mvvLVA == 0) {
-                    mv->scoreMove(idx, 50000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
-                } else {
-                    mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
-                }
+                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
@@ -66,7 +62,6 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         } else{
             mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
         }
-        
     }else if constexpr (m == GENERATE_NON_QUIET){
         // scoring when only non quiet moves are generated
         MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
