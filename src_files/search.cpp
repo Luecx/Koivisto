@@ -609,7 +609,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
-    UCI_ASSERT(ply >= 0);
+    UCI_ASSERT(ply >= 0 && ply < MAX_INTERNAL_PLY);
+    
     
     // increment the node counter for the current thread
     td->nodes++;
@@ -670,10 +671,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
+    
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
         // reuse static evaluation from previous ply in case of nullmove
+        UCI_ASSERT(ply - 1 < MAX_INTERNAL_PLY);
         staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
         staticEval =
@@ -697,7 +700,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
             || (en.type == ALL_NODE && staticEval > en.score)) {
-            
             staticEval = en.score;
         }
         

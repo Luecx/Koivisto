@@ -28,12 +28,18 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
     Piece  prevPiece = getMovingPiece(previous) % 8;
     Square prevTo    = getSquareTo(previous);
     Color  color     = getMovingPiece(m) / 8;
-
+    
+    UCI_ASSERT(prevPiece   < N_PIECES  && prevPiece   >= 0);
+    UCI_ASSERT(prevTo      < N_SQUARES && prevTo      >= 0);
+    
     for (int i = 0; i < mv->getSize(); i++) {
         m2 = mv->getMove(i);
 
         Piece  movingPiece = getMovingPiece(m2) % 8;
         Square squareTo    = getSquareTo(m2);
+        
+        UCI_ASSERT(movingPiece < N_PIECES  && movingPiece >= 0);
+        UCI_ASSERT(squareTo    < N_SQUARES && squareTo    >= 0);
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
@@ -80,6 +86,11 @@ int SearchData::getHistories(Move m, Color side, Move previous) {
         Piece  movingPiece = getMovingPiece(m) % 8;
         Square squareTo    = getSquareTo(m);
 
+        UCI_ASSERT(prevPiece   < N_PIECES  && prevPiece   >= 0);
+        UCI_ASSERT(prevTo      < N_SQUARES && prevTo      >= 0);
+        UCI_ASSERT(movingPiece < N_PIECES  && movingPiece >= 0);
+        UCI_ASSERT(squareTo    < N_SQUARES && squareTo    >= 0);
+        
         return cmh[prevPiece][prevTo][side][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
     }
 }
@@ -88,6 +99,9 @@ int SearchData::getHistories(Move m, Color side, Move previous) {
  * Set killer
  */
 void SearchData::setKiller(Move move, Depth ply, Color color) {
+    
+    UCI_ASSERT(ply < MAX_INTERNAL_PLY);
+    
     if (!sameMove(move, killer[color][ply][0])) {
         killer[color][ply][1] = killer[color][ply][0];
         killer[color][ply][0] = move;
@@ -98,6 +112,9 @@ void SearchData::setKiller(Move move, Depth ply, Color color) {
  * Is killer?
  */
 int SearchData::isKiller(Move move, Depth ply, Color color) {
+    
+    UCI_ASSERT(ply < MAX_INTERNAL_PLY);
+    
     if (sameMove(move, killer[color][ply][0]))
         return 2;
     return sameMove(move, killer[color][ply][1]);
