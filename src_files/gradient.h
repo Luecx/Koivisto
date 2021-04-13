@@ -42,7 +42,9 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 16
+
+#define PST225_PIECE_TYPES 5
 
 namespace tuning {
 
@@ -169,8 +171,8 @@ namespace tuning {
 
         float evalReduction = 1;
         float phase = 0;
-        float matingMaterialWhite = false;
-        float matingMaterialBlack = false;
+        bool  matingMaterialWhite = false;
+        bool  matingMaterialBlack = false;
 
         void init(Board *b) {
             phase =
@@ -307,17 +309,17 @@ namespace tuning {
     struct Pst225Data {
 
         // only for pawns currently,
-        uint8_t indices_white_wk[1][10]{};
-        uint8_t indices_black_wk[1][10]{};
-        uint8_t indices_white_bk[1][10]{};
-        uint8_t indices_black_bk[1][10]{};
+        uint8_t indices_white_wk[PST225_PIECE_TYPES][10]{};
+        uint8_t indices_black_wk[PST225_PIECE_TYPES][10]{};
+        uint8_t indices_white_bk[PST225_PIECE_TYPES][10]{};
+        uint8_t indices_black_bk[PST225_PIECE_TYPES][10]{};
 
         void init(Board *b) {
 
             Square wKingSq = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square bKingSq = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
-            for (Piece p = PAWN; p <= PAWN; p++) {
+            for (Piece p = PAWN; p <= PST225_PIECE_TYPES-1; p++) {
                 for (int c= 0; c <= 1; c++) {
                     U64 k = b->getPieceBB(c, p);
                     while (k) {
@@ -338,7 +340,7 @@ namespace tuning {
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (Piece p = PAWN; p <= PAWN; p++) {
+            for (Piece p = PAWN; p <= PST225_PIECE_TYPES-1; p++) {
 
                 for (int i = 1; i <= indices_white_wk[p][0]; i++) {
                     uint8_t w = indices_white_wk[p][i];
@@ -366,7 +368,7 @@ namespace tuning {
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            for (Piece p = PAWN; p <= PAWN; p++) {
+            for (Piece p = PAWN; p <= PST225_PIECE_TYPES-1; p++) {
                 for (int i = 1; i <= indices_white_wk[p][0]; i++) {
                     uint8_t w = indices_white_wk[p][i];
                     td->w_piece_our_king_square_table[p][w].midgame.gradient +=
@@ -1446,7 +1448,7 @@ namespace tuning {
 
             if (i < 5) {
 
-                if (i < 1) {
+                if (i < PST225_PIECE_TYPES) {
                     for (int n = 0; n < 15 * 15; n++) {
                         threadData[0].w_piece_opp_king_square_table[i][n].midgame.update(eta);
                         threadData[0].w_piece_opp_king_square_table[i][n].endgame.update(eta);
@@ -1605,7 +1607,7 @@ namespace tuning {
             startMeasure();
             std::cout << left;
             std::cout << "loss= " << setw(20) << compute_loss(K)
-                      << " eps= " << setw(20) << positions.size() / stopMeasure() * 1000 << std::endl;
+                      << " eps= " << setw(20) << positions.size() / std::max(1,stopMeasure()) * 1000 << std::endl;
             adjust_weights(eta);
         }
     }
