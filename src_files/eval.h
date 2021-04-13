@@ -49,18 +49,21 @@ struct EvalData{
 
 class Evaluator {
     public:
-
+    
+    EvalData evalData;
     float phase;
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    EvalScore computeHangingPieces(Board* b, EvalData* evalData);
+    EvalScore computeHangingPieces(Board* b);
 
     bb::Score evaluate(Board* b);
 
     bb::Score evaluateTempo(Board* b);
     
     float getPhase();
+
+    EvalData* getEvalData();
 };
 
 void printEvaluation(Board* b);

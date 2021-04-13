@@ -176,7 +176,7 @@ namespace tuning {
         float matingMaterialWhite = false;
         float matingMaterialBlack = false;
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
             phase =
                     (24.0f + phaseValues[5] -
                      phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
@@ -213,7 +213,7 @@ namespace tuning {
         int8_t indices_white[6][10]{};
         int8_t indices_black[6][10]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
 
             bool wKSide = (fileIndex(bitscanForward(b->getPieceBB()[WHITE_KING])) > 3 ? 0 : 1);
             bool bKSide = (fileIndex(bitscanForward(b->getPieceBB()[BLACK_KING])) > 3 ? 0 : 1);
@@ -316,7 +316,7 @@ namespace tuning {
         uint8_t indices_white_bk[1][10]{};
         uint8_t indices_black_bk[1][10]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
 
             Square wKingSq = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square bKingSq = bitscanForward(b->getPieceBB()[BLACK_KING]);
@@ -411,7 +411,7 @@ namespace tuning {
         int8_t wkingsafety_index;
         int8_t bkingsafety_index;
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
 
             U64 k;
             Square square;
@@ -499,7 +499,7 @@ namespace tuning {
         int8_t count_e[9]{};
         int8_t count_o[9]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
             U64 k;
             Square square;
 
@@ -560,7 +560,7 @@ namespace tuning {
 
         int8_t count[16]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
             U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
             U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
 
@@ -608,7 +608,7 @@ namespace tuning {
 
         int8_t count[I_END]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
 
             U64 k, attacks;
             Square square;
@@ -860,7 +860,7 @@ namespace tuning {
     struct PinnedData {
         int8_t count[15]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
 
             for (int color= 0; color <= 1; color++) {
 
@@ -942,7 +942,7 @@ namespace tuning {
     struct HangingData {
         int8_t count[5]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
             U64 WnotAttacked = ~b->getAttackedSquares<WHITE>();
             U64 BnotAttacked = ~b->getAttackedSquares<BLACK>();
 
@@ -975,7 +975,7 @@ namespace tuning {
         uint8_t indices_white[5][10]{};
         uint8_t indices_black[5][10]{};
 
-        void init(Board *b) {
+        void init(Board *b, EvalData* evalData) {
 
             U64 k, attacks;
             Square square;
@@ -1064,7 +1064,7 @@ namespace tuning {
 
     };
 
-    struct EvalData {
+    struct EntryData {
         FeatureData features{};
         MobilityData mobility{};
         HangingData hanging{};
@@ -1076,17 +1076,17 @@ namespace tuning {
         Pst225Data pst225{};
         MetaData meta{};
 
-        void init(Board *b) {
-            features.init(b);
-            mobility.init(b);
-            hanging.init(b);
-            pinned.init(b);
-            passed.init(b);
-            bishop_pawn.init(b);
-            king_safety.init(b);
-            pst64.init(b);
-            pst225.init(b);
-            meta.init(b);
+        void init(Board *b, EvalData *evalData) {
+            features.init(b, evalData);
+            mobility.init(b, evalData);
+            hanging.init(b, evalData);
+            pinned.init(b, evalData);
+            passed.init(b, evalData);
+            bishop_pawn.init(b, evalData);
+            king_safety.init(b, evalData);
+            pst64.init(b, evalData);
+            pst225.init(b, evalData);
+            meta.init(b, evalData);
         }
 
         double evaluate(int threadID = 0) {
@@ -1143,11 +1143,11 @@ namespace tuning {
     };
 
     struct TrainEntry {
-        EvalData evalData;
+        EntryData entryData;
         double target;
 
-        TrainEntry(Board *b, float target) {
-            this->evalData.init(b);
+        TrainEntry(Board *b, EvalData *evalData, float target) {
+            this->entryData.init(b, evalData);
             this->target = target;
         }
     };
@@ -1534,12 +1534,13 @@ namespace tuning {
                 res = findAndReplaceAll(res, "\"", "");
                 res = findAndReplaceAll(res, ";", "");
                 res = trim(res);
-
+                
                 Board b{fen};
-                TrainEntry new_entry{&b, 0};
-                if ((int) (new_entry.evalData.evaluate()) != evaluator.evaluate(&b)) {
+                int correctEval = evaluator.evaluate(&b);
+                TrainEntry new_entry{&b, evaluator.getEvalData(), 0};
+                if ((int) (new_entry.entryData.evaluate()) != correctEval) {
                     std::cout << fen << std::endl;
-                    std::cout << new_entry.evalData.evaluate() << std::endl;
+                    std::cout << new_entry.entryData.evaluate() << std::endl;
                     std::cout << evaluator.evaluate(&b) << std::endl;
                     exit(-1);
                 }
@@ -1588,7 +1589,7 @@ namespace tuning {
         double sum = 0;
 #pragma omp parallel for schedule(static) num_threads(N_THREAD) reduction(+: sum)
         for (int i = 0; i < positions.size(); i++) {
-            sum += positions[i].evalData.train(positions[i].target, K, omp_get_thread_num());
+            sum += positions[i].entryData.train(positions[i].target, K, omp_get_thread_num());
         }
         return sum / positions.size();
         return 0;
@@ -1599,7 +1600,7 @@ namespace tuning {
 #pragma omp parallel for schedule(static) num_threads(N_THREAD) reduction(+: sum)
         for (int i = 0; i < positions.size(); i++) {
 //        const int threadID = omp_get_thread_num();
-            sum += positions[i].evalData.error(positions[i].target, K);
+            sum += positions[i].entryData.error(positions[i].target, K);
         }
         return sum / positions.size();
     }

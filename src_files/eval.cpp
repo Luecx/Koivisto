@@ -253,18 +253,18 @@ bb::Score Evaluator::evaluateTempo(Board* b){
    return MgScore(SIDE_TO_MOVE) * (1 - phase) + EgScore(SIDE_TO_MOVE) * (phase);
 }
 
-EvalScore Evaluator::computeHangingPieces(Board* b, EvalData* evalData) {
+EvalScore Evaluator::computeHangingPieces(Board* b) {
     UCI_ASSERT(b);
 
     U64 WnotAttacked = ZERO;
     U64 BnotAttacked = ZERO;
     for(int i = PAWN; i <= KING; i++){
-        WnotAttacked |= evalData->attacks[WHITE][i];
-        BnotAttacked |= evalData->attacks[BLACK][i];
+        WnotAttacked |= evalData.attacks[WHITE][i];
+        BnotAttacked |= evalData.attacks[BLACK][i];
     }
 
-    evalData->allAttacks[WHITE] = WnotAttacked;
-    evalData->allAttacks[BLACK] = BnotAttacked;
+    evalData.allAttacks[WHITE] = WnotAttacked;
+    evalData.allAttacks[BLACK] = BnotAttacked;
     WnotAttacked = ~WnotAttacked;
     BnotAttacked = ~BnotAttacked;
     
@@ -359,9 +359,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
     
-    EvalData evalData{};
-
-
+    evalData = EvalData{};
+    
     Square square;
     U64    attacks;
     U64    k;
@@ -745,20 +744,20 @@ bb::Score Evaluator::evaluate(Board* b) {
     }
     
     
-    EvalScore hangingEvalScore = computeHangingPieces(b, &evalData);
+    EvalScore hangingEvalScore = computeHangingPieces(b);
 
     //Score additional threats
     featureScore += MINOR_ATTACK_HANING_MINOR *(
-            + bitCount(~evalData.allAttacks[BLACK] & ((evalData.attacks[WHITE][KNIGHT] & b->getPieceBB<BLACK>(BISHOP)) | 
+            + bitCount(~evalData.allAttacks[BLACK] & ((evalData.attacks[WHITE][KNIGHT] & b->getPieceBB<BLACK>(BISHOP)) |
                                                       (evalData.attacks[WHITE][BISHOP] & b->getPieceBB<BLACK>(KNIGHT))))
-            - bitCount(~evalData.allAttacks[WHITE] & ((evalData.attacks[BLACK][KNIGHT] & b->getPieceBB<WHITE>(BISHOP)) | 
+            - bitCount(~evalData.allAttacks[WHITE] & ((evalData.attacks[BLACK][KNIGHT] & b->getPieceBB<WHITE>(BISHOP)) |
                                                       (evalData.attacks[BLACK][BISHOP] & b->getPieceBB<WHITE>(KNIGHT)))));
-    
+
     featureScore += MAJOR_ATTACK_HANING_MINOR *(
             + bitCount(~evalData.allAttacks[BLACK] & (evalData.attacks[WHITE][QUEEN]|evalData.attacks[WHITE][ROOK]) & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))
             - bitCount(~evalData.allAttacks[WHITE] & (evalData.attacks[BLACK][QUEEN]|evalData.attacks[BLACK][ROOK]) & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
 
-    featureScore = PIECE_ATTACK_HANGING_PAWN* (
+    featureScore += PIECE_ATTACK_HANGING_PAWN* (
             + bitCount(~evalData.allAttacks[BLACK] & evalData.allAttacks[WHITE] & b->getPieceBB<BLACK>(PAWN))
             - bitCount(~evalData.allAttacks[WHITE] & evalData.allAttacks[BLACK] & b->getPieceBB<WHITE>(PAWN))
     );
@@ -801,6 +800,4 @@ void printEvaluation(Board* board) {
 }
 
 float Evaluator::getPhase() { return phase; }
-
-
-
+EvalData* Evaluator::getEvalData() { return &evalData; }
