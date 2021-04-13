@@ -92,6 +92,10 @@ namespace tuning {
         I_PAWN_ATTACK_MINOR,
         I_PAWN_ATTACK_ROOK,
         I_PAWN_ATTACK_QUEEN,
+
+        I_MINOR_ATTACK_ROOK,
+        I_MINOR_ATTACK_QUEEN,
+        I_ROOK_ATTACK_QUEEN,
         
         // always have this at the end
         I_END,
@@ -695,6 +699,8 @@ namespace tuning {
             while (k) {
                 square = bitscanForward(k);
                 attacks = KNIGHT_ATTACKS[square];
+                count[I_MINOR_ATTACK_ROOK] +=  bitCount(attacks & b->getPieceBB<BLACK>(ROOK));
+                count[I_MINOR_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
                 count[I_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
                 count[I_SAFE_KNIGHT_CHECK] += bitCount(bKingKnightAttacks & attacks & ~blackPawnCover);
@@ -705,6 +711,8 @@ namespace tuning {
             while (k) {
                 square = bitscanForward(k);
                 attacks = KNIGHT_ATTACKS[square];
+                count[I_MINOR_ATTACK_ROOK] -=  bitCount(attacks & b->getPieceBB<WHITE>(ROOK));
+                count[I_MINOR_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
                 count[I_KNIGHT_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
                 count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
                 count[I_SAFE_KNIGHT_CHECK] -= bitCount(wKingKnightAttacks & attacks & ~whitePawnCover);
@@ -716,6 +724,8 @@ namespace tuning {
             while (k) {
                 square = bitscanForward(k);
                 attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_QUEEN]);
+                count[I_MINOR_ATTACK_ROOK] +=  bitCount(attacks & b->getPieceBB<BLACK>(ROOK));
+                count[I_MINOR_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] +=
                         bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                 count[I_BISHOP_FIANCHETTO] +=
@@ -732,6 +742,8 @@ namespace tuning {
             while (k) {
                 square = bitscanForward(k);
                 attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_QUEEN]);
+                count[I_MINOR_ATTACK_ROOK] -=  bitCount(attacks & b->getPieceBB<WHITE>(ROOK));
+                count[I_MINOR_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] -=
                         bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                 count[I_BISHOP_FIANCHETTO] -=
@@ -753,6 +765,7 @@ namespace tuning {
             while (k) {
                 square  = bitscanForward(k);
                 attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[WHITE_ROOK] & ~b->getPieceBB()[WHITE_QUEEN]);
+                count[I_ROOK_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
                 count[I_SAFE_ROOK_CHECK] += bitCount(bKingRookAttacks & attacks & ~blackPawnCover);
 
                 k = lsbReset(k);
@@ -762,7 +775,7 @@ namespace tuning {
             while (k) {
                 square  = bitscanForward(k);
                 attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[BLACK_ROOK] & ~b->getPieceBB()[BLACK_QUEEN]);
-    
+                count[I_ROOK_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
                 count[I_SAFE_ROOK_CHECK] -= bitCount(wKingRookAttacks & attacks & ~whitePawnCover);
 
                 k = lsbReset(k);
@@ -1651,6 +1664,9 @@ namespace tuning {
                 "PAWN_ATTACK_MINOR",
                 "PAWN_ATTACK_ROOK",
                 "PAWN_ATTACK_QUEEN",
+                "MINOR_ATTACK_ROOK",
+                "MINOR_ATTACK_QUEEN",
+                "ROOK_ATTACK_QUEEN",
                 };
 
         for (int i = 0; i < I_END; i++) {
