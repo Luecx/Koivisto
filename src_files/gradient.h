@@ -97,9 +97,9 @@ namespace tuning {
         I_MINOR_ATTACK_QUEEN,
         I_ROOK_ATTACK_QUEEN,
 
-        I_MINOR_ATTACK_ROOK,
-        I_MINOR_ATTACK_QUEEN,
-        I_ROOK_ATTACK_QUEEN,
+        I_MINOR_ATTACK_HANING_MINOR,
+        I_MAJOR_ATTACK_HANING_MINOR,
+        I_PIECE_ATTACK_HANGING_PAWN,
         
         // always have this at the end
         I_END,
@@ -1674,6 +1674,9 @@ namespace tuning {
                 "MINOR_ATTACK_ROOK",
                 "MINOR_ATTACK_QUEEN",
                 "ROOK_ATTACK_QUEEN",
+                "MINOR_ATTACK_HANING_MINOR",
+                "MAJOR_ATTACK_HANING_MINOR",
+                "PIECE_ATTACK_HANGING_PAWN",
                 };
 
         for (int i = 0; i < I_END; i++) {
