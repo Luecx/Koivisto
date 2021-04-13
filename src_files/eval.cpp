@@ -56,6 +56,9 @@ EvalScore PAWN_ATTACK_QUEEN             = M(   32,   27);
 EvalScore MINOR_ATTACK_ROOK             = M(   36,   24);
 EvalScore MINOR_ATTACK_QUEEN            = M(   25,   40);
 EvalScore ROOK_ATTACK_QUEEN             = M(   33,   14);
+EvalScore MINOR_ATTACK_HANING_MINOR     = M(    0,    0);
+EvalScore MAJOR_ATTACK_HANING_MINOR     = M(    0,    0);
+EvalScore PIECE_ATTACK_HANGING_PAWN     = M(    0,    0);
 
 EvalScore mobilityKnight[9] = {
         M(  -52,   -6), M(  -40,   49), M(  -35,   80), M(  -31,   98), M(  -26,  110),
@@ -255,6 +258,9 @@ EvalScore Evaluator::computeHangingPieces(Board* b, EvalData* evalData) {
         WnotAttacked |= evalData->attacks[WHITE][i];
         BnotAttacked |= evalData->attacks[BLACK][i];
     }
+
+    evalData->allAttacks[WHITE] = WnotAttacked;
+    evalData->allAttacks[BLACK] = BnotAttacked;
     WnotAttacked = ~WnotAttacked;
     BnotAttacked = ~BnotAttacked;
     
@@ -736,6 +742,23 @@ bb::Score Evaluator::evaluate(Board* b) {
     
     
     EvalScore hangingEvalScore = computeHangingPieces(b, &evalData);
+
+    //Score additional threats
+    featureScore += MINOR_ATTACK_HANING_MINOR *(
+            + bitCount(~evalData.allAttacks[BLACK] & ((evalData.attacks[WHITE][KNIGHT] & b->getPieceBB<BLACK>(BISHOP)) | 
+                                                      (evalData.attacks[WHITE][BISHOP] & b->getPieceBB<BLACK>(KNIGHT))))
+            - bitCount(~evalData.allAttacks[WHITE] & ((evalData.attacks[BLACK][KNIGHT] & b->getPieceBB<WHITE>(BISHOP)) | 
+                                                      (evalData.attacks[BLACK][BISHOP] & b->getPieceBB<WHITE>(KNIGHT)))));
+    
+    featureScore += MAJOR_ATTACK_HANING_MINOR *(
+            + bitCount(~evalData.allAttacks[BLACK] & (evalData.attacks[WHITE][QUEEN]|evalData.attacks[WHITE][ROOK]) & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))
+            - bitCount(~evalData.allAttacks[WHITE] & (evalData.attacks[BLACK][QUEEN]|evalData.attacks[BLACK][ROOK]) & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
+
+    featureScore = PIECE_ATTACK_HANGING_PAWN* (
+            + bitCount(~evalData.allAttacks[BLACK] & evalData.allAttacks[WHITE] & b->getPieceBB<BLACK>(PAWN))
+            - bitCount(~evalData.allAttacks[WHITE] & evalData.allAttacks[BLACK] & b->getPieceBB<WHITE>(PAWN))
+    );
+
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
     
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];

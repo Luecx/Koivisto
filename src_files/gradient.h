@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -92,6 +92,10 @@ namespace tuning {
         I_PAWN_ATTACK_MINOR,
         I_PAWN_ATTACK_ROOK,
         I_PAWN_ATTACK_QUEEN,
+
+        I_MINOR_ATTACK_ROOK,
+        I_MINOR_ATTACK_QUEEN,
+        I_ROOK_ATTACK_QUEEN,
 
         I_MINOR_ATTACK_ROOK,
         I_MINOR_ATTACK_QUEEN,
@@ -1664,6 +1668,9 @@ namespace tuning {
                 "PAWN_ATTACK_MINOR",
                 "PAWN_ATTACK_ROOK",
                 "PAWN_ATTACK_QUEEN",
+                "MINOR_ATTACK_ROOK",
+                "MINOR_ATTACK_QUEEN",
+                "ROOK_ATTACK_QUEEN",
                 "MINOR_ATTACK_ROOK",
                 "MINOR_ATTACK_QUEEN",
                 "ROOK_ATTACK_QUEEN",
