@@ -39,6 +39,14 @@ bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
 void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
+struct EvalData{
+    
+    U64 attacks [N_COLORS][N_PIECE_TYPES]{};
+    U64 kingZone[N_COLORS]{};
+    
+    
+};
+
 class Evaluator {
     public:
 
@@ -46,7 +54,7 @@ class Evaluator {
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    EvalScore computeHangingPieces(Board* b);
+    EvalScore computeHangingPieces(Board* b, EvalData* evalData);
 
     bb::Score evaluate(Board* b);
 
