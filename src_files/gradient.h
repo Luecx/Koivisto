@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -838,6 +838,22 @@ namespace tuning {
                     - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
                     - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
             count[I_SIDE_TO_MOVE] += (b->getActivePlayer() == WHITE ? 1 : -1);
+
+            count[I_MINOR_ATTACK_HANING_MINOR] += (
+                    + bitCount(~evalData->allAttacks[BLACK] & ((evalData->attacks[WHITE][KNIGHT] & b->getPieceBB<BLACK>(BISHOP)) |
+                                                            (evalData->attacks[WHITE][BISHOP] & b->getPieceBB<BLACK>(KNIGHT))))
+                    - bitCount(~evalData->allAttacks[WHITE] & ((evalData->attacks[BLACK][KNIGHT] & b->getPieceBB<WHITE>(BISHOP)) |
+                                                            (evalData->attacks[BLACK][BISHOP] & b->getPieceBB<WHITE>(KNIGHT)))));
+
+            count[I_MAJOR_ATTACK_HANING_MINOR] += (
+                    + bitCount(~evalData->allAttacks[BLACK] & (evalData->attacks[WHITE][QUEEN]|evalData->attacks[WHITE][ROOK]) & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))
+                    - bitCount(~evalData->allAttacks[WHITE] & (evalData->attacks[BLACK][QUEEN]|evalData->attacks[BLACK][ROOK]) & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
+
+            count[I_PIECE_ATTACK_HANGING_PAWN] += (
+                + bitCount(~evalData->allAttacks[BLACK] & evalData->allAttacks[WHITE] & b->getPieceBB<BLACK>(PAWN))
+                - bitCount(~evalData->allAttacks[WHITE] & evalData->allAttacks[BLACK] & b->getPieceBB<WHITE>(PAWN))
+            );
+
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
