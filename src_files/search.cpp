@@ -1110,12 +1110,25 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     if (alpha < bestScore)
         alpha = bestScore;
     
+    if (!inCheck && stand_pat + 250 < alpha) {
+        //Get our oponents most valuable attacked piece
+        U64 ourAttacks = sd->evaluator.allAttacks[b->getActivePlayer()];
+        Piece type;
+        for (type = QUEEN; type >= 0; type--) {
+            if (ourAttacks & b->getPieceBB(!b->getActivePlayer(), type))
+                break;
+        }
+        if (stand_pat + 150 + see_piece_vals[type] < alpha) {
+            return alpha;
+        }
+    }
+
     // extract all:
     //- captures (including e.p.)
     //- promotions
     //
     // moves that give check are not considered non-quiet in
-    // getNonQuietMoves() although they are not quiet.
+    // getNonQuietMoves() although they are not quiet.s
     //
     MoveList* mv = sd->moves[ply];
     

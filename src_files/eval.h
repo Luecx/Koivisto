@@ -50,6 +50,8 @@ struct EvalData{
 class Evaluator {
     public:
 
+    U64 allAttacks[N_COLORS]{}; //reuse evaluation information in search
+    
     float phase;
 
     EvalScore computePinnedPieces(Board* b, Color color);
