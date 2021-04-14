@@ -942,7 +942,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
-            if (!sd->reduce && sd->sideToReduce == b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -963,7 +962,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
+            bool sred        = sd->sideToReduce;
+            bool red         = sd->reduce;
+            if (staticExchangeEval < 0 && lmr) {
+                sd->sideToReduce = !b->getActivePlayer();
+                sd->reduce       = true;
+            }
+
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
+            sd->sideToReduce = sred;
+            sd->reduce       = red;
             if (pv) sd->reduce = true;
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
