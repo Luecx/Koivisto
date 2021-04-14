@@ -1087,11 +1087,12 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     Score stand_pat;
+    Score bestScore = -MAX_MATE_SCORE;
     if (b->getPreviousMove() == 0 && ply != 0) {
         // reuse static evaluation from previous ply incase of nullmove
-        stand_pat = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        stand_pat = bestScore = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
-        stand_pat =
+        stand_pat = bestScore = 
             inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     
@@ -1101,14 +1102,14 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type == ALL_NODE && stand_pat > en.score)) {
             
-            stand_pat = en.score;
+            bestScore = en.score;
         }
     }
     
-    if (stand_pat >= beta)
+    if (bestScore >= beta)
         return beta;
-    if (alpha < stand_pat)
-        alpha = stand_pat;
+    if (alpha < bestScore)
+        alpha = bestScore;
     
     // extract all:
     //- captures (including e.p.)
@@ -1125,7 +1126,6 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // keping track of the best move for the transpositions
     Move  bestMove  = 0;
-    Score bestScore = -MAX_MATE_SCORE;
 
     for (int i = 0; i < mv->getSize(); i++) {
         
@@ -1135,6 +1135,9 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         if (!b->isLegal(m))
             continue;
         
+        if (see_piece_vals[(getCapturedPiece(m) % 8)] - see_piece_vals[(getMovingPiece(m) % 8)] - 300 + stand_pat > alpha)
+            return beta;
+
         // **********************************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
