@@ -1135,6 +1135,9 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         if (!b->isLegal(m))
             continue;
         
+        if (see_piece_vals[(getCapturedPiece(m) % 8)] + stand_pat < alpha - 200)
+            continue;
+
         // **********************************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
