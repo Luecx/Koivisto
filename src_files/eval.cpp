@@ -23,6 +23,17 @@
 #include <immintrin.h>
 #include <iomanip>
 
+//Scaling factors for endgames
+#define DEFAULT_SCALE                   100
+#define LONEMINOR_SCALE                 10
+#define ROOKBISHOP_ROOK_SCALE           10
+#define ROOK_MINOR_SCALE                25
+
+//Material keys used for getting material situation
+#define MATERIALKEY_KNIGHT              16
+#define MATERIALKEY_BISHOP              256
+#define MATERIALKEY_ROOK                4096
+#define MATERIALKEY_ROOKBISHOP          4352
 
 EvalScore SIDE_TO_MOVE                  = M(   14,   15);
 EvalScore PAWN_STRUCTURE                = M(   10,    3);
@@ -192,16 +203,6 @@ EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, m
  * @param factor
  */
 
-bool hasMatingMaterial(Board* b, bool side) {
-    UCI_ASSERT(b);
-
-    if ((b->getPieceBB()[QUEEN + side * 8] | b->getPieceBB()[ROOK + side * 8] | b->getPieceBB()[PAWN + side * 8])
-        || (bitCount(b->getPieceBB()[BISHOP + side * 8] | b->getPieceBB()[KNIGHT + side * 8]) > 1
-            && b->getPieceBB()[BISHOP + side * 8]))
-        return true;
-    return false;
-}
-
 void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor) {
     if (attacks & kingZone) {
         pieceCount++;
@@ -227,6 +228,48 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     return false;
 }
 
+int Evaluator::egMaterialDrawishnessScale(Board* b, bool side) {
+    UCI_ASSERT(b);
+
+
+    if (phase < 0.6)
+        return DEFAULT_SCALE; 
+
+    uint32_t pawnCount = bitCount(b->getPieceBB(side, PAWN));
+
+    uint32_t    winningSideKey  =   pawnCount;
+                winningSideKey |=   bitCount(b->getPieceBB(side, KNIGHT))       << 4;
+                winningSideKey |=   bitCount(b->getPieceBB(side, BISHOP))       << 8;
+                winningSideKey |=   bitCount(b->getPieceBB(side, ROOK))         << 12;
+                winningSideKey |=   bitCount(b->getPieceBB(side, QUEEN))        << 16;
+    uint32_t    loosingSideKey  =   bitCount(b->getPieceBB(1 - side, PAWN));
+                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, KNIGHT))   << 4;
+                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, BISHOP))   << 8;
+                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, ROOK))     << 12;
+                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, QUEEN))    << 16;
+
+    bool OCB = bitCount(WHITE_SQUARES_BB & (b->getPieceBB(WHITE, BISHOP) | b->getPieceBB(BLACK, BISHOP))) == 1 && loosingSideKey & MATERIALKEY_BISHOP && winningSideKey & MATERIALKEY_BISHOP;
+    //q    r    b    kn   p
+    //0000 0000 0000 0000 0000
+    //0000 0000 0000 0000 0000
+    //std::cout << winningSideKey << std::endl << loosingSideKey << std::endl << std::endl;
+    //Lone minor
+    
+    if (winningSideKey < MATERIALKEY_ROOK && !pawnCount)
+        return LONEMINOR_SCALE;
+
+    //Rook and bishop endgame
+    if (winningSideKey == MATERIALKEY_ROOKBISHOP && loosingSideKey & MATERIALKEY_ROOK) 
+        return ROOKBISHOP_ROOK_SCALE;
+    
+    //Rook vs minor + possibly pawns. Both rook vs knigth and rook vs bishop are draws in most cases
+    if (winningSideKey == MATERIALKEY_ROOK && loosingSideKey & (MATERIALKEY_KNIGHT | MATERIALKEY_BISHOP))
+        return ROOK_MINOR_SCALE;
+
+
+
+    return DEFAULT_SCALE;
+}
 
 bb::Score Evaluator::evaluateTempo(Board* b){
     UCI_ASSERT(b);
@@ -754,8 +797,7 @@ bb::Score Evaluator::evaluate(Board* b) {
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
 
-    if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
-        res = res / 10;
+    res = res*egMaterialDrawishnessScale(b, res > 0 ? WHITE : BLACK)/100;
     return res;
 }
 

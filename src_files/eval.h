@@ -35,15 +35,13 @@ extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[2*N_RANKS];
 
-bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
-bool hasMatingMaterial  (Board* b, bool side);
-void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
+bool isOutpost                  (Square s, Color c, U64 opponentPawns, U64 pawnCover);
+void addToKingSafety            (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 struct EvalData{
     
     U64 attacks [N_COLORS][N_PIECE_TYPES]{};
     U64 kingZone[N_COLORS]{};
-    
     
 };
 
@@ -53,6 +51,8 @@ class Evaluator {
     float phase;
 
     EvalScore computePinnedPieces(Board* b, Color color);
+
+    int egMaterialDrawishnessScale(Board* b, bool side);
 
     EvalScore computeHangingPieces(Board* b, EvalData* evalData);
 
