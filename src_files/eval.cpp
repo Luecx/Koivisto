@@ -25,15 +25,7 @@
 
 //Scaling factors for endgames
 #define DEFAULT_SCALE                   100
-#define LONEMINOR_SCALE                 10
-#define ROOKBISHOP_ROOK_SCALE           10
-#define ROOK_MINOR_SCALE                25
-
-//Material keys used for getting material situation
-#define MATERIALKEY_KNIGHT              16
-#define MATERIALKEY_BISHOP              256
-#define MATERIALKEY_ROOK                4096
-#define MATERIALKEY_ROOKBISHOP          4352
+#define DRAW_SCALE                      8
 
 EvalScore SIDE_TO_MOVE                  = M(   14,   15);
 EvalScore PAWN_STRUCTURE                = M(   10,    3);
@@ -237,36 +229,11 @@ int Evaluator::egMaterialDrawishnessScale(Board* b, bool side) {
 
     uint32_t pawnCount = bitCount(b->getPieceBB(side, PAWN));
 
-    uint32_t    winningSideKey  =   pawnCount;
-                winningSideKey |=   bitCount(b->getPieceBB(side, KNIGHT))       << 4;
-                winningSideKey |=   bitCount(b->getPieceBB(side, BISHOP))       << 8;
-                winningSideKey |=   bitCount(b->getPieceBB(side, ROOK))         << 12;
-                winningSideKey |=   bitCount(b->getPieceBB(side, QUEEN))        << 16;
-    uint32_t    loosingSideKey  =   bitCount(b->getPieceBB(1 - side, PAWN));
-                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, KNIGHT))   << 4;
-                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, BISHOP))   << 8;
-                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, ROOK))     << 12;
-                loosingSideKey |=   bitCount(b->getPieceBB(1 - side, QUEEN))    << 16;
+    int winningSideMaterial = 925 * bitCount(b->getPieceBB(side, QUEEN)) + 500 * bitCount(b->getPieceBB(side, ROOK)) + 300 * bitCount(b->getPieceBB(side, BISHOP) | b->getPieceBB(side, BISHOP));
+    int loosingSideMaterial = 925 * bitCount(b->getPieceBB(!side, QUEEN)) + 500 * bitCount(b->getPieceBB(!side, ROOK)) + 300 * bitCount(b->getPieceBB(!side, BISHOP) | b->getPieceBB(side, BISHOP));
 
-    bool OCB = bitCount(WHITE_SQUARES_BB & (b->getPieceBB(WHITE, BISHOP) | b->getPieceBB(BLACK, BISHOP))) == 1 && loosingSideKey & MATERIALKEY_BISHOP && winningSideKey & MATERIALKEY_BISHOP;
-    //q    r    b    kn   p
-    //0000 0000 0000 0000 0000
-    //0000 0000 0000 0000 0000
-    //std::cout << winningSideKey << std::endl << loosingSideKey << std::endl << std::endl;
-    //Lone minor
-    
-    if (winningSideKey < MATERIALKEY_ROOK && !pawnCount)
-        return LONEMINOR_SCALE;
-
-    //Rook and bishop endgame
-    if (winningSideKey == MATERIALKEY_ROOKBISHOP && loosingSideKey & MATERIALKEY_ROOK) 
-        return ROOKBISHOP_ROOK_SCALE;
-    
-    //Rook vs minor + possibly pawns. Both rook vs knigth and rook vs bishop are draws in most cases
-    if (winningSideKey == MATERIALKEY_ROOK && loosingSideKey & (MATERIALKEY_KNIGHT | MATERIALKEY_BISHOP))
-        return ROOK_MINOR_SCALE;
-
-
+    if (!pawnCount && winningSideMaterial - loosingSideMaterial <= 300)
+        return DRAW_SCALE;
 
     return DEFAULT_SCALE;
 }
