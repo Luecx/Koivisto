@@ -1014,11 +1014,15 @@ namespace tuning {
                                 break;
                         }
                         if (c == WHITE) {
-                            if (p == KING)indices_white[p][++indices_white[p][0]] = bitCount(attacks & mobilitySquaresWhite & ~b->getAttackedSquares<BLACK>());
-                            else indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
+                            if (p == KING)
+                                indices_white[p][++indices_white[p][0]] = bitCount(attacks & mobilitySquaresWhite & ~b->getAttackedSquares<BLACK>());
+                            else
+                                indices_white[p][++indices_white[p][0]] = bitCount(attacks & mobilitySquaresWhite);
                         } else {
-                            if (p == KING)indices_black[p][++indices_black[p][0]] = bitCount(attacks & mobilitySquaresBlack & ~b->getAttackedSquares<WHITE>());
-                            else indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack));
+                            if (p == KING)
+                                indices_black[p][++indices_black[p][0]] = bitCount(attacks & mobilitySquaresBlack & ~b->getAttackedSquares<WHITE>());
+                            else
+                                indices_black[p][++indices_black[p][0]] = bitCount(attacks & mobilitySquaresBlack);
                         }
 
                         k = lsbReset(k);
@@ -1182,7 +1186,8 @@ namespace tuning {
                         threadData[t].w_piece_our_king_square_table[i][n] = {{w1},
                                                                              {w2}};
                     }
-
+                }
+                if (i < 6){
                     for (int n = 0; n < mobEntryCount[i]; n++) {
                         float w1 = MgScore(mobilities[i][n]);
                         float w2 = EgScore(mobilities[i][n]);
@@ -1267,7 +1272,8 @@ namespace tuning {
                         threadData[t].w_piece_opp_king_square_table[i][n].midgame.gradient = 0;
                         threadData[t].w_piece_opp_king_square_table[i][n].endgame.gradient = 0;
                     }
-
+                }
+                if (i < 6){
                     for (int n = 0; n < mobEntryCount[i]; n++) {
                         threadData[0].w_mobility[i][n].midgame.gradient +=
                                 threadData[t].w_mobility[i][n].midgame.gradient;
@@ -1371,7 +1377,8 @@ namespace tuning {
                                 threadData[0].w_piece_opp_king_square_table[i][n].endgame.value;
 
                     }
-
+                }
+                if (i < 6){
                     for (int n = 0; n < mobEntryCount[i]; n++) {
                         threadData[t].w_mobility[i][n].midgame.value =
                                 threadData[0].w_mobility[i][n].midgame.value;
@@ -1460,8 +1467,8 @@ namespace tuning {
                         threadData[0].w_piece_our_king_square_table[i][n].endgame.update(eta);
                     }
                 }
-
-
+            }
+            if(i < 6){
                 for (int n = 0; n < mobEntryCount[i]; n++) {
                     threadData[0].w_mobility[i][n].midgame.update(eta);
                     threadData[0].w_mobility[i][n].endgame.update(eta);
@@ -1689,11 +1696,11 @@ namespace tuning {
                 "EvalScore mobilityQueen[28] = {",
                 "EvalScore mobilityKing[9] = {",};
 
-        for (int i = 0; i < 4; i++) {
-            std::cout << mobility_names[i];
-            for (int n = 0; n < mobEntryCount[i + 1]; n++) {
+        for (int i = KNIGHT; i <= KING; i++) {
+            std::cout << mobility_names[i-1];
+            for (int n = 0; n < mobEntryCount[i]; n++) {
                 if (n % 5 == 0) std::cout << std::endl << "\t";
-                std::cout << threadData[0].w_mobility[i + 1][n] << ", ";
+                std::cout << threadData[0].w_mobility[i][n] << ", ";
             }
             std::cout << "};\n" << std::endl;
         }

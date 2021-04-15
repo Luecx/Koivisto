@@ -57,7 +57,9 @@ EvalScore MINOR_ATTACK_ROOK             = M(   36,   24);
 EvalScore MINOR_ATTACK_QUEEN            = M(   25,   40);
 EvalScore ROOK_ATTACK_QUEEN             = M(   33,   14);
 
-EvalScore mobilityKing[9] = {};
+EvalScore mobilityKing[9] = {
+
+};
 
 EvalScore mobilityKnight[9] = {
         M(  -52,   -6), M(  -40,   49), M(  -35,   80), M(  -31,   98), M(  -26,  110),
@@ -173,7 +175,7 @@ EvalScore* evfeatures[] {
 
 
 
-int mobEntryCount[N_PIECE_TYPES] {0, 9, 14, 15, 28, 0};
+int mobEntryCount[N_PIECE_TYPES] {0, 9, 14, 15, 28, 9};
 
 float* phaseValues = new float[6] {
     0, 1, 1, 2, 4, 0,
@@ -250,19 +252,9 @@ bb::Score Evaluator::evaluateTempo(Board* b){
 
 EvalScore Evaluator::computeHangingPieces(Board* b, EvalData* evalData) {
     UCI_ASSERT(b);
-
-    U64 WnotAttacked = ZERO;
-    U64 BnotAttacked = ZERO;
-    for(int i = PAWN; i <= KING; i++){
-        WnotAttacked |= evalData->attacks[WHITE][i];
-        BnotAttacked |= evalData->attacks[BLACK][i];
-    }
-
-    evalData->allAttacks[WHITE] = WnotAttacked;
-    evalData->allAttacks[BLACK] = BnotAttacked;
-
-    WnotAttacked = ~WnotAttacked;
-    BnotAttacked = ~BnotAttacked;
+    
+    U64 WnotAttacked = ~evalData->allAttacks[WHITE];
+    U64 BnotAttacked = ~evalData->allAttacks[BLACK];
     
     
    
@@ -714,14 +706,24 @@ bb::Score Evaluator::evaluate(Board* b) {
     /**********************************************************************************
      *                                  K I N G S                                     *
      **********************************************************************************/
+     
+    
+    // compute the total attacked squares
+    evalData.allAttacks[WHITE] = KING_ATTACKS[whiteKingSquare];
+    evalData.allAttacks[BLACK] = KING_ATTACKS[blackKingSquare];
+    for(int i = PAWN; i <= QUEEN; i++){
+        evalData.allAttacks[WHITE] |= evalData.attacks[WHITE][i];
+        evalData.allAttacks[BLACK] |= evalData.attacks[BLACK][i];
+    }
+    
     k = b->getPieceBB()[WHITE_KING];
 
     while (k) {
         square = bitscanForward(k);
         evalData.attacks[WHITE][KING] = KING_ATTACKS[square];
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_KING][square];
-        mobScore     -= mobilityKing[bitCount(attacks & mobilitySquaresWhite & ~evalData.allAttacks[BLACK])];
-        featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
+        mobScore     += mobilityKing[bitCount(KING_ATTACKS[square] & mobilitySquaresWhite & ~evalData.allAttacks[BLACK])];
+        featureScore += KING_PAWN_SHIELD    * bitCount(KING_ATTACKS[square] & whitePawns);
         featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
 
         k = lsbReset(k);
@@ -732,8 +734,8 @@ bb::Score Evaluator::evaluate(Board* b) {
         square = bitscanForward(k);
         evalData.attacks[BLACK][KING] = KING_ATTACKS[square];
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_KING][square];
-        mobScore     -= mobilityKing[bitCount(attacks & mobilitySquaresWhite & ~evalData.allAttacks[WHITE])];
-        featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
+        mobScore     -= mobilityKing[bitCount(KING_ATTACKS[square] & mobilitySquaresBlack & ~evalData.allAttacks[WHITE])];
+        featureScore -= KING_PAWN_SHIELD    * bitCount(KING_ATTACKS[square] & blackPawns);
         featureScore -= KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
 
         k = lsbReset(k);
