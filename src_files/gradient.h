@@ -40,9 +40,9 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 12
 
 namespace tuning {
 
@@ -152,7 +152,7 @@ namespace tuning {
         Weight w_piece_square_table[6][2][64];
         Weight w_piece_opp_king_square_table[5][15 * 15];
         Weight w_piece_our_king_square_table[5][15 * 15];
-        Weight w_mobility[5][28];
+        Weight w_mobility[6][28];
         Weight w_features[I_END];
         Weight w_bishop_pawn_e[9];
         Weight w_bishop_pawn_o[9];
@@ -968,8 +968,8 @@ namespace tuning {
 
     struct MobilityData {
 
-        uint8_t indices_white[5][10]{};
-        uint8_t indices_black[5][10]{};
+        uint8_t indices_white[6][10]{};
+        uint8_t indices_black[6][10]{};
 
         void init(Board *b) {
 
@@ -984,7 +984,7 @@ namespace tuning {
 
             U64 occupied = *b->getOccupiedBB();
 
-            for (Piece p = KNIGHT; p <= QUEEN; p++) {
+            for (Piece p = KNIGHT; p <= KING; p++) {
                 for (int c= 0; c <= 1; c++) {
                     k = b->getPieceBB(c, p);
                     while (k) {
@@ -1009,11 +1009,16 @@ namespace tuning {
                                                 ~b->getPieceBB(c, QUEEN)&
                                                 ~b->getPieceBB(c, ROOK));
                                 break;
+                            case KING:
+                                attacks = KING_ATTACKS[square];
+                                break;
                         }
                         if (c == WHITE) {
-                            indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
+                            if (p == KING)indices_white[p][++indices_white[p][0]] = bitCount(attacks & mobilitySquaresWhite & ~b->getAttackedSquares<BLACK>());
+                            else indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
                         } else {
-                            indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack));
+                            if (p == KING)indices_black[p][++indices_black[p][0]] = bitCount(attacks & mobilitySquaresBlack & ~b->getAttackedSquares<WHITE>());
+                            else indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack));
                         }
 
                         k = lsbReset(k);
@@ -1023,7 +1028,7 @@ namespace tuning {
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (Piece p = PAWN; p <= QUEEN; p++) {
+            for (Piece p = PAWN; p <= KING; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
                     midgame += td->w_mobility[p][w].midgame.value;
@@ -1039,7 +1044,7 @@ namespace tuning {
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
 
-            for (Piece p = PAWN; p <= QUEEN; p++) {
+            for (Piece p = PAWN; p <= KING; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
 
@@ -1681,7 +1686,8 @@ namespace tuning {
                 "EvalScore mobilityKnight[9] = {",
                 "EvalScore mobilityBishop[14] = {",
                 "EvalScore mobilityRook[15] = {",
-                "EvalScore mobilityQueen[28] = {",};
+                "EvalScore mobilityQueen[28] = {",
+                "EvalScore mobilityKing[9] = {",};
 
         for (int i = 0; i < 4; i++) {
             std::cout << mobility_names[i];

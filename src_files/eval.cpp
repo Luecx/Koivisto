@@ -57,6 +57,8 @@ EvalScore MINOR_ATTACK_ROOK             = M(   36,   24);
 EvalScore MINOR_ATTACK_QUEEN            = M(   25,   40);
 EvalScore ROOK_ATTACK_QUEEN             = M(   33,   14);
 
+EvalScore mobilityKing[9] = {};
+
 EvalScore mobilityKnight[9] = {
         M(  -52,   -6), M(  -40,   49), M(  -35,   80), M(  -31,   98), M(  -26,  110),
         M(  -22,  120), M(  -15,  122), M(   -5,  115), M(    9,  100), };
@@ -178,7 +180,7 @@ float* phaseValues = new float[6] {
 };
 
 
-EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
+EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, mobilityKing};
 
 
 
@@ -255,6 +257,10 @@ EvalScore Evaluator::computeHangingPieces(Board* b, EvalData* evalData) {
         WnotAttacked |= evalData->attacks[WHITE][i];
         BnotAttacked |= evalData->attacks[BLACK][i];
     }
+
+    evalData->allAttacks[WHITE] = WnotAttacked;
+    evalData->allAttacks[BLACK] = BnotAttacked;
+
     WnotAttacked = ~WnotAttacked;
     BnotAttacked = ~BnotAttacked;
     
@@ -714,7 +720,7 @@ bb::Score Evaluator::evaluate(Board* b) {
         square = bitscanForward(k);
         evalData.attacks[WHITE][KING] = KING_ATTACKS[square];
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][WHITE_KING][square];
-
+        mobScore     -= mobilityKing[bitCount(attacks & mobilitySquaresWhite & ~evalData.allAttacks[BLACK])];
         featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
         featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
 
@@ -725,9 +731,8 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalData.attacks[BLACK][KING] = KING_ATTACKS[square];
-    
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_KING][square];
-
+        mobScore     -= mobilityKing[bitCount(attacks & mobilitySquaresWhite & ~evalData.allAttacks[WHITE])];
         featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
         featureScore -= KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
 
