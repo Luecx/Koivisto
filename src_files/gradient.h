@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -157,7 +157,7 @@ namespace tuning {
         Weight w_bishop_pawn_e[9];
         Weight w_bishop_pawn_o[9];
         Weight w_king_safety[100];
-        Weight w_passer[16];
+        Weight w_passer[64];
         Weight w_pinned[15];
         Weight w_hanging[5];
     };
@@ -1212,7 +1212,7 @@ namespace tuning {
                     threadData[t].w_king_safety[i] = {{w1},
                                                       {w2}};
                 }
-                if (i < 16) {
+                if (i < 64) {
                     float w1 = MgScore(passer_rank_n[i]);
                     float w2 = EgScore(passer_rank_n[i]);
                     threadData[t].w_passer[i] = {{w1},
@@ -1310,7 +1310,7 @@ namespace tuning {
                     threadData[t].w_king_safety[i].endgame.gradient = 0;
 
                 }
-                if (i < 16) {
+                if (i < 64) {
                     threadData[0].w_passer[i].midgame.gradient +=
                             threadData[t].w_passer[i].midgame.gradient;
                     threadData[0].w_passer[i].endgame.gradient +=
@@ -1404,7 +1404,7 @@ namespace tuning {
                             threadData[0].w_king_safety[i].endgame.value;
 
                 }
-                if (i < 16) {
+                if (i < 64) {
                     threadData[t].w_passer[i].midgame.value =
                             threadData[0].w_passer[i].midgame.value;
                     threadData[t].w_passer[i].endgame.value =
@@ -1481,7 +1481,7 @@ namespace tuning {
                 threadData[0].w_king_safety[i].midgame.update(eta);
                 threadData[0].w_king_safety[i].endgame.update(eta);
             }
-            if (i < 16) {
+            if (i < 64) {
                 threadData[0].w_passer[i].midgame.update(eta);
                 threadData[0].w_passer[i].endgame.update(eta);
             }
@@ -1709,8 +1709,8 @@ namespace tuning {
         std::cout << "};\n" << std::endl;
 
         // --------------------------------- passer_rank_n ---------------------------------
-        std::cout << "EvalScore passer_rank_n[16] = {";
-        for (int n = 0; n < 16; n++) {
+        std::cout << "EvalScore passer_rank_n[64] = {";
+        for (int n = 0; n < 64; n++) {
             if (n % 4 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_passer[n] << ", ";
         }

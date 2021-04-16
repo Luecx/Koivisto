@@ -33,7 +33,7 @@ extern EvalScore* mobilities[N_PIECE_TYPES];
 extern int        mobEntryCount[N_PIECE_TYPES];
 extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
-extern EvalScore passer_rank_n[2*N_RANKS];
+extern EvalScore passer_rank_n[2*N_RANKS*N_FILES/2];
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
