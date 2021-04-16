@@ -25,10 +25,10 @@
 
 #include <atomic>
 #include <cstdint>
+#include <fstream>
 #include <omp.h>
 #include <ostream>
 #include <vector>
-#include <fstream>
 
 /**
  * How to add new eval params:
@@ -40,629 +40,626 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 16
 
 namespace tuning {
 
-    inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
+inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
 
-    inline double sigmoidPrime(double s, double K) {
-        double ex = exp(-s * K / 400);
-        return (K * ex) / (400 * (ex + 1) * (ex + 1));
+inline double sigmoidPrime(double s, double K) {
+    double ex = exp(-s * K / 400);
+    return (K * ex) / (400 * (ex + 1) * (ex + 1));
+}
+
+enum feature_indices {
+    I_SIDE_TO_MOVE,
+
+    I_PAWN_STRUCTURE,
+    I_PAWN_PASSED,
+    I_PAWN_ISOLATED,
+    I_PAWN_DOUBLED,
+    I_PAWN_DOUBLED_AND_ISOLATED,
+    I_PAWN_BACKWARD,
+    I_PAWN_OPEN,
+    I_PAWN_BLOCKED,
+
+    I_KNIGHT_OUTPOST,
+    I_KNIGHT_DISTANCE_ENEMY_KING,
+
+    I_ROOK_OPEN_FILE,
+    I_ROOK_HALF_OPEN_FILE,
+    I_ROOK_KING_LINE,
+
+    I_BISHOP_DOUBLED,
+    I_BISHOP_FIANCHETTO,
+    I_BISHOP_PIECE_SAME_SQUARE_E,
+
+    I_QUEEN_DISTANCE_ENEMY_KING,
+
+    I_KING_CLOSE_OPPONENT,
+    I_KING_PAWN_SHIELD,
+
+    I_CASTLING_RIGHTS,
+    I_MINOR_BEHIND_PAWN,
+
+    I_SAFE_QUEEN_CHECK,
+    I_SAFE_ROOK_CHECK,
+    I_SAFE_BISHOP_CHECK,
+    I_SAFE_KNIGHT_CHECK,
+
+    I_PAWN_ATTACK_MINOR,
+    I_PAWN_ATTACK_ROOK,
+    I_PAWN_ATTACK_QUEEN,
+
+    I_MINOR_ATTACK_ROOK,
+    I_MINOR_ATTACK_QUEEN,
+    I_ROOK_ATTACK_QUEEN,
+
+    // always have this at the end
+    I_END,
+};
+
+struct Param {
+    Param() {}
+
+    Param(float value) : value(value) {}
+
+    float value;
+    float gradient;
+
+    double firstMoment  = 0;
+    double secondMoment = 0;
+    double t            = 0;
+
+    void update(float eta) {
+
+        static double beta1 = 0.9;
+        static double beta2 = 0.999;
+        static double eps   = 1e-8;
+
+        this->t++;
+
+        firstMoment  = beta1 * firstMoment + (1 - beta1) * gradient;
+        secondMoment = beta2 * secondMoment + (1 - beta2) * gradient * gradient;
+
+        double firstMomentCorrected  = firstMoment / (1 - pow(beta1, t));
+        double secondMomentCorrected = secondMoment / (1 - pow(beta2, t));
+
+        this->value -= eta / (sqrt(secondMomentCorrected) + eps) * firstMomentCorrected;
+
+        this->gradient = 0;
+    }
+};
+
+struct Weight {
+    Param midgame;
+    Param endgame;
+
+    friend ostream& operator<<(ostream& os, const Weight& weight) {
+        os << "M(" << std::setw(5) << round(weight.midgame.value) << "," << std::setw(5) << round(weight.endgame.value)
+           << ")";
+        return os;
+    }
+};
+
+struct ThreadData {
+    Weight w_piece_square_table[6][2][64];
+    Weight w_piece_opp_king_square_table[5][15 * 15];
+    Weight w_piece_our_king_square_table[5][15 * 15];
+    Weight w_mobility[5][28];
+    Weight w_features[I_END];
+    Weight w_bishop_pawn_e[9];
+    Weight w_bishop_pawn_o[9];
+    Weight w_king_safety[100];
+    Weight w_passer[64];
+    Weight w_pinned[15];
+    Weight w_hanging[5];
+};
+
+ThreadData threadData[N_THREAD] {};
+
+struct MetaData {
+    // it can happen that the final evaluation is reduced by a given scalar
+
+    float evalReduction       = 1;
+    float phase               = 0;
+    float matingMaterialWhite = false;
+    float matingMaterialBlack = false;
+
+    void init(Board* b) {
+        phase = (24.0f + phaseValues[5]
+                 - phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
+                 - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
+                 - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
+                 - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
+                 - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
+                / 24.0f;
+
+        if (phase > 1)
+            phase = 1;
+        if (phase < 0)
+            phase = 0;
+
+        matingMaterialWhite = hasMatingMaterial(b, WHITE);
+        matingMaterialBlack = hasMatingMaterial(b, BLACK);
     }
 
-    enum feature_indices {
-        I_SIDE_TO_MOVE,
-
-        I_PAWN_STRUCTURE,
-        I_PAWN_PASSED,
-        I_PAWN_ISOLATED,
-        I_PAWN_DOUBLED,
-        I_PAWN_DOUBLED_AND_ISOLATED,
-        I_PAWN_BACKWARD,
-        I_PAWN_OPEN,
-        I_PAWN_BLOCKED,
-
-        I_KNIGHT_OUTPOST,
-        I_KNIGHT_DISTANCE_ENEMY_KING,
-
-        I_ROOK_OPEN_FILE,
-        I_ROOK_HALF_OPEN_FILE,
-        I_ROOK_KING_LINE,
-
-        I_BISHOP_DOUBLED,
-        I_BISHOP_FIANCHETTO,
-        I_BISHOP_PIECE_SAME_SQUARE_E,
-
-        I_QUEEN_DISTANCE_ENEMY_KING,
-
-        I_KING_CLOSE_OPPONENT,
-        I_KING_PAWN_SHIELD,
-
-        I_CASTLING_RIGHTS,
-        I_MINOR_BEHIND_PAWN,
-        
-        I_SAFE_QUEEN_CHECK,
-        I_SAFE_ROOK_CHECK,
-        I_SAFE_BISHOP_CHECK,
-        I_SAFE_KNIGHT_CHECK,
-
-        I_PAWN_ATTACK_MINOR,
-        I_PAWN_ATTACK_ROOK,
-        I_PAWN_ATTACK_QUEEN,
-
-        I_MINOR_ATTACK_ROOK,
-        I_MINOR_ATTACK_QUEEN,
-        I_ROOK_ATTACK_QUEEN,
-        
-        // always have this at the end
-        I_END,
-    };
-
-    struct Param {
-        Param() {}
-
-        Param(float value) : value(value) {}
-
-        float value;
-        float gradient;
-
-        double firstMoment = 0;
-        double secondMoment = 0;
-        double t = 0;
-
-        void update(float eta) {
-
-
-            static double beta1 = 0.9;
-            static double beta2 = 0.999;
-            static double eps = 1e-8;
-
-
-            this->t++;
-
-
-            firstMoment  = beta1 *  firstMoment + (1 - beta1) * gradient;
-            secondMoment = beta2 * secondMoment + (1 - beta2) * gradient * gradient;
-
-            double  firstMomentCorrected =  firstMoment / (1 - pow(beta1, t));
-            double secondMomentCorrected = secondMoment / (1 - pow(beta2, t));
-
-            this->value -= eta / (sqrt(secondMomentCorrected) + eps) * firstMomentCorrected;
-
-            this->gradient = 0;
+    void evaluate(float& res, ThreadData* td) {
+        if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
+            evalReduction = 1.0 / 10;
+        else {
+            evalReduction = 1;
         }
-    };
+        res *= evalReduction;
+    }
+};
 
-    struct Weight {
-        Param midgame;
-        Param endgame;
+struct Pst64Data {
+    // to quickly recompute the values for the piece square tables, we require the indices of each square
+    // and how often is being used. We also need to know if we deal with same side or opposite side castling
+    bool sameside_castle;
 
-        friend ostream &operator<<(ostream &os, const Weight &weight) {
-            os << "M(" << std::setw(5) << round(weight.midgame.value) << "," << std::setw(5)
-               << round(weight.endgame.value)
-               << ")";
-            return os;
-        }
-    };
+    int8_t indices_white[6][10] {};
+    int8_t indices_black[6][10] {};
 
-    struct ThreadData {
-        Weight w_piece_square_table[6][2][64];
-        Weight w_piece_opp_king_square_table[5][15 * 15];
-        Weight w_piece_our_king_square_table[5][15 * 15];
-        Weight w_mobility[5][28];
-        Weight w_features[I_END];
-        Weight w_bishop_pawn_e[9];
-        Weight w_bishop_pawn_o[9];
-        Weight w_king_safety[100];
-        Weight w_passer[64];
-        Weight w_pinned[15];
-        Weight w_hanging[5];
-    };
+    void init(Board* b) {
 
-    ThreadData threadData[N_THREAD]{};
+        bool wKSide     = (fileIndex(bitscanForward(b->getPieceBB()[WHITE_KING])) > 3 ? 0 : 1);
+        bool bKSide     = (fileIndex(bitscanForward(b->getPieceBB()[BLACK_KING])) > 3 ? 0 : 1);
+        sameside_castle = wKSide == bKSide;
 
-    struct MetaData {
-        // it can happen that the final evaluation is reduced by a given scalar
+        for (Piece p = PAWN; p <= KING; p++) {
+            for (int c = 0; c <= 1; c++) {
+                U64 k = b->getPieceBB(c, p);
+                while (k) {
+                    Square s = bitscanForward(k);
 
-        float evalReduction = 1;
-        float phase = 0;
-        float matingMaterialWhite = false;
-        float matingMaterialBlack = false;
-
-        void init(Board *b) {
-            phase =
-                    (24.0f + phaseValues[5] -
-                     phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
-                     - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
-                     - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
-                     - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
-                     - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
-                    / 24.0f;
-
-            if (phase > 1)
-                phase = 1;
-            if (phase < 0)
-                phase = 0;
-
-            matingMaterialWhite = hasMatingMaterial(b, WHITE);
-            matingMaterialBlack = hasMatingMaterial(b, BLACK);
-        }
-
-        void evaluate(float &res, ThreadData* td) {
-            if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
-                evalReduction = 1.0 / 10;
-            else {
-                evalReduction = 1;
-            }
-            res *= evalReduction;
-        }
-    };
-
-    struct Pst64Data {
-        // to quickly recompute the values for the piece square tables, we require the indices of each square
-        // and how often is being used. We also need to know if we deal with same side or opposite side castling
-        bool sameside_castle;
-
-        int8_t indices_white[6][10]{};
-        int8_t indices_black[6][10]{};
-
-        void init(Board *b) {
-
-            bool wKSide = (fileIndex(bitscanForward(b->getPieceBB()[WHITE_KING])) > 3 ? 0 : 1);
-            bool bKSide = (fileIndex(bitscanForward(b->getPieceBB()[BLACK_KING])) > 3 ? 0 : 1);
-            sameside_castle = wKSide == bKSide;
-
-            for (Piece p = PAWN; p <= KING; p++) {
-                for (int c= 0; c <= 1; c++) {
-                    U64 k = b->getPieceBB(c, p);
-                    while (k) {
-                        Square s = bitscanForward(k);
-
-                        if (p == KING) {
-                            if (c == WHITE) {
-                                indices_white[p][++indices_white[p][0]] = (pst_index_white_s(s));
-                            } else {
-                                indices_black[p][++indices_black[p][0]] = (pst_index_black_s(s));
-                            }
-                        } else {
-                            if (c == WHITE) {
-                                indices_white[p][++indices_white[p][0]] = (pst_index_white(s, wKSide));
-                            } else {
-                                indices_black[p][++indices_black[p][0]] = (pst_index_black(s, bKSide));
-                            }
-                        }
-
-                        k = lsbReset(k);
-                    }
-                }
-            }
-        }
-
-        void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (Piece p = PAWN; p < KING; p++) {
-                for (int i = 1; i <= indices_white[p][0]; i++) {
-                    int8_t w = indices_white[p][i];
-                    midgame += td->w_piece_square_table[p][!sameside_castle][w].midgame.value;
-                    endgame += td->w_piece_square_table[p][!sameside_castle][w].endgame.value;
-                }
-                for (int i = 1; i <= indices_black[p][0]; i++) {
-                    int8_t b = indices_black[p][i];
-                    midgame -= td->w_piece_square_table[p][!sameside_castle][b].midgame.value;
-                    endgame -= td->w_piece_square_table[p][!sameside_castle][b].endgame.value;
-                }
-            }
-
-            // the kings are done seperate as they are not affected by castling side
-            for (int i = 1; i <= indices_white[KING][0]; i++) {
-                int8_t w = indices_white[KING][i];
-                midgame += td->w_piece_square_table[KING][0][w].midgame.value;
-                endgame += td->w_piece_square_table[KING][0][w].endgame.value;
-            }
-            for (int i = 1; i <= indices_black[KING][0]; i++) {
-                int8_t b = indices_black[KING][i];
-                midgame -= td->w_piece_square_table[KING][0][b].midgame.value;
-                endgame -= td->w_piece_square_table[KING][0][b].endgame.value;
-            }
-        }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            for (Piece p = PAWN; p < KING; p++) {
-                for (int i = 1; i <= indices_white[p][0]; i++) {
-                    int8_t w = indices_white[p][i];
-                    td->w_piece_square_table[p][!sameside_castle][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_square_table[p][!sameside_castle][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
-                }
-                for (int i = 1; i <= indices_black[p][0]; i++) {
-                    int8_t b = indices_black[p][i];
-                    td->w_piece_square_table[p][!sameside_castle][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_square_table[p][!sameside_castle][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
-                }
-            }
-
-            // the kings are done seperate as they are not affected by castling side
-            for (int i = 1; i <= indices_white[KING][0]; i++) {
-                int8_t w = indices_white[KING][i];
-                td->w_piece_square_table[KING][0][w].midgame.gradient +=
-                        (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_piece_square_table[KING][0][w].endgame.gradient +=
-                        (meta->phase) * meta->evalReduction * lossgrad;
-            }
-            for (int i = 1; i <= indices_black[KING][0]; i++) {
-                int8_t b = indices_black[KING][i];
-                td->w_piece_square_table[KING][0][b].midgame.gradient -=
-                        (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_piece_square_table[KING][0][b].endgame.gradient -=
-                        (meta->phase) * meta->evalReduction * lossgrad;
-            }
-        }
-    };
-
-    struct Pst225Data {
-
-        // only for pawns currently,
-        uint8_t indices_white_wk[1][10]{};
-        uint8_t indices_black_wk[1][10]{};
-        uint8_t indices_white_bk[1][10]{};
-        uint8_t indices_black_bk[1][10]{};
-
-        void init(Board *b) {
-
-            Square wKingSq = bitscanForward(b->getPieceBB()[WHITE_KING]);
-            Square bKingSq = bitscanForward(b->getPieceBB()[BLACK_KING]);
-
-            for (Piece p = PAWN; p <= PAWN; p++) {
-                for (int c= 0; c <= 1; c++) {
-                    U64 k = b->getPieceBB(c, p);
-                    while (k) {
-                        Square s = bitscanForward(k);
-
+                    if (p == KING) {
                         if (c == WHITE) {
-                            indices_white_wk[p][++indices_white_wk[p][0]] = (pst_index_relative_white(s, wKingSq));
-                            indices_white_bk[p][++indices_white_bk[p][0]] = (pst_index_relative_white(s, bKingSq));
+                            indices_white[p][++indices_white[p][0]] = (pst_index_white_s(s));
                         } else {
-                            indices_black_wk[p][++indices_black_wk[p][0]] = (pst_index_relative_black(s, wKingSq));
-                            indices_black_bk[p][++indices_black_bk[p][0]] = (pst_index_relative_black(s, bKingSq));
+                            indices_black[p][++indices_black[p][0]] = (pst_index_black_s(s));
                         }
-
-                        k = lsbReset(k);
-                    }
-                }
-            }
-        }
-
-        void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (Piece p = PAWN; p <= PAWN; p++) {
-
-                for (int i = 1; i <= indices_white_wk[p][0]; i++) {
-                    uint8_t w = indices_white_wk[p][i];
-                    midgame += td->w_piece_our_king_square_table[p][w].midgame.value;
-                    endgame += td->w_piece_our_king_square_table[p][w].endgame.value;
-                }
-
-                for (int i = 1; i <= indices_white_bk[p][0]; i++) {
-                    uint8_t w = indices_white_bk[p][i];
-                    midgame += td->w_piece_opp_king_square_table[p][w].midgame.value;
-                    endgame += td->w_piece_opp_king_square_table[p][w].endgame.value;
-                }
-                for (int i = 1; i <= indices_black_bk[p][0]; i++) {
-                    uint8_t b = indices_black_bk[p][i];
-                    midgame -= td->w_piece_our_king_square_table[p][b].midgame.value;
-                    endgame -= td->w_piece_our_king_square_table[p][b].endgame.value;
-                }
-
-                for (int i = 1; i <= indices_black_wk[p][0]; i++) {
-                    uint8_t b = indices_black_wk[p][i];
-                    midgame -= td->w_piece_opp_king_square_table[p][b].midgame.value;
-                    endgame -= td->w_piece_opp_king_square_table[p][b].endgame.value;
-                }
-            }
-        }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            for (Piece p = PAWN; p <= PAWN; p++) {
-                for (int i = 1; i <= indices_white_wk[p][0]; i++) {
-                    uint8_t w = indices_white_wk[p][i];
-                    td->w_piece_our_king_square_table[p][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_our_king_square_table[p][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
-                }
-
-                for (int i = 1; i <= indices_white_bk[p][0]; i++) {
-                    uint8_t w = indices_white_bk[p][i];
-                    td->w_piece_opp_king_square_table[p][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_opp_king_square_table[p][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
-                }
-                for (int i = 1; i <= indices_black_bk[p][0]; i++) {
-                    uint8_t b = indices_black_bk[p][i];
-                    td->w_piece_our_king_square_table[p][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_our_king_square_table[p][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
-                }
-
-                for (int i = 1; i <= indices_black_wk[p][0]; i++) {
-                    uint8_t b = indices_black_wk[p][i];
-                    td->w_piece_opp_king_square_table[p][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_opp_king_square_table[p][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
-                }
-            }
-        }
-    };
-
-    struct KingSafetyData {
-        // we only need to store one index for the white and black king
-
-        int8_t wkingsafety_index;
-        int8_t bkingsafety_index;
-
-        void init(Board *b) {
-
-            U64 k;
-            Square square;
-            U64 attacks;
-            U64 occupied = *(b->getOccupiedBB());
-
-            static int factors[6] = {0, 2, 2, 3, 4};
-
-            Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
-            Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
-
-            U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
-            U64 blackKingZone = KING_ATTACKS[blackKingSquare];
-
-            int wkingSafety_attPiecesCount = 0;
-            int wkingSafety_valueOfAttacks = 0;
-
-            int bkingSafety_attPiecesCount = 0;
-            int bkingSafety_valueOfAttacks = 0;
-
-            for (Piece p = KNIGHT; p <= QUEEN; p++) {
-                for (int c= 0; c <= 1; c++) {
-                    k = b->getPieceBB(c, p);
-                    while (k) {
-                        square = bitscanForward(k);
-                        attacks = ZERO;
-                        switch (p) {
-                            case KNIGHT:
-                                attacks = KNIGHT_ATTACKS[square];
-                                break;
-                            case BISHOP:
-                                attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
-                                break;
-                            case QUEEN:
-                                attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, BISHOP)) |
-                                        lookUpRookAttack    (square, occupied &~b->getPieceBB(c, ROOK));
-                                break;
-                            case ROOK:
-                                attacks =
-                                        lookUpRookAttack    (square,occupied &
-                                                                    ~b->getPieceBB(c, QUEEN)&
-                                                                    ~b->getPieceBB(c, ROOK));
-                                break;
-                        }
+                    } else {
                         if (c == WHITE) {
-                            addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount,
-                                            bkingSafety_valueOfAttacks,
-                                            factors[p]);
+                            indices_white[p][++indices_white[p][0]] = (pst_index_white(s, wKSide));
                         } else {
-                            addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount,
-                                            wkingSafety_valueOfAttacks,
-                                            factors[p]);
+                            indices_black[p][++indices_black[p][0]] = (pst_index_black(s, bKSide));
                         }
-
-                        k = lsbReset(k);
                     }
+
+                    k = lsbReset(k);
                 }
             }
+        }
+    }
 
-            wkingsafety_index = wkingSafety_valueOfAttacks;
-            bkingsafety_index = bkingSafety_valueOfAttacks;
+    void evaluate(float& midgame, float& endgame, ThreadData* td) {
+        for (Piece p = PAWN; p < KING; p++) {
+            for (int i = 1; i <= indices_white[p][0]; i++) {
+                int8_t w = indices_white[p][i];
+                midgame += td->w_piece_square_table[p][!sameside_castle][w].midgame.value;
+                endgame += td->w_piece_square_table[p][!sameside_castle][w].endgame.value;
+            }
+            for (int i = 1; i <= indices_black[p][0]; i++) {
+                int8_t b = indices_black[p][i];
+                midgame -= td->w_piece_square_table[p][!sameside_castle][b].midgame.value;
+                endgame -= td->w_piece_square_table[p][!sameside_castle][b].endgame.value;
+            }
         }
 
-        void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            midgame += td->w_king_safety[bkingsafety_index].midgame.value - td->w_king_safety[wkingsafety_index].midgame.value;
-            endgame += td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
+        // the kings are done seperate as they are not affected by castling side
+        for (int i = 1; i <= indices_white[KING][0]; i++) {
+            int8_t w = indices_white[KING][i];
+            midgame += td->w_piece_square_table[KING][0][w].midgame.value;
+            endgame += td->w_piece_square_table[KING][0][w].endgame.value;
         }
+        for (int i = 1; i <= indices_black[KING][0]; i++) {
+            int8_t b = indices_black[KING][i];
+            midgame -= td->w_piece_square_table[KING][0][b].midgame.value;
+            endgame -= td->w_piece_square_table[KING][0][b].endgame.value;
+        }
+    }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            td->w_king_safety[bkingsafety_index].midgame.gradient +=
+    void gradient(MetaData* meta, float lossgrad, ThreadData* td) {
+        for (Piece p = PAWN; p < KING; p++) {
+            for (int i = 1; i <= indices_white[p][0]; i++) {
+                int8_t w = indices_white[p][i];
+                td->w_piece_square_table[p][!sameside_castle][w].midgame.gradient +=
                     (1 - meta->phase) * meta->evalReduction * lossgrad;
-            td->w_king_safety[bkingsafety_index].endgame.gradient +=
+                td->w_piece_square_table[p][!sameside_castle][w].endgame.gradient +=
                     (meta->phase) * meta->evalReduction * lossgrad;
-
-            td->w_king_safety[wkingsafety_index].midgame.gradient -=
+            }
+            for (int i = 1; i <= indices_black[p][0]; i++) {
+                int8_t b = indices_black[p][i];
+                td->w_piece_square_table[p][!sameside_castle][b].midgame.gradient -=
                     (1 - meta->phase) * meta->evalReduction * lossgrad;
-            td->w_king_safety[wkingsafety_index].endgame.gradient -=
+                td->w_piece_square_table[p][!sameside_castle][b].endgame.gradient -=
                     (meta->phase) * meta->evalReduction * lossgrad;
-        }
-    };
-
-    struct BishopPawnTableData {
-        int8_t count_e[9]{};
-        int8_t count_o[9]{};
-
-        void init(Board *b) {
-            U64 k;
-            Square square;
-
-            U64 whitePawns = b->getPieceBB(WHITE, PAWN);
-            U64 blackPawns = b->getPieceBB(BLACK, PAWN);
-
-            k = b->getPieceBB()[WHITE_BISHOP];
-            while (k) {
-                square = bitscanForward(k); 
-                count_e[bitCount(
-                        blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
-                count_o[bitCount(
-                        whitePawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
-                k = lsbReset(k);
-            }
-
-            k = b->getPieceBB()[BLACK_BISHOP];
-            while (k) {
-                square = bitscanForward(k);
-                count_e[bitCount(
-                        whitePawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] -= 1;
-                count_o[bitCount(
-                        blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] -= 1;
-                k = lsbReset(k);
             }
         }
 
-        void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (int i = 0; i < 9; i++) {
-                midgame += count_e[i] * td->w_bishop_pawn_e[i].midgame.value;
-                endgame += count_e[i] * td->w_bishop_pawn_e[i].endgame.value;
+        // the kings are done seperate as they are not affected by castling side
+        for (int i = 1; i <= indices_white[KING][0]; i++) {
+            int8_t w = indices_white[KING][i];
+            td->w_piece_square_table[KING][0][w].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
+            td->w_piece_square_table[KING][0][w].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
+        }
+        for (int i = 1; i <= indices_black[KING][0]; i++) {
+            int8_t b = indices_black[KING][i];
+            td->w_piece_square_table[KING][0][b].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
+            td->w_piece_square_table[KING][0][b].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
+        }
+    }
+};
 
-                midgame += count_o[i] * td->w_bishop_pawn_o[i].midgame.value;
-                endgame += count_o[i] * td->w_bishop_pawn_o[i].endgame.value;
+struct Pst225Data {
+
+    // only for pawns currently,
+    uint8_t indices_white_wk[1][10] {};
+    uint8_t indices_black_wk[1][10] {};
+    uint8_t indices_white_bk[1][10] {};
+    uint8_t indices_black_bk[1][10] {};
+
+    void init(Board* b) {
+
+        Square wKingSq = bitscanForward(b->getPieceBB()[WHITE_KING]);
+        Square bKingSq = bitscanForward(b->getPieceBB()[BLACK_KING]);
+
+        for (Piece p = PAWN; p <= PAWN; p++) {
+            for (int c = 0; c <= 1; c++) {
+                U64 k = b->getPieceBB(c, p);
+                while (k) {
+                    Square s = bitscanForward(k);
+
+                    if (c == WHITE) {
+                        indices_white_wk[p][++indices_white_wk[p][0]] = (pst_index_relative_white(s, wKingSq));
+                        indices_white_bk[p][++indices_white_bk[p][0]] = (pst_index_relative_white(s, bKingSq));
+                    } else {
+                        indices_black_wk[p][++indices_black_wk[p][0]] = (pst_index_relative_black(s, wKingSq));
+                        indices_black_bk[p][++indices_black_bk[p][0]] = (pst_index_relative_black(s, bKingSq));
+                    }
+
+                    k = lsbReset(k);
+                }
+            }
+        }
+    }
+
+    void evaluate(float& midgame, float& endgame, ThreadData* td) {
+        for (Piece p = PAWN; p <= PAWN; p++) {
+
+            for (int i = 1; i <= indices_white_wk[p][0]; i++) {
+                uint8_t w = indices_white_wk[p][i];
+                midgame += td->w_piece_our_king_square_table[p][w].midgame.value;
+                endgame += td->w_piece_our_king_square_table[p][w].endgame.value;
+            }
+
+            for (int i = 1; i <= indices_white_bk[p][0]; i++) {
+                uint8_t w = indices_white_bk[p][i];
+                midgame += td->w_piece_opp_king_square_table[p][w].midgame.value;
+                endgame += td->w_piece_opp_king_square_table[p][w].endgame.value;
+            }
+            for (int i = 1; i <= indices_black_bk[p][0]; i++) {
+                uint8_t b = indices_black_bk[p][i];
+                midgame -= td->w_piece_our_king_square_table[p][b].midgame.value;
+                endgame -= td->w_piece_our_king_square_table[p][b].endgame.value;
+            }
+
+            for (int i = 1; i <= indices_black_wk[p][0]; i++) {
+                uint8_t b = indices_black_wk[p][i];
+                midgame -= td->w_piece_opp_king_square_table[p][b].midgame.value;
+                endgame -= td->w_piece_opp_king_square_table[p][b].endgame.value;
+            }
+        }
+    }
+
+    void gradient(MetaData* meta, float lossgrad, ThreadData* td) {
+        for (Piece p = PAWN; p <= PAWN; p++) {
+            for (int i = 1; i <= indices_white_wk[p][0]; i++) {
+                uint8_t w = indices_white_wk[p][i];
+                td->w_piece_our_king_square_table[p][w].midgame.gradient +=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_our_king_square_table[p][w].endgame.gradient +=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+
+            for (int i = 1; i <= indices_white_bk[p][0]; i++) {
+                uint8_t w = indices_white_bk[p][i];
+                td->w_piece_opp_king_square_table[p][w].midgame.gradient +=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_opp_king_square_table[p][w].endgame.gradient +=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+            for (int i = 1; i <= indices_black_bk[p][0]; i++) {
+                uint8_t b = indices_black_bk[p][i];
+                td->w_piece_our_king_square_table[p][b].midgame.gradient -=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_our_king_square_table[p][b].endgame.gradient -=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+
+            for (int i = 1; i <= indices_black_wk[p][0]; i++) {
+                uint8_t b = indices_black_wk[p][i];
+                td->w_piece_opp_king_square_table[p][b].midgame.gradient -=
+                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_opp_king_square_table[p][b].endgame.gradient -=
+                    (meta->phase) * meta->evalReduction * lossgrad;
+            }
+        }
+    }
+};
+
+struct KingSafetyData {
+    // we only need to store one index for the white and black king
+
+    int8_t wkingsafety_index;
+    int8_t bkingsafety_index;
+
+    void init(Board* b) {
+
+        U64    k;
+        Square square;
+        U64    attacks;
+        U64    occupied = *(b->getOccupiedBB());
+
+        static int factors[6] = {0, 2, 2, 3, 4};
+
+        Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
+        Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
+
+        U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
+        U64 blackKingZone = KING_ATTACKS[blackKingSquare];
+
+        int wkingSafety_attPiecesCount = 0;
+        int wkingSafety_valueOfAttacks = 0;
+
+        int bkingSafety_attPiecesCount = 0;
+        int bkingSafety_valueOfAttacks = 0;
+
+        for (Piece p = KNIGHT; p <= QUEEN; p++) {
+            for (int c = 0; c <= 1; c++) {
+                k = b->getPieceBB(c, p);
+                while (k) {
+                    square  = bitscanForward(k);
+                    attacks = ZERO;
+                    switch (p) {
+                        case KNIGHT: attacks = KNIGHT_ATTACKS[square]; break;
+                        case BISHOP: attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB(c, QUEEN)); break;
+                        case QUEEN:
+                            attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB(c, BISHOP))
+                                      | lookUpRookAttack(square, occupied & ~b->getPieceBB(c, ROOK));
+                            break;
+                        case ROOK:
+                            attacks =
+                                lookUpRookAttack(square, occupied & ~b->getPieceBB(c, QUEEN) & ~b->getPieceBB(c, ROOK));
+                            break;
+                    }
+                    if (c == WHITE) {
+                        addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks,
+                                        factors[p]);
+                    } else {
+                        addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks,
+                                        factors[p]);
+                    }
+
+                    k = lsbReset(k);
+                }
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            for (int i = 0; i < 9; i++) {
-                td->w_bishop_pawn_e[i].midgame.gradient +=
-                        count_e[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_bishop_pawn_e[i].endgame.gradient +=
-                        count_e[i] * (meta->phase) * meta->evalReduction * lossgrad;
-                //            midgame += count_e[i] * w_bishop_pawn_e[i].midgame.value;
-                //            endgame += count_e[i] * w_bishop_pawn_e[i].endgame.value;
+        wkingsafety_index = wkingSafety_valueOfAttacks;
+        bkingsafety_index = bkingSafety_valueOfAttacks;
+    }
 
-                td->w_bishop_pawn_o[i].midgame.gradient +=
-                        count_o[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_bishop_pawn_o[i].endgame.gradient +=
-                        count_o[i] * (meta->phase) * meta->evalReduction * lossgrad;
-                //            midgame += count_o[i] * w_bishop_pawn_o[i].midgame.value;
-                //            endgame += count_o[i] * w_bishop_pawn_o[i].endgame.value;
-            }
-        }
-    };
+    void evaluate(float& midgame, float& endgame, ThreadData* td) {
+        midgame +=
+            td->w_king_safety[bkingsafety_index].midgame.value - td->w_king_safety[wkingsafety_index].midgame.value;
+        endgame +=
+            td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
+    }
 
-    struct PasserData {
+    void gradient(MetaData* meta, float lossgrad, ThreadData* td) {
+        td->w_king_safety[bkingsafety_index].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
+        td->w_king_safety[bkingsafety_index].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
 
-        int8_t count[16]{};
+        td->w_king_safety[wkingsafety_index].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
+        td->w_king_safety[wkingsafety_index].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
+    }
+};
 
-        void init(Board *b) {
-            U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
-            U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
-
-            U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
-            U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
-
-            U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
-            U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
-
-            U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
-            U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
-
-            U64 k = whitePassers;
-            while (k) {
-                Square square = bitscanForward(k);
-                count[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)] += 1;
-                k = lsbReset(k);
-            }
-            k = blackPassers;
-            while (k) {
-                Square square = bitscanForward(k);
-                count[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)] -= 1;
-                k = lsbReset(k);
-            }
-        }
-
-        void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (int i = 0; i < 16; i++) {
-                midgame += count[i] * td->w_passer[i].midgame.value;
-                endgame += count[i] * td->w_passer[i].endgame.value;
-            }
-        }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-
-            for (int i = 0; i < 16; i++) {
-                td->w_passer[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_passer[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
-            }
-        }
-    };
-
-    struct FeatureData {
-        // we assume that these features are linear which means that we only need their count
-
-        int8_t count[I_END]{};
-
-        void init(Board *b) {
-
-            U64 k, attacks;
-            Square square;
-
-            Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
-            Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
-
-            U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
-            U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
-
-            U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
-            U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
-
-            // all passed pawns for white/black
-            U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
-            U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
-
-            // doubled pawns without the pawn least developed
-            U64 whiteDoubledWithoutFirst = wFrontSpans(whitePawns) & whitePawns;
-            U64 blackDoubledWithoutFirst = bFrontSpans(blackPawns) & blackPawns;
-
-            // all doubled pawns
-            U64 whiteDoubledPawns = whiteDoubledWithoutFirst | (wRearSpans(whiteDoubledWithoutFirst) & whitePawns);
-            U64 blackDoubledPawns = blackDoubledWithoutFirst | (bRearSpans(blackDoubledWithoutFirst) & blackPawns);
-
-            // all isolated pawns
-            U64 whiteIsolatedPawns = whitePawns & ~(fillFile(shiftWest(whitePawns) | shiftEast(whitePawns)));
-            U64 blackIsolatedPawns = blackPawns & ~(fillFile(shiftWest(blackPawns) | shiftEast(blackPawns)));
-
-            U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
-            U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
-
-            U64 openFilesWhite = ~fillFile(whitePawns);
-            U64 openFilesBlack = ~fillFile(blackPawns);
-            U64 openFiles = openFilesBlack & openFilesWhite;
-
-            U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
-            U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
-            U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
-            U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
-
-            U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
-            U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+struct BishopPawnTableData {
+    int8_t count_e[9] {};
+    int8_t count_o[9] {};
     
-            count[I_PAWN_ATTACK_MINOR] = (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))-bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
-            count[I_PAWN_ATTACK_ROOK] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
-            count[I_PAWN_ATTACK_QUEEN] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
+    void init(Board* b) {
+        U64    k;
+        Square square;
+        
+        U64 whitePawns = b->getPieceBB(WHITE, PAWN);
+        U64 blackPawns = b->getPieceBB(BLACK, PAWN);
 
+        k = b->getPieceBB()[WHITE_BISHOP];
+        while (k) {
+            square = bitscanForward(k);
+            count_e[bitCount(blackPawns
+                             & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
+            count_o[bitCount(whitePawns
+                             & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
+            k = lsbReset(k);
+        }
 
-            U64 occupied = *b->getOccupiedBB();
-            U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
-            U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied)  & ~whiteTeam;
-            U64 wKingRookAttacks   = lookUpRookAttack  (whiteKingSquare, occupied)  & ~blackTeam;
-            U64 bKingRookAttacks   = lookUpRookAttack  (blackKingSquare, occupied)  & ~whiteTeam;
-            U64 wKingKnightAttacks = KNIGHT_ATTACKS    [whiteKingSquare]            & ~blackTeam;
-            U64 bKingKnightAttacks = KNIGHT_ATTACKS    [blackKingSquare]            & ~whiteTeam;
-            
-            // clang-format off
+        k = b->getPieceBB()[BLACK_BISHOP];
+        while (k) {
+            square = bitscanForward(k);
+            count_e[bitCount(whitePawns
+                             & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] -= 1;
+            count_o[bitCount(blackPawns
+                             & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] -= 1;
+            k = lsbReset(k);
+        }
+    }
+
+    void evaluate(float& midgame, float& endgame, ThreadData* td) {
+        for (int i = 0; i < 9; i++) {
+            midgame += count_e[i] * td->w_bishop_pawn_e[i].midgame.value;
+            endgame += count_e[i] * td->w_bishop_pawn_e[i].endgame.value;
+
+            midgame += count_o[i] * td->w_bishop_pawn_o[i].midgame.value;
+            endgame += count_o[i] * td->w_bishop_pawn_o[i].endgame.value;
+        }
+    }
+
+    void gradient(MetaData* meta, float lossgrad, ThreadData* td) {
+        for (int i = 0; i < 9; i++) {
+            td->w_bishop_pawn_e[i].midgame.gradient += count_e[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
+            td->w_bishop_pawn_e[i].endgame.gradient += count_e[i] * (meta->phase) * meta->evalReduction * lossgrad;
+            //            midgame += count_e[i] * w_bishop_pawn_e[i].midgame.value;
+            //            endgame += count_e[i] * w_bishop_pawn_e[i].endgame.value;
+
+            td->w_bishop_pawn_o[i].midgame.gradient += count_o[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
+            td->w_bishop_pawn_o[i].endgame.gradient += count_o[i] * (meta->phase) * meta->evalReduction * lossgrad;
+            //            midgame += count_o[i] * w_bishop_pawn_o[i].midgame.value;
+            //            endgame += count_o[i] * w_bishop_pawn_o[i].endgame.value;
+        }
+    }
+};
+
+struct PasserData {
+
+    // first index to track the size, rest for values. e.g.: [2, 3, 4, 0, 0, 0, 0] -> 2 values (3,4)
+    int8_t indices_w[9] {};
+    int8_t indices_b[9] {};
+
+    void init(Board* b) {
+        U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
+        U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
+
+        U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
+        U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
+
+        U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
+        U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
+
+        U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
+        U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
+
+        Square square;
+        U64    k = whitePassers;
+        while (k) {
+            square = bitscanForward(k);
+            File f = fileIndex(square);
+            Rank r = rankIndex(square);
+            if (f > 3)
+                f = 7 - f;
+            indices_w[++indices_w[0]] = getBit(whiteBlockedPawns, square) * 32 + r * 4 + f;
+            k                         = lsbReset(k);
+        }
+        k = blackPassers;
+        while (k) {
+            square = bitscanForward(k);
+            File f = fileIndex(square);
+            Rank r = 7 - rankIndex(square);
+            if (f > 3)
+                f = 7 - f;
+            indices_b[++indices_b[0]] = getBit(blackBlockedPawns, square) * 32 + r * 4 + f;
+            k                         = lsbReset(k);
+        }
+    }
+
+    void evaluate(float& midgame, float& endgame, ThreadData* td) {
+        for (int i = 1; i <= indices_w[0]; i++) {
+            midgame += td->w_passer[indices_w[i]].midgame.value;
+            endgame += td->w_passer[indices_w[i]].endgame.value;
+        }
+        for (int i = 1; i <= indices_b[0]; i++) {
+            midgame -= td->w_passer[indices_b[i]].midgame.value;
+            endgame -= td->w_passer[indices_b[i]].endgame.value;
+        }
+    }
+
+    void gradient(MetaData* meta, float lossgrad, ThreadData* td) {
+
+        for (int i = 1; i <= indices_w[0]; i++) {
+            td->w_passer[indices_w[i]].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
+            td->w_passer[indices_w[i]].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
+        }
+        for (int i = 1; i <= indices_b[0]; i++) {
+            td->w_passer[indices_b[i]].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
+            td->w_passer[indices_b[i]].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
+        }
+    }
+};
+
+struct FeatureData {
+    // we assume that these features are linear which means that we only need their count
+
+    int8_t count[I_END] {};
+
+    void init(Board* b) {
+
+        U64    k, attacks;
+        Square square;
+
+        Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
+        Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
+
+        U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
+        U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
+
+        U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
+        U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
+
+        // all passed pawns for white/black
+        U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
+        U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
+
+        // doubled pawns without the pawn least developed
+        U64 whiteDoubledWithoutFirst = wFrontSpans(whitePawns) & whitePawns;
+        U64 blackDoubledWithoutFirst = bFrontSpans(blackPawns) & blackPawns;
+
+        // all doubled pawns
+        U64 whiteDoubledPawns = whiteDoubledWithoutFirst | (wRearSpans(whiteDoubledWithoutFirst) & whitePawns);
+        U64 blackDoubledPawns = blackDoubledWithoutFirst | (bRearSpans(blackDoubledWithoutFirst) & blackPawns);
+
+        // all isolated pawns
+        U64 whiteIsolatedPawns = whitePawns & ~(fillFile(shiftWest(whitePawns) | shiftEast(whitePawns)));
+        U64 blackIsolatedPawns = blackPawns & ~(fillFile(shiftWest(blackPawns) | shiftEast(blackPawns)));
+
+        U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
+        U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
+
+        U64 openFilesWhite = ~fillFile(whitePawns);
+        U64 openFilesBlack = ~fillFile(blackPawns);
+        U64 openFiles      = openFilesBlack & openFilesWhite;
+
+        U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
+        U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
+        U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
+        U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
+
+        U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
+        U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+
+        count[I_PAWN_ATTACK_MINOR] =
+            (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))
+             - bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
+        count[I_PAWN_ATTACK_ROOK]  = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))
+                                     - bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
+        count[I_PAWN_ATTACK_QUEEN] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))
+                                      - bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
+
+        U64 occupied           = *b->getOccupiedBB();
+        U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied) & ~blackTeam;
+        U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied) & ~whiteTeam;
+        U64 wKingRookAttacks   = lookUpRookAttack(whiteKingSquare, occupied) & ~blackTeam;
+        U64 bKingRookAttacks   = lookUpRookAttack(blackKingSquare, occupied) & ~whiteTeam;
+        U64 wKingKnightAttacks = KNIGHT_ATTACKS[whiteKingSquare] & ~blackTeam;
+        U64 bKingKnightAttacks = KNIGHT_ATTACKS[blackKingSquare] & ~whiteTeam;
+
+        // clang-format off
             count[I_PAWN_DOUBLED_AND_ISOLATED] = (
                     +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
                     - bitCount(blackIsolatedPawns & blackDoubledPawns));
