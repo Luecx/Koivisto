@@ -223,7 +223,7 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
 int Evaluator::egMaterialDrawishnessScale(Board* b, bool side, int material) {
     UCI_ASSERT(b);
 
-    if (phase < 0.6)
+    if (phase < 0.8)
         return DEFAULT_SCALE; 
 
     uint32_t pawnCount = bitCount(b->getPieceBB(side, PAWN));

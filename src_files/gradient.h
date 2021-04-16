@@ -214,7 +214,7 @@ namespace tuning {
             if (!pawnCount && (winningSideMaterial - loosingSideMaterial <= 300 || !(pieceCounts[side][BISHOP]|pieceCounts[side][ROOK]|pieceCounts[side][QUEEN])))
                 scaleFactor = 0.08;
             
-            if (phase < 0.6)
+            if (phase < 0.8)
                 scaleFactor = 1.0; 
 
             res *= scaleFactor;
