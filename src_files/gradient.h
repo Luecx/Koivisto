@@ -169,10 +169,20 @@ namespace tuning {
 
         float evalReduction = 1;
         float phase = 0;
-        float matingMaterialWhite = false;
-        float matingMaterialBlack = false;
+        int   pieceCounts[2][5];
 
         void init(Board *b) {
+            pieceCounts[0][0] = bitCount(b->getPieceBB()[WHITE_PAWN]);
+            pieceCounts[0][1] = bitCount(b->getPieceBB()[WHITE_KNIGHT]);
+            pieceCounts[0][2] = bitCount(b->getPieceBB()[WHITE_BISHOP]);
+            pieceCounts[0][3] = bitCount(b->getPieceBB()[WHITE_ROOK]);
+            pieceCounts[0][4] = bitCount(b->getPieceBB()[WHITE_QUEEN]);
+            pieceCounts[1][0] = bitCount(b->getPieceBB()[BLACK_PAWN]);
+            pieceCounts[1][1] = bitCount(b->getPieceBB()[BLACK_KNIGHT]);
+            pieceCounts[1][2] = bitCount(b->getPieceBB()[BLACK_BISHOP]);
+            pieceCounts[1][3] = bitCount(b->getPieceBB()[BLACK_ROOK]);
+            pieceCounts[1][4] = bitCount(b->getPieceBB()[BLACK_QUEEN]);
+
             phase =
                     (24.0f + phaseValues[5] -
                      phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
@@ -187,17 +197,27 @@ namespace tuning {
             if (phase < 0)
                 phase = 0;
 
-            matingMaterialWhite = hasMatingMaterial(b, WHITE);
-            matingMaterialBlack = hasMatingMaterial(b, BLACK);
         }
 
         void evaluate(float &res, ThreadData* td) {
-            if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
-                evalReduction = 1.0 / 10;
-            else {
-                evalReduction = 1;
-            }
-            res *= evalReduction;
+
+            //Include drawishness eval code here?
+            float scaleFactor = 1.0;
+
+            bool side = res > 0 ? WHITE : BLACK;
+
+            uint32_t pawnCount = pieceCounts[side][PAWN];
+
+            int winningSideMaterial = 925 * pieceCounts[side][QUEEN] + 500 * pieceCounts[side][ROOK] + 300 * (pieceCounts[side][BISHOP] + pieceCounts[side][KNIGHT]);
+            int loosingSideMaterial = 925 * pieceCounts[!side][QUEEN] + 500 * pieceCounts[!side][ROOK] + 300 * (pieceCounts[!side][BISHOP] + pieceCounts[!side][KNIGHT]);
+
+            if (!pawnCount && winningSideMaterial - loosingSideMaterial <= 300)
+                scaleFactor = 0.08;
+            
+            if (phase < 0.6)
+                scaleFactor = 1.0; 
+
+            res *= scaleFactor;
         }
     };
 
