@@ -42,7 +42,7 @@ struct EvalData{
     
     U64 attacks [N_COLORS][N_PIECE_TYPES]{};
     U64 kingZone[N_COLORS]{};
-    
+
 };
 
 class Evaluator {
@@ -52,7 +52,7 @@ class Evaluator {
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    int egMaterialDrawishnessScale(Board* b, bool side);
+    int egMaterialDrawishnessScale(Board* b, bool side, int material);
 
     EvalScore computeHangingPieces(Board* b, EvalData* evalData);
 
