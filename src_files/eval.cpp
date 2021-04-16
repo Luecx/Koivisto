@@ -229,9 +229,9 @@ int Evaluator::egMaterialDrawishnessScale(Board* b, bool side, int material) {
     uint32_t pawnCount = bitCount(b->getPieceBB(side, PAWN));
 
     //See https://www.chessprogramming.org/Material#InsufficientMaterial
-    if (!pawnCount && material - 2*material*side <= 300)
+    if (!pawnCount && (material - 2*material*side <= 300 || !(b->getPieceBB(side, BISHOP)|b->getPieceBB(side, ROOK)|b->getPieceBB(side, QUEEN))))
         return DRAW_SCALE;
-        
+
     return DEFAULT_SCALE;
 }
 
@@ -740,7 +740,6 @@ bb::Score Evaluator::evaluate(Board* b) {
     while (k) {
         square = bitscanForward(k);
         evalData.attacks[BLACK][KING] = KING_ATTACKS[square];
-    
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_KING][square];
 
         featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);

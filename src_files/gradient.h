@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+//define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -211,7 +211,7 @@ namespace tuning {
             int winningSideMaterial = 925 * pieceCounts[side][QUEEN] + 500 * pieceCounts[side][ROOK] + 300 * (pieceCounts[side][BISHOP] + pieceCounts[side][KNIGHT]);
             int loosingSideMaterial = 925 * pieceCounts[!side][QUEEN] + 500 * pieceCounts[!side][ROOK] + 300 * (pieceCounts[!side][BISHOP] + pieceCounts[!side][KNIGHT]);
 
-            if (!pawnCount && winningSideMaterial - loosingSideMaterial <= 300)
+            if (!pawnCount && (winningSideMaterial - loosingSideMaterial <= 300 || !(pieceCounts[side][BISHOP]|pieceCounts[side][ROOK]|pieceCounts[side][QUEEN])))
                 scaleFactor = 0.08;
             
             if (phase < 0.6)
