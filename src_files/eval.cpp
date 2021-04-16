@@ -444,17 +444,23 @@ bb::Score Evaluator::evaluate(Board* b) {
         materialScore += piece_kk_square_tables[whiteKingSquare][blackKingSquare][BLACK_PAWN][square];
         k = lsbReset(k);
     }
-
+    
     k = whitePassers;
     while (k) {
         square = bitscanForward(k);
-        featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)];
+        File f = fileIndex(square);
+        Rank r = rankIndex(square);
+        if(f > 3) f = 7-f;
+        featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 32 + r * 4 + f];
         k = lsbReset(k);
     }
     k = blackPassers;
     while (k) {
         square = bitscanForward(k);
-        featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)];
+        File f = fileIndex(square);
+        Rank r = 7 - rankIndex(square);
+        if(f > 3) f = 7-f;
+        featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 32 + r * 4 + f];
         k = lsbReset(k);
     }
 
