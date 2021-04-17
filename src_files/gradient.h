@@ -640,7 +640,7 @@ namespace tuning {
             U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
             U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
 
-            int centerClosed = bitCount((whiteBlockedPawns | blackBlockedPawns) & CENTER_SQUARES_EXTENDED_BB);
+            int centerClosed = bitCount((whiteBlockedPawns | blackBlockedPawns) & CENTER_SQUARES_EXTENDED_BB)/2;
 
             U64 wKsideMask = fillFile(b->getPieceBB<WHITE>(KING));
                 wKsideMask |= shiftEast(wKsideMask);
@@ -864,10 +864,10 @@ namespace tuning {
                 k = lsbReset(k);
             }
 
-            count[I_SLOW_ATTACK_BUILDUP] -= wKsideAttacks > 0 ?  centerClosed * wKsideAttacks / 15: 0;
-            count[I_SLOW_ATTACK_BUILDUP] += bKsideAttacks > 0 ?  centerClosed * bKsideAttacks / 15 : 0;
-            count[I_SLOW_ATTACK_BUILDUP_NORM] -= wKsideAttacks > 0 ? wKsideAttacks / 5  : 0;
-            count[I_SLOW_ATTACK_BUILDUP_NORM] += bKsideAttacks > 0 ? bKsideAttacks / 5 : 0;
+            count[I_SLOW_ATTACK_BUILDUP] -= wKsideAttacks > 0 ?  centerClosed * wKsideAttacks : 0;
+            count[I_SLOW_ATTACK_BUILDUP] += bKsideAttacks > 0 ?  centerClosed * bKsideAttacks : 0;
+            count[I_SLOW_ATTACK_BUILDUP_NORM] -= wKsideAttacks > 0 ? wKsideAttacks : 0;
+            count[I_SLOW_ATTACK_BUILDUP_NORM] += bKsideAttacks > 0 ? bKsideAttacks : 0;
 
             //std::cout << "BUILDUPSCORE " << (int)count[I_SLOW_ATTACK_BUILDUP] << " | "<<  (int)count[I_SLOW_ATTACK_BUILDUP_NORM] << std::endl;
 
