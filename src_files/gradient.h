@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -605,7 +605,7 @@ namespace tuning {
     struct FeatureData {
         // we assume that these features are linear which means that we only need their count
 
-        int8_t count[I_END]{};
+        int16_t count[I_END]{};
 
         void init(Board *b) {
 
@@ -864,10 +864,12 @@ namespace tuning {
                 k = lsbReset(k);
             }
 
-            count[I_SLOW_ATTACK_BUILDUP] -= wKsideAttacks > 0 ?  centerClosed * wKsideAttacks/10 : 0;
-            count[I_SLOW_ATTACK_BUILDUP] += bKsideAttacks > 0 ?  centerClosed * bKsideAttacks/10 : 0;
-            count[I_SLOW_ATTACK_BUILDUP_NORM] -= wKsideAttacks > 0 ? wKsideAttacks / 10 : 0;
-            count[I_SLOW_ATTACK_BUILDUP_NORM] += bKsideAttacks > 0 ? bKsideAttacks / 10 : 0;
+            count[I_SLOW_ATTACK_BUILDUP] -= wKsideAttacks > 0 ?  centerClosed * wKsideAttacks / 15: 0;
+            count[I_SLOW_ATTACK_BUILDUP] += bKsideAttacks > 0 ?  centerClosed * bKsideAttacks / 15 : 0;
+            count[I_SLOW_ATTACK_BUILDUP_NORM] -= wKsideAttacks > 0 ? wKsideAttacks / 5  : 0;
+            count[I_SLOW_ATTACK_BUILDUP_NORM] += bKsideAttacks > 0 ? bKsideAttacks / 5 : 0;
+
+            //std::cout << "BUILDUPSCORE " << (int)count[I_SLOW_ATTACK_BUILDUP] << " | "<<  (int)count[I_SLOW_ATTACK_BUILDUP_NORM] << std::endl;
 
             count[I_CASTLING_RIGHTS] += (
                     +b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
