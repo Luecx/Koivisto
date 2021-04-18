@@ -42,7 +42,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 16
 
 namespace tuning {
 
