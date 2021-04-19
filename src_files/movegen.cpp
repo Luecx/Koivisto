@@ -28,13 +28,13 @@ enum MoveGenConfig{
 };
 
 template<Color c, MoveTypes t, MoveGenConfig m>
-inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd, Depth ply){
+inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd, [[maybe_unused]] Depth ply) {
     
     Move move = mv->getMove(mv->getSize()-1);
     int  idx  = mv->getSize()-1;
     
-    constexpr bool  isCapture   = t & CAPTURE_MASK;
-    constexpr bool  isPromotion = t & PROMOTION_MASK;
+    [[maybe_unused]] constexpr bool isCapture   = t & CAPTURE_MASK;
+    [[maybe_unused]] constexpr bool isPromotion = t & PROMOTION_MASK;
     
     // score hash move
     if(sameMove(move, hashMove)){
@@ -76,10 +76,10 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
 template<Color c, MoveGenConfig m, bool score>
 void generatePawnMoves(
     Board* b,
-    MoveList* mv,
-    Move hashMove=0,
-    SearchData* sd= nullptr,
-    Depth ply=0){
+    MoveList* mv, 
+    [[maybe_unused]] Move hashMove = 0,
+    [[maybe_unused]] SearchData* sd = nullptr,
+    [[maybe_unused]] Depth ply = 0) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     
@@ -208,18 +208,16 @@ void generatePawnMoves(
 template<Color c, MoveGenConfig m, bool score>
 void generatePieceMoves(
     Board* b,
-    MoveList* mv,
-    Move hashMove=0,
-    SearchData* sd= nullptr,
-    Depth ply=0){
+    MoveList* mv, 
+    [[maybe_unused]] Move hashMove = 0,
+    [[maybe_unused]] SearchData* sd = nullptr, 
+    [[maybe_unused]] Depth ply = 0) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->template getTeamOccupiedBB<them>();
     const U64 friendly   = b->template getTeamOccupiedBB<us  >();
     
     for(Piece p = KNIGHT; p <= QUEEN; p++){
@@ -283,20 +281,18 @@ void generatePieceMoves(
 template<Color c, MoveGenConfig m, bool score>
 void generateKingMoves(
     Board* b,
-    MoveList* mv,
-    Move hashMove=0,
-    SearchData* sd= nullptr,
-    Depth ply=0){
+    MoveList* mv, 
+    [[maybe_unused]] Move hashMove = 0,
+    [[maybe_unused]] SearchData* sd = nullptr, 
+    [[maybe_unused]] Depth ply = 0) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
     
     constexpr Piece movingPiece = KING + us * 8;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->getTeamOccupiedBB<them>();
     const U64 friendly   = b->getTeamOccupiedBB<us  >();
     
     U64 kings      = b->getPieceBB<us>(KING);

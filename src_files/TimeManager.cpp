@@ -33,6 +33,7 @@ auto startTime =
 TimeManager::TimeManager(int moveTime) : 
     mode(MOVETIME), 
     timeToUse(moveTime), 
+    nodesToUse(-1), 
     upperTimeBound(moveTime), 
     ignorePV(true), 
     isSafeToStop(true), 
@@ -50,8 +51,8 @@ TimeManager::TimeManager(int moveTime) :
 TimeManager::TimeManager() : 
     mode(DEPTH), 
     timeToUse(1 << 30), 
+    nodesToUse(-1), 
     upperTimeBound(1 << 30),
-    nodesToUse(-1),
     ignorePV(true), 
     isSafeToStop(true), 
     forceStop() {
@@ -128,7 +129,7 @@ TimeManager::~TimeManager() {
  * @param score
  * @param depth
  */
-void TimeManager::updatePV(Move move, Score score, Depth depth) {
+void TimeManager::updatePV(Move, Score, Depth) {
 
     // dont keep track of pv changes if timing doesnt matter
     if (ignorePV)

@@ -807,8 +807,7 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
  * @return
  */
 bool Board::isUnderAttack(Square square, Color attacker) {
-    U64 sqBB = ONE << square;
-    
+   
     if (attacker == WHITE) {
         return isUnderAttack<WHITE>(square);
     } else {
