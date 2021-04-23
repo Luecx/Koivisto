@@ -781,7 +781,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
-        if (staticEval >= beta && !hasOnlyPawns(b, b->getActivePlayer())) {
+        if (staticEval >= beta + (5 > depth ? 30 : 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
             b->undoMove_null();
