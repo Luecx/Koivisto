@@ -19,7 +19,6 @@
 
 #include "psqt.h"
 
-EvalScore piece_square_tables[64][64][12][64]{};
 
 // indexed by piece
 EvalScore piece_values[6] = {
@@ -744,7 +743,7 @@ EvalScore piece_opp_king_square_table[5][15*15]{
         },
 };
 // indexed by wking, bking, piece, square
-EvalScore piece_kk_square_tables[64][64][14][64];
+EvalScore piece_kk_square_tables[N_SQUARES][N_SQUARES][N_PIECES][N_SQUARES];
 
 void psqt_init() {
     for(Square wKingSq = 0; wKingSq < 64; wKingSq++){
