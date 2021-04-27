@@ -39,9 +39,11 @@ add_executable(Koivisto
         src_files/psqt.h
         src_files/gradient.h
         src_files/movegen.h
-        src_files/movegen.cpp src_files/material.h src_files/material.cpp)
+        src_files/movegen.cpp
+        src_files/material.h
+        src_files/material.cpp)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=37")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=43")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAJOR_VERSION=4")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
