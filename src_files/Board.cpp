@@ -18,8 +18,9 @@
  ****************************************************************************************************/
 
 #include "Board.h"
-#include "search.h"
+
 #include "UCIAssert.h"
+#include "search.h"
 
 using namespace bb;
 
@@ -51,7 +52,7 @@ Board::Board(std::string fen) {
     }
 
     // we need to push a default board status.
-    BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0};
+    BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0, {}};
     this->m_boardStatusHistory.push_back(boardStatus);
 
     // using some string utilties defined in Util.h, we split the fen into parts.
@@ -141,6 +142,7 @@ Board::Board(std::string fen) {
         }
     }
 
+    getBoardStatus()->material.reset(this);
     // note that we do not read information about move counts. This is usually not required for playing games.
 }
 
@@ -176,6 +178,8 @@ Board::Board(Board* board) {
     for (int n = 0; n < static_cast<int>(board->m_boardStatusHistory.size()); n++) {
         m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
     }
+
+    getBoardStatus()->material.reset(this);
 }
 
 /**
@@ -389,14 +393,17 @@ void Board::move(Move m) {
                                       + 1,    // increment fifty move counter. might be reset
                                   1ULL,       // set rep to 1 (no rep)
                                   previousStatus->moveCounter + getActivePlayer(),    // increment move counter
-                                  m};
+                                  m,
+                                  previousStatus->material};
 
-    Square sqFrom = getSquareFrom(m);
-    Square sqTo   = getSquareTo(m);
-    Piece  pFrom  = getMovingPiece(m);
+    Material material = previousStatus->material;
+
+    Square   sqFrom = getSquareFrom(m);
+    Square   sqTo   = getSquareTo(m);
+    Piece    pFrom  = getMovingPiece(m);
     MoveType mType  = getType(m);
-    Color  color  = getActivePlayer();
-    int    factor = getActivePlayer() == WHITE ? 1 : -1;
+    Color    color  = getActivePlayer();
+    int      factor = getActivePlayer() == WHITE ? 1 : -1;
 
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
@@ -440,14 +447,19 @@ void Board::move(Move m) {
 
             // setting m_piecesBB
             this->unsetPiece(sqFrom);
-
+            // update material
+            material.unsetPiece(pFrom, sqFrom);
+            material.setPiece(promotionPiece(m), sqTo);
             // do the "basic" move
             if (isCapture(m)) {
+                // update material
+                material.unsetPiece(getPiece(sqTo), sqTo);
                 this->replacePiece(sqTo, promotionPiece(m));
             } else {
                 this->setPiece(sqTo, promotionPiece(m));
             }
 
+            getBoardStatus()->material = material;
             return;
         } else if (mType == EN_PASSANT) {
 
@@ -455,12 +467,16 @@ void Board::move(Move m) {
             this->changeActivePlayer();
 
             // make sure to capture the pawn
+            material.unsetPiece(!color, PAWN, sqTo - 8 * factor);
             unsetPiece(sqTo - 8 * factor);
 
-            // move to pawn
+            // move the pawn
+            material.unsetPiece(pFrom, sqFrom);
+            material.setPiece(pFrom, sqTo);
             this->unsetPiece(sqFrom);
             this->setPiece(sqTo, pFrom);
 
+            getBoardStatus()->material = material;
             return;
         }
     } else if (pFrom % 8 == KING) {
@@ -491,6 +507,10 @@ void Board::move(Move m) {
         // we need to compute the repetition count
         this->computeNewRepetition();
 
+        // completely recalculate material
+        material.reset(this);
+        getBoardStatus()->material = material;
+
         return;
 
     }
@@ -517,7 +537,12 @@ void Board::move(Move m) {
     // doing the initial move
     this->unsetPiece(sqFrom);
 
+    // updating material
+    material.unsetPiece(pFrom, sqFrom);
+    material.setPiece(pFrom, sqTo);
+
     if (mType != EN_PASSANT && isCapture(m)) {
+        material.unsetPiece(getPiece(sqTo), sqTo);
         this->replacePiece(sqTo, pFrom);
     } else {
         this->setPiece(sqTo, pFrom);
@@ -526,8 +551,8 @@ void Board::move(Move m) {
     this->changeActivePlayer();
     this->computeNewRepetition();
 
-    __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist&table->m_mask]);
-
+    getBoardStatus()->material = material;
+    __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist & table->m_mask]);
 }
 
 /**
@@ -539,14 +564,14 @@ void Board::undoMove() {
 
     changeActivePlayer();
 
-    Square sqFrom   = getSquareFrom(m);
-    Square sqTo     = getSquareTo(m);
-    Piece  pFrom    = getMovingPiece(m);
+    Square   sqFrom   = getSquareFrom(m);
+    Square   sqTo     = getSquareTo(m);
+    Piece    pFrom    = getMovingPiece(m);
     MoveType mType    = getType(m);
-    Piece  captured = getCapturedPiece(m);
-    bool   isCap    = isCapture(m);
-    Color  color    = getActivePlayer();
-    int    factor   = getActivePlayer() == 0 ? 1 : -1;
+    Piece    captured = getCapturedPiece(m);
+    bool     isCap    = isCapture(m);
+    Color    color    = getActivePlayer();
+    int      factor   = getActivePlayer() == 0 ? 1 : -1;
 
     if (mType == EN_PASSANT) {
         setPiece(sqTo - 8 * factor, (1 - color) * 8);
@@ -575,15 +600,14 @@ void Board::undoMove() {
  */
 void Board::move_null() {
     BoardStatus* previousStatus = getBoardStatus();
-    BoardStatus  newBoardStatus = {
-        previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
-        0ULL,
-        previousStatus->castlingRights,
-        previousStatus->fiftyMoveCounter + 1,
-        1ULL,
-        previousStatus->moveCounter + getActivePlayer(),
-        0ULL,
-    };
+    BoardStatus  newBoardStatus = {previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
+                                  0ULL,
+                                  previousStatus->castlingRights,
+                                  previousStatus->fiftyMoveCounter + 1,
+                                  1ULL,
+                                  previousStatus->moveCounter + getActivePlayer(),
+                                  0ULL,
+                                  previousStatus->material};
 
     m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
     changeActivePlayer();
@@ -739,7 +763,6 @@ Score Board::staticExchangeEvaluation(Move m) {
         occ ^= fromSet;
         attadef |=
             occ & ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens));
-        // attadef |= (attacksTo(occ, sqTo) & occ);
         fromSet = getLeastValuablePiece(attadef, attacker, capturingPiece);
 
     } while (fromSet);
@@ -764,11 +787,11 @@ Score Board::staticExchangeEvaluation(Move m) {
 U64 Board::attacksTo(U64 p_occupied, Square sq) {
     U64 sqBB = ONE << sq;
     U64 knights, kings, bishopsQueens, rooksQueens;
-    knights         = m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT];
-    kings           = m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING];
-    rooksQueens     = bishopsQueens = m_piecesBB[WHITE_QUEEN] | m_piecesBB[BLACK_QUEEN];
-    rooksQueens    |= m_piecesBB[WHITE_ROOK] | m_piecesBB[BLACK_ROOK];
-    bishopsQueens  |= m_piecesBB[WHITE_BISHOP] | m_piecesBB[BLACK_BISHOP];
+    knights     = m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT];
+    kings       = m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING];
+    rooksQueens = bishopsQueens = m_piecesBB[WHITE_QUEEN] | m_piecesBB[BLACK_QUEEN];
+    rooksQueens |= m_piecesBB[WHITE_ROOK] | m_piecesBB[BLACK_ROOK];
+    bishopsQueens |= m_piecesBB[WHITE_BISHOP] | m_piecesBB[BLACK_BISHOP];
 
     return ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
            | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN]) | (KNIGHT_ATTACKS[sq] & knights)
@@ -808,7 +831,7 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
  */
 bool Board::isUnderAttack(Square square, Color attacker) {
     U64 sqBB = ONE << square;
-    
+
     if (attacker == WHITE) {
         return isUnderAttack<WHITE>(square);
     } else {
@@ -837,21 +860,21 @@ bool Board::givesCheck(Move m) {
         opponentKing    = m_piecesBB[BLACK_KING];
         opponentKingPos = bitscanForward(opponentKing);
     }
-    
+
     U64 occ = m_occupiedBB;
-    
+
     // replace the moving piece with the piece to promote to if promotion to detect direct check
     if (isPromotion(m)) {
         unsetBit(m_occupiedBB, sqFrom);
         pFrom = promotionPiece(m);
     }
-    
+
     // direct check
     switch (getPieceType(pFrom)) {
         case QUEEN: {
             U64 att = lookUpBishopAttack(sqTo, m_occupiedBB) | lookUpRookAttack(sqTo, m_occupiedBB);
-//            printBitmap(m_occupiedBB);
-//            printBitmap(att);
+            //            printBitmap(m_occupiedBB);
+            //            printBitmap(att);
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -904,13 +927,13 @@ bool Board::givesCheck(Move m) {
 
     unsetBit(m_occupiedBB, sqFrom);
     setBit(m_occupiedBB, sqTo);
-    
-    if(getActivePlayer() == WHITE){
+
+    if (getActivePlayer() == WHITE) {
         if (isUnderAttack<WHITE>(opponentKingPos)) {
             m_occupiedBB = occ;
             return true;
         }
-    }else{
+    } else {
         if (isUnderAttack<BLACK>(opponentKingPos)) {
             m_occupiedBB = occ;
             return true;
@@ -930,7 +953,7 @@ bool Board::givesCheck(Move m) {
 
     // en passant
     else if (isEnPassant(m)) {
-        
+
         if (getActivePlayer() == WHITE) {
             unsetBit(m_occupiedBB, sqTo - 8);
             unsetBit(m_occupiedBB, sqFrom);
@@ -1014,7 +1037,7 @@ bool Board::isLegal(Move m) {
     if (getPieceType(getMovingPiece(m)) == KING) {
         thisKing = sqTo;
     }
-    
+
     if (isCap) {
         Piece captured = getCapturedPiece(m);
 
