@@ -175,6 +175,10 @@ float* phaseValues = new float[6] {
     0, 1, 1, 2, 4, 0,
 };
 
+
+int lazyEvalAlphaBound = 803;
+int lazyEvalBetaBound  = 392;
+
 EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 
 /**
@@ -352,10 +356,10 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     res += (int) ((float) EgScore(materialScore) * (phase));
     
     Score lazyScore = res * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    if(lazyScore < alpha - 300){
+    if(lazyScore < alpha - lazyEvalAlphaBound){
         return res;
     }
-    if(lazyScore > beta + 300){
+    if(lazyScore > beta + lazyEvalBetaBound){
         return res;
     }
     

@@ -35,7 +35,8 @@ extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[2*N_RANKS];
 
-extern int 
+extern int lazyEvalAlphaBound;
+extern int lazyEvalBetaBound ;
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
