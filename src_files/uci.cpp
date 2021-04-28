@@ -346,7 +346,11 @@ void uci_stop() {
  * @param value
  */
 void uci_set_option(std::string& name, std::string& value) {
-    if (name == "Hash") {
+    if (name == "LEA"){
+        lazyEvalAlphaBound = stoi(value);
+    }else if (name == "LEB"){
+        lazyEvalBetaBound = stoi(value);
+    } else if (name == "Hash") {
         search_setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
         if (value.empty())

@@ -35,6 +35,9 @@ extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[2*N_RANKS];
 
+extern int lazyEvalAlphaBound;
+extern int lazyEvalBetaBound ;
+
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
 void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
@@ -56,7 +59,7 @@ class Evaluator {
 
     EvalScore computeHangingPieces(Board* b, EvalData* evalData);
 
-    bb::Score evaluate(Board* b);
+    bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
     bb::Score evaluateTempo(Board* b);
     

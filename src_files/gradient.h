@@ -1533,7 +1533,7 @@ namespace tuning {
 
                 Board b{fen};
                 TrainEntry new_entry{&b, 0};
-                if ((int) (new_entry.evalData.evaluate()) != evaluator.evaluate(&b)) {
+                if ((int) std::abs((new_entry.evalData.evaluate()) - evaluator.evaluate(&b)) > 3){
                     std::cout << fen << std::endl;
                     std::cout << new_entry.evalData.evaluate() << std::endl;
                     std::cout << evaluator.evaluate(&b) << std::endl;
