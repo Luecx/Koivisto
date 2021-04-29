@@ -5,7 +5,7 @@
 </h1>
 
 
-Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and Eugenio Bruno (retired).
+Koivisto is a strong chess engine written primarily by Kim Kåhre and Finn Eggers in c++. Koivisto in itself is not a complete chess program and requires a UCI-compatible graphical user interface.
 
 ### Supported UCI settings:
 - Hash
@@ -13,13 +13,12 @@ Koivisto is an AB-engine for chess written in C++ by Kim Kåhre, Finn Eggers and
 - Threads (up to 256)
 
 ### Acknowledgements
-- [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page)
-- [Andrew Grant](https://github.com/AndyGrant/Ethereal)
+All the Koivisto contributors, [kz04px](https://github.com/kz04px), [Eugenio Bruno](https://github.com/Eugenio-Bruno), [Daniel Dugovic](https://github.com/ddugovic). Additionally we have recieved invaluable help and advice from [Andrew Grant](https://github.com/AndyGrant/Ethereal) and [theo77186](https://github.com/theo77186). We use [Fathom](https://github.com/jdart1/Fathom) for tablebase probing. [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) has been a very usefull resource.
+
+Additionaly, we have recieved support from:
 - [Noobpwnftw](https://github.com/noobpwnftw)
-- [Fathom](https://github.com/jdart1/Fathom)
 - [Mk-Chan](https://github.com/Mk-Chan)
 - [Terje Kirstihagen](https://github.com/TerjeKir)
-- [kz04px](https://github.com/kz04px)
 - [bobsquared](https://github.com/bobsquared/Mr_Bob_Chess)
 
 
