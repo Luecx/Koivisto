@@ -33,7 +33,8 @@ auto startTime =
 TimeManager::TimeManager(int moveTime) : 
     mode(MOVETIME), 
     timeToUse(moveTime), 
-    upperTimeBound(moveTime), 
+    upperTimeBound(moveTime),
+    nodesToUse(-1),
     ignorePV(true), 
     isSafeToStop(true), 
     forceStop() {
