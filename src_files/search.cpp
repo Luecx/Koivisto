@@ -791,6 +791,15 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
+    if (!pv && depth > 4 && isCapture(hashMove) && en.type == CUT_NODE && b->staticExchangeEvaluation(hashMove)+staticEval > beta + 200) {
+        b->move(hashMove);
+        score =  -pvSearch(b, -beta-200, 1 - beta - 200, depth-4, ply + ONE_PLY, td, 0);
+        b->undoMove();
+        if (score > beta + 200)
+            return beta + 200;
+    }
+
+
     // **********************************************************************************************************
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
