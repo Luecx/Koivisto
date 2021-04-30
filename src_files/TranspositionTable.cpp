@@ -105,6 +105,9 @@ Entry TranspositionTable::get(U64 zobrist) {
 
     Entry enP = m_entries[index];
 
+    if (zobrist == enP.zobrist)
+        m_entries[index].setAge(m_currentAge);
+
     return enP;
 }
 
@@ -134,7 +137,7 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
         enP->setAge(m_currentAge);
         return true;
     } else {
-        if ((enP->getAge() != m_currentAge && zobrist != enP->zobrist) || type == PV_NODE || enP->depth <= depth) {
+        if ((enP->getAge() != m_currentAge) || enP->depth <= depth) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
             return true;

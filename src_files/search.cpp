@@ -692,6 +692,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Entry en = table->get(zobrist);
     
     if (en.zobrist == zobrist && !skipMove) {
+
         hashMove = en.move;
         
         // adjusting eval
