@@ -176,6 +176,13 @@ void uci_processCommand(std::string str) {
             uci_go_mate(stoi(uci_getValue(split, "mate")));
         } else if (str.find("perft") != string::npos) {
             uci_go_perft(stoi(uci_getValue(split, "perft")), str.find("hash") != string::npos);
+        } else if (str.find("qsearch") != string::npos) {
+            search_clearHash();
+            SearchData sd{};
+            ThreadData td{};
+            td.searchData = &sd;
+            Score s = qSearch(board, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, &td);
+            std::cout << "qsearch: " << s << std::endl;
         }
     } else if (split.at(0) == "stop") {
         uci_stop();
