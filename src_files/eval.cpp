@@ -213,11 +213,11 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     U64 sq = ONE << s;
 
     if (c == WHITE) {
-        if (((whitePassedPawnMask[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+        if (((WHITE_PASSED_PAWN_MASK[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
         }
     } else {
-        if (((blackPassedPawnMask[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+        if (((BLACK_PASSED_PAWN_MASK[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
         }
     }
@@ -242,14 +242,14 @@ bb::Score Evaluator::evaluateTempo(Board* b) {
     return MgScore(SIDE_TO_MOVE) * (1 - phase) + EgScore(SIDE_TO_MOVE) * (phase);
 }
 
-EvalScore Evaluator::computeHangingPieces(Board* b, EvalData* evalData) {
+EvalScore Evaluator::computeHangingPieces(Board* b) {
     UCI_ASSERT(b);
 
     U64 WnotAttacked = ZERO;
     U64 BnotAttacked = ZERO;
     for (int i = PAWN; i <= KING; i++) {
-        WnotAttacked |= evalData->attacks[WHITE][i];
-        BnotAttacked |= evalData->attacks[BLACK][i];
+        WnotAttacked |= evalData.attacks[WHITE][i];
+        BnotAttacked |= evalData.attacks[BLACK][i];
     }
     WnotAttacked = ~WnotAttacked;
     BnotAttacked = ~BnotAttacked;
@@ -294,7 +294,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
         Square pinnerSquare = bitscanForward(potentialPinners);
 
         // get all the squares in between the king and the potential pinner
-        U64 inBetween = inBetweenSquares[kingSq][pinnerSquare];
+        U64 inBetween = IN_BETWEEN_SQUARES[kingSq][pinnerSquare];
 
         // if there is exactly one of our pieces in the way, consider it pinned. Otherwise, continue
         U64 potentialPinned = ourOcc & inBetween;
@@ -362,61 +362,60 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     if(lazyScore > beta + lazyEvalBetaBound){
         return res;
     }
-    
 
-    U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
-    U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
-    U64 occupied  = *b->getOccupiedBB();
+    U64    whiteTeam                  = b->getTeamOccupiedBB()[WHITE];
+    U64    blackTeam                  = b->getTeamOccupiedBB()[BLACK];
+    U64    occupied                   = *b->getOccupiedBB();
 
-    Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
-    Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
+    Square whiteKingSquare            = bitscanForward(b->getPieceBB()[WHITE_KING]);
+    Square blackKingSquare            = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
-    EvalData evalData {};
-    evalData.kingZone[WHITE] = KING_ATTACKS[whiteKingSquare];
-    evalData.kingZone[BLACK] = KING_ATTACKS[blackKingSquare];
+    evalData                          = {};
+    evalData.kingZone[WHITE]          = KING_ATTACKS[whiteKingSquare];
+    evalData.kingZone[BLACK]          = KING_ATTACKS[blackKingSquare];
 
-    int wkingSafety_attPiecesCount = 0;
-    int wkingSafety_valueOfAttacks = 0;
+    int    wkingSafety_attPiecesCount = 0;
+    int    wkingSafety_valueOfAttacks = 0;
 
-    int bkingSafety_attPiecesCount = 0;
-    int bkingSafety_valueOfAttacks = 0;
+    int    bkingSafety_attPiecesCount = 0;
+    int    bkingSafety_valueOfAttacks = 0;
 
-    U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied) & ~blackTeam;
-    U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied) & ~whiteTeam;
-    U64 wKingRookAttacks   = lookUpRookAttack(whiteKingSquare, occupied) & ~blackTeam;
-    U64 bKingRookAttacks   = lookUpRookAttack(blackKingSquare, occupied) & ~whiteTeam;
-    U64 wKingKnightAttacks = KNIGHT_ATTACKS[whiteKingSquare] & ~blackTeam;
-    U64 bKingKnightAttacks = KNIGHT_ATTACKS[blackKingSquare] & ~whiteTeam;
+    U64    wKingBishopAttacks         = lookUpBishopAttack(whiteKingSquare, occupied) & ~blackTeam;
+    U64    bKingBishopAttacks         = lookUpBishopAttack(blackKingSquare, occupied) & ~whiteTeam;
+    U64    wKingRookAttacks           = lookUpRookAttack(whiteKingSquare, occupied) & ~blackTeam;
+    U64    bKingRookAttacks           = lookUpRookAttack(blackKingSquare, occupied) & ~whiteTeam;
+    U64    wKingKnightAttacks         = KNIGHT_ATTACKS[whiteKingSquare] & ~blackTeam;
+    U64    bKingKnightAttacks         = KNIGHT_ATTACKS[blackKingSquare] & ~whiteTeam;
 
     /**********************************************************************************
      *                                  P A W N S                                     *
      **********************************************************************************/
 
-    U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
-    U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
+    U64    whitePawns                 = b->getPieceBB()[WHITE_PAWN];
+    U64    blackPawns                 = b->getPieceBB()[BLACK_PAWN];
 
     // all passed pawns for white/black
-    U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
-    U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
+    U64    whitePassers               = wPassedPawns(whitePawns, blackPawns);
+    U64    blackPassers               = bPassedPawns(blackPawns, whitePawns);
 
     // doubled pawns without the pawn least developed
-    U64 whiteDoubledWithoutFirst = wFrontSpans(whitePawns) & whitePawns;
-    U64 blackDoubledWithoutFirst = bFrontSpans(blackPawns) & blackPawns;
+    U64    whiteDoubledWithoutFirst   = wFrontSpans(whitePawns) & whitePawns;
+    U64    blackDoubledWithoutFirst   = bFrontSpans(blackPawns) & blackPawns;
 
     // all doubled pawns
-    U64 whiteDoubledPawns = whiteDoubledWithoutFirst | (wRearSpans(whiteDoubledWithoutFirst) & whitePawns);
-    U64 blackDoubledPawns = blackDoubledWithoutFirst | (bRearSpans(blackDoubledWithoutFirst) & blackPawns);
+    U64    whiteDoubledPawns          = whiteDoubledWithoutFirst | (wRearSpans(whiteDoubledWithoutFirst) & whitePawns);
+    U64    blackDoubledPawns          = blackDoubledWithoutFirst | (bRearSpans(blackDoubledWithoutFirst) & blackPawns);
 
     // all isolated pawns
-    U64 whiteIsolatedPawns = whitePawns & ~(fillFile(shiftWest(whitePawns) | shiftEast(whitePawns)));
-    U64 blackIsolatedPawns = blackPawns & ~(fillFile(shiftWest(blackPawns) | shiftEast(blackPawns)));
+    U64    whiteIsolatedPawns         = whitePawns & ~(fillFile(shiftWest(whitePawns) | shiftEast(whitePawns)));
+    U64    blackIsolatedPawns         = blackPawns & ~(fillFile(shiftWest(blackPawns) | shiftEast(blackPawns)));
 
-    U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
-    U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
+    U64    whiteBlockedPawns          = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
+    U64    blackBlockedPawns          = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
 
-    U64 openFilesWhite = ~fillFile(whitePawns);
-    U64 openFilesBlack = ~fillFile(blackPawns);
-    U64 openFiles      = openFilesBlack & openFilesWhite;
+    U64    openFilesWhite             = ~fillFile(whitePawns);
+    U64    openFilesBlack             = ~fillFile(blackPawns);
+    U64    openFiles                  = openFilesBlack & openFilesWhite;
 
     Square square;
     U64    attacks;
@@ -434,18 +433,18 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         k = lsbReset(k);
     }
 
-    U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
-    U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
-    U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
-    U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
+    U64 whitePawnEastCover        = shiftNorthEast(whitePawns) & whitePawns;
+    U64 whitePawnWestCover        = shiftNorthWest(whitePawns) & whitePawns;
+    U64 blackPawnEastCover        = shiftSouthEast(blackPawns) & blackPawns;
+    U64 blackPawnWestCover        = shiftSouthWest(blackPawns) & blackPawns;
 
     evalData.attacks[WHITE][PAWN] = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     evalData.attacks[BLACK][PAWN] = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     U64 whitePawnCover            = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnCover            = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
-    U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnCover);
-    U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnCover);
+    U64 mobilitySquaresWhite      = ~whiteTeam & ~(blackPawnCover);
+    U64 mobilitySquaresBlack      = ~blackTeam & ~(whitePawnCover);
 
     // clang-format off
     featureScore += PAWN_ATTACK_MINOR * (
@@ -486,10 +485,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     featureScore += MINOR_BEHIND_PAWN * (
             + bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT]|b->getPieceBB()[WHITE_BISHOP])&(b->getPieceBB()[WHITE_PAWN]|b->getPieceBB()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieceBB()[BLACK_KNIGHT]|b->getPieceBB()[BLACK_BISHOP])&(b->getPieceBB()[WHITE_PAWN]|b->getPieceBB()[BLACK_PAWN])));
-    
 
-    
-   
     /**********************************************************************************
      *                                  K N I G H T S                                 *
      **********************************************************************************/
@@ -589,7 +585,6 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
         k = lsbReset(k);
     }
-    // clang-format off
     featureScore += BISHOP_DOUBLED * (
             + (bitCount(b->getPieceBB()[WHITE_BISHOP]) == 2)
             - (bitCount(b->getPieceBB()[BLACK_BISHOP]) == 2));
@@ -705,7 +700,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         k = lsbReset(k);
     }
 
-    EvalScore hangingEvalScore = computeHangingPieces(b, &evalData);
+    EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];

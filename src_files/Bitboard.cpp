@@ -23,16 +23,16 @@
 
 using namespace bb;
 
-U64** bb::ROOK_ATTACKS   = new U64*[N_SQUARES];
-U64** bb::BISHOP_ATTACKS = new U64*[N_SQUARES];
+U64*            bb::ROOK_ATTACKS[N_SQUARES];
+U64*            bb::BISHOP_ATTACKS[N_SQUARES];
 
-U64** bb::all_hashes = {};
+U64             bb::ALL_HASHES[N_PIECES][N_SQUARES];
 
-U64** bb::inBetweenSquares = new U64*[N_SQUARES];
+U64             bb::IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
 
 std::mt19937_64 rng;
 
-void bb::bb_init() {
+void            bb::bb_init() {
 
     rng.seed(seed);
 
@@ -46,23 +46,7 @@ void bb::bb_cleanUp() {
         ROOK_ATTACKS[i] = nullptr;
         delete[] BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
-        delete[] inBetweenSquares[i];
-        inBetweenSquares[i] = nullptr;
     }
-    delete[] ROOK_ATTACKS;
-    ROOK_ATTACKS = nullptr;
-    delete[] BISHOP_ATTACKS;
-    BISHOP_ATTACKS = nullptr;
-    delete[] inBetweenSquares;
-    inBetweenSquares = nullptr;
-
-    for (int i = 0; i < N_PIECES; i++) {
-        delete[] all_hashes[i];
-        all_hashes[i] = nullptr;
-    }
-
-    delete[] all_hashes;
-    all_hashes = nullptr;
 }
 
 U64 bb::randU64() {
@@ -85,7 +69,7 @@ double bb::randDouble(double min, double max) {
 }
 
 U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
-    U64 res {0};
+    U64              res {0};
 
     static const U64 topBottom = RANK_1_BB | RANK_8_BB;
     static const U64 leftRight = FILE_A_BB | FILE_H_BB;
@@ -131,24 +115,23 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
 
 void bb::generateData() {
     for (int n = 0; n < 64; n++) {
-        ROOK_ATTACKS[n]   = new U64[ONE << (64 - rookShifts[n])];
-        BISHOP_ATTACKS[n] = new U64[ONE << (64 - bishopShifts[n])];
+        ROOK_ATTACKS[n]   = new U64[ONE << (64 - ROOK_SHIFTS[n])];
+        BISHOP_ATTACKS[n] = new U64[ONE << (64 - BISHOP_SHIFTS[n])];
 
-        for (int i = 0; i < pow(2, 64 - rookShifts[n]); i++) {
-            U64 rel_occ            = populateMask(rookMasks[n], i);
-            int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
+        for (int i = 0; i < pow(2, 64 - ROOK_SHIFTS[n]); i++) {
+            U64 rel_occ            = populateMask(ROOK_MASKS[n], i);
+            int index              = static_cast<int>((rel_occ * ROOK_MAGICS[n]) >> ROOK_SHIFTS[n]);
             ROOK_ATTACKS[n][index] = generateRookAttack(n, rel_occ);
         }
 
-        for (int i = 0; i < pow(2, 64 - bishopShifts[n]); i++) {
-            U64 rel_occ              = populateMask(bishopMasks[n], i);
-            int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
+        for (int i = 0; i < pow(2, 64 - BISHOP_SHIFTS[n]); i++) {
+            U64 rel_occ              = populateMask(BISHOP_MASKS[n], i);
+            int index                = static_cast<int>((rel_occ * BISHOP_MAGICS[n]) >> BISHOP_SHIFTS[n]);
             BISHOP_ATTACKS[n][index] = generateBishopAttack(n, rel_occ);
         }
     }
 
     for (Square n = A1; n <= H8; n++) {
-        inBetweenSquares[n] = new U64[64];
 
         for (Square i = A1; i <= H8; i++) {
             if (i == n)
@@ -173,7 +156,7 @@ void bb::generateData() {
 
             m &= ~occ;
 
-            inBetweenSquares[n][i] = m;
+            IN_BETWEEN_SQUARES[n][i] = m;
         }
     }
 }
@@ -207,25 +190,22 @@ U64 bb::populateMask(U64 mask, U64 index) {
 
 void bb::generateZobristKeys() {
 
-    all_hashes = new U64*[N_PIECES];
     for (int i = 0; i < 6; i++) {
-        all_hashes[i]     = new U64[64];
-        all_hashes[i + 8] = new U64[64];
         for (int n = 0; n < 64; n++) {
-            all_hashes[i][n]     = randU64();
-            all_hashes[i + 8][n] = randU64();
+            ALL_HASHES[i][n]     = randU64();
+            ALL_HASHES[i + 8][n] = randU64();
         }
     }
 }
 
 U64 bb::generateRookAttack(Square sq, U64 occupied) {
     return generateSlidingAttacks(sq, NORTH, occupied) | generateSlidingAttacks(sq, EAST, occupied)
-           | generateSlidingAttacks(sq, WEST, occupied) | generateSlidingAttacks(sq, SOUTH, occupied);
+         | generateSlidingAttacks(sq, WEST, occupied) | generateSlidingAttacks(sq, SOUTH, occupied);
 }
 
 U64 bb::generateBishopAttack(Square sq, U64 occupied) {
     return generateSlidingAttacks(sq, NORTH_WEST, occupied) | generateSlidingAttacks(sq, NORTH_EAST, occupied)
-           | generateSlidingAttacks(sq, SOUTH_WEST, occupied) | generateSlidingAttacks(sq, SOUTH_EAST, occupied);
+         | generateSlidingAttacks(sq, SOUTH_WEST, occupied) | generateSlidingAttacks(sq, SOUTH_EAST, occupied);
 }
 
 void bb::printBitmap(U64 bb) {

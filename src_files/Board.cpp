@@ -1191,7 +1191,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
     pinners |= pinner;
     while (pinner) {
         Square s = bitscanForward(pinner);
-        pinned |= inBetweenSquares[kingSq][s] & m_teamOccupiedBB[side];
+        pinned |= IN_BETWEEN_SQUARES[kingSq][s] & m_teamOccupiedBB[side];
         pinner = lsbReset(pinner);
     }
 
@@ -1201,7 +1201,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
 
     while (pinner) {
         Square s = bitscanForward(pinner);
-        pinned |= inBetweenSquares[kingSq][s] & m_teamOccupiedBB[side];
+        pinned |= IN_BETWEEN_SQUARES[kingSq][s] & m_teamOccupiedBB[side];
         pinner = lsbReset(pinner);
     }
     return pinned;

@@ -52,12 +52,13 @@ struct EvalData{
 
 class Evaluator {
     public:
-
+    
+    EvalData evalData;
     float phase;
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    EvalScore computeHangingPieces(Board* b, EvalData* evalData);
+    EvalScore computeHangingPieces(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 

@@ -121,19 +121,9 @@ bool SearchData::isImproving(Score ev, Color color, Depth ply) {
     }
 }
 
-SearchData::~SearchData() {
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        delete moves[i];
-    }
-    delete[] moves;
-}
+SearchData::~SearchData() {}
 
-SearchData::SearchData() {
-    moves = new MoveList*[MAX_INTERNAL_PLY];
-    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
-        moves[i] = new MoveList();
-    }
-}
+SearchData::SearchData() {}
 
 ThreadData::ThreadData(int threadId) : threadID(threadId) {}
 ThreadData::ThreadData() {}

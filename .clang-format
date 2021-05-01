@@ -4,11 +4,12 @@ Language: Cpp
 
 AccessModifierOffset: 0
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
-AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
+AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments
+AlignConsecutiveBitFields: AcrossEmptyLinesAndComments
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 AlignEscapedNewlines: Right
-AlignOperands: true
+AlignOperands: AlignAfterOperator
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: false
@@ -26,7 +27,7 @@ BreakBeforeBraces: Attach
 BreakBeforeTernaryOperators: true
 
 Cpp11BracedListStyle: true
-ColumnLimit: 180
+ColumnLimit: 140
 
 DeriveLineEnding: true
 DerivePointerAlignment: false

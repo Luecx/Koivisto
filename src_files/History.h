@@ -30,8 +30,10 @@ using namespace move;
 struct SearchData {
 
     Move bestMove = 0;
+    bool sideToReduce = false;
+    bool reduce = false;
 
-    MoveList** moves;
+    MoveList moves[MAX_INTERNAL_PLY]{};
     Evaluator  evaluator {};
     
     // capture history table (side-from-to)
@@ -44,8 +46,7 @@ struct SearchData {
     Move  killer        [N_COLORS][MAX_INTERNAL_PLY+2][2]   = {0};    // +2 used to make sure we can always reset +2
     // eval history across plies
     Score eval          [N_COLORS][MAX_INTERNAL_PLY]        = {0};
-    bool  sideToReduce;
-    bool reduce;
+    
 
 
     SearchData();
@@ -64,7 +65,7 @@ struct SearchData {
 
     bool isImproving(Score eval, Color color, Depth ply);
 
-};
+} __attribute__((aligned(128)));
 
 /**
  * data about each thread
@@ -80,7 +81,7 @@ struct ThreadData {
 
     ThreadData();
 
-    ThreadData(int threadId);
-};
+    explicit ThreadData(int threadId);
+} __attribute__((aligned(128)));
 
 #endif    // KOIVISTO_HISTORY_H
