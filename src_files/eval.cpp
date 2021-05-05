@@ -171,6 +171,10 @@ EvalScore* evfeatures[] {
 
 int mobEntryCount[N_PIECE_TYPES] {0, 9, 14, 15, 28, 0};
 
+int egReductionTable[9] = {
+    87, 43, 18, 0, -12,
+    -17, -15, 1, 63, };
+
 float* phaseValues = new float[6] {
     0, 1, 1, 2, 4, 0,
 };
@@ -719,11 +723,20 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore;
 
+
+
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
 
+    float egReduction = egReductionTable[bitCount(EgScore(res) > 0 ? whitePawns : blackPawns)] / 128.0;
+    res -= EgScore(totalScore) * phase * egReduction;
+
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
+
+
+
+
     return res;
 }
 

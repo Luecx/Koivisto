@@ -42,7 +42,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
+#define N_THREAD 1
 
 namespace tuning {
 
@@ -156,6 +156,7 @@ namespace tuning {
         Weight w_features[I_END];
         Weight w_bishop_pawn_e[9];
         Weight w_bishop_pawn_o[9];
+        Weight w_eg_reduction[9];
         Weight w_king_safety[100];
         Weight w_passer[16];
         Weight w_pinned[15];
@@ -171,6 +172,10 @@ namespace tuning {
         float phase = 0;
         float matingMaterialWhite = false;
         float matingMaterialBlack = false;
+        float egVal       = 0;
+        float egReduction = 0;
+        float eval = 0;
+        int   pawnCount[N_COLORS];
 
         void init(Board *b) {
             phase =
@@ -189,15 +194,35 @@ namespace tuning {
 
             matingMaterialWhite = hasMatingMaterial(b, WHITE);
             matingMaterialBlack = hasMatingMaterial(b, BLACK);
+            pawnCount[WHITE] = bitCount(b->getPieceBB<WHITE>(PAWN));
+            pawnCount[BLACK] = bitCount(b->getPieceBB<BLACK>(PAWN));
         }
 
-        void evaluate(float &res, ThreadData* td) {
+        void evaluate(float& mg, float& eg, float &res, ThreadData* td) {
             if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
                 evalReduction = 1.0 / 10;
             else {
                 evalReduction = 1;
             }
             res *= evalReduction;
+
+            eval        = res;
+            egVal       = eg;
+            egReduction = td->w_eg_reduction[eg > 0 ? pawnCount[WHITE] : pawnCount[BLACK]].midgame.value / 128.0;
+
+            res -= eg * phase * egReduction * evalReduction;
+        }
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* threadData) {
+            float egReductionGrad = - egVal * phase * evalReduction * eg_grad;
+
+//            std::cout << "eval " << eval << " eg value: " << egVal << " reduction_grad: " <<   egReductionGrad / 128.0 << std::endl;
+//            std::cout << "current reduction: "<< threadData->w_eg_reduction[egVal > 0 ? pawnCount[WHITE] : pawnCount[BLACK]].midgame.value << std::endl;
+
+            threadData->w_eg_reduction[egVal > 0 ? pawnCount[WHITE] : pawnCount[BLACK]].midgame.gradient += egReductionGrad / 128.0;
+
+            mg_grad *= (1-phase)    * evalReduction;
+            eg_grad *= phase        * evalReduction * egReduction;
+            
         }
     };
 
@@ -268,21 +293,21 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
             for (Piece p = PAWN; p < KING; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
                     td->w_piece_square_table[p][!sameside_castle][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_square_table[p][!sameside_castle][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
                 for (int i = 1; i <= indices_black[p][0]; i++) {
                     int8_t b = indices_black[p][i];
                     td->w_piece_square_table[p][!sameside_castle][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_square_table[p][!sameside_castle][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
             }
 
@@ -290,16 +315,16 @@ namespace tuning {
             for (int i = 1; i <= indices_white[KING][0]; i++) {
                 int8_t w = indices_white[KING][i];
                 td->w_piece_square_table[KING][0][w].midgame.gradient +=
-                        (1 - meta->phase) * meta->evalReduction * lossgrad;
+                        mg_grad;
                 td->w_piece_square_table[KING][0][w].endgame.gradient +=
-                        (meta->phase) * meta->evalReduction * lossgrad;
+                        eg_grad;
             }
             for (int i = 1; i <= indices_black[KING][0]; i++) {
                 int8_t b = indices_black[KING][i];
                 td->w_piece_square_table[KING][0][b].midgame.gradient -=
-                        (1 - meta->phase) * meta->evalReduction * lossgrad;
+                        mg_grad;
                 td->w_piece_square_table[KING][0][b].endgame.gradient -=
-                        (meta->phase) * meta->evalReduction * lossgrad;
+                        eg_grad;
             }
         }
     };
@@ -365,37 +390,37 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
             for (Piece p = PAWN; p <= PAWN; p++) {
                 for (int i = 1; i <= indices_white_wk[p][0]; i++) {
                     uint8_t w = indices_white_wk[p][i];
                     td->w_piece_our_king_square_table[p][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_our_king_square_table[p][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
 
                 for (int i = 1; i <= indices_white_bk[p][0]; i++) {
                     uint8_t w = indices_white_bk[p][i];
                     td->w_piece_opp_king_square_table[p][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_opp_king_square_table[p][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
                 for (int i = 1; i <= indices_black_bk[p][0]; i++) {
                     uint8_t b = indices_black_bk[p][i];
                     td->w_piece_our_king_square_table[p][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_our_king_square_table[p][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
 
                 for (int i = 1; i <= indices_black_wk[p][0]; i++) {
                     uint8_t b = indices_black_wk[p][i];
                     td->w_piece_opp_king_square_table[p][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_opp_king_square_table[p][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
             }
         }
@@ -478,16 +503,16 @@ namespace tuning {
             endgame += td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
             td->w_king_safety[bkingsafety_index].midgame.gradient +=
-                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                    mg_grad;
             td->w_king_safety[bkingsafety_index].endgame.gradient +=
-                    (meta->phase) * meta->evalReduction * lossgrad;
+                    eg_grad;
 
             td->w_king_safety[wkingsafety_index].midgame.gradient -=
-                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                    mg_grad;
             td->w_king_safety[wkingsafety_index].endgame.gradient -=
-                    (meta->phase) * meta->evalReduction * lossgrad;
+                    eg_grad;
         }
     };
 
@@ -504,7 +529,7 @@ namespace tuning {
 
             k = b->getPieceBB()[WHITE_BISHOP];
             while (k) {
-                square = bitscanForward(k); 
+                square = bitscanForward(k);
                 count_e[bitCount(
                         blackPawns & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB))] += 1;
                 count_o[bitCount(
@@ -533,19 +558,19 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
             for (int i = 0; i < 9; i++) {
                 td->w_bishop_pawn_e[i].midgame.gradient +=
-                        count_e[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
+                        count_e[i] * mg_grad;
                 td->w_bishop_pawn_e[i].endgame.gradient +=
-                        count_e[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count_e[i] * eg_grad;
                 //            midgame += count_e[i] * w_bishop_pawn_e[i].midgame.value;
                 //            endgame += count_e[i] * w_bishop_pawn_e[i].endgame.value;
 
                 td->w_bishop_pawn_o[i].midgame.gradient +=
-                        count_o[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
+                        count_o[i] * mg_grad;
                 td->w_bishop_pawn_o[i].endgame.gradient +=
-                        count_o[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count_o[i] * eg_grad;
                 //            midgame += count_o[i] * w_bishop_pawn_o[i].midgame.value;
                 //            endgame += count_o[i] * w_bishop_pawn_o[i].endgame.value;
             }
@@ -590,11 +615,11 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
 
             for (int i = 0; i < 16; i++) {
-                td->w_passer[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_passer[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                td->w_passer[i].midgame.gradient += count[i] * mg_grad;
+                td->w_passer[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -648,7 +673,7 @@ namespace tuning {
 
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
-    
+
             count[I_PAWN_ATTACK_MINOR] = (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))-bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
             count[I_PAWN_ATTACK_ROOK] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
             count[I_PAWN_ATTACK_QUEEN] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
@@ -661,7 +686,7 @@ namespace tuning {
             U64 bKingRookAttacks   = lookUpRookAttack  (blackKingSquare, occupied)  & ~whiteTeam;
             U64 wKingKnightAttacks = KNIGHT_ATTACKS    [whiteKingSquare]            & ~blackTeam;
             U64 bKingKnightAttacks = KNIGHT_ATTACKS    [blackKingSquare]            & ~whiteTeam;
-            
+
             // clang-format off
             count[I_PAWN_DOUBLED_AND_ISOLATED] = (
                     +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
@@ -759,8 +784,8 @@ namespace tuning {
             count[I_BISHOP_DOUBLED] += (
                     +(bitCount(b->getPieceBB()[WHITE_BISHOP]) == 2)
                     - (bitCount(b->getPieceBB()[BLACK_BISHOP]) == 2));
-    
-    
+
+
             k = b->getPieceBB()[WHITE_ROOK];
             while (k) {
                 square  = bitscanForward(k);
@@ -770,7 +795,7 @@ namespace tuning {
 
                 k = lsbReset(k);
             }
-    
+
             k = b->getPieceBB()[BLACK_ROOK];
             while (k) {
                 square  = bitscanForward(k);
@@ -843,12 +868,12 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
 
             for (int i = 0; i < I_END; i++) {
                 td->w_features[i].midgame.gradient +=
-                        count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_features[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count[i] * mg_grad;
+                td->w_features[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -923,14 +948,14 @@ namespace tuning {
                 midgame += count[i] * td->w_pinned[i].midgame.value;
                 endgame += count[i] * td->w_pinned[i].endgame.value;
             }
-            
+
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
 
             for (int i = 0; i < 15; i++) {
-                td->w_pinned[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_pinned[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                td->w_pinned[i].midgame.gradient += count[i] * mg_grad;
+                td->w_pinned[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -956,12 +981,12 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
 
             for (int i = 0; i < 5; i++) {
                 td->w_hanging[i].midgame.gradient +=
-                        count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_hanging[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count[i] * mg_grad;
+                td->w_hanging[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -1037,21 +1062,21 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(MetaData *meta, float mg_grad, float eg_grad, ThreadData* td) {
 
             for (Piece p = PAWN; p <= QUEEN; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
 
-                    td->w_mobility[p][w].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_mobility[p][w].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_mobility[p][w].midgame.gradient += mg_grad;
+                    td->w_mobility[p][w].endgame.gradient += eg_grad;
 
                 }
                 for (int i = 1; i <= indices_black[p][0]; i++) {
                     int8_t b = indices_black[p][i];
 
-                    td->w_mobility[p][b].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_mobility[p][b].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_mobility[p][b].midgame.gradient -= mg_grad;
+                    td->w_mobility[p][b].endgame.gradient -= eg_grad;
 
                 }
             }
@@ -1088,7 +1113,7 @@ namespace tuning {
         double evaluate(int threadID = 0) {
             float midgame = 0;
             float endgame = 0;
-    
+
 
             features.evaluate(midgame, endgame, &threadData[threadID]);
             mobility.evaluate(midgame, endgame, &threadData[threadID]);
@@ -1101,21 +1126,27 @@ namespace tuning {
             pst225.evaluate(midgame, endgame, &threadData[threadID]);
 
             float res = (int) (meta.phase * endgame) + (int) ((1 - meta.phase) * midgame);
-            meta.evaluate(res, &threadData[threadID]);
+            meta.evaluate(midgame, endgame, res, &threadData[threadID]);
 
             return res;
         }
 
         void gradient(float lossgrad, int threadID) {
-            features.gradient(&meta, lossgrad, &threadData[threadID]);
-            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
-            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+
+            float mg_grad = lossgrad;
+            float eg_grad = lossgrad;
+            
+            meta.gradient(mg_grad, eg_grad, &threadData[threadID]);
+
+//            features.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            mobility.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            hanging.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            pinned.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            passed.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            bishop_pawn.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            king_safety.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            pst64.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+//            pst225.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1205,6 +1236,11 @@ namespace tuning {
                     float w2 = EgScore(bishop_pawn_same_color_table_o[i]);
                     threadData[t].w_bishop_pawn_o[i] = {{w1},
                                                         {w2}};
+                }
+                if (i < 9) {
+                    float w1 = egReductionTable[i];
+                    threadData[t].w_eg_reduction[i] = {{w1},
+                                                       {0}};
                 }
                 if (i < 100) {
                     float w1 = MgScore(kingSafetyTable[i]);
@@ -1299,6 +1335,16 @@ namespace tuning {
                             threadData[t].w_bishop_pawn_o[i].endgame.gradient;
                     threadData[t].w_bishop_pawn_o[i].midgame.gradient = 0;
                     threadData[t].w_bishop_pawn_o[i].endgame.gradient = 0;
+
+                }
+                if (i < 9) {
+
+                    threadData[0].w_eg_reduction[i].midgame.gradient +=
+                        threadData[t].w_eg_reduction[i].midgame.gradient;
+                    threadData[0].w_eg_reduction[i].endgame.gradient +=
+                        threadData[t].w_eg_reduction[i].endgame.gradient;
+                    threadData[t].w_eg_reduction[i].midgame.gradient = 0;
+                    threadData[t].w_eg_reduction[i].endgame.gradient = 0;
 
                 }
                 if (i < 100) {
@@ -1397,6 +1443,12 @@ namespace tuning {
                             threadData[0].w_bishop_pawn_o[i].endgame.value;
 
                 }
+                if (i < 9) {
+                    threadData[t].w_eg_reduction[i].midgame.value =
+                        threadData[0].w_eg_reduction[i].midgame.value;
+                    threadData[t].w_eg_reduction[i].endgame.value =
+                        threadData[0].w_eg_reduction[i].endgame.value;
+                }
                 if (i < 100) {
                     threadData[t].w_king_safety[i].midgame.value =
                             threadData[0].w_king_safety[i].midgame.value;
@@ -1477,6 +1529,10 @@ namespace tuning {
                 threadData[0].w_bishop_pawn_o[i].midgame.update(eta);
                 threadData[0].w_bishop_pawn_o[i].endgame.update(eta);
             }
+            if (i < 9) {
+                threadData[0].w_eg_reduction[i].midgame.update(eta);
+                threadData[0].w_eg_reduction[i].endgame.update(eta);
+            }
             if (i < 100) {
                 threadData[0].w_king_safety[i].midgame.update(eta);
                 threadData[0].w_king_safety[i].endgame.update(eta);
@@ -1533,12 +1589,12 @@ namespace tuning {
 
                 Board b{fen};
                 TrainEntry new_entry{&b, 0};
-                if ((int) std::abs((new_entry.evalData.evaluate()) - evaluator.evaluate(&b)) > 3){
-                    std::cout << fen << std::endl;
-                    std::cout << new_entry.evalData.evaluate() << std::endl;
-                    std::cout << evaluator.evaluate(&b) << std::endl;
-                    exit(-1);
-                }
+//                if ((int) std::abs((new_entry.evalData.evaluate()) - evaluator.evaluate(&b)) > 3){
+//                    std::cout << fen << std::endl;
+//                    std::cout << new_entry.evalData.evaluate() << std::endl;
+//                    std::cout << evaluator.evaluate(&b) << std::endl;
+//                    exit(-1);
+//                }
 
                 // parsing the result to a usable value:
                 // assuming that the result is given as : a-b
@@ -1604,8 +1660,8 @@ namespace tuning {
         for (int i = 0; i < iterations; i++) {
             startMeasure();
             std::cout << left;
-            std::cout << "loss= " << setw(20) << compute_loss(K)
-                      << " eps= " << setw(20) << positions.size() / stopMeasure() * 1000 << std::endl;
+            std::cout << "loss= " << setw(20) << compute_loss(K) << std::endl;
+//                      << " eps= " << setw(20) << positions.size() / stopMeasure() * 1000 << std::endl;
             adjust_weights(eta);
         }
     }
@@ -1740,6 +1796,14 @@ namespace tuning {
         }
         std::cout << "};\n" << std::endl;
 
+        // --------------------------------- egReductionTable ---------------------------------
+
+        std::cout << "int egReductionTable[9] = {";
+        for (int n = 0; n < 9; n++) {
+            if (n % 5 == 0) std::cout << std::endl << "\t";
+            std::cout << std::round(threadData[0].w_eg_reduction[n].midgame.value) << ", ";
+        }
+        std::cout << "};\n" << std::endl;
         // --------------------------------- piece_square_table ---------------------------------
 
         std::cout << "EvalScore piece_square_table[6][2][64]{\n";
