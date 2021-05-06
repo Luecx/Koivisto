@@ -837,10 +837,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             continue;
         
         // check if the move gives check and/or its promoting
-        bool givesCheck  = b->givesCheck(m);
-        bool isPromotion = move::isPromotion(m);
-        bool quiet = !isCapture(m) && !isPromotion && !givesCheck;
-        
+        bool givesCheck     = b->givesCheck(m);
+        bool isPromotion    = move::isPromotion(m);
+        bool quiet          = !isCapture(m) && !isPromotion && !givesCheck;
+        int  see            = -1;
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
@@ -865,8 +865,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
             // consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
+            see = (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) ? b->staticExchangeEvaluation(m) : 0;
+            if (moveDepth <= 5 && see <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
 
@@ -874,11 +874,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (!b->isLegal(m))
             continue;
         
-        // compute the static exchange evaluation if the move is a capture
-        Score staticExchangeEval = 0;
-        if (isCapture(m) && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
-        }
+        // compute the static exchange evaluation if the move is a capture but only if not previously calculated
+        if (see == -1 && isCapture(m))
+            see = (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) ? b->staticExchangeEvaluation(m) : 0;
         
         // keep track of the depth we want to extend by
         int extension = 0;
@@ -929,7 +927,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
         // furthermore no queen promotions are reduced
-        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && see >= 0)
                      || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
