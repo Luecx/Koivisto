@@ -42,7 +42,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 1
+#define N_THREAD 6
 
 namespace tuning {
 
@@ -106,8 +106,8 @@ namespace tuning {
 
         Param(float value) : value(value) {}
 
-        float value;
-        float gradient;
+        float value = 0;
+        float gradient = 0;
 
         double firstMoment = 0;
         double secondMoment = 0;
@@ -137,8 +137,8 @@ namespace tuning {
     };
 
     struct Weight {
-        Param midgame;
-        Param endgame;
+        Param midgame{};
+        Param endgame{};
 
         friend ostream &operator<<(ostream &os, const Weight &weight) {
             os << "M(" << std::setw(5) << round(weight.midgame.value) << "," << std::setw(5)
@@ -149,18 +149,18 @@ namespace tuning {
     };
 
     struct ThreadData {
-        Weight w_piece_square_table[6][2][64];
-        Weight w_piece_opp_king_square_table[5][15 * 15];
-        Weight w_piece_our_king_square_table[5][15 * 15];
-        Weight w_mobility[5][28];
-        Weight w_features[I_END];
-        Weight w_bishop_pawn_e[9];
-        Weight w_bishop_pawn_o[9];
-        Weight w_eg_reduction[9];
-        Weight w_king_safety[100];
-        Weight w_passer[16];
-        Weight w_pinned[15];
-        Weight w_hanging[5];
+        Weight w_piece_square_table[6][2][64]{};
+        Weight w_piece_opp_king_square_table[5][15 * 15]{};
+        Weight w_piece_our_king_square_table[5][15 * 15]{};
+        Weight w_mobility[5][28]{};
+        Weight w_features[I_END]{};
+        Weight w_bishop_pawn_e[9]{};
+        Weight w_bishop_pawn_o[9]{};
+        Weight w_eg_reduction[9]{};
+        Weight w_king_safety[100]{};
+        Weight w_passer[16]{};
+        Weight w_pinned[15]{};
+        Weight w_hanging[5]{};
     };
 
     ThreadData threadData[N_THREAD]{};
@@ -1138,15 +1138,15 @@ namespace tuning {
             
             meta.gradient(mg_grad, eg_grad, &threadData[threadID]);
 
-//            features.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            mobility.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            hanging.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            pinned.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            passed.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            bishop_pawn.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            king_safety.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            pst64.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
-//            pst225.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            features.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            mobility.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            hanging.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            pinned.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            passed.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            bishop_pawn.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            king_safety.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            pst64.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
+            pst225.gradient(&meta, mg_grad, eg_grad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
