@@ -45,7 +45,7 @@ int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
-
+bool rootSide        = false;
 void initLMR() {
     int d, m;
     
@@ -535,6 +535,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     Board searchBoard{b};
     Board printBoard {b};
     td->dropOut = false;
+    rootSide = searchBoard.getActivePlayer();
     for (d = 1; d <= maxDepth; d++) {
         
         if (d < 6) {
@@ -930,7 +931,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && see >= 0)
                      || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
                     ? 0
-                    : lmrReductions[depth][legalMoves];
+                    : (sd->reduce && sd->sideToReduce != b->getActivePlayer())+lmrReductions[depth][legalMoves];
         
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
@@ -939,8 +940,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr += !isImproving;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
-            if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (!isCapture(m) && see < -1) lmr++;
+            if (b->getActivePlayer() == rootSide) lmr+=depth/6;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
