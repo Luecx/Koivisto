@@ -39,7 +39,7 @@ void TranspositionTable::init(U64 MB) {
     m_size /= 2;
     m_mask    = m_size - 1;
 
-    m_entries = (Entry*) (_mm_malloc(m_size * sizeof(Entry), 128));
+    m_entries =  new (std::align_val_t(128)) Entry[m_size]{};
     clear();
 
     m_currentAge = 0;
