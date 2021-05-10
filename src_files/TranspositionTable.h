@@ -22,10 +22,12 @@
 
 #include "Bitboard.h"
 #include "Board.h"
-#include "Move.h"
 #include "malloc.h"
-#include <ostream>
+#include "Move.h"
+
 #include <cstdint>
+#include <new>
+#include <ostream>
 
 using namespace bb;
 using namespace std;
