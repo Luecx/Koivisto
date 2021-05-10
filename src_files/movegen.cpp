@@ -17,7 +17,6 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "movegen.h"
-#include "psqt.h"
 #include "UCIAssert.h"
 
 
@@ -216,15 +215,13 @@ void generatePieceMoves(
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
-    
+
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->template getTeamOccupiedBB<them>();
     const U64 friendly   = b->template getTeamOccupiedBB<us  >();
     
     for(Piece p = KNIGHT; p <= QUEEN; p++){
         U64 pieceOcc    = b->getPieceBB<c>(p);
-        U64 movingPiece = p + 8 * us;
+        Piece movingPiece = p + 8 * us;
         while(pieceOcc){
             Square square = bitscanForward(pieceOcc);
             U64 attacks = ZERO;
@@ -245,7 +242,8 @@ void generatePieceMoves(
                         lookUpBishopAttack  (square, occupied) |
                         lookUpRookAttack    (square, occupied);
                     break;
-                
+                default:
+                    break;
             }
             attacks &= ~friendly;
 
@@ -291,12 +289,10 @@ void generateKingMoves(
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
-    
+
     constexpr Piece movingPiece = KING + us * 8;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->getTeamOccupiedBB<them>();
     const U64 friendly   = b->getTeamOccupiedBB<us  >();
     
     U64 kings      = b->getPieceBB<us>(KING);

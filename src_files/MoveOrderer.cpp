@@ -23,14 +23,14 @@
 using namespace move;
 
 MoveOrderer::MoveOrderer(move::MoveList* p_moves) {
-    this->moves     = p_moves;
-    this->counter   = 0;
-    this->skip      = false;
+    this->moves   = p_moves;
+    this->counter = 0;
+    this->skip    = false;
 }
 
 MoveOrderer::~MoveOrderer() {}
 
-bool MoveOrderer::hasNext() { return counter < moves->getSize(); }
+bool       MoveOrderer::hasNext() { return counter < moves->getSize(); }
 
 move::Move MoveOrderer::next() {
     if (skip) {

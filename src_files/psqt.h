@@ -35,13 +35,12 @@ using namespace bb;
 #define pst_index_relative_white(pieceSquare, kingSquare)  (   (rankIndex(kingSquare)-rankIndex(pieceSquare)+7))*15+(fileIndex(kingSquare)-fileIndex(pieceSquare)+7)
 #define pst_index_relative_black(pieceSquare, kingSquare)  (14-(rankIndex(kingSquare)-rankIndex(pieceSquare)+7))*15+(fileIndex(kingSquare)-fileIndex(pieceSquare)+7)
 
-
 // indexed by piece
 extern EvalScore piece_values[6];
 
 // indexed by piece, relation to king
-extern EvalScore piece_our_king_square_table[5][15*15];
-extern EvalScore piece_opp_king_square_table[5][15*15];
+extern EvalScore piece_our_king_square_table[5][15 * 15];
+extern EvalScore piece_opp_king_square_table[5][15 * 15];
 
 // indexed by piece, sameSideCastle, square
 extern EvalScore piece_square_table[6][2][64];
@@ -49,6 +48,6 @@ extern EvalScore piece_square_table[6][2][64];
 // indexed by wking, bking, piece, square
 extern EvalScore piece_kk_square_tables[64][64][14][64];
 
-void psqt_init();
+void             psqt_init();
 
 #endif    // KOIVISTO_PSQT_H

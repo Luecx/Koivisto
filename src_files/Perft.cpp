@@ -18,8 +18,8 @@
  ****************************************************************************************************/
 #include "Perft.h"
 
-#include "UCIAssert.h"
 #include "movegen.h"
+#include "UCIAssert.h"
 
 using namespace std;
 
@@ -30,7 +30,7 @@ TranspositionTable* perft_tt;
  * called at the start of the program
  * @param hash
  */
-void perft_init(bool hash) {
+void                perft_init(bool hash) {
     if (hash)
         perft_tt = new TranspositionTable(512);
 
@@ -58,7 +58,7 @@ void perft_cleanUp() {
 
 /**
  * does nothing yet.
- * Supposed to print an overview of the previous perft call.
+ * Supposed to print an searchOverview of the previous perft call.
  */
 void perft_res() {}
 
@@ -73,7 +73,7 @@ void perft_res() {}
  * @param ply internally for the ply
  * @return
  */
-U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
+U64  perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     UCI_ASSERT(b);
 
     U64 zob = ZERO;
@@ -96,10 +96,9 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     if (depth == 0)
         return 1;
 
-    
-//    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
+    //    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
     generatePerftMoves(b, perft_mvlist_buffer[depth]);
-    
+
     //    generations ++;
 
     for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
@@ -114,7 +113,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         if (d1 && depth == 1) {
             nodes += 1;
         } else {
-            
+
             b->move(m);
 
             U64 np = perft(b, depth - 1, false, d1, hash, ply + 1);

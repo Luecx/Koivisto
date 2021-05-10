@@ -31,8 +31,8 @@ using namespace bb;
 using namespace std;
 using namespace move;
 
-typedef uint8_t NodeType;
-typedef uint8_t NodeAge;
+typedef uint8_t    NodeType;
+typedef uint8_t    NodeAge;
 
 constexpr NodeType PV_NODE  = 0;
 constexpr NodeType CUT_NODE = 1;
@@ -57,9 +57,9 @@ struct Entry {
         this->depth   = p_depth;
     }
 
-    NodeAge getAge() { return getScore(move); }
+    NodeAge  getAge() { return getScore(move); }
 
-    void setAge(NodeAge p_age) { setScore(move, p_age); }
+    void     setAge(NodeAge p_age) { setScore(move, p_age); }
 
     U64      zobrist;    // 64 bit
     Move     move;       // 32 bit  (using the 8 msb for age)
@@ -74,12 +74,11 @@ class TranspositionTable {
     NodeAge m_currentAge;
     U64     m_size;
 
-    void init(U64 MB);
+    void    init(U64 MB);
 
     public:
-    
-    Entry*  m_entries;
-    U64     m_mask;
+    Entry* m_entries;
+    U64    m_mask;
     TranspositionTable(U64 mb);
 
     TranspositionTable(const TranspositionTable& other) = delete;
@@ -88,21 +87,20 @@ class TranspositionTable {
 
     ~TranspositionTable();
 
-    Entry get(U64 zobrist);
+    Entry  get(U64 zobrist);
 
-    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
+    bool   put(U64 zobrist, Score score, Move move, NodeType type, Depth depth);
 
-    void incrementAge();
+    void   incrementAge();
 
-    void setSize(U64 mb);
+    void   setSize(U64 mb);
 
-    void clear();
+    void   clear();
 
     double usage();
 
-    U64 getSize();
+    U64    getSize();
 };
-
 
 int maxTTSize();
 

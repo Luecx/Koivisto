@@ -552,7 +552,7 @@ void Board::move(Move m) {
     this->computeNewRepetition();
 
     getBoardStatus()->material = material;
-    __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist & table->m_mask]);
+    search::prefetchHash(getBoardStatus()->zobrist);
 }
 
 /**
@@ -830,8 +830,6 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
  * @return
  */
 bool Board::isUnderAttack(Square square, Color attacker) {
-    U64 sqBB = ONE << square;
-
     if (attacker == WHITE) {
         return isUnderAttack<WHITE>(square);
     } else {

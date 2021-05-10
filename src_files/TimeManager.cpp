@@ -17,10 +17,12 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include <algorithm>
 #include "TimeManager.h"
+
 #include "Board.h"
 #include "UCIAssert.h"
+
+#include <algorithm>
 
 auto startTime =
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -30,14 +32,8 @@ auto startTime =
  * This means that we do not want to extend the time in critical positions and want to stop the search exactly after
  * movetime milliseconds.
  */
-TimeManager::TimeManager(int moveTime) : 
-    mode(MOVETIME), 
-    timeToUse(moveTime), 
-    upperTimeBound(moveTime),
-    nodesToUse(-1),
-    ignorePV(true), 
-    isSafeToStop(true), 
-    forceStop() {
+TimeManager::TimeManager(int moveTime)
+    : mode(MOVETIME), timeToUse(moveTime), nodesToUse(-1), upperTimeBound(moveTime), ignorePV(true), forceStop() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -48,14 +44,8 @@ TimeManager::TimeManager(int moveTime) :
  * If the depth is specified, we use this constructor.
  * No constraints about time are made and the search wont be stopped by the time manager.
  */
-TimeManager::TimeManager() : 
-    mode(DEPTH), 
-    timeToUse(1 << 30), 
-    upperTimeBound(1 << 30),
-    nodesToUse(-1),
-    ignorePV(true), 
-    isSafeToStop(true), 
-    forceStop() {
+TimeManager::TimeManager()
+    : mode(DEPTH), timeToUse(1 << 30), nodesToUse(-1), upperTimeBound(1 << 30), ignorePV(true), forceStop() {
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -74,28 +64,22 @@ TimeManager::TimeManager() :
  * @param movesToGo
  * @param board
  */
-TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) : 
-    mode(TOURNAMENT), 
-    timeToUse(),
-    nodesToUse(-1),
-    upperTimeBound(), 
-    ignorePV(), 
-    isSafeToStop(true),
-    forceStop() {
+TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board)
+    : mode(TOURNAMENT), nodesToUse(-1), ignorePV(), forceStop() {
     UCI_ASSERT(board);
     UCI_ASSERT(white > 0);
     UCI_ASSERT(black > 0);
     UCI_ASSERT(movesToGo >= 0);
 
-    double division = movesToGo+1;
+    double division = movesToGo + 1;
 
-    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / division)*3 + whiteInc) - 25
-                                                       : (int(black / division)*3 + blackInc) - 25;
+    upperTimeBound  = board->getActivePlayer() == WHITE ? (int(white / division) * 3 + whiteInc) - 25
+                                                        : (int(black / division) * 3 + blackInc) - 25;
 
-    timeToUse = upperTimeBound / 3;
+    timeToUse       = upperTimeBound / 3;
 
-    timeToUse = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
-    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
+    timeToUse       = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
+    upperTimeBound  = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
@@ -119,22 +103,7 @@ int TimeManager::elapsedTime() {
 /**
  * a destructor for the sake of completeness.
  */
-TimeManager::~TimeManager() {
-}
-
-/**
- * when the pv is updated during the search, this is called. Could be used to consider time extensions but is not used
- * at this point.
- * @param move
- * @param score
- * @param depth
- */
-void TimeManager::updatePV(Move move, Score score, Depth depth) {
-
-    // dont keep track of pv changes if timing doesnt matter
-    if (ignorePV)
-        return;
-}
+TimeManager::~TimeManager() {}
 
 /**
  * stops the search. Next time isTimeLeft() is called, false will be returned so that the search finishes as soon as
@@ -147,11 +116,10 @@ void TimeManager::stopSearch() { forceStop = true; }
  */
 bool TimeManager::isTimeLeft() {
 
-
     // stop the search if requested
     if (forceStop)
         return false;
-    
+
     int elapsed = elapsedTime();
 
     // if we are above the maximum allowed time, stop
@@ -194,23 +162,16 @@ TimeMode TimeManager::getMode() const { return mode; }
  * sets the node limit for the search
  * @param maxNodes
  */
-void     TimeManager::setNodeLimit(U64 maxNodes) {
-    this->nodesToUse = maxNodes;
-}
+void     TimeManager::setNodeLimit(U64 maxNodes) { this->nodesToUse = maxNodes; }
 
 /**
  * checks if the search is stopped by force
  * @return
  */
-bool TimeManager::isForceStopped() {
-    return forceStop;
-}
+bool     TimeManager::isForceStopped() { return forceStop; }
 
 /**
  * gets the node limit for the search
  * @return
  */
-U64  TimeManager::getNodeLimit() {
-    return nodesToUse;
-}
-
+U64      TimeManager::getNodeLimit() { return nodesToUse; }

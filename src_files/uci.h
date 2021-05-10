@@ -24,8 +24,8 @@
 #include "Board.h"
 #include "Move.h"
 #include "Perft.h"
-#include "Util.h"
 #include "search.h"
+#include "Util.h"
 
 #include <cstdlib>
 #include <fcntl.h>
@@ -35,33 +35,36 @@
 #include <thread>
 #include <unistd.h>
 
-void uci_loop(bool bench);
+namespace uci {
 
-void uci_processCommand(std::string str);
+void loop(bool bench);
 
-void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth);
-void uci_go_perft(int depth, bool hash);
-void uci_go_depth(int depth);
-void uci_go_nodes(int nodes);
-void uci_go_time(int movetime);
-void uci_go_infinite();
-void uci_go_mate(int depth);
+void processCommand(std::string str);
 
-void uci_stop();
+void goMatch(int wtime, int btime, int winc, int binc, int movesToGo, int depth);
+void goPerft(int depth, bool hash);
+void goDepth(int depth);
+void goNodes(int nodes);
+void goTime(int movetime);
+void goInfinite();
+void goMate(int depth);
 
-void uci_set_option(std::string& name, std::string& value);
+void stop();
 
-void uci_isReady();
+void setOption(std::string& name, std::string& value);
 
-void uci_debug(bool mode);
+void isReady();
 
-void uci_uci();
+void debug(bool mode);
 
-void uci_position_fen(std::string fen, std::string moves);
-void uci_position_startpos(std::string moves);
+void uci();
 
-void uci_bench();
+void positionFEN(std::string fen, std::string moves);
+void positionStartPos(std::string moves);
 
-void uci_quit();
+void bench();
 
+void quit();
+
+}    // namespace uci
 #endif    // KOIVISTO_UCI_H

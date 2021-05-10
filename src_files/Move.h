@@ -101,7 +101,7 @@ inline void setScore(      Move& move, const int moveScore) {
     move = (move & ~(MASK_8 << SHIFT_SCORE_INFO));    // clearing
     move |= (moveScore << SHIFT_SCORE_INFO);
 }
-inline int  getScore(const Move& move) { return (move >> SHIFT_SCORE_INFO); }
+inline int getScore(const Move& move) { return (move >> SHIFT_SCORE_INFO); }
 
 inline int getPieceSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK_10;}
 inline int getPieceTypeSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK_9;}

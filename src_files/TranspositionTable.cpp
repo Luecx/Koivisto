@@ -30,16 +30,16 @@ void TranspositionTable::init(U64 MB) {
     U64 maxEntries = bytes / sizeof(Entry);
 
     // size must be a power of 2!
-    m_size = 1;
+    m_size         = 1;
 
     while (m_size <= maxEntries) {
         m_size *= 2;
     }
 
     m_size /= 2;
-    m_mask = m_size - 1;
+    m_mask    = m_size - 1;
 
-    m_entries = (Entry*) (calloc(m_size, sizeof(Entry)));
+    m_entries = (Entry*) (_mm_malloc(m_size * sizeof(Entry), 128));
     clear();
 
     m_currentAge = 0;
@@ -74,7 +74,7 @@ void TranspositionTable::setSize(U64 mb) {
 /**
  * clears the content and sets all entries to 0.
  */
-void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_size); }
+void   TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_size); }
 
 /**
  * returns a floating value for the amount of values used.
@@ -101,9 +101,9 @@ double TranspositionTable::usage() {
  */
 Entry TranspositionTable::get(U64 zobrist) {
 
-    U64 index = zobrist & m_mask;
+    U64   index = zobrist & m_mask;
 
-    Entry enP = m_entries[index];
+    Entry enP   = m_entries[index];
 
     return enP;
 }
@@ -125,16 +125,17 @@ Entry TranspositionTable::get(U64 zobrist) {
  */
 bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
 
-    U64 index = zobrist & m_mask;
+    U64    index = zobrist & m_mask;
 
-    Entry* enP = &m_entries[index];
+    Entry* enP   = &m_entries[index];
 
     if (enP->zobrist == 0) {
         enP->set(zobrist, score, move, type, depth);
         enP->setAge(m_currentAge);
         return true;
     } else {
-        if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE||enP->zobrist == zobrist) && enP->depth <= depth)) {
+        if (enP->getAge() != m_currentAge || type == PV_NODE
+            || ((enP->type != PV_NODE || enP->zobrist == zobrist) && enP->depth <= depth)) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
             return true;

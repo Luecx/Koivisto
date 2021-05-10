@@ -32,12 +32,12 @@ class MoveOrderer {
 
     public:
     bool skip;
-    
+
     MoveOrderer(move::MoveList* p_moves);
 
     virtual ~MoveOrderer();
-    
-    bool hasNext();
+
+    bool       hasNext();
 
     move::Move next();
 };

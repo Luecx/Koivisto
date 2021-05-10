@@ -176,8 +176,8 @@ float* phaseValues = new float[6] {
 };
 
 
-int lazyEvalAlphaBound = 803;
-int lazyEvalBetaBound  = 392;
+constexpr int lazyEvalAlphaBound = 803;
+constexpr int lazyEvalBetaBound  = 392;
 
 EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 

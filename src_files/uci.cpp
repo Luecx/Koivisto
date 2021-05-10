@@ -18,17 +18,15 @@
  ****************************************************************************************************/
 
 #include "uci.h"
-#include "search.h"
-#include "UCIAssert.h"
 
+#include "search.h"
 #include "syzygy/tbprobe.h"
+#include "UCIAssert.h"
 
 #include <fstream>
 #include <iostream>
 #include <thread>
 
-
-TimeManager timeManager;
 Board*      board;
 std::thread searchThread;
 
@@ -37,16 +35,16 @@ std::thread searchThread;
  * and continues reading the lines until 'quit' is parsed which will shut down the engine and deallocate arrays.
  * @param bench
  */
-void uci_loop(bool bench) {
+void        uci::loop(bool bench) {
 
     bb_init();
-    search_init(16);
+    search::init(16);
     psqt_init();
 
     if (bench) {
-        uci_bench();
+        uci::bench();
 
-        search_cleanUp();
+        search::cleanUp();
         bb_cleanUp();
     } else {
         std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
@@ -54,7 +52,7 @@ void uci_loop(bool bench) {
 
         board = new Board();
 
-        std::atexit(uci_quit);
+        std::atexit(uci::quit);
         std::string line;
 
         while (getline(cin, line)) {
@@ -62,7 +60,7 @@ void uci_loop(bool bench) {
             if (line == "quit") {
                 exit(0);
             } else {
-                uci_processCommand(line);
+                uci::processCommand(line);
             }
         }
     }
@@ -73,7 +71,7 @@ void uci_loop(bool bench) {
  * Displays engine version and the authors.
  * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive further commands.
  */
-void uci_uci() {
+void uci::uci() {
     std::cout << "id name Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
     std::cout << "id author K. Kahre, F. Eggers, E. Bruno" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
@@ -90,7 +88,7 @@ void uci_uci() {
  * @param key
  * @return
  */
-std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
+std::string getValue(std::vector<std::string>& vec, std::string key) {
     int index = 0;
     for (std::string s : vec) {
         if (s == key) {
@@ -109,15 +107,15 @@ std::string uci_getValue(std::vector<std::string>& vec, std::string key) {
  * @param maxDepth
  * @param p_timeManager
  */
-void uci_searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
-    Move m = bestMove(board, maxDepth, p_timeManager);
+void searchAndPrint(Depth maxDepth, TimeManager p_timeManager) {
+    Move m = search::bestMove(board, maxDepth, &p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
 }
 
 /**
  * processes a single command.
  */
-void uci_processCommand(std::string str) {
+void uci::processCommand(std::string str) {
 
     // we trim all white spaces on both sides first
     str = trim(str);
@@ -136,71 +134,71 @@ void uci_processCommand(std::string str) {
     }
 
     if (split.at(0) == "ucinewgame") {
-        search_clearHash();
-        search_clearHistory();
+        search::clearHash();
+        search::clearHistory();
     }
     if (split.at(0) == "uci") {
-        uci_uci();
+        uci::uci();
     } else if (split.at(0) == "setoption") {
 
         if (split.size() < 5)
             return;
 
-        string name  = uci_getValue(split, "name");
-        string value = uci_getValue(split, "value");
+        string name  = getValue(split, "name");
+        string value = getValue(split, "value");
 
-        uci_set_option(name, value);
+        uci::setOption(name, value);
 
     } else if (split.at(0) == "go") {
         if (str.find("wtime") != string::npos) {
-            string wtime = uci_getValue(split, "wtime");
-            string btime = uci_getValue(split, "btime");
-            string wincr = uci_getValue(split, "winc");
-            string bincr = uci_getValue(split, "binc");
-            string mvtog = uci_getValue(split, "movestogo");
-            string depth = uci_getValue(split, "depth");
+            string wtime = getValue(split, "wtime");
+            string btime = getValue(split, "btime");
+            string wincr = getValue(split, "winc");
+            string bincr = getValue(split, "binc");
+            string mvtog = getValue(split, "movestogo");
+            string depth = getValue(split, "depth");
 
-            uci_go_match((wtime.empty()) ? 60000000 : stoi(wtime), (btime.empty()) ? 60000000 : stoi(btime),
+            uci::goMatch((wtime.empty()) ? 60000000 : stoi(wtime), (btime.empty()) ? 60000000 : stoi(btime),
                          (wincr.empty()) ? 0 : stoi(wincr), (bincr.empty()) ? 0 : stoi(bincr),
                          (mvtog.empty()) ? 29 : stoi(mvtog), (depth.empty()) ? MAX_PLY : stoi(depth));
 
         } else if (str.find("depth") != string::npos) {
-            uci_go_depth(stoi(uci_getValue(split, "depth")));
+            uci::goDepth(stoi(getValue(split, "depth")));
         } else if (str.find("nodes") != string::npos) {
-            uci_go_nodes(stoi(uci_getValue(split, "nodes")));
+            uci::goNodes(stoi(getValue(split, "nodes")));
         } else if (str.find("movetime") != string::npos) {
-            uci_go_time(stoi(uci_getValue(split, "movetime")));
+            uci::goTime(stoi(getValue(split, "movetime")));
         } else if (str.find("infinite") != string::npos) {
-            uci_go_infinite();
+            uci::goInfinite();
         } else if (str.find("mate") != string::npos) {
-            uci_go_mate(stoi(uci_getValue(split, "mate")));
+            uci::goMate(stoi(getValue(split, "mate")));
         } else if (str.find("perft") != string::npos) {
-            uci_go_perft(stoi(uci_getValue(split, "perft")), str.find("hash") != string::npos);
+            uci::goPerft(stoi(getValue(split, "perft")), str.find("hash") != string::npos);
         }
     } else if (split.at(0) == "stop") {
-        uci_stop();
+        uci::stop();
     } else if (split.at(0) == "isready") {
-        uci_isReady();
+        uci::isReady();
     } else if (split.at(0) == "debug") {
-        uci_debug(uci_getValue(split, "debug") == "on");
+        uci::debug(getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
         if (str.find("FUTILITY_MARGIN") != string::npos) {
-            FUTILITY_MARGIN = stoi(uci_getValue(split, "FUTILITY_MARGIN"));
+            search::FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
         }
         if (str.find("RAZOR_MARGIN") != string::npos) {
-            RAZOR_MARGIN = stoi(uci_getValue(split, "RAZOR_MARGIN"));
+            search::RAZOR_MARGIN = stoi(getValue(split, "RAZOR_MARGIN"));
         }
         if (str.find("SE_MARGIN_STATIC") != string::npos) {
-            SE_MARGIN_STATIC = stoi(uci_getValue(split, "SE_MARGIN_STATIC"));
+            search::SE_MARGIN_STATIC = stoi(getValue(split, "SE_MARGIN_STATIC"));
         }
         if (str.find("LMR_DIV") != string::npos) {
-            LMR_DIV = stoi(uci_getValue(split, "LMR_DIV"));
-            initLMR();
+            search::LMR_DIV = stoi(getValue(split, "LMR_DIV"));
+            search::initLMR();
         }
     } else if (split.at(0) == "position") {
 
-        auto fenPos  = str.find("fen");
-        auto movePos = str.find("moves");
+        auto   fenPos  = str.find("fen");
+        auto   movePos = str.find("moves");
 
         string moves {};
         if (movePos != string::npos) {
@@ -211,9 +209,9 @@ void uci_processCommand(std::string str) {
         if (fenPos != string::npos) {
             string fen = str.substr(fenPos + 3);
             fen        = trim(fen);
-            uci_position_fen(fen, moves);
+            uci::positionFEN(fen, moves);
         } else {
-            uci_position_startpos(moves);
+            uci::positionStartPos(moves);
         }
     } else if (split.at(0) == "print") {
         std::cout << *board << std::endl;
@@ -230,7 +228,7 @@ void uci_processCommand(std::string str) {
  * @param depth
  * @param hash
  */
-void uci_go_perft(int depth, bool hash) {
+void uci::goPerft(int depth, bool hash) {
 
     perft_init(hash);
 
@@ -255,13 +253,13 @@ void uci_go_perft(int depth, bool hash) {
  * @param movesToGo
  * @param depth
  */
-void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth) {
+void uci::goMatch(int wtime, int btime, int winc, int binc, int movesToGo, int depth) {
 
-    uci_stop();
+    uci::stop();
 
-    timeManager = TimeManager(wtime, btime, winc, binc, movesToGo, board);
+    TimeManager timeManager = TimeManager(wtime, btime, winc, binc, movesToGo, board);
 
-    searchThread = std::thread(uci_searchAndPrint, depth, &timeManager);
+    searchThread            = std::thread(searchAndPrint, depth, timeManager);
 }
 
 /**
@@ -269,13 +267,11 @@ void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int d
  * It does a search on the current position until the specified depth has been reached.
  * @param depth
  */
-void uci_go_depth(int depth) {
+void uci::goDepth(int depth) {
 
-    uci_stop();
+    uci::stop();
 
-    timeManager = TimeManager();
-
-    searchThread = std::thread(uci_searchAndPrint, depth, &timeManager);
+    searchThread = std::thread(searchAndPrint, depth, TimeManager {});
 }
 
 /**
@@ -283,14 +279,13 @@ void uci_go_depth(int depth) {
  * Not yet implemented
  * @param nodes
  */
-void uci_go_nodes(int nodes) {
-    uci_stop();
-    
-    timeManager = TimeManager();
+void uci::goNodes(int nodes) {
+    uci::stop();
+
+    TimeManager timeManager {};
     timeManager.setNodeLimit(nodes);
-    
-    searchThread = std::thread(uci_searchAndPrint, MAX_PLY, &timeManager);
-    
+
+    searchThread = std::thread(searchAndPrint, MAX_PLY, timeManager);
 }
 
 /**
@@ -299,27 +294,27 @@ void uci_go_nodes(int nodes) {
  * The search will not extend the time, even if critical positions are analysed.
  * @param depth
  */
-void uci_go_time(int movetime) {
+void uci::goTime(int movetime) {
 
-    uci_stop();
+    uci::stop();
 
-    timeManager = TimeManager(movetime);
+    TimeManager timeManager {movetime};
 
-    searchThread = std::thread(uci_searchAndPrint, MAX_PLY, &timeManager);
+    searchThread = std::thread(searchAndPrint, MAX_PLY, timeManager);
 }
 
 /**
  * parses the uci command: go infinite
  * It does a search on the current position until night and dawn have passed.
  */
-void uci_go_infinite() { uci_go_depth(MAX_PLY); }
+void uci::goInfinite() { uci::goDepth(MAX_PLY); }
 
 /**
  * parsed the uci command: go mate [mate_in_ply]
  * Not yet implemented
  * @param nodes
  */
-void uci_go_mate(int depth) {
+void uci::goMate(int depth) {
 
     // TODO implement mate search
     std::cout << "go mate " << depth << " not supported" << std::endl;
@@ -329,8 +324,8 @@ void uci_go_mate(int depth) {
  * parses the uci command: stop
  * stops the current search. This will usually print a last info string and the best move.
  */
-void uci_stop() {
-    search_stop();
+void uci::stop() {
+    search::stop();
     if (searchThread.joinable()) {
         searchThread.join();
     }
@@ -345,13 +340,9 @@ void uci_stop() {
  * @param name
  * @param value
  */
-void uci_set_option(std::string& name, std::string& value) {
-    if (name == "LEA"){
-        lazyEvalAlphaBound = stoi(value);
-    }else if (name == "LEB"){
-        lazyEvalBetaBound = stoi(value);
-    } else if (name == "Hash") {
-        search_setHashSize(stoi(value));
+void uci::setOption(std::string& name, std::string& value) {
+    if (name == "Hash") {
+        search::setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
         if (value.empty())
             return;
@@ -362,23 +353,11 @@ void uci_set_option(std::string& name, std::string& value) {
 
         std::cout << "using syzygy table with " << TB_LARGEST << " pieces" << std::endl;
 
-        /*
-         * only use TB if loading was successful
-         */
-        search_useTB(TB_LARGEST > 0);
+        // only use TB if loading was successful
+        search::useTB(TB_LARGEST > 0);
     } else if (name == "Threads") {
-        int count           = stoi(value);
-        int processor_count = (int) std::thread::hardware_concurrency();
-        if (processor_count == 0)
-            processor_count = MAX_THREADS;
-        if (processor_count < count)
-            count = processor_count;
-        if (count < 1)
-            count = 1;
-        if (count > MAX_THREADS)
-            count = MAX_THREADS;
-        
-        search_setThreads(count);
+        int count = stoi(value);
+        search::setThreads(count);
     }
 }
 
@@ -386,7 +365,7 @@ void uci_set_option(std::string& name, std::string& value) {
  * parses the uci command: isready
  * The engine is supposed to return readyok after checking that its ready to receive further commands.
  */
-void uci_isReady() {
+void uci::isReady() {
     // TODO check if its running
 
     std::cout << "readyok" << std::endl;
@@ -397,7 +376,7 @@ void uci_isReady() {
  * it is possible to enable debugging soon.
  * @param mode
  */
-void uci_debug(bool mode) {
+void uci::debug(bool mode) {
     // TODO enable debug
     std::cout << "debug=" << mode << std::endl;
 }
@@ -409,7 +388,7 @@ void uci_debug(bool mode) {
  * @param fen
  * @param moves
  */
-void uci_position_fen(std::string fen, std::string moves) {
+void uci::positionFEN(std::string fen, std::string moves) {
     if (board != nullptr)
         delete board;
     board = new Board {fen};
@@ -421,13 +400,13 @@ void uci_position_fen(std::string fen, std::string moves) {
 
     for (string s : mv) {
 
-        string str1 = s.substr(0, 2);
-        string str2 = s.substr(2, 4);
-        Square s1   = squareIndex(str1);
-        Square s2   = squareIndex(str2);
+        string   str1     = s.substr(0, 2);
+        string   str2     = s.substr(2, 4);
+        Square   s1       = squareIndex(str1);
+        Square   s2       = squareIndex(str2);
 
-        Piece moving   = board->getPiece(s1);
-        Piece captured = board->getPiece(s2);
+        Piece    moving   = board->getPiece(s1);
+        Piece    captured = board->getPiece(s2);
 
         MoveType type;
 
@@ -496,28 +475,28 @@ void uci_position_fen(std::string fen, std::string moves) {
  * @param fen
  * @param moves
  */
-void uci_position_startpos(std::string moves) {
-    uci_position_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves);
+void uci::positionStartPos(std::string moves) {
+    uci::positionFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves);
 }
 
 /**
  * cleans up all allocated data
  */
-void uci_quit() {
+void uci::quit() {
 
-    uci_stop();
+    uci::stop();
 
     delete board;
     board = nullptr;
 
     bb_cleanUp();
-    search_cleanUp();
+    search::cleanUp();
 }
 
 /**
  * performs a bench
  */
-void uci_bench() {
+void uci::bench() {
 
     // positions from Ethereal
     static const char* Benchmarks[] = {
@@ -527,14 +506,14 @@ void uci_bench() {
     int nodes = 0;
     int time  = 0;
 
-    search_disable_infoStrings();
+    search::disableInfoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
 
-        Board b(Benchmarks[i]);
+        Board       b(Benchmarks[i]);
 
         TimeManager manager;
-        bestMove(&b, 13, &manager, 0);
-        SearchOverview overview = search_overview();
+        search::bestMove(&b, 13, &manager, 0);
+        search::SearchOverview overview = search::overview();
 
         nodes += overview.nodes;
         time += overview.time;
@@ -544,11 +523,10 @@ void uci_bench() {
                (int) (1000.0f * overview.nodes / (overview.time + 1)));
         std::cout << std::endl;
 
-        search_clearHash();
-        search_clearHistory();
+        search::clearHash();
+        search::clearHistory();
     }
     printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
-    search_enable_infoStrings();
-
+    search::enableInfoStrings();
 }

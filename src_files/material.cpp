@@ -22,15 +22,12 @@
 #include "Board.h"
 #include "UCIAssert.h"
 
-Material::Material() {
-
-}
+Material::Material() {}
 Material::Material(const Material& other) {
     this->kingSquare[WHITE] = other.kingSquare[WHITE];
     this->kingSquare[BLACK] = other.kingSquare[BLACK];
     this->materialScore     = other.materialScore;
 }
-
 
 void Material::reset(Board* board) {
     materialScore     = 0;
@@ -56,7 +53,6 @@ void Material::setPiece(Piece p, Square s) {
     materialScore += piece_kk_square_tables[kingSquare[WHITE]][kingSquare[BLACK]][p][s];
 }
 
-
 void Material::unsetPiece(Color c, PieceType t, Square s) { unsetPiece(getPiece(c, t), s); }
 
 void Material::unsetPiece(Piece p, Square s) {
@@ -78,7 +74,7 @@ bool Material::operator==(const Material& rhs) const {
 }
 bool Material::operator!=(const Material& rhs) const { return !(rhs == *this); }
 std::ostream&  operator<<(std::ostream& os, const Material& material) {
-    os << "Mat(wk=" << (int)material.kingSquare[WHITE] << ";bk=" << (int)material.kingSquare[BLACK] << ") = (" <<
-        MgScore(material.materialScore) << ", " << EgScore(material.materialScore) << ")";
+    os << "Mat(wk=" << (int) material.kingSquare[WHITE] << ";bk=" << (int) material.kingSquare[BLACK] << ") = ("
+       << MgScore(material.materialScore) << ", " << EgScore(material.materialScore) << ")";
     return os;
 }

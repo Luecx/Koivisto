@@ -12,7 +12,7 @@
 #endif
 
 #ifdef NDEBUG
-#define UCI_ASSERT(expr)
+#define UCI_ASSERT(expr) {}
 #else
 #define UCI_ASSERT(expr)                                                                                               \
     {                                                                                                                  \
