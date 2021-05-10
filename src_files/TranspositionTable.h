@@ -23,9 +23,9 @@
 #include "Bitboard.h"
 #include "Board.h"
 #include "Move.h"
-
+#include "malloc.h"
 #include <ostream>
-#include <stdint.h>
+#include <cstdint>
 
 using namespace bb;
 using namespace std;
