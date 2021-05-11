@@ -45,6 +45,9 @@ extern int LMR_DIV;
 extern TranspositionTable* table;
 #define MAX_THREADS 256
 
+// will force to promote all pawns in a winning position before checkmating
+#define FOUNTAIN_DIVE
+
 /**
  * used to store information about a search
  */

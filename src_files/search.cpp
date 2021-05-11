@@ -34,6 +34,10 @@ int                      threadCount = 1;
 bool                     useTB       = false;
 bool                     printInfo   = true;
 
+#ifdef FOUNTAIN_DIVE
+bool                     rootPositionIsWinning = false;
+#endif
+
 SearchOverview overview;
 
 int lmrReductions[256][256];
@@ -491,9 +495,11 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     if (threadId == 0) {
         
         // if there is a dtz move available, do not start any threads or search at all. just do the dtz move
+#ifndef FOUNTAIN_DIVE
         Move dtzMove = getDTZMove(b);
         if (dtzMove != 0)
             return dtzMove;
+#endif
         
         // make sure that the given depth isnt too large
         if (maxDepth > MAX_PLY)
@@ -513,7 +519,28 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
             tds[i].nodes    = 0;
             tds[i].seldepth = 0;
         }
-        
+
+        // check if the root position is completely winning and all pawns can be promoted
+#ifdef FOUNTAIN_DIVE
+        EvalScore material = b->getBoardStatus()->material();
+        Score     egScore  = EgScore(material);
+        if (
+            std::abs(egScore) > 800
+            && bitCount(
+                b->getPieceBB(egScore < 0 ? WHITE : BLACK, BISHOP) |
+                b->getPieceBB(egScore < 0 ? WHITE : BLACK, KNIGHT) |
+                b->getPieceBB(egScore < 0 ? WHITE : BLACK, ROOK)) <= 1
+            && bitCount(
+                b->getPieceBB(egScore < 0 ? WHITE : BLACK, QUEEN)) == 0
+            && bitCount(
+                b->getPieceBB(egScore < 0 ? WHITE : BLACK, PAWN) &
+                   (egScore < 0 ? RANK_7_BB : RANK_2_BB)) == 0){
+            rootPositionIsWinning = true;
+        }else{
+            rootPositionIsWinning = false;
+        }
+#endif
+
         // we will call this function for the other threads which will skip this part and jump straight to the part
         // below
         for (int n = 1; n < threadCount; n++) {
@@ -613,7 +640,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // increment the node counter for the current thread
     td->nodes++;
-    
+
     // force a stop when enough nodes have been searched
     if(search_timeManager->getNodeLimit() <= td->nodes){
         search_timeManager->stopSearch();
@@ -670,15 +697,23 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
-    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
-    // simply adjust the tempo-bonus.
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply in case of nullmove
-        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    }
+
+#ifdef FOUNTAIN_DIVE
+    if(rootPositionIsWinning){
+        staticEval = EgScore(b->getBoardStatus()->material.materialScore) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }else
+#endif
+    {
+        // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
+        // simply adjust the tempo-bonus.
+        if (b->getPreviousMove() == 0 && ply != 0) {
+            // reuse static evaluation from previous ply in case of nullmove
+            staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        } else {
+            staticEval =
+                inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        }
+    };
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
@@ -720,7 +755,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
     }
-    
+
     // **************************************************************************************************************
     // tablebase probing:
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
@@ -821,6 +856,23 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
     MoveOrderer moveOrderer {mv};
+
+    // if we are in the very endgame and want to promote our pawns first, make sure to give pawn pushes a higher score
+#ifdef FOUNTAIN_DIVE
+    if(rootPositionIsWinning){
+        for(int i = 0; i < mv->getSize(); i++){
+            Move m = mv->getMove(i);
+            if(getMovingPieceType(m) == PAWN){
+                if(isPromotion(m) && promotionPiece(m) % 8 != KNIGHT)
+                    mv->scoreMove(i, 0);
+                else
+                    mv->scoreMove(i, 1000);
+            }else{
+                mv->scoreMove(i, 1);
+            }
+        }
+    }
+#endif
 
     // count the legal and quiet moves.
     int legalMoves = 0;
@@ -971,7 +1023,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
         }
-        
+
         // undo the move
         b->undoMove();
         
@@ -1012,7 +1064,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if this loop finished, we can increment the legal move counter by one which is important for detecting mates
         legalMoves++;
     }
-    
+
     // if we are inside a tournament game and at the root and there is only one legal move, no need to search at all.
     if (search_timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1 && td->threadID == 0) {
         sd->bestMove = bestMove;
@@ -1026,10 +1078,18 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (!inCheck) {
             return 0;
         } else {
-            return -MAX_MATE_SCORE + ply;
+            // dont mate if there are still pawns
+#ifdef FOUNTAIN_DIVE
+            if (rootPositionIsWinning && bitCount(b->getPieceBB(!b->getActivePlayer(), PAWN)) != 0)
+                return 0;
+            else
+#endif
+            {
+                return -MAX_MATE_SCORE + ply;
+            }
         }
     }
-    
+
     // we need to write the current score/position into the transposition table if and only if we havent skipped a move
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {
@@ -1089,12 +1149,18 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // simply adjust the tempo-bonus.
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply incase of nullmove
-        stand_pat = bestScore = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        stand_pat = bestScore = 
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+//#ifdef FOUNTAIN_DIVE
+//    if(rootPositionIsWinning){
+//        stand_pat = EgScore(b->getBoardStatus()->material.materialScore) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+//    }else
+//#endif
+    {
+        if (b->getPreviousMove() == 0 && ply != 0) {
+            // reuse static evaluation from previous ply incase of nullmove
+            stand_pat = bestScore = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        } else {
+            stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        }
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.
@@ -1107,11 +1173,12 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         }
     }
     
-    if (bestScore >= beta)
+    if (bestScore >= beta){
         return beta;
+    }
     if (alpha < bestScore)
         alpha = bestScore;
-    
+
     // extract all:
     //- captures (including e.p.)
     //- promotions
@@ -1136,8 +1203,9 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         if (!b->isLegal(m))
             continue;
         
-        if (see_piece_vals[(getCapturedPiece(m) % 8)] - see_piece_vals[(getMovingPiece(m) % 8)] - 300 + stand_pat > beta)
+        if (see_piece_vals[(getCapturedPiece(m) % 8)] - see_piece_vals[(getMovingPiece(m) % 8)] - 300 + stand_pat > beta){
             return beta;
+        }
 
         // **********************************************************************************************************
         // static exchange evaluation pruning (see pruning):
@@ -1173,6 +1241,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // store the current position inside the transposition table
     if (bestMove)
         table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+
     return alpha;
     
     //    return 0;
