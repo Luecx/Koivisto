@@ -44,20 +44,21 @@ void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueO
 
 struct EvalData{
     
-    U64 attacks [N_COLORS][N_PIECE_TYPES]{};
-    U64 kingZone[N_COLORS]{};
-    
+    U64 attacks     [N_COLORS][N_PIECE_TYPES]{};
+    U64 kingZone    [N_COLORS]{};
+    U64 allAttacks  [N_COLORS]{};
     
 };
 
 class Evaluator {
     public:
 
+    EvalData evalData;
     float phase;
 
     EvalScore computePinnedPieces(Board* b, Color color);
 
-    EvalScore computeHangingPieces(Board* b, EvalData* evalData);
+    EvalScore computeHangingPieces(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
