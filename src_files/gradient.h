@@ -851,11 +851,11 @@ namespace tuning {
                 k = lsbReset(k);
             }
 
-            count[I_CASTLING_RIGHTS] += (
-                    +b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
+            count[I_CASTLING_RIGHTS] +=
+                    + b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
                     + b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
                     - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-                    - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                    - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING);
             count[I_SIDE_TO_MOVE] += (b->getActivePlayer() == WHITE ? 1 : -1);
         }
 
@@ -967,7 +967,7 @@ namespace tuning {
 
             for (int i = PAWN; i <= QUEEN; i++) {
                 count[i] =
-                        +bitCount(b->getPieceBB(WHITE, i) & WnotAttacked)
+                        + bitCount(b->getPieceBB(WHITE, i) & WnotAttacked)
                         - bitCount(b->getPieceBB(BLACK, i) & BnotAttacked);
             }
         }
@@ -1207,7 +1207,7 @@ namespace tuning {
                 }
                 if (i < 9) {
                     threadData[t].w_bishop_pawn_e[i].set(bishop_pawn_same_color_table_e[i]);
-                    threadData[t].w_bishop_pawn_e[i].set(bishop_pawn_same_color_table_o[i]);
+                    threadData[t].w_bishop_pawn_o[i].set(bishop_pawn_same_color_table_o[i]);
                 }
 
                 if (i < 100) {
@@ -1307,12 +1307,9 @@ namespace tuning {
                 }
                 if (i < 9) {
                     threadData[t].w_bishop_pawn_e[i].set(threadData[0].w_bishop_pawn_e[i]);
-                }
-                if (i < 9) {
-
                     threadData[t].w_bishop_pawn_o[i].set(threadData[0].w_bishop_pawn_o[i]);
-
                 }
+
                 if (i < 100) {
                     threadData[t].w_king_safety[i].set(threadData[0].w_king_safety[i]);
 

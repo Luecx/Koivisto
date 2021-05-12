@@ -717,7 +717,6 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                        - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore;
-
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
 
