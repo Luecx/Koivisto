@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
 
 #ifndef TUNING
     if (argc == 1) {
-        uci_loop(false);
+        uci::mainloop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {
-        uci_loop(true);
+        uci::mainloop(true);
     }
 #else
 using namespace tuning;

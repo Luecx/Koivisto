@@ -17,8 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#ifndef KOIVISTO_UCI_H
-#define KOIVISTO_UCI_H
+#ifndef KOIVISTO_H
+#define KOIVISTO_H
 
 #include "Bitboard.h"
 #include "Board.h"
@@ -34,34 +34,38 @@
 #include <string>
 #include <thread>
 #include <unistd.h>
+namespace uci {
+std::string versionString(bool addAuthorName);
+void        mainloop(bool bench);
 
-void uci_loop(bool bench);
+void        processCommand(std::string& str);
 
-void uci_processCommand(std::string str);
+void        goMatch(int wtime, int btime, int winc, int binc, int movesToGo, int depth);
+void        goPerft(int depth, bool hash);
+void        goDepth(int depth);
+void        goNodes(int nodes);
+void        goMoveTime(int movetime);
+void        goInfinite();
+void        goMate(int depth);
 
-void uci_go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth);
-void uci_go_perft(int depth, bool hash);
-void uci_go_depth(int depth);
-void uci_go_nodes(int nodes);
-void uci_go_time(int movetime);
-void uci_go_infinite();
-void uci_go_mate(int depth);
+void        stop();
 
-void uci_stop();
+void        searchAndPrint(Depth maxDepth, TimeManager* p_timeManager);
 
-void uci_set_option(std::string& name, std::string& value);
+std::string getValue(std::vector<std::string>& vec, const std::string& key);
+void        setOption(const std::string& name, const std::string& value);
 
-void uci_isReady();
+void        isReady();
 
-void uci_debug(bool mode);
+void        debug(bool mode);
 
-void uci_uci();
+void        uci();
 
-void uci_position_fen(std::string fen, std::string moves);
-void uci_position_startpos(std::string moves);
+void        positionFEN(const std::string& fen, const std::string& moves);
+void        positionStartPos(const std::string& moves);
 
-void uci_bench();
+void        bench();
 
-void uci_quit();
-
-#endif    // KOIVISTO_UCI_H
+void        quit();
+}    // namespace uci
+#endif    // KOIVISTO_H

@@ -32,21 +32,21 @@
 #include <cmath>
 #include <ctime>
 #include <iostream>
-#include <stdint.h>
 #include <string>
-#include <tgmath.h>
 
-extern int threadCount;
-
-extern int RAZOR_MARGIN;
-extern int FUTILITY_MARGIN;
-extern int SE_MARGIN_STATIC;
-extern int LMR_DIV;
-extern TranspositionTable* table;
+// max threads which can be used
 #define MAX_THREADS 256
 
 // will force to promote all pawns in a winning position before checkmating
 #define FOUNTAIN_DIVE
+
+extern int                 threadCount;
+extern TranspositionTable* table;
+
+extern int                 RAZOR_MARGIN;
+extern int                 FUTILITY_MARGIN;
+extern int                 SE_MARGIN_STATIC;
+extern int                 LMR_DIV;
 
 /**
  * used to store information about a search
@@ -72,7 +72,7 @@ SearchOverview search_overview();            // used to get information about th
 void           search_enable_infoStrings();
 void           search_disable_infoStrings();
 
-Move  bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId = 0);
+Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId = 0);
 Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd, Move skipMove, Depth* lmrFactor = nullptr);
 Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
 
