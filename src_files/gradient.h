@@ -176,7 +176,6 @@ namespace tuning {
         Weight w_piece_opp_king_square_table[5][15 * 15]{};
         Weight w_piece_our_king_square_table[5][15 * 15]{};
         Weight w_mobility[5][28]{};
-        Weight w_vision  [5][28]{};
         Weight w_features[I_END]{};
         Weight w_bishop_pawn_e[9]{};
         Weight w_bishop_pawn_o[9]{};
