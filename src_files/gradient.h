@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -58,6 +58,8 @@ namespace tuning {
 
         I_PAWN_STRUCTURE,
         I_PAWN_PASSED,
+        I_PAWN_PASSED_AND_CONNECTED,
+        I_PAWN_PASSED_AND_DOUBLED,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -698,6 +700,12 @@ namespace tuning {
             count[I_PAWN_PASSED] += (
                     +bitCount(whitePassers)
                     - bitCount(blackPassers));
+            count[I_PAWN_PASSED_AND_CONNECTED] += (
+                +bitCount(whitePassers & whitePawnCover)
+                - bitCount(blackPassers & blackPawnCover));
+            count[I_PAWN_PASSED_AND_DOUBLED] += (
+                +bitCount(whitePassers & whiteDoubledPawns)
+                - bitCount(blackPassers & blackDoubledPawns));
             count[I_PAWN_STRUCTURE] += (
                     +bitCount(whitePawnEastCover)
                     + bitCount(whitePawnWestCover)
@@ -1293,6 +1301,7 @@ namespace tuning {
 
                     for (int n = 0; n < 15 * 15; n++) {
                         threadData[t].w_piece_opp_king_square_table[i][n].set(threadData[0].w_piece_opp_king_square_table[i][n]);
+                        threadData[t].w_piece_our_king_square_table[i][n].set(threadData[0].w_piece_our_king_square_table[i][n]);
                     }
 
                     for (int n = 0; n < mobEntryCount[i]; n++) {
@@ -1528,6 +1537,8 @@ namespace tuning {
                 "SIDE_TO_MOVE",
                 "PAWN_STRUCTURE",
                 "PAWN_PASSED",
+                "PAWN_PASSED_AND_CONNECTED",
+                "PAWN_PASSED_AND_DOUBLED",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
