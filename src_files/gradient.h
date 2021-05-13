@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
 #define N_THREAD 4
 
@@ -176,6 +176,7 @@ namespace tuning {
         Weight w_piece_opp_king_square_table[5][15 * 15]{};
         Weight w_piece_our_king_square_table[5][15 * 15]{};
         Weight w_mobility[5][28]{};
+        Weight w_vision[5][28]{};
         Weight w_features[I_END]{};
         Weight w_bishop_pawn_e[9]{};
         Weight w_bishop_pawn_o[9]{};
@@ -994,6 +995,9 @@ namespace tuning {
         uint8_t indices_white[5][10]{};
         uint8_t indices_black[5][10]{};
 
+        uint8_t indices_white_vision[5][10]{};
+        uint8_t indices_black_vision[5][10]{};
+
         void init(Board *b, EvalData *ev) {
 
             U64 k, attacks;
@@ -1004,6 +1008,9 @@ namespace tuning {
 
             U64 mobilitySquaresWhite = ~(b->getTeamOccupiedBB()[WHITE]) & ~(blackPawnCover);
             U64 mobilitySquaresBlack = ~(b->getTeamOccupiedBB()[BLACK]) & ~(whitePawnCover);
+
+            U64 visionSquaresWhite   = ~(b->getTeamOccupiedBB()[WHITE]);
+            U64 visionSquaresBlack   = ~(b->getTeamOccupiedBB()[BLACK]);
 
             U64 occupied = *b->getOccupiedBB();
 
@@ -1034,9 +1041,11 @@ namespace tuning {
                                 break;
                         }
                         if (c == WHITE) {
-                            indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
+                            indices_white       [p][++indices_white       [p][0]] = (bitCount(attacks & mobilitySquaresWhite));
+                            indices_white_vision[p][++indices_white_vision[p][0]] = (bitCount(attacks & visionSquaresWhite));
                         } else {
-                            indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack));
+                            indices_black       [p][++indices_black       [p][0]] = (bitCount(attacks & mobilitySquaresBlack));
+                            indices_black_vision[p][++indices_black_vision[p][0]] = (bitCount(attacks & visionSquaresBlack));
                         }
 
                         k = lsbReset(k);
@@ -1057,6 +1066,17 @@ namespace tuning {
                     midgame -= td->w_mobility[p][b].midgame.value;
                     endgame -= td->w_mobility[p][b].endgame.value;
                 }
+
+                for (int i = 1; i <= indices_white_vision[p][0]; i++) {
+                    int8_t w = indices_white_vision[p][i];
+                    midgame += td->w_vision[p][w].midgame.value;
+                    endgame += td->w_vision[p][w].endgame.value;
+                }
+                for (int i = 1; i <= indices_black_vision[p][0]; i++) {
+                    int8_t b = indices_black_vision[p][i];
+                    midgame -= td->w_vision[p][b].midgame.value;
+                    endgame -= td->w_vision[p][b].endgame.value;
+                }
             }
         }
 
@@ -1075,6 +1095,21 @@ namespace tuning {
 
                     td->w_mobility[p][b].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
                     td->w_mobility[p][b].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
+
+                }
+
+                for (int i = 1; i <= indices_white_vision[p][0]; i++) {
+                    int8_t w = indices_white_vision[p][i];
+
+                    td->w_vision[p][w].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_vision[p][w].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
+
+                }
+                for (int i = 1; i <= indices_black_vision[p][0]; i++) {
+                    int8_t b = indices_black_vision[p][i];
+
+                    td->w_vision[p][b].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_vision[p][b].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
 
                 }
             }
@@ -1197,6 +1232,7 @@ namespace tuning {
 
                     for (int n = 0; n < mobEntryCount[i]; n++) {
                         threadData[t].w_mobility[i][n].set(mobilities[i][n]);
+                        threadData[t].w_vision  [i][n].set(visions   [i][n]);
                     }
 
                 }
@@ -1246,6 +1282,7 @@ namespace tuning {
 
                     for (int n = 0; n < mobEntryCount[i]; n++) {
                         threadData[t].w_mobility[i][n].merge(threadData[0].w_mobility[i][n]);
+                        threadData[t].w_vision  [i][n].merge(threadData[0].w_vision  [i][n]);
                     }
 
                 }
@@ -1293,10 +1330,12 @@ namespace tuning {
 
                     for (int n = 0; n < 15 * 15; n++) {
                         threadData[t].w_piece_opp_king_square_table[i][n].set(threadData[0].w_piece_opp_king_square_table[i][n]);
+                        threadData[t].w_piece_our_king_square_table[i][n].set(threadData[0].w_piece_our_king_square_table[i][n]);
                     }
 
                     for (int n = 0; n < mobEntryCount[i]; n++) {
                         threadData[t].w_mobility[i][n].set(threadData[0].w_mobility[i][n]);
+                        threadData[t].w_vision  [i][n].set(threadData[0].w_vision  [i][n]);
                     }
 
                 }
@@ -1355,6 +1394,7 @@ namespace tuning {
 
                 for (int n = 0; n < mobEntryCount[i]; n++) {
                     threadData[0].w_mobility[i][n].update(eta);
+                    threadData[0].w_vision  [i][n].update(eta);
                 }
 
             }
@@ -1572,12 +1612,25 @@ namespace tuning {
                 "EvalScore mobilityBishop[14] = {",
                 "EvalScore mobilityRook[15] = {",
                 "EvalScore mobilityQueen[28] = {",};
+        const static std::string vision_names[]{
+            "EvalScore visionKnight[9] = {",
+            "EvalScore visionBishop[14] = {",
+            "EvalScore visionRook[15] = {",
+            "EvalScore visionQueen[28] = {",};
 
         for (int i = 0; i < 4; i++) {
             std::cout << mobility_names[i];
             for (int n = 0; n < mobEntryCount[i + 1]; n++) {
                 if (n % 5 == 0) std::cout << std::endl << "\t";
                 std::cout << threadData[0].w_mobility[i + 1][n] << ", ";
+            }
+            std::cout << "};\n" << std::endl;
+        }
+        for (int i = 0; i < 4; i++) {
+            std::cout << vision_names[i];
+            for (int n = 0; n < mobEntryCount[i + 1]; n++) {
+                if (n % 5 == 0) std::cout << std::endl << "\t";
+                std::cout << threadData[0].w_vision[i + 1][n] << ", ";
             }
             std::cout << "};\n" << std::endl;
         }
