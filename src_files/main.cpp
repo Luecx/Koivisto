@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
         uci_loop(true);
     }
 #else
+    
 using namespace tuning;
 
     bb_init();
