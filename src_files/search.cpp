@@ -553,8 +553,8 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
                 if (s >= beta) {
                     beta += window;
                 } else if (s <= alpha) {
+		    beta = (alpha + beta) / 2;
                     alpha -= window;
-		    beta -= window / 2;
                 } else {
                     break;
                 }
