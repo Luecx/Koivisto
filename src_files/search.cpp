@@ -537,7 +537,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     td->dropOut = false;
     for (d = 1; d <= maxDepth; d++) {
         
-        if (d < 6) {
+        if (d < 6 || abs(s) > 1000) {
             s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
         } else {
             Score window = 10;
