@@ -535,6 +535,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     Board searchBoard{b};
     Board printBoard {b};
     td->dropOut = false;
+    td->searchData->rootProveSide = b->getActivePlayer();
     for (d = 1; d <= maxDepth; d++) {
         
         if (d < 6) {
@@ -773,7 +774,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + (depth - (!pv && sd->rootProveSide == b->getActivePlayer())) * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
@@ -836,6 +837,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (sameMove(m, skipMove))
             continue;
         
+        if (pv) {
+            sd->rootProveSide = b->getActivePlayer();
+        }
+
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
