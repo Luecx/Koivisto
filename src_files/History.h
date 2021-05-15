@@ -46,6 +46,7 @@ struct SearchData {
     Score eval          [N_COLORS][MAX_INTERNAL_PLY]        = {0};
     bool  sideToReduce;
     bool reduce;
+    bool pvLmr;
 
 
     SearchData();

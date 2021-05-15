@@ -923,6 +923,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (legalMoves == 0){
                 sd->reduce = true;
             }
+            sd->pvLmr = false;
         }
         
         // compute the lmr based on the depth, the amount of legal moves etc.
@@ -941,6 +942,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr += !isImproving;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
+            if (sd->pvLmr && sd->sideToReduce == b->getActivePlayer()) lmr++;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
@@ -950,6 +952,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
+        if (lmr && pv) sd->pvLmr = true;
+
         // doing the move
         b->move(m);
         
@@ -962,9 +966,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
-            if (pv && lmr == 0) sd->reduce = true;
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
-            if (pv) sd->reduce = true;
+            if (pv) {
+                sd->reduce = true;
+                sd->pvLmr = false;
+            }
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
