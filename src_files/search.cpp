@@ -931,7 +931,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves == 0 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
+                     || isPromotion)
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
