@@ -58,12 +58,14 @@ class Evaluator {
 
     EvalData evalData;
     float phase;
-
-    EvalScore computePinnedPieces(Board* b, Color color);
+    
+    template<Color color>
+    EvalScore computePinnedPieces(Board* b);
 
     EvalScore computeHangingPieces(Board* b);
     
-    EvalScore computePassedPawns(Board* b, Color color);
+    template<Color color>
+    EvalScore computePassedPawns(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 

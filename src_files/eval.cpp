@@ -268,13 +268,14 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
     return res;
 }
 
-EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
+template<Color color>
+EvalScore Evaluator::computePinnedPieces(Board* b) {
     UCI_ASSERT(b);
 
     EvalScore result = 0;
 
-    Color us   = color;
-    Color them = 1 - color;
+    constexpr Color us   = color;
+    constexpr Color them = 1 - color;
 
     // figure out where the opponent has pieces
     U64 opponentOcc = b->getTeamOccupiedBB()[them];
@@ -314,7 +315,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
         Piece pinnerPiece = b->getPiece(pinnerSquare) - BISHOP;
 
         // normalise the values (black pieces will be made to white pieces)
-        if (us == WHITE) {
+        if constexpr (us == WHITE) {
             pinnerPiece -= 8;
         } else {
             pinnedPiece -= 8;
@@ -330,7 +331,8 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
     return result;
 }
 
-EvalScore Evaluator::computePassedPawns(Board* b, Color color){
+template<Color color>
+EvalScore Evaluator::computePassedPawns(Board* b){
     
     EvalScore h = M(0,0);
     
@@ -379,18 +381,18 @@ EvalScore Evaluator::computePassedPawns(Board* b, Color color){
                       bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
         }
         
-        // check for candidates
-        if((ONE << s) & evalData.semiOpen[color]){
-            U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
-            int defendingPawnCount  = bitCount(frontSpan & evalData.pawnEastAttacks[!color]) +
-                                      bitCount(frontSpan & evalData.pawnWestAttacks[!color]);
-            int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
-            
-            // it is a candidate
-            if(attackingPawnCount >= defendingPawnCount){
-                h += PAWN_PASSED_CANDIDATE * (attackingPawnCount - defendingPawnCount + 1);
-            }
-        }
+//        // check for candidates
+//        if((ONE << s) & evalData.semiOpen[color]){
+//            U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
+//            int defendingPawnCount  = bitCount(frontSpan & evalData.pawnEastAttacks[!color]) +
+//                                      bitCount(frontSpan & evalData.pawnWestAttacks[!color]);
+//            int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
+//
+//            // it is a candidate
+//            if(attackingPawnCount >= defendingPawnCount){
+//                h += PAWN_PASSED_CANDIDATE * (attackingPawnCount - defendingPawnCount + 1);
+//            }
+//        }
         bb = lsbReset(bb);
     }
     return h;
@@ -768,8 +770,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     }
 
     EvalScore hangingEvalScore = computeHangingPieces(b);
-    EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
-    EvalScore passedScore      = computePassedPawns(b, WHITE) - computePassedPawns(b, BLACK);
+    EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
+    EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
 
