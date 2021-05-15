@@ -33,7 +33,7 @@ extern EvalScore* mobilities[N_PIECE_TYPES];
 extern int        mobEntryCount[N_PIECE_TYPES];
 extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
-extern EvalScore passer_rank_n[2*N_RANKS];
+extern EvalScore passer_rank_n[N_RANKS];
 
 extern int lazyEvalAlphaBound;
 extern int lazyEvalBetaBound ;
@@ -44,9 +44,12 @@ void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueO
 
 struct EvalData{
     
-    U64 attacks     [N_COLORS][N_PIECE_TYPES]{};
-    U64 kingZone    [N_COLORS]{};
-    U64 allAttacks  [N_COLORS]{};
+    U64 attacks         [N_COLORS][N_PIECE_TYPES]{};
+    U64 kingZone        [N_COLORS]{};
+    U64 allAttacks      [N_COLORS]{};
+    U64 semiOpen        [N_COLORS]{};
+    U64 pawnEastAttacks [N_COLORS]{};
+    U64 pawnWestAttacks [N_COLORS]{};
     
 };
 
@@ -59,6 +62,8 @@ class Evaluator {
     EvalScore computePinnedPieces(Board* b, Color color);
 
     EvalScore computeHangingPieces(Board* b);
+    
+    EvalScore computePassedPawns(Board* b, Color color);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
