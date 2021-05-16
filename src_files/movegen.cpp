@@ -54,9 +54,10 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
-        } else if constexpr (isPromotion){
+        } else if constexpr (isPromotion) {
             MoveScore mvvLVA = (getCapturedPiece(move) % 8) - (getMovingPiece(move) % 8);
-            mv->scoreMove(idx, 40000 + mvvLVA + promotionPiece(move));
+            if (promotionPiece(move) == QUEEN)mv->scoreMove(idx, 40000 + mvvLVA);
+            else mv->scoreMove(idx, 1000 + mvvLVA);
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
         } else{
@@ -161,13 +162,15 @@ void generatePawnMoves(
         while (attacks) {
             target = bitscanForward(attacks);
             mv->add(genMove(target - forward, target, QUEEN_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, QUEEN_PROMOTION,  m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, ROOK_PROMOTION,   m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, BISHOP_PROMOTION, m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, KNIGHT_PROMOTION, m>(b, mv, hashMove, sd, ply);
+            if constexpr (m != GENERATE_NON_QUIET){
+                if constexpr (score) scoreMove<c, QUEEN_PROMOTION,  m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
+                if constexpr (score) scoreMove<c, ROOK_PROMOTION,   m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
+                if constexpr (score) scoreMove<c, BISHOP_PROMOTION, m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
+                if constexpr (score) scoreMove<c, KNIGHT_PROMOTION, m>(b, mv, hashMove, sd, ply);
+            }
             attacks = lsbReset(attacks);
         }
         
@@ -175,13 +178,15 @@ void generatePawnMoves(
         while (attacks) {
             target = bitscanForward(attacks);
             mv->add(genMove(target - left, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            if constexpr (m != GENERATE_NON_QUIET){
+                if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            }
             attacks = lsbReset(attacks);
         }
 
@@ -189,13 +194,15 @@ void generatePawnMoves(
         while (attacks) {
             target = bitscanForward(attacks);
             mv->add(genMove(target - right, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            if constexpr (m != GENERATE_NON_QUIET){
+                if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            }
             attacks = lsbReset(attacks);
         }
     }
