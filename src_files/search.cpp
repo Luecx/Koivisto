@@ -889,7 +889,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the node turns 
         // out to be singular.
         // *********************************************************************************************************
-        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
+        if ((b->getActivePlayer() == behindLmr) && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
@@ -965,7 +965,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, lmr ? b->getActivePlayer() : behindLmr,  &lmr);
             if (pv) sd->reduce = true;
-            if (lmr && score > alpha && (b->getActivePlayer() != behindLmr))
+            if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0, behindLmr);    // re-search
             if (score > alpha && score < beta)
