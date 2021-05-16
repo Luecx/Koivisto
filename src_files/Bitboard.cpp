@@ -28,7 +28,8 @@ U64** bb::BISHOP_ATTACKS = new U64*[N_SQUARES];
 
 U64** bb::all_hashes = {};
 
-U64** bb::inBetweenSquares = new U64*[N_SQUARES];
+U64 bb::inBetweenSquares[N_SQUARES][N_SQUARES];
+U64 bb::passedPawnMask  [N_COLORS][N_SQUARES];
 
 std::mt19937_64 rng;
 
@@ -46,15 +47,13 @@ void bb::bb_cleanUp() {
         ROOK_ATTACKS[i] = nullptr;
         delete[] BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
-        delete[] inBetweenSquares[i];
-        inBetweenSquares[i] = nullptr;
+       
     }
     delete[] ROOK_ATTACKS;
     ROOK_ATTACKS = nullptr;
     delete[] BISHOP_ATTACKS;
     BISHOP_ATTACKS = nullptr;
-    delete[] inBetweenSquares;
-    inBetweenSquares = nullptr;
+    
 
     for (int i = 0; i < N_PIECES; i++) {
         delete[] all_hashes[i];
@@ -147,8 +146,8 @@ void bb::generateData() {
         }
     }
 
+    // in between squares
     for (Square n = A1; n <= H8; n++) {
-        inBetweenSquares[n] = new U64[64];
 
         for (Square i = A1; i <= H8; i++) {
             if (i == n)
@@ -174,6 +173,19 @@ void bb::generateData() {
             m &= ~occ;
 
             inBetweenSquares[n][i] = m;
+        }
+    }
+
+    // passed pawn mask
+    for (Color c:{WHITE,BLACK}){
+        for(Square s = A1; s <= H8; s++){
+            U64 h = ONE << s;
+            h |= shiftWest(h) | shiftEast(h);
+            if(c == WHITE){
+                passedPawnMask[c][s] = fillNorth(shiftNorth(h));
+            }else{
+                passedPawnMask[c][s] = fillSouth(shiftSouth(h));
+            }
         }
     }
 }

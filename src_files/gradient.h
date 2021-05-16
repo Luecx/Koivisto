@@ -42,8 +42,7 @@
  */
 //#define TUNING
 #ifdef TUNING
-#define N_THREAD 4
-
+#define N_THREAD 16
 namespace tuning {
 
     inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -57,9 +56,12 @@ namespace tuning {
         I_SIDE_TO_MOVE,
 
         I_PAWN_STRUCTURE,
-        I_PAWN_PASSED,
-        I_PAWN_PASSED_AND_CONNECTED,
         I_PAWN_PASSED_AND_DOUBLED,
+        I_PAWN_PASSED_AND_BLOCKED,
+        I_PAWN_PASSED_COVERED_PROMO,
+        I_PAWN_PASSED_HELPER,
+        I_PAWN_PASSED_AND_DEFENDED,
+        I_PAWN_PASSED_SQUARE_RULE,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -182,7 +184,7 @@ namespace tuning {
         Weight w_bishop_pawn_e[9]{};
         Weight w_bishop_pawn_o[9]{};
         Weight w_king_safety[100]{};
-        Weight w_passer[16]{};
+        Weight w_passer[8]{};
         Weight w_pinned[15]{};
         Weight w_hanging[5]{};
     };
@@ -579,37 +581,39 @@ namespace tuning {
 
     struct PasserData {
 
-        int8_t count[16]{};
+        int8_t count[8]{};
 
         void init(Board *b, EvalData *ev) {
-            U64 whiteTeam = b->getTeamOccupiedBB()[WHITE];
-            U64 blackTeam = b->getTeamOccupiedBB()[BLACK];
-
-            U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
-            U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
-
-            U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
-            U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
-
-            U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
-            U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
-
-            U64 k = whitePassers;
-            while (k) {
-                Square square = bitscanForward(k);
-                count[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)] += 1;
-                k = lsbReset(k);
-            }
-            k = blackPassers;
-            while (k) {
-                Square square = bitscanForward(k);
-                count[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)] -= 1;
-                k = lsbReset(k);
+            for(Color color:{WHITE,BLACK}){
+                U64 pawns    = b->getPieceBB( color, PAWN);
+                U64 oppPawns = b->getPieceBB(!color, PAWN);
+    
+                U64 bb = pawns;
+    
+                while (bb) {
+                    Square s      = bitscanForward(bb);
+                    Rank   r      = color == WHITE ? rankIndex(s) : 7 - rankIndex(s);
+                    File   f      = fileIndex(s);
+                    U64    sqBB   = ONE << s;
+        
+                    U64 passerMask = passedPawnMask[color][s];
+        
+                    // check if passer
+                    if (!(passerMask & oppPawns)){
+                        U64    teleBB  = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
+                        U64    promBB  = FILES_BB[f] & (color == WHITE ? RANK_8_BB:RANK_1_BB);
+                        U64    promCBB = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
+                        
+                        count[r] += color == WHITE ? 1:-1;
+                        
+                    }
+                    bb = lsbReset(bb);
+                }
             }
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (int i = 0; i < 16; i++) {
+            for (int i = 0; i < 8; i++) {
                 midgame += count[i] * td->w_passer[i].midgame.value;
                 endgame += count[i] * td->w_passer[i].endgame.value;
             }
@@ -617,7 +621,7 @@ namespace tuning {
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
 
-            for (int i = 0; i < 16; i++) {
+            for (int i = 0; i < 8; i++) {
                 td->w_passer[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
                 td->w_passer[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
             }
@@ -674,11 +678,7 @@ namespace tuning {
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     
-            count[I_PAWN_ATTACK_MINOR] = (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))-bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
-            count[I_PAWN_ATTACK_ROOK] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
-            count[I_PAWN_ATTACK_QUEEN] = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
-
-
+            
             U64 occupied = *b->getOccupiedBB();
             U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
             U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied)  & ~whiteTeam;
@@ -687,8 +687,63 @@ namespace tuning {
             U64 wKingKnightAttacks = KNIGHT_ATTACKS    [whiteKingSquare]            & ~blackTeam;
             U64 bKingKnightAttacks = KNIGHT_ATTACKS    [blackKingSquare]            & ~whiteTeam;
             
+            for(Color color:{WHITE,BLACK}){
+    
+                U64 pawns    = b->getPieceBB( color, PAWN);
+                U64 oppPawns = b->getPieceBB(!color, PAWN);
+    
+                U64 bb = pawns;
+                int h  = color == WHITE ? 1:-1;
+    
+                while (bb) {
+                    Square s      = bitscanForward(bb);
+                    Rank   r      = color == WHITE ? rankIndex(s) : 7 - rankIndex(s);
+                    File   f      = fileIndex(s);
+                    U64    sqBB   = ONE << s;
+        
+                    U64 passerMask = passedPawnMask[color][s];
+        
+                    // check if passer
+                    if (!(passerMask & oppPawns)){
+                        U64    teleBB  = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
+                        U64    promBB  = FILES_BB[f] & (color == WHITE ? RANK_8_BB:RANK_1_BB);
+                        U64    promCBB = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
+            
+            
+                        // check if doubled
+                        count[I_PAWN_PASSED_AND_DOUBLED] += bitCount(teleBB & pawns) * h;
+            
+                        // check if square in front is blocked
+                        count[I_PAWN_PASSED_AND_BLOCKED] += bitCount(teleBB & b->getTeamOccupiedBB(!color)) * h;
+            
+                        // check if promotion square can be covered
+                        count[I_PAWN_PASSED_COVERED_PROMO] +=
+                               (  bitCount(b->getPieceBB(color, BISHOP) & promCBB)
+                                + bitCount(b->getPieceBB(color, QUEEN))
+                                - bitCount(b->getPieceBB(!color, BISHOP) & promCBB)
+                                - bitCount(b->getPieceBB(!color, QUEEN))) * h;
+            
+                        // check if there is a helper
+                        count[I_PAWN_PASSED_HELPER]       += (bitCount(pawns & (color == WHITE ? wAttackRearSpans(pawns) : bAttackRearSpans(pawns)))) * h;
+            
+                        // check if its defended
+                        count[I_PAWN_PASSED_AND_DEFENDED] += (bitCount(sqBB & ev->pawnWestAttacks[color]) + bitCount(sqBB & ev->pawnEastAttacks[color])) * h;
+            
+                        // check if can be caught by king
+                        count[I_PAWN_PASSED_SQUARE_RULE]  += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
+                            bitscanForward(promBB),
+                            bitscanForward(b->getPieceBB(!color, KING)))) * h;
+                    }
+                    
+                    bb = lsbReset(bb);
+                }
+            }
+            
             // clang-format off
-            count[I_PAWN_DOUBLED_AND_ISOLATED] = (
+            count[I_PAWN_ATTACK_MINOR]          = (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))-bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
+            count[I_PAWN_ATTACK_ROOK]           = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
+            count[I_PAWN_ATTACK_QUEEN]          = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
+            count[I_PAWN_DOUBLED_AND_ISOLATED]  = (
                     +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
                     - bitCount(blackIsolatedPawns & blackDoubledPawns));
             count[I_PAWN_DOUBLED] += (
@@ -697,15 +752,6 @@ namespace tuning {
             count[I_PAWN_ISOLATED] += (
                     +bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
                     - bitCount(blackIsolatedPawns & ~blackDoubledPawns));
-            count[I_PAWN_PASSED] += (
-                    +bitCount(whitePassers)
-                    - bitCount(blackPassers));
-            count[I_PAWN_PASSED_AND_CONNECTED] += (
-                +bitCount(whitePassers & whitePawnCover)
-                - bitCount(blackPassers & blackPawnCover));
-            count[I_PAWN_PASSED_AND_DOUBLED] += (
-                +bitCount(whitePassers & whiteDoubledPawns)
-                - bitCount(blackPassers & blackDoubledPawns));
             count[I_PAWN_STRUCTURE] += (
                     +bitCount(whitePawnEastCover)
                     + bitCount(whitePawnWestCover)
@@ -1221,7 +1267,7 @@ namespace tuning {
                 if (i < 100) {
                     threadData[t].w_king_safety[i].set(kingSafetyTable[i]);
                 }
-                if (i < 16) {
+                if (i < 8) {
                     threadData[t].w_passer[i].set(passer_rank_n[i]);
                 }
                 if (i < 15) {
@@ -1271,7 +1317,7 @@ namespace tuning {
                     threadData[t].w_king_safety[i].merge(threadData[0].w_king_safety[i]);
 
                 }
-                if (i < 16) {
+                if (i < 8) {
                     threadData[t].w_passer[i].merge(threadData[0].w_passer[i]);
                 }
                 if (i < 15) {
@@ -1323,7 +1369,7 @@ namespace tuning {
                     threadData[t].w_king_safety[i].set(threadData[0].w_king_safety[i]);
 
                 }
-                if (i < 16) {
+                if (i < 8) {
                     threadData[t].w_passer[i].set(threadData[0].w_passer[i]);
 
                 }
@@ -1381,7 +1427,7 @@ namespace tuning {
             if (i < 100) {
                 threadData[0].w_king_safety[i].update(eta);
             }
-            if (i < 16) {
+            if (i < 8) {
                 threadData[0].w_passer[i].update(eta);
             }
             if (i < 15) {
@@ -1536,9 +1582,12 @@ namespace tuning {
         const static std::string feature_names[]{
                 "SIDE_TO_MOVE",
                 "PAWN_STRUCTURE",
-                "PAWN_PASSED",
-                "PAWN_PASSED_AND_CONNECTED",
                 "PAWN_PASSED_AND_DOUBLED",
+                "PAWN_PASSED_AND_BLOCKED",
+                "PAWN_PASSED_COVERED_PROMO",
+                "PAWN_PASSED_HELPER",
+                "PAWN_PASSED_AND_DEFENDED",
+                "PAWN_PASSED_SQUARE_RULE",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
@@ -1610,8 +1659,8 @@ namespace tuning {
         std::cout << "};\n" << std::endl;
 
         // --------------------------------- passer_rank_n ---------------------------------
-        std::cout << "EvalScore passer_rank_n[16] = {";
-        for (int n = 0; n < 16; n++) {
+        std::cout << "EvalScore passer_rank_n[N_RANKS] = {";
+        for (int n = 0; n < 8; n++) {
             if (n % 4 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_passer[n] << ", ";
         }

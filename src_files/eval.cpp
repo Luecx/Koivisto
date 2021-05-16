@@ -22,98 +22,99 @@
 
 #include <immintrin.h>
 #include <iomanip>
-EvalScore SIDE_TO_MOVE                  = M(   15,   15);
-EvalScore PAWN_STRUCTURE                = M(   10,    1);
-EvalScore PAWN_PASSED                   = M(    6,   49);
-EvalScore PAWN_PASSED_AND_CONNECTED     = M(   19,    8);
-EvalScore PAWN_PASSED_AND_DOUBLED       = M(   -8,  -21);
-EvalScore PAWN_ISOLATED                 = M(   -0,  -13);
-EvalScore PAWN_DOUBLED                  = M(   -6,    2);
-EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -6,  -18);
-EvalScore PAWN_BACKWARD                 = M(  -12,   -2);
-EvalScore PAWN_OPEN                     = M(   -6,    5);
-EvalScore PAWN_BLOCKED                  = M(   -4,  -16);
-EvalScore KNIGHT_OUTPOST                = M(   24,   18);
+EvalScore SIDE_TO_MOVE                  = M(   14,   12);
+EvalScore PAWN_STRUCTURE                = M(   10,    2);
+EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -19,  -32);
+EvalScore PAWN_PASSED_AND_BLOCKED       = M(   -1,  -40);
+EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    7);
+EvalScore PAWN_PASSED_HELPER            = M(    1,    6);
+EvalScore PAWN_PASSED_AND_DEFENDED      = M(   17,   -1);
+EvalScore PAWN_PASSED_SQUARE_RULE       = M(    9,   36);
+EvalScore PAWN_ISOLATED                 = M(   -2,    1);
+EvalScore PAWN_DOUBLED                  = M(   -6,   -1);
+EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -7,  -12);
+EvalScore PAWN_BACKWARD                 = M(  -11,   -8);
+EvalScore PAWN_OPEN                     = M(   -8,   -2);
+EvalScore PAWN_BLOCKED                  = M(   -4,   -9);
+EvalScore KNIGHT_OUTPOST                = M(   24,   19);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -5,   -2);
-EvalScore ROOK_OPEN_FILE                = M(   24,   -2);
-EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -12);
-EvalScore ROOK_KING_LINE                = M(   18,    0);
-EvalScore BISHOP_DOUBLED                = M(   16,   79);
-EvalScore BISHOP_FIANCHETTO             = M(   -4,    6);
+EvalScore ROOK_OPEN_FILE                = M(   23,   -1);
+EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -11);
+EvalScore ROOK_KING_LINE                = M(   19,    1);
+EvalScore BISHOP_DOUBLED                = M(   16,   77);
+EvalScore BISHOP_FIANCHETTO             = M(   -4,    7);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    3);
-EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    3,  -21);
-EvalScore KING_CLOSE_OPPONENT           = M(  -20,   15);
-EvalScore KING_PAWN_SHIELD              = M(   26,   13);
-EvalScore CASTLING_RIGHTS               = M(   18,   -2);
-EvalScore MINOR_BEHIND_PAWN             = M(    6,   24);
-EvalScore SAFE_QUEEN_CHECK              = M(    6,   20);
+EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(    3,  -26);
+EvalScore KING_CLOSE_OPPONENT           = M(  -21,   15);
+EvalScore KING_PAWN_SHIELD              = M(   26,   12);
+EvalScore CASTLING_RIGHTS               = M(   17,   -2);
+EvalScore MINOR_BEHIND_PAWN             = M(    6,   20);
+EvalScore SAFE_QUEEN_CHECK              = M(    6,   19);
 EvalScore SAFE_ROOK_CHECK               = M(   11,    4);
-EvalScore SAFE_BISHOP_CHECK             = M(   10,    4);
-EvalScore SAFE_KNIGHT_CHECK             = M(   12,    4);
-EvalScore PAWN_ATTACK_MINOR             = M(   41,   75);
-EvalScore PAWN_ATTACK_ROOK              = M(   43,   31);
-EvalScore PAWN_ATTACK_QUEEN             = M(   32,   28);
-EvalScore MINOR_ATTACK_ROOK             = M(   37,   24);
+EvalScore SAFE_BISHOP_CHECK             = M(    9,    4);
+EvalScore SAFE_KNIGHT_CHECK             = M(   12,    3);
+EvalScore PAWN_ATTACK_MINOR             = M(   40,   72);
+EvalScore PAWN_ATTACK_ROOK              = M(   42,   27);
+EvalScore PAWN_ATTACK_QUEEN             = M(   31,   27);
+EvalScore MINOR_ATTACK_ROOK             = M(   36,   24);
 EvalScore MINOR_ATTACK_QUEEN            = M(   25,   40);
-EvalScore ROOK_ATTACK_QUEEN             = M(   33,   14);
+EvalScore ROOK_ATTACK_QUEEN             = M(   32,   15);
 
 EvalScore mobilityKnight[9] = {
-    M(  -48,   -5), M(  -36,   50), M(  -31,   82), M(  -27,  100), M(  -22,  112),
-    M(  -18,  122), M(  -11,  123), M(   -1,  117), M(   13,  102), };
+    M(  -49,   -6), M(  -37,   48), M(  -33,   78), M(  -29,   96), M(  -24,  107),
+    M(  -20,  117), M(  -13,  118), M(   -4,  112), M(   10,   98), };
 
 EvalScore mobilityBishop[14] = {
-    M(   -9,  -34), M(    2,   37), M(    9,   71), M(   15,   92), M(   21,  108),
-    M(   25,  122), M(   27,  130), M(   26,  135), M(   28,  139), M(   32,  138),
-    M(   40,  132), M(   56,  125), M(   67,  133), M(   91,  105), };
+    M(   -8,  -30), M(    3,   38), M(   10,   70), M(   15,   91), M(   21,  107),
+    M(   25,  120), M(   27,  128), M(   26,  133), M(   28,  137), M(   32,  136),
+    M(   39,  131), M(   55,  123), M(   65,  131), M(   88,  105), };
 
 EvalScore mobilityRook[15] = {
-    M(  -43,   66), M(  -36,  110), M(  -33,  148), M(  -32,  176), M(  -31,  192),
-    M(  -25,  198), M(  -19,  206), M(  -11,  208), M(   -4,  213), M(    2,  218),
-    M(    7,  221), M(   12,  224), M(   21,  222), M(   46,  206), M(  105,  174), };
+    M(  -47,   57), M(  -40,   98), M(  -37,  135), M(  -36,  163), M(  -35,  178),
+    M(  -29,  185), M(  -24,  192), M(  -16,  195), M(  -10,  201), M(   -5,  206),
+    M(   -0,  210), M(    4,  213), M(   14,  211), M(   38,  195), M(   96,  165), };
 
 EvalScore mobilityQueen[28] = {
-    M( -185,  101), M( -169,  105), M( -156,  233), M( -151,  315), M( -149,  360),
-    M( -149,  390), M( -147,  415), M( -145,  431), M( -143,  443), M( -141,  451),
-    M( -138,  458), M( -136,  462), M( -135,  465), M( -135,  469), M( -135,  472),
-    M( -136,  473), M( -136,  472), M( -137,  471), M( -136,  468), M( -129,  458),
-    M( -121,  445), M( -118,  436), M( -124,  429), M( -106,  413), M( -170,  436),
-    M(  -39,  356), M(  -77,  404), M( -118,  429), };
+    M( -185,   93), M( -169,   96), M( -156,  219), M( -152,  299), M( -150,  341),
+    M( -149,  371), M( -148,  394), M( -146,  410), M( -144,  422), M( -142,  429),
+    M( -140,  436), M( -138,  441), M( -136,  443), M( -136,  448), M( -136,  452),
+    M( -138,  453), M( -138,  453), M( -138,  452), M( -138,  450), M( -131,  442),
+    M( -123,  429), M( -121,  422), M( -126,  416), M( -108,  401), M( -172,  425),
+    M(  -42,  347), M(  -83,  395), M( -129,  422), };
 
 EvalScore hangingEval[5] = {
-    M(   -3,   -1), M(   -4,   -0), M(   -6,   -6), M(   -5,   -6), M(   -5,   -6), };
+    M(   -3,   -2), M(   -4,   -2), M(   -6,   -8), M(   -5,   -6), M(   -4,   -7), };
 
 EvalScore pinnedEval[15] = {
-    M(    1,   -6), M(   -7,    8), M(   -6,   24), M(  -21,  -61), M(  -24,  -13),
-    M(  -17,   11), M(   -1,   -7), M(  -29,  -14), M(  -16,   -4), M(  -10,  -12),
-    M(    4,  -11), M(  -13,   -1), M(   13,  -27), M(  -11,  -38), M(  -13,    6), };
+    M(    1,   -5), M(   -7,    9), M(   -6,   25), M(  -20,  -60), M(  -22,  -12),
+    M(  -17,   15), M(   -1,   -8), M(  -28,  -14), M(  -17,   -1), M(   -9,  -12),
+    M(    4,  -10), M(  -14,    3), M(   12,  -25), M(  -10,  -36), M(  -13,    9), };
 
-EvalScore passer_rank_n[16] = {
-    M(    0,    0), M(  -14,  -32), M(  -25,  -29), M(  -19,   -0),
-    M(   13,   26), M(   38,   84), M(   36,   44), M(    0,    0),
-    M(    0,    0), M(    1,    2), M(  -25,  -36), M(  -17,    9),
-    M(   -7,   13), M(   43,   37), M(  124,  -94), M(    0,    0), };
+EvalScore passer_rank_n[N_RANKS] = {
+    M(    0,    0), M(  -13,   -8), M(  -24,   -4), M(  -20,   22),
+    M(    9,   45), M(   36,   87), M(   16,   25), M(    0,    0), };
 
 EvalScore bishop_pawn_same_color_table_o[9] = {
-    M(  -34,   40), M(  -41,   41), M(  -40,   27),
-    M(  -44,   18), M(  -48,    8), M(  -53,   -5),
-    M(  -56,  -23), M(  -57,  -40), M(  -67,  -89), };
+    M(  -36,   38), M(  -42,   39), M(  -42,   27),
+    M(  -45,   19), M(  -49,    9), M(  -54,   -3),
+    M(  -58,  -20), M(  -59,  -36), M(  -68,  -82), };
 
 EvalScore bishop_pawn_same_color_table_e[9] = {
-    M(  -22,   37), M(  -40,   48), M(  -44,   41),
-    M(  -50,   34), M(  -54,   24), M(  -57,   10),
-    M(  -59,   -9), M(  -58,  -23), M(  -66,  -37), };
+    M(  -25,   26), M(  -42,   38), M(  -47,   32),
+    M(  -52,   27), M(  -56,   20), M(  -60,    8),
+    M(  -62,   -8), M(  -61,  -19), M(  -69,  -30), };
 
 EvalScore kingSafetyTable[100] = {
-    M(   -7,   -5), M(    0,    0), M(  -11,   -6), M(   -5,   -8), M(   -8,   -7),
-    M(   20,  -11), M(    7,  -13), M(   29,  -13), M(   13,  -13), M(   42,  -22),
-    M(   59,  -16), M(   76,  -25), M(   37,  -29), M(  107,  -25), M(  102,  -26),
-    M(  104,  -19), M(   95,  -51), M(  168,  -23), M(  187,  -47), M(  204,  -66),
-    M(  223, -121), M(  183,  -42), M(  288,  -74), M(  238,  -46), M(  268,  -57),
-    M(  275,  -19), M(  369,  -46), M(  389, -104), M(  312,   62), M(  431,  -79),
-    M(  448, -188), M(  507, -158), M(  575, -293), M(  667, -264), M(  529, -116),
-    M( 2020,-3712), M(   76, 1086), M( 1861,-2609), M(  393,  395), M( 1103,  860),
-    M( 1255,-1937), M( 1064, -828), M( 1595, 1330), M(  500,  500), M(  501,  500),
-    M( 1744, 1495), M(  500,  500), M(  938,  695), M(  500,  500), M( -509, -514),
+    M(   -6,   -3), M(    0,    0), M(  -11,   -3), M(   -5,   -6), M(   -8,   -5),
+    M(   19,   -9), M(    6,  -11), M(   28,  -11), M(   13,  -12), M(   41,  -19),
+    M(   57,  -15), M(   73,  -23), M(   36,  -26), M(  104,  -24), M(   99,  -25),
+    M(  101,  -17), M(   92,  -49), M(  164,  -24), M(  182,  -45), M(  198,  -64),
+    M(  219, -120), M(  177,  -39), M(  282,  -75), M(  231,  -46), M(  261,  -58),
+    M(  270,  -23), M(  364,  -52), M(  387, -120), M(  308,   52), M(  425,  -84),
+    M(  447, -204), M(  516, -195), M(  576, -305), M(  671, -290), M(  525, -154),
+    M( 1997,-3688), M(   93, 1021), M( 1847,-2621), M(  387,  374), M( 1112,  863),
+    M( 1231,-1947), M( 1066, -899), M( 1602, 1332), M(  500,  500), M(  501,  500),
+    M( 1753, 1497), M(  500,  500), M(  948,  698), M(  500,  500), M( -509, -514),
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
@@ -126,12 +127,16 @@ EvalScore kingSafetyTable[100] = {
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), };
 
 
+
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
     &PAWN_STRUCTURE,
-    &PAWN_PASSED,
-    &PAWN_PASSED_AND_CONNECTED,
     &PAWN_PASSED_AND_DOUBLED,
+    &PAWN_PASSED_AND_BLOCKED,
+    &PAWN_PASSED_COVERED_PROMO,
+    &PAWN_PASSED_HELPER,
+    &PAWN_PASSED_AND_DEFENDED,
+    &PAWN_PASSED_SQUARE_RULE,
     &PAWN_ISOLATED,
     &PAWN_DOUBLED,
     &PAWN_DOUBLED_AND_ISOLATED,
@@ -216,11 +221,11 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     U64 sq = ONE << s;
 
     if (c == WHITE) {
-        if (((whitePassedPawnMask[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+        if (((passedPawnMask[c][s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
         }
     } else {
-        if (((blackPassedPawnMask[s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
+        if (((passedPawnMask[c][s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
             return true;
         }
     }
@@ -261,13 +266,14 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
     return res;
 }
 
-EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
+template<Color color>
+EvalScore Evaluator::computePinnedPieces(Board* b) {
     UCI_ASSERT(b);
 
     EvalScore result = 0;
 
-    Color us   = color;
-    Color them = 1 - color;
+    constexpr Color us   = color;
+    constexpr Color them = 1 - color;
 
     // figure out where the opponent has pieces
     U64 opponentOcc = b->getTeamOccupiedBB()[them];
@@ -307,7 +313,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
         Piece pinnerPiece = b->getPiece(pinnerSquare) - BISHOP;
 
         // normalise the values (black pieces will be made to white pieces)
-        if (us == WHITE) {
+        if constexpr (us == WHITE) {
             pinnerPiece -= 8;
         } else {
             pinnedPiece -= 8;
@@ -321,6 +327,73 @@ EvalScore Evaluator::computePinnedPieces(Board* b, Color color) {
     }
 
     return result;
+}
+
+template<Color color>
+EvalScore Evaluator::computePassedPawns(Board* b){
+    
+    EvalScore h = M(0,0);
+    
+    U64 pawns    = b->getPieceBB( color, PAWN);
+    U64 oppPawns = b->getPieceBB(!color, PAWN);
+    
+    U64 bb = pawns;
+    
+    while (bb) {
+        Square s      = bitscanForward(bb);
+        Rank   r      = color == WHITE ? rankIndex(s) : 7 - rankIndex(s);
+        File   f      = fileIndex(s);
+        U64    sqBB   = ONE << s;
+
+        U64 passerMask = passedPawnMask[color][s];
+
+        // check if passer
+        if (!(passerMask & oppPawns)){
+            U64    teleBB  = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
+            U64    promBB  = FILES_BB[f] & (color == WHITE ? RANK_8_BB:RANK_1_BB);
+            U64    promCBB = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
+            
+            h += passer_rank_n[r];
+            
+            // check if doubled
+            h += bitCount(teleBB & pawns) * PAWN_PASSED_AND_DOUBLED;
+            
+            // check if square in front is blocked
+            h += bitCount(teleBB & b->getTeamOccupiedBB(!color)) * PAWN_PASSED_AND_BLOCKED;
+            
+            // check if promotion square can be covered
+            h += (  bitCount(b->getPieceBB(color, BISHOP) & promCBB)
+                  + bitCount(b->getPieceBB(color, QUEEN))
+                  - bitCount(b->getPieceBB(!color, BISHOP) & promCBB)
+                  - bitCount(b->getPieceBB(!color, QUEEN))) * PAWN_PASSED_COVERED_PROMO;
+           
+            // check if there is a helper
+            h += (bitCount(pawns & (color == WHITE ? wAttackRearSpans(pawns) : bAttackRearSpans(pawns)))) * PAWN_PASSED_HELPER;
+            
+            // check if its defended
+            h += (bitCount(sqBB & evalData.pawnWestAttacks[color]) + bitCount(sqBB & evalData.pawnEastAttacks[color])) * PAWN_PASSED_AND_DEFENDED;
+            
+            // check if can be caught by king
+            h += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
+                      bitscanForward(promBB),
+                      bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
+        }
+        
+//        // check for candidates
+//        if((ONE << s) & evalData.semiOpen[color]){
+//            U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
+//            int defendingPawnCount  = bitCount(frontSpan & evalData.pawnEastAttacks[!color]) +
+//                                      bitCount(frontSpan & evalData.pawnWestAttacks[!color]);
+//            int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
+//
+//            // it is a candidate
+//            if(attackingPawnCount >= defendingPawnCount){
+//                h += PAWN_PASSED_CANDIDATE * (attackingPawnCount - defendingPawnCount + 1);
+//            }
+//        }
+        bb = lsbReset(bb);
+    }
+    return h;
 }
 
 /**
@@ -393,11 +466,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
     U64 whitePawns = b->getPieceBB()[WHITE_PAWN];
     U64 blackPawns = b->getPieceBB()[BLACK_PAWN];
-
-    // all passed pawns for white/black
-    U64 whitePassers = wPassedPawns(whitePawns, blackPawns);
-    U64 blackPassers = bPassedPawns(blackPawns, whitePawns);
-
+    
     // doubled pawns without the pawn least developed
     U64 whiteDoubledWithoutFirst = wFrontSpans(whitePawns) & whitePawns;
     U64 blackDoubledWithoutFirst = bFrontSpans(blackPawns) & blackPawns;
@@ -412,39 +481,31 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
     U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
     U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
-
-    U64 openFilesWhite = ~fillFile(whitePawns);
-    U64 openFilesBlack = ~fillFile(blackPawns);
-    U64 openFiles      = openFilesBlack & openFilesWhite;
+    
+    evalData.semiOpen[WHITE] = ~fillFile(blackPawns);
+    evalData.semiOpen[BLACK] = ~fillFile(whitePawns);
+    
+    U64 openFiles          = evalData.semiOpen[WHITE] & evalData.semiOpen[BLACK];
 
     Square square;
     U64    attacks;
     U64    k;
-    k = whitePassers;
-    while (k) {
-        square = bitscanForward(k);
-        featureScore += passer_rank_n[getBit(whiteBlockedPawns, square) * 8 + rankIndex(square)];
-        k = lsbReset(k);
-    }
-    k = blackPassers;
-    while (k) {
-        square = bitscanForward(k);
-        featureScore -= passer_rank_n[getBit(blackBlockedPawns, square) * 8 + 7 - rankIndex(square)];
-        k = lsbReset(k);
-    }
-
+    
     U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
     U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
     U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
     U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
 
-    evalData.attacks[WHITE][PAWN] = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
-    evalData.attacks[BLACK][PAWN] = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
-    U64 whitePawnCover            = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
-    U64 blackPawnCover            = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+    evalData.pawnEastAttacks[WHITE] = shiftNorthEast(whitePawns);
+    evalData.pawnEastAttacks[BLACK] = shiftSouthEast(blackPawns);
+    evalData.pawnWestAttacks[WHITE] = shiftNorthWest(whitePawns);
+    evalData.pawnWestAttacks[BLACK] = shiftSouthWest(blackPawns);
+    
+    evalData.attacks[WHITE][PAWN] = evalData.pawnEastAttacks[WHITE] | evalData.pawnWestAttacks[WHITE];
+    evalData.attacks[BLACK][PAWN] = evalData.pawnEastAttacks[BLACK] | evalData.pawnWestAttacks[BLACK];
 
-    U64 mobilitySquaresWhite = ~whiteTeam & ~(blackPawnCover);
-    U64 mobilitySquaresBlack = ~blackTeam & ~(whitePawnCover);
+    U64 mobilitySquaresWhite = ~whiteTeam & ~(evalData.attacks[BLACK][PAWN]);
+    U64 mobilitySquaresBlack = ~blackTeam & ~(evalData.attacks[WHITE][PAWN]);
 
     // clang-format off
     featureScore += PAWN_ATTACK_MINOR * (
@@ -465,15 +526,6 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     featureScore += PAWN_ISOLATED * (
             + bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
             - bitCount(blackIsolatedPawns & ~blackDoubledPawns));
-    featureScore += PAWN_PASSED * (
-            + bitCount(whitePassers)
-            - bitCount(blackPassers));
-    featureScore += PAWN_PASSED_AND_CONNECTED * (
-            + bitCount(whitePassers & whitePawnCover)
-            - bitCount(blackPassers & blackPawnCover));
-    featureScore += PAWN_PASSED_AND_DOUBLED * (
-            + bitCount(whitePassers & whiteDoubledPawns)
-            - bitCount(blackPassers & blackDoubledPawns));
     featureScore += PAWN_STRUCTURE * (
             + bitCount(whitePawnEastCover)
             + bitCount(whitePawnWestCover)
@@ -483,8 +535,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
             + bitCount(whitePawns & ~fillSouth(blackPawns))
             - bitCount(blackPawns & ~fillNorth(whitePawns)));
     featureScore += PAWN_BACKWARD * (
-            + bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
-            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns));
+            + bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & evalData.attacks[BLACK][PAWN]) & whitePawns)
+            - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & evalData.attacks[WHITE][PAWN]) & blackPawns));
     featureScore += PAWN_BLOCKED * (
             + bitCount(whiteBlockedPawns)
             - bitCount(blackBlockedPawns));
@@ -509,9 +561,9 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
         featureScore    += MINOR_ATTACK_ROOK            * bitCount(attacks & b->getPieceBB<BLACK>(ROOK));
         featureScore    += MINOR_ATTACK_QUEEN           * bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
-        featureScore    += KNIGHT_OUTPOST               * isOutpost(square, WHITE, blackPawns, whitePawnCover);
+        featureScore    += KNIGHT_OUTPOST               * isOutpost(square, WHITE, blackPawns, evalData.attacks[WHITE][PAWN]);
         featureScore    += KNIGHT_DISTANCE_ENEMY_KING   * manhattanDistance(square, blackKingSquare);
-        featureScore    += SAFE_KNIGHT_CHECK            * bitCount(bKingKnightAttacks & attacks & ~blackPawnCover);
+        featureScore    += SAFE_KNIGHT_CHECK            * bitCount(bKingKnightAttacks & attacks & ~evalData.attacks[BLACK][PAWN]);
 
         addToKingSafety(attacks, evalData.kingZone[BLACK], bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 2);
 
@@ -528,9 +580,9 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
         featureScore    -= MINOR_ATTACK_ROOK            * bitCount(attacks & b->getPieceBB<WHITE>(ROOK));
         featureScore    -= MINOR_ATTACK_QUEEN           * bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
-        featureScore    -= KNIGHT_OUTPOST               * isOutpost(square, BLACK, whitePawns, blackPawnCover);
+        featureScore    -= KNIGHT_OUTPOST               * isOutpost(square, BLACK, whitePawns, evalData.attacks[BLACK][PAWN]);
         featureScore    -= KNIGHT_DISTANCE_ENEMY_KING   * manhattanDistance(square, whiteKingSquare);
-        featureScore    -= SAFE_KNIGHT_CHECK            * bitCount(wKingKnightAttacks & attacks & ~whitePawnCover);
+        featureScore    -= SAFE_KNIGHT_CHECK            * bitCount(wKingKnightAttacks & attacks & ~evalData.attacks[WHITE][PAWN]);
     
         addToKingSafety(attacks, evalData.kingZone[WHITE], wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 2);
 
@@ -562,7 +614,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                            * (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
                               && whitePawns & (ONE << B3 | ONE << B4));
                         
-        featureScore    += SAFE_BISHOP_CHECK * bitCount(bKingBishopAttacks & attacks & ~blackPawnCover);
+        featureScore    += SAFE_BISHOP_CHECK * bitCount(bKingBishopAttacks & attacks & ~evalData.attacks[BLACK][PAWN]);
         addToKingSafety(attacks,  evalData.kingZone[BLACK], bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 2);
 
         k = lsbReset(k);
@@ -589,7 +641,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                            * (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
                               && blackPawns & (ONE << B6 | ONE << B5));
                         
-        featureScore    -= SAFE_BISHOP_CHECK * bitCount(wKingBishopAttacks & attacks & ~whitePawnCover);
+        featureScore    -= SAFE_BISHOP_CHECK * bitCount(wKingBishopAttacks & attacks & ~evalData.attacks[WHITE][PAWN]);
         addToKingSafety(attacks, evalData.kingZone[WHITE], wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 2);
 
         k = lsbReset(k);
@@ -613,7 +665,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         mobScore += mobilityRook[bitCount(attacks & mobilitySquaresWhite)];
 
         featureScore += ROOK_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
-        featureScore += SAFE_ROOK_CHECK * bitCount(bKingRookAttacks & attacks & ~blackPawnCover);
+        featureScore += SAFE_ROOK_CHECK * bitCount(bKingRookAttacks & attacks & ~evalData.attacks[BLACK][PAWN]);
 
         addToKingSafety(attacks, evalData.kingZone[BLACK], bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 3);
 
@@ -629,7 +681,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         mobScore -= mobilityRook[bitCount(attacks & mobilitySquaresBlack)];
 
         featureScore -= ROOK_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
-        featureScore -= SAFE_ROOK_CHECK * bitCount(wKingRookAttacks & attacks & ~whitePawnCover);
+        featureScore -= SAFE_ROOK_CHECK * bitCount(wKingRookAttacks & attacks & ~evalData.attacks[WHITE][PAWN]);
 
         addToKingSafety(attacks, evalData.kingZone[WHITE], wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 3);
 
@@ -644,8 +696,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
             + bitCount(openFiles & b->getPieceBB(WHITE, ROOK))
             - bitCount(openFiles & b->getPieceBB(BLACK, ROOK)));
     featureScore += ROOK_HALF_OPEN_FILE * (
-            + bitCount(openFilesBlack & ~openFiles & b->getPieceBB(WHITE, ROOK))
-            - bitCount(openFilesWhite & ~openFiles & b->getPieceBB(BLACK, ROOK)));
+            + bitCount(evalData.semiOpen[WHITE] & ~openFiles & b->getPieceBB(WHITE, ROOK))
+            - bitCount(evalData.semiOpen[BLACK] & ~openFiles & b->getPieceBB(BLACK, ROOK)));
     // clang-format on
 
     /**********************************************************************************
@@ -661,7 +713,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
         mobScore += mobilityQueen[bitCount(attacks & mobilitySquaresWhite)];
         featureScore += QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
-        featureScore += SAFE_QUEEN_CHECK * bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~blackPawnCover);
+        featureScore += SAFE_QUEEN_CHECK * bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~evalData.attacks[BLACK][PAWN]);
 
         addToKingSafety(attacks, evalData.kingZone[BLACK], bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 4);
 
@@ -677,7 +729,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
         mobScore -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack)];
         featureScore -= QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
-        featureScore -= SAFE_QUEEN_CHECK * bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~whitePawnCover);
+        featureScore -= SAFE_QUEEN_CHECK * bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~evalData.attacks[WHITE][PAWN]);
 
         addToKingSafety(attacks, evalData.kingZone[WHITE], wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 4);
 
@@ -716,7 +768,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     }
 
     EvalScore hangingEvalScore = computeHangingPieces(b);
-    EvalScore pinnedEvalScore  = computePinnedPieces(b, WHITE) - computePinnedPieces(b, BLACK);
+    EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
+    EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
 
@@ -726,7 +779,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                        - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
                        - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
-    EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore;
+    EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + passedScore;
     res += (int) ((float) MgScore(totalScore) * (1 - phase));
     res += (int) ((float) EgScore(totalScore) * (phase));
 
