@@ -934,8 +934,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                      || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
-        
-        if (b->getActivePlayer() == behindLmr && legalMoves > 0 && depth > 2) lmr++;
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
@@ -943,6 +941,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
+            if (b->getActivePlayer() == behindLmr) lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
