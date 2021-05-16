@@ -30,7 +30,6 @@ EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    7);
 EvalScore PAWN_PASSED_HELPER            = M(    1,    6);
 EvalScore PAWN_PASSED_AND_DEFENDED      = M(   17,   -1);
 EvalScore PAWN_PASSED_SQUARE_RULE       = M(    9,   36);
-EvalScore PAWN_PASSED_CANDIDATE         = M(   -0,   14);
 EvalScore PAWN_ISOLATED                 = M(   -2,    1);
 EvalScore PAWN_DOUBLED                  = M(   -6,   -1);
 EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -7,  -12);
@@ -138,7 +137,6 @@ EvalScore* evfeatures[] {
     &PAWN_PASSED_HELPER,
     &PAWN_PASSED_AND_DEFENDED,
     &PAWN_PASSED_SQUARE_RULE,
-    &PAWN_PASSED_CANDIDATE,
     &PAWN_ISOLATED,
     &PAWN_DOUBLED,
     &PAWN_DOUBLED_AND_ISOLATED,

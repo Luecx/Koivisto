@@ -62,7 +62,6 @@ namespace tuning {
         I_PAWN_PASSED_HELPER,
         I_PAWN_PASSED_AND_DEFENDED,
         I_PAWN_PASSED_SQUARE_RULE,
-        I_PAWN_PASSED_CANDIDATE,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -735,19 +734,7 @@ namespace tuning {
                             bitscanForward(promBB),
                             bitscanForward(b->getPieceBB(!color, KING)))) * h;
                     }
-        
-                    // check for candidates
-                    if((ONE << s) & ev->semiOpen[color]){
-                        U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
-                        int defendingPawnCount  = bitCount(frontSpan & ev->pawnEastAttacks[!color]) +
-                                                  bitCount(frontSpan & ev->pawnWestAttacks[!color]);
-                        int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
-            
-                        // it is a candidate
-                        if(attackingPawnCount >= defendingPawnCount){
-                            count[I_PAWN_PASSED_CANDIDATE] += h * (attackingPawnCount - defendingPawnCount + 1);
-                        }
-                    }
+                    
                     bb = lsbReset(bb);
                 }
             }
@@ -1601,7 +1588,6 @@ namespace tuning {
                 "PAWN_PASSED_HELPER",
                 "PAWN_PASSED_AND_DEFENDED",
                 "PAWN_PASSED_SQUARE_RULE",
-                "PAWN_PASSED_CANDIDATE",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
