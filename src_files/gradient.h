@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 16
 namespace tuning {
@@ -62,7 +62,7 @@ namespace tuning {
         I_PAWN_PASSED_HELPER,
         I_PAWN_PASSED_AND_DEFENDED,
         I_PAWN_PASSED_SQUARE_RULE,
-        I_PAWN_PASSED_CANDIDATE,
+        I_PAWN_PASSED_KING_SPAN,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -618,6 +618,7 @@ namespace tuning {
                 midgame += count[i] * td->w_passer[i].midgame.value;
                 endgame += count[i] * td->w_passer[i].endgame.value;
             }
+            
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
@@ -626,6 +627,8 @@ namespace tuning {
                 td->w_passer[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
                 td->w_passer[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
             }
+    
+            
         }
     };
 
@@ -706,9 +709,10 @@ namespace tuning {
         
                     // check if passer
                     if (!(passerMask & oppPawns)){
-                        U64    teleBB  = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
-                        U64    promBB  = FILES_BB[f] & (color == WHITE ? RANK_8_BB:RANK_1_BB);
-                        U64    promCBB = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
+                        U64 teleBB    = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
+                        U64 frontSpan = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
+                        U64 promBB    = FILES_BB[f] & (color == WHITE ? RANK_8_BB : RANK_1_BB);
+                        U64 promCBB   = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
             
             
                         // check if doubled
@@ -734,20 +738,23 @@ namespace tuning {
                         count[I_PAWN_PASSED_SQUARE_RULE]  += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
                             bitscanForward(promBB),
                             bitscanForward(b->getPieceBB(!color, KING)))) * h;
+                        
+                        // check if its front span is defended by the king
+                        count[I_PAWN_PASSED_KING_SPAN]    += ((ev->attacks[color][KING] & frontSpan) == frontSpan) * h;
                     }
         
-                    // check for candidates
-                    if((ONE << s) & ev->semiOpen[color]){
-                        U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
-                        int defendingPawnCount  = bitCount(frontSpan & ev->pawnEastAttacks[!color]) +
-                                                  bitCount(frontSpan & ev->pawnWestAttacks[!color]);
-                        int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
-            
-                        // it is a candidate
-                        if(attackingPawnCount >= defendingPawnCount){
-                            count[I_PAWN_PASSED_CANDIDATE] += h * (attackingPawnCount - defendingPawnCount + 1);
-                        }
-                    }
+//                    // check for candidates
+//                    if((ONE << s) & ev->semiOpen[color]){
+//                        U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
+//                        int defendingPawnCount  = bitCount(frontSpan & ev->pawnEastAttacks[!color]) +
+//                                                  bitCount(frontSpan & ev->pawnWestAttacks[!color]);
+//                        int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
+//
+//                        // it is a candidate
+//                        if(attackingPawnCount >= defendingPawnCount){
+//                            count[I_PAWN_PASSED_KING_SPAN] += h * (attackingPawnCount - defendingPawnCount + 1);
+//                        }
+//                    }
                     bb = lsbReset(bb);
                 }
             }
@@ -1273,15 +1280,15 @@ namespace tuning {
                     threadData[t].w_features[i].set(*evfeatures[i]);
                 }
                 if (i < 9) {
-                    threadData[t].w_bishop_pawn_e[i].set(bishop_pawn_same_color_table_e[i]);
-                    threadData[t].w_bishop_pawn_o[i].set(bishop_pawn_same_color_table_o[i]);
+                    threadData[t].w_bishop_pawn_e[i].set(bishopPawnSameColorTableE[i]);
+                    threadData[t].w_bishop_pawn_o[i].set(bishopPawnSameColorTableO[i]);
                 }
 
                 if (i < 100) {
                     threadData[t].w_king_safety[i].set(kingSafetyTable[i]);
                 }
                 if (i < 8) {
-                    threadData[t].w_passer[i].set(passer_rank_n[i]);
+                    threadData[t].w_passer[i].set(passerRankN[i]);
                 }
                 if (i < 15) {
                     threadData[t].w_pinned[i].set(pinnedEval[i]);
@@ -1433,8 +1440,6 @@ namespace tuning {
             }
             if (i < 9) {
                 threadData[0].w_bishop_pawn_e[i].update(eta);
-            }
-            if (i < 9) {
                 threadData[0].w_bishop_pawn_o[i].update(eta);
             }
             if (i < 100) {
@@ -1601,7 +1606,7 @@ namespace tuning {
                 "PAWN_PASSED_HELPER",
                 "PAWN_PASSED_AND_DEFENDED",
                 "PAWN_PASSED_SQUARE_RULE",
-                "PAWN_PASSED_CANDIDATE",
+                "PAWN_PASSED_KING_SPAN",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
@@ -1672,24 +1677,24 @@ namespace tuning {
         }
         std::cout << "};\n" << std::endl;
 
-        // --------------------------------- passer_rank_n ---------------------------------
-        std::cout << "EvalScore passer_rank_n[N_RANKS] = {";
+        // --------------------------------- passerRankN ---------------------------------
+        std::cout << "EvalScore passerRankN[N_RANKS] = {";
         for (int n = 0; n < 8; n++) {
             if (n % 4 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_passer[n] << ", ";
         }
         std::cout << "};\n" << std::endl;
 
-        // --------------------------------- bishop_pawn_same_color_table_o ---------------------------------
-        std::cout << "EvalScore bishop_pawn_same_color_table_o[9] = {";
+        // --------------------------------- bishopPawnSameColorTableO ---------------------------------
+        std::cout << "EvalScore bishopPawnSameColorTableO[9] = {";
         for (int n = 0; n < 9; n++) {
             if (n % 3 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_bishop_pawn_o[n] << ", ";
         }
         std::cout << "};\n" << std::endl;
 
-        // --------------------------------- bishop_pawn_same_color_table_o ---------------------------------
-        std::cout << "EvalScore bishop_pawn_same_color_table_e[9] = {";
+        // --------------------------------- bishopPawnSameColorTableO ---------------------------------
+        std::cout << "EvalScore bishopPawnSameColorTableE[9] = {";
         for (int n = 0; n < 9; n++) {
             if (n % 3 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_bishop_pawn_e[n] << ", ";

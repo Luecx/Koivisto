@@ -23,8 +23,8 @@
 #include "Board.h"
 #include "psqt.h"
 
-extern EvalScore bishop_pawn_same_color_table_o[9];
-extern EvalScore bishop_pawn_same_color_table_e[9];
+extern EvalScore bishopPawnSameColorTableO[9];
+extern EvalScore bishopPawnSameColorTableE[9];
 
 extern EvalScore* evfeatures[];
 extern EvalScore  hangingEval[5];
@@ -33,7 +33,7 @@ extern EvalScore* mobilities[N_PIECE_TYPES];
 extern int        mobEntryCount[N_PIECE_TYPES];
 extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
-extern EvalScore passer_rank_n[N_RANKS];
+extern EvalScore  passerRankN[N_RANKS];
 
 extern int lazyEvalAlphaBound;
 extern int lazyEvalBetaBound ;
