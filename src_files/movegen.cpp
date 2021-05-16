@@ -73,7 +73,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
 }
 
 
-template<Color c, MoveGenConfig m, bool score>
+template<Color c, MoveGenConfig m, bool score, bool noUnderPromotions>
 void generatePawnMoves(
     Board* b,
     MoveList* mv,
@@ -162,12 +162,15 @@ void generatePawnMoves(
             target = bitscanForward(attacks);
             mv->add(genMove(target - forward, target, QUEEN_PROMOTION, movingPiece));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION,  m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, ROOK_PROMOTION,   m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, BISHOP_PROMOTION, m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
-            if constexpr (score) scoreMove<c, KNIGHT_PROMOTION, m>(b, mv, hashMove, sd, ply);
+            if constexpr (!noUnderPromotions){
+                mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
+                if constexpr (score) scoreMove<c, ROOK_PROMOTION,   m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
+                if constexpr (score) scoreMove<c, BISHOP_PROMOTION, m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
+                if constexpr (score) scoreMove<c, KNIGHT_PROMOTION, m>(b, mv, hashMove, sd, ply);
+            }
+           
             attacks = lsbReset(attacks);
         }
         
@@ -176,12 +179,14 @@ void generatePawnMoves(
             target = bitscanForward(attacks);
             mv->add(genMove(target - left, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            if constexpr (!noUnderPromotions){
+                mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            }
             attacks = lsbReset(attacks);
         }
 
@@ -190,12 +195,15 @@ void generatePawnMoves(
             target = bitscanForward(attacks);
             mv->add(genMove(target - right, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
-            mv->add(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
-            if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            if constexpr (!noUnderPromotions){
+                mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, BISHOP_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+                mv->add(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
+                if constexpr (score) scoreMove<c, KNIGHT_PROMOTION_CAPTURE, m>(b, mv, hashMove, sd, ply);
+            }
+           
             attacks = lsbReset(attacks);
         }
     }
@@ -216,10 +224,8 @@ void generatePieceMoves(
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->template getTeamOccupiedBB<them>();
     const U64 friendly   = b->template getTeamOccupiedBB<us  >();
     
     for(Piece p = KNIGHT; p <= QUEEN; p++){
@@ -296,7 +302,6 @@ void generateKingMoves(
     constexpr Piece movingPiece = KING + us * 8;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->getTeamOccupiedBB<them>();
     const U64 friendly   = b->getTeamOccupiedBB<us  >();
     
     U64 kings      = b->getPieceBB<us>(KING);
@@ -352,7 +357,7 @@ void generateKingMoves(
     }
 }
 
-template<MoveGenConfig config, bool score> void generate(
+template<MoveGenConfig config, bool score, bool noUnderPromotions> void generate(
     Board* b,
     MoveList* mv,
     Move hashMove = 0,
@@ -364,13 +369,13 @@ template<MoveGenConfig config, bool score> void generate(
     mv->clear();
     
     if(b->getActivePlayer() == WHITE){
-        generatePawnMoves <WHITE, config, score>(b, mv, hashMove, sd, ply);
-        generatePieceMoves<WHITE, config, score>(b, mv, hashMove, sd, ply);
-        generateKingMoves <WHITE, config, score>(b, mv, hashMove, sd, ply);
+        generatePawnMoves <WHITE, config, score, noUnderPromotions  >(b, mv, hashMove, sd, ply);
+        generatePieceMoves<WHITE, config, score                     >(b, mv, hashMove, sd, ply);
+        generateKingMoves <WHITE, config, score                     >(b, mv, hashMove, sd, ply);
     }else{
-        generatePawnMoves <BLACK, config, score>(b, mv, hashMove, sd, ply);
-        generatePieceMoves<BLACK, config, score>(b, mv, hashMove, sd, ply);
-        generateKingMoves <BLACK, config, score>(b, mv, hashMove, sd, ply);
+        generatePawnMoves <BLACK, config, score, noUnderPromotions  >(b, mv, hashMove, sd, ply);
+        generatePieceMoves<BLACK, config, score                     >(b, mv, hashMove, sd, ply);
+        generateKingMoves <BLACK, config, score                     >(b, mv, hashMove, sd, ply);
     }
     
 }
@@ -379,15 +384,15 @@ void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth 
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     UCI_ASSERT(sd);
-    generate<GENERATE_ALL, true>(b, mv, hashMove, sd, ply);
+    generate<GENERATE_ALL, true, true>(b, mv, hashMove, sd, ply);
 }
 void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
-    generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
+    generate<GENERATE_NON_QUIET, true, true>(b, mv, hashMove, sd, ply);
 }
 void generatePerftMoves(Board* b, MoveList* mv) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
-    generate<GENERATE_ALL, false>(b, mv);
+    generate<GENERATE_ALL, false, false>(b, mv);
 }
