@@ -1135,7 +1135,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         
         Move m = moveOrderer.next();
         
-        if (!isCapture && legalMoves > 2) continue;
+        if (!isCapture(m) && legalMoves > 2) continue;
 
         // do not consider illegal moves
         if (!b->isLegal(m))
