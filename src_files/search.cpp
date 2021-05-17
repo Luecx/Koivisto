@@ -1123,20 +1123,24 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     MoveList* mv = sd->moves[ply];
     
     // create a moveorderer to sort the moves during the search
-    generateNonQuietMoves(b, mv);
+    if (!inCheck) generateNonQuietMoves(b, mv);
+    else generateMoves(b, mv, 0, sd, ply);
     MoveOrderer moveOrderer {mv};
     
     // keping track of the best move for the transpositions
     Move  bestMove  = 0;
+    int legalMoves  = 0;
 
     for (int i = 0; i < mv->getSize(); i++) {
         
         Move m = moveOrderer.next();
         
+        if (!isCapture && legalMoves > 2) continue;
+
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
-        
+
         if (see_piece_vals[(getCapturedPiece(m) % 8)] - see_piece_vals[(getMovingPiece(m) % 8)] - 300 + stand_pat > beta)
             return beta;
 
@@ -1156,6 +1160,8 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         
         b->undoMove();
         
+        legalMoves++;
+
         if (score > bestScore) {
             bestScore = score;
             bestMove  = m;
