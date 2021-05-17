@@ -511,11 +511,11 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     evalData.threats[WHITE] = PAWN_ATTACK_MINOR * bitCount(evalData.attacks[WHITE][PAWN] & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)));
     evalData.threats[BLACK] = PAWN_ATTACK_MINOR * bitCount(evalData.attacks[BLACK][PAWN] & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP)));
 
-    evalData.threats[WHITE] += PAWN_ATTACK_ROOK * evalData.attacks[WHITE][PAWN] & b->getPieceBB<BLACK>(ROOK);
-    evalData.threats[BLACK] += PAWN_ATTACK_ROOK * evalData.attacks[BLACK][PAWN] & b->getPieceBB<WHITE>(ROOK);
+    evalData.threats[WHITE] += PAWN_ATTACK_ROOK * bitCount(evalData.attacks[WHITE][PAWN] & b->getPieceBB<BLACK>(ROOK));
+    evalData.threats[BLACK] += PAWN_ATTACK_ROOK * bitCount(evalData.attacks[BLACK][PAWN] & b->getPieceBB<WHITE>(ROOK));
 
-    evalData.threats[WHITE] += PAWN_ATTACK_QUEEN * evalData.attacks[WHITE][PAWN] & b->getPieceBB<BLACK>(QUEEN);
-    evalData.threats[BLACK] += PAWN_ATTACK_QUEEN * evalData.attacks[BLACK][PAWN] & b->getPieceBB<WHITE>(QUEEN);
+    evalData.threats[WHITE] += PAWN_ATTACK_QUEEN * bitCount(evalData.attacks[WHITE][PAWN] & b->getPieceBB<BLACK>(QUEEN));
+    evalData.threats[BLACK] += PAWN_ATTACK_QUEEN * bitCount(evalData.attacks[BLACK][PAWN] & b->getPieceBB<WHITE>(QUEEN));
 
     featureScore += PAWN_DOUBLED_AND_ISOLATED * (
             + bitCount(whiteIsolatedPawns & whiteDoubledPawns)
