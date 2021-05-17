@@ -50,6 +50,7 @@ struct EvalData{
     U64 semiOpen        [N_COLORS]{};
     U64 pawnEastAttacks [N_COLORS]{};
     U64 pawnWestAttacks [N_COLORS]{};
+    Score threats       [N_COLORS]{};
     
 };
 

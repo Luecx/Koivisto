@@ -42,7 +42,7 @@ int lmrReductions[256][256];
 ThreadData tds[MAX_THREADS]{};
 
 int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 82;
+int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
@@ -774,7 +774,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN / (sd->evaluator.evalData.threats[!b->getActivePlayer()] > 0 ? 1 : 2) && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
