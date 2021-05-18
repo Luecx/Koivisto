@@ -799,14 +799,14 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // probcut was first implemented in StockFish by Gary Linscott. See https://www.chessprogramming.org/ProbCut.
     // **********************************************************************************************************
 
-    Score betaCut = staticEval + FUTILITY_MARGIN;
+    Score betaCut = beta + FUTILITY_MARGIN;
     if (!inCheck && !pv && depth > 4 && !skipMove) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
             // get the current move
             Move m = moveOrderer.next();
-            if ((see_piece_vals[getCapturedPiece(m) % 8] < 50 + betaCut - staticEval && !(isPromotion && (promotionPiece(m) % 8 == QUEEN))) || b->staticExchangeEvaluation(m) < 1)
+            if (b->staticExchangeEvaluation(m) < ((isPromotion && (promotionPiece(m) % 8 == QUEEN)) ? 0 : std::max(1, betaCut - staticEval)))
                 continue;
 
             if (!b->isLegal(m))
@@ -817,7 +817,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Score score = -qSearch(b, -betaCut, -betaCut+1, ply + 1, td);
             
             if (score >= betaCut)
-                score = -pvSearch(b, -betaCut, -betaCut+1, depth - 4, ply+1, td, m);
+                score = -pvSearch(b, -betaCut, -betaCut+1, depth - 4, ply+1, td, 0);
 
             b->undoMove();
 
