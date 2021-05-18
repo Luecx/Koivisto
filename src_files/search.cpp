@@ -799,7 +799,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // probcut was first implemented in StockFish by Gary Linscott. See https://www.chessprogramming.org/ProbCut.
     // **********************************************************************************************************
 
-    Score betaCut = beta + FUTILITY_MARGIN;
+    Score betaCut = beta + 110;
     if (!inCheck && !pv && depth > 4 && !skipMove && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
@@ -819,11 +819,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             b->undoMove();
 
-            if (score >= betaCut) {
-                table->put(zobrist, score, m, CUT_NODE, depth - 3);
+            if (score >= betaCut)
                 return betaCut;
-            }
-
         }
     }
 
