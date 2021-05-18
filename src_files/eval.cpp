@@ -53,12 +53,12 @@ EvalScore SAFE_QUEEN_CHECK              = M(    5,   24);
 EvalScore SAFE_ROOK_CHECK               = M(   10,    4);
 EvalScore SAFE_BISHOP_CHECK             = M(    9,    4);
 EvalScore SAFE_KNIGHT_CHECK             = M(   11,    3);
-EvalScore PAWN_ATTACK_MINOR             = M(   39,   70);
-EvalScore PAWN_ATTACK_ROOK              = M(   41,   26);
-EvalScore PAWN_ATTACK_QUEEN             = M(   30,   29);
-EvalScore MINOR_ATTACK_ROOK             = M(   35,   23);
-EvalScore MINOR_ATTACK_QUEEN            = M(   24,   38);
-EvalScore ROOK_ATTACK_QUEEN             = M(   32,   14);
+EvalScore PAWN_ATTACK_MINOR             = 2 * M(   39,   70);
+EvalScore PAWN_ATTACK_ROOK              = 2 * M(   41,   26);
+EvalScore PAWN_ATTACK_QUEEN             = 2 * M(   30,   29);
+EvalScore MINOR_ATTACK_ROOK             = 2 * M(   35,   23);
+EvalScore MINOR_ATTACK_QUEEN            = 2 * M(   24,   38);
+EvalScore ROOK_ATTACK_QUEEN             = 2 * M(   32,   14);
 
 EvalScore mobilityKnight[9] = {
     M(  -50,  -11), M(  -39,   41), M(  -35,   71), M(  -31,   88), M(  -26,   99),
