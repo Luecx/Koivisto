@@ -800,14 +800,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // **********************************************************************************************************
 
     Score betaCut = beta + FUTILITY_MARGIN;
-    if (!inCheck && !pv && depth > 4 && !skipMove) {
+    if (!inCheck && !pv && depth > 4 && !skipMove && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
             // get the current move
             Move m = moveOrderer.next();
-            if (b->staticExchangeEvaluation(m) < ((isPromotion && (promotionPiece(m) % 8 == QUEEN)) ? 0 : std::max(1, betaCut - staticEval)))
-                continue;
 
             if (!b->isLegal(m))
                 continue;
@@ -822,7 +820,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             b->undoMove();
 
             if (score >= betaCut) {
-                table->put(zobrist, score, m, CUT_NODE, depth - 4);
+                table->put(zobrist, score, m, CUT_NODE, depth - 3);
                 return betaCut;
             }
 
