@@ -334,17 +334,17 @@ namespace tuning {
     struct Pst225Data {
 
         // only for pawns currently,
-        uint8_t indices_white_wk[1][10]{};
-        uint8_t indices_black_wk[1][10]{};
-        uint8_t indices_white_bk[1][10]{};
-        uint8_t indices_black_bk[1][10]{};
+        uint8_t indices_white_wk[5][10]{};
+        uint8_t indices_black_wk[5][10]{};
+        uint8_t indices_white_bk[5][10]{};
+        uint8_t indices_black_bk[5][10]{};
 
         void init(Board *b, EvalData *ev) {
 
             Square wKingSq = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square bKingSq = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
-            for (Piece p = PAWN; p <= PAWN; p++) {
+            for (Piece p: {PAWN, QUEEN}) {
                 for (int c= 0; c <= 1; c++) {
                     U64 k = b->getPieceBB(c, p);
                     while (k) {
@@ -365,7 +365,7 @@ namespace tuning {
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            for (Piece p = PAWN; p <= PAWN; p++) {
+            for (Piece p : {PAWN, QUEEN}) {
 
                 for (int i = 1; i <= indices_white_wk[p][0]; i++) {
                     uint8_t w = indices_white_wk[p][i];
@@ -393,7 +393,7 @@ namespace tuning {
         }
 
         void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
-            for (Piece p = PAWN; p <= PAWN; p++) {
+            for (Piece p: {PAWN, QUEEN}) {
                 for (int i = 1; i <= indices_white_wk[p][0]; i++) {
                     uint8_t w = indices_white_wk[p][i];
                     td->w_piece_our_king_square_table[p][w].midgame.gradient +=
@@ -1400,7 +1400,7 @@ namespace tuning {
 
             if (i < 5) {
 
-                if (i < 1) {
+                if (i == PAWN || i == QUEEN) {
                     for (int n = 0; n < 15 * 15; n++) {
                         threadData[0].w_piece_opp_king_square_table[i][n].update(eta);
                         threadData[0].w_piece_our_king_square_table[i][n].update(eta);
