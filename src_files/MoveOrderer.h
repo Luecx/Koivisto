@@ -28,9 +28,9 @@ class MoveOrderer {
 
     private:
     move::MoveList* moves;
-    int             counter;
 
     public:
+    int             counter;
     bool skip;
     
     MoveOrderer(move::MoveList* p_moves);
