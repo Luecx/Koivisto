@@ -991,11 +991,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
+        mv->scoreMove(moveOrderer.counter-1, depth - lmr + extension);
+
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
-            mv->scoreMove(moveOrderer.counter-1, depth - lmr + extension);
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
             if (pv) sd->reduce = true;
             if (lmr && score > alpha) {
