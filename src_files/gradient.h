@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 16
 namespace tuning {
@@ -62,6 +62,7 @@ namespace tuning {
         I_PAWN_PASSED_HELPER,
         I_PAWN_PASSED_AND_DEFENDED,
         I_PAWN_PASSED_SQUARE_RULE,
+        I_PAWN_CANDIDATE_PASSER,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -733,6 +734,18 @@ namespace tuning {
                         count[I_PAWN_PASSED_SQUARE_RULE]  += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
                             bitscanForward(promBB),
                             bitscanForward(b->getPieceBB(!color, KING)))) * h;
+                    }
+                    // check for candidates
+                    if((ONE << s) & ev->semiOpen[color]){
+                        U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
+                        int defendingPawnCount  = bitCount(frontSpan & ev->pawnEastAttacks[!color]) +
+                                                  bitCount(frontSpan & ev->pawnWestAttacks[!color]);
+                        int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
+        
+                        // it is a candidate
+                        if(attackingPawnCount >= defendingPawnCount){
+                            count[I_PAWN_CANDIDATE_PASSER] += (attackingPawnCount - defendingPawnCount + 1) * h;
+                        }
                     }
                     
                     bb = lsbReset(bb);
@@ -1588,6 +1601,7 @@ namespace tuning {
                 "PAWN_PASSED_HELPER",
                 "PAWN_PASSED_AND_DEFENDED",
                 "PAWN_PASSED_SQUARE_RULE",
+                "PAWN_CANDIDATE_PASSER",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",

@@ -23,36 +23,37 @@
 #include <immintrin.h>
 #include <iomanip>
 EvalScore SIDE_TO_MOVE                  = M(   14,   12);
-EvalScore PAWN_STRUCTURE                = M(   10,    2);
-EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -15,  -35);
-EvalScore PAWN_PASSED_AND_BLOCKED       = M(   -1,  -41);
+EvalScore PAWN_STRUCTURE                = M(    9,    2);
+EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -15,  -29);
+EvalScore PAWN_PASSED_AND_BLOCKED       = M(   -1,  -40);
 EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    7);
-EvalScore PAWN_PASSED_HELPER            = M(    2,    8);
-EvalScore PAWN_PASSED_AND_DEFENDED      = M(   17,    6);
-EvalScore PAWN_PASSED_SQUARE_RULE       = M(   10,   34);
-EvalScore PAWN_ISOLATED                 = M(   -1,   -6);
+EvalScore PAWN_PASSED_HELPER            = M(    2,    5);
+EvalScore PAWN_PASSED_AND_DEFENDED      = M(   18,   -1);
+EvalScore PAWN_PASSED_SQUARE_RULE       = M(   11,   35);
+EvalScore PAWN_CANDIDATE_PASSER         = M(   -0,   12);
+EvalScore PAWN_ISOLATED                 = M(   -2,   -1);
 EvalScore PAWN_DOUBLED                  = M(   -7,   -5);
-EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -7,  -19);
-EvalScore PAWN_BACKWARD                 = M(  -11,   -4);
-EvalScore PAWN_OPEN                     = M(  -10,   -1);
-EvalScore PAWN_BLOCKED                  = M(   -5,   -8);
+EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -7,  -15);
+EvalScore PAWN_BACKWARD                 = M(  -11,   -8);
+EvalScore PAWN_OPEN                     = M(   -9,  -10);
+EvalScore PAWN_BLOCKED                  = M(   -5,   -9);
 EvalScore KNIGHT_OUTPOST                = M(   23,   19);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -5,   -3);
-EvalScore ROOK_OPEN_FILE                = M(   22,   -2);
+EvalScore ROOK_OPEN_FILE                = M(   22,   -1);
 EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -10);
 EvalScore ROOK_KING_LINE                = M(   22,    1);
-EvalScore BISHOP_DOUBLED                = M(   15,   75);
+EvalScore BISHOP_DOUBLED                = M(   16,   74);
 EvalScore BISHOP_FIANCHETTO             = M(   -3,    7);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    2);
 EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(   -1,  -28);
-EvalScore KING_CLOSE_OPPONENT           = M(  -13,   14);
+EvalScore KING_CLOSE_OPPONENT           = M(  -13,   15);
 EvalScore KING_PAWN_SHIELD              = M(   29,   12);
-EvalScore CASTLING_RIGHTS               = M(   17,    1);
+EvalScore CASTLING_RIGHTS               = M(   17,   -0);
 EvalScore MINOR_BEHIND_PAWN             = M(    6,   20);
 EvalScore SAFE_QUEEN_CHECK              = M(    5,   24);
-EvalScore SAFE_ROOK_CHECK               = M(   10,    4);
+EvalScore SAFE_ROOK_CHECK               = M(   10,    5);
 EvalScore SAFE_BISHOP_CHECK             = M(    9,    4);
-EvalScore SAFE_KNIGHT_CHECK             = M(   11,    3);
+EvalScore SAFE_KNIGHT_CHECK             = M(   12,    3);
 EvalScore PAWN_ATTACK_MINOR             = M(   39,   70);
 EvalScore PAWN_ATTACK_ROOK              = M(   41,   26);
 EvalScore PAWN_ATTACK_QUEEN             = M(   30,   29);
@@ -72,7 +73,7 @@ EvalScore mobilityBishop[14] = {
 EvalScore mobilityRook[15] = {
     M(  -50,   45), M(  -43,   86), M(  -40,  122), M(  -39,  148), M(  -38,  163),
     M(  -33,  170), M(  -27,  177), M(  -20,  179), M(  -14,  184), M(   -9,  190),
-    M(   -4,  194), M(   -0,  197), M(    9,  195), M(   33,  179), M(   89,  149), };
+    M(   -4,  194), M(    0,  197), M(    9,  195), M(   33,  179), M(   89,  149), };
 
 EvalScore mobilityQueen[28] = {
     M( -186,   88), M( -170,   90), M( -158,  209), M( -154,  286), M( -152,  327),
@@ -91,8 +92,8 @@ EvalScore pinnedEval[15] = {
     M(    1,   -9), M(  -15,   39), M(   13,  -23), M(  -11,  -32), M(  -18,   58), };
 
 EvalScore passer_rank_n[N_RANKS] = {
-    M(    0,    0), M(  -16,    4), M(  -27,    7), M(  -23,   31),
-    M(    5,   53), M(   29,   99), M(   14,   30), M(    0,    0), };
+    M(    0,    0), M(  -15,   -4), M(  -26,   -1), M(  -23,   24),
+    M(    6,   47), M(   31,   92), M(   15,   23), M(    0,    0), };
 
 EvalScore bishop_pawn_same_color_table_o[9] = {
     M(  -36,   35), M(  -42,   37), M(  -42,   25),
@@ -126,7 +127,6 @@ EvalScore kingSafetyTable[100] = {
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
     M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), };
 
-
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
     &PAWN_STRUCTURE,
@@ -136,6 +136,7 @@ EvalScore* evfeatures[] {
     &PAWN_PASSED_HELPER,
     &PAWN_PASSED_AND_DEFENDED,
     &PAWN_PASSED_SQUARE_RULE,
+    &PAWN_CANDIDATE_PASSER,
     &PAWN_ISOLATED,
     &PAWN_DOUBLED,
     &PAWN_DOUBLED_AND_ISOLATED,
@@ -378,18 +379,18 @@ EvalScore Evaluator::computePassedPawns(Board* b){
                       bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
         }
         
-//        // check for candidates
-//        if((ONE << s) & evalData.semiOpen[color]){
-//            U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
-//            int defendingPawnCount  = bitCount(frontSpan & evalData.pawnEastAttacks[!color]) +
-//                                      bitCount(frontSpan & evalData.pawnWestAttacks[!color]);
-//            int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
-//
-//            // it is a candidate
-//            if(attackingPawnCount >= defendingPawnCount){
-//                h += PAWN_PASSED_CANDIDATE * (attackingPawnCount - defendingPawnCount + 1);
-//            }
-//        }
+        // check for candidates
+        if((ONE << s) & evalData.semiOpen[color]){
+            U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
+            int defendingPawnCount  = bitCount(frontSpan & evalData.pawnEastAttacks[!color]) +
+                                      bitCount(frontSpan & evalData.pawnWestAttacks[!color]);
+            int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
+
+            // it is a candidate
+            if(attackingPawnCount >= defendingPawnCount){
+                h += PAWN_CANDIDATE_PASSER * (attackingPawnCount - defendingPawnCount + 1);
+            }
+        }
         bb = lsbReset(bb);
     }
     return h;
