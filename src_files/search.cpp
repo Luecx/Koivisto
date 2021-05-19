@@ -876,7 +876,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             
-            Depth moveDepth = depth-lmrReductions[depth][legalMoves];
+            Depth moveDepth = std::max(1, depth-lmrReductions[depth][legalMoves]-1);
             
             if (quiet) {
                 quiets++;
