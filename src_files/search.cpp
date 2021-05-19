@@ -991,7 +991,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
-        mv->scoreMove(moveOrderer.counter-1, depth - lmr + extension);
+        mv->scoreMove(moveOrderer.counter-1, depth);
 
         // principal variation search recursion.
         if (legalMoves == 0) {
@@ -999,11 +999,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
             if (pv) sd->reduce = true;
-            if (lmr && score > alpha) {
-                mv->scoreMove(moveOrderer.counter-1, depth - lmr + extension);
+            if (lmr && score > alpha) 
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                     0);    // re-search
-            }
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
