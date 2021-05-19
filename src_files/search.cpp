@@ -879,16 +879,18 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
             
             if (quiet) {
+                int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+
                 quiets++;
                 // **************************************************************************************************
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets > lmp[isImproving][depth] && history < 0) {
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < std::min(200-30*(depth*depth), 0)){
+                if (history < std::min(200-30*(depth*depth), 0)){
                     continue;
                 }
             }
@@ -921,7 +923,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the node turns 
         // out to be singular.
         // *********************************************************************************************************
-        if (!extension && depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
+        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
@@ -969,7 +971,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
-            int history = 0;
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
