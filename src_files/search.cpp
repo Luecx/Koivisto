@@ -859,6 +859,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     int legalMoves = 0;
     int quiets     = 0;
     
+    U64 enemyPawnCover =  b->getActivePlayer() == WHITE ? ((shiftSouthEast(b->getPieceBB(BLACK, PAWN))) | (shiftSouthWest(b->getPieceBB(BLACK, PAWN)))) : ((shiftNorthEast(b->getPieceBB(WHITE, PAWN)) & b->getPieceBB(WHITE, PAWN)) | (shiftSouthWest(b->getPieceBB(WHITE, PAWN)) & b->getPieceBB(WHITE, PAWN))) ; 
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
@@ -892,7 +894,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     continue;
                 }
             }
-            
+        
+            if (moveDepth <= 5 && quiet && getMovingPiece(m) % 8 != PAWN && (ONE << getSquareTo(m)) & enemyPawnCover)
+                continue;
+
             // ******************************************************************************************************
             // static exchange evaluation pruning (see pruning):
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
