@@ -23,109 +23,108 @@
 #include <immintrin.h>
 #include <iomanip>
 EvalScore SIDE_TO_MOVE                  = M(   14,   12);
-EvalScore PAWN_STRUCTURE                = M(   10,    2);
-EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -15,  -35);
-EvalScore PAWN_PASSED_AND_BLOCKED       = M(   -1,  -41);
+EvalScore PAWN_STRUCTURE                = M(   10,    3);
+EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -16,  -36);
+EvalScore PAWN_PASSED_AND_BLOCKED       = M(   -0,  -41);
 EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    7);
 EvalScore PAWN_PASSED_HELPER            = M(    2,    8);
-EvalScore PAWN_PASSED_AND_DEFENDED      = M(   17,    6);
-EvalScore PAWN_PASSED_SQUARE_RULE       = M(   10,   34);
+EvalScore PAWN_PASSED_AND_DEFENDED      = M(   18,    5);
+EvalScore PAWN_PASSED_SQUARE_RULE       = M(   11,   35);
 EvalScore PAWN_ISOLATED                 = M(   -1,   -6);
 EvalScore PAWN_DOUBLED                  = M(   -7,   -5);
 EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -7,  -19);
-EvalScore PAWN_BACKWARD                 = M(  -11,   -4);
+EvalScore PAWN_BACKWARD                 = M(  -12,   -4);
 EvalScore PAWN_OPEN                     = M(  -10,   -1);
-EvalScore PAWN_BLOCKED                  = M(   -5,   -8);
-EvalScore KNIGHT_OUTPOST                = M(   23,   19);
-EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -5,   -3);
-EvalScore ROOK_OPEN_FILE                = M(   22,   -2);
-EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -10);
-EvalScore ROOK_KING_LINE                = M(   22,    1);
-EvalScore BISHOP_DOUBLED                = M(   15,   75);
-EvalScore BISHOP_FIANCHETTO             = M(   -3,    7);
-EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    2);
-EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(   -1,  -28);
-EvalScore KING_CLOSE_OPPONENT           = M(  -13,   14);
-EvalScore KING_PAWN_SHIELD              = M(   29,   12);
-EvalScore CASTLING_RIGHTS               = M(   17,    1);
-EvalScore MINOR_BEHIND_PAWN             = M(    6,   20);
-EvalScore SAFE_QUEEN_CHECK              = M(    5,   24);
-EvalScore SAFE_ROOK_CHECK               = M(   10,    4);
-EvalScore SAFE_BISHOP_CHECK             = M(    9,    4);
-EvalScore SAFE_KNIGHT_CHECK             = M(   11,    3);
-EvalScore PAWN_ATTACK_MINOR             = M(   39,   70);
-EvalScore PAWN_ATTACK_ROOK              = M(   41,   26);
-EvalScore PAWN_ATTACK_QUEEN             = M(   30,   29);
-EvalScore MINOR_ATTACK_ROOK             = M(   35,   23);
-EvalScore MINOR_ATTACK_QUEEN            = M(   24,   38);
-EvalScore ROOK_ATTACK_QUEEN             = M(   32,   14);
+EvalScore PAWN_BLOCKED                  = M(   -3,   -8);
+EvalScore KNIGHT_OUTPOST                = M(   21,   20);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -7,   -1);
+EvalScore ROOK_OPEN_FILE                = M(   24,   -1);
+EvalScore ROOK_HALF_OPEN_FILE           = M(   -2,  -10);
+EvalScore ROOK_KING_LINE                = M(   20,    0);
+EvalScore BISHOP_DOUBLED                = M(   16,   74);
+EvalScore BISHOP_FIANCHETTO             = M(   -4,   10);
+EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    3);
+EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(   -1,  -19);
+EvalScore KING_CLOSE_OPPONENT           = M(  -10,   13);
+EvalScore KING_PAWN_SHIELD              = M(   30,   14);
+EvalScore CASTLING_RIGHTS               = M(   17,   -4);
+EvalScore MINOR_BEHIND_PAWN             = M(    7,   21);
+EvalScore SAFE_QUEEN_CHECK              = M(    6,   23);
+EvalScore SAFE_ROOK_CHECK               = M(   14,    4);
+EvalScore SAFE_BISHOP_CHECK             = M(    9,    3);
+EvalScore SAFE_KNIGHT_CHECK             = M(   11,    4);
+EvalScore PAWN_ATTACK_MINOR             = M(   38,   71);
+EvalScore PAWN_ATTACK_ROOK              = M(   40,   27);
+EvalScore PAWN_ATTACK_QUEEN             = M(   29,   31);
+EvalScore MINOR_ATTACK_ROOK             = M(   40,   23);
+EvalScore MINOR_ATTACK_QUEEN            = M(   25,   40);
+EvalScore ROOK_ATTACK_QUEEN             = M(   30,    8);
 
 EvalScore mobilityKnight[9] = {
-    M(  -50,  -11), M(  -39,   41), M(  -35,   71), M(  -31,   88), M(  -26,   99),
-    M(  -22,  108), M(  -16,  110), M(   -7,  104), M(    6,   90), };
+        M(  -53,  -12), M(  -42,   41), M(  -37,   70), M(  -33,   87), M(  -29,   98),
+        M(  -25,  108), M(  -19,  109), M(  -10,  103), M(    2,   89), };
 
 EvalScore mobilityBishop[14] = {
-    M(   -9,  -31), M(    1,   34), M(    8,   66), M(   13,   86), M(   19,  102),
-    M(   23,  115), M(   24,  122), M(   24,  127), M(   25,  131), M(   29,  129),
-    M(   36,  125), M(   51,  117), M(   60,  125), M(   82,  100), };
+        M(   -8,  -26), M(    3,   40), M(   10,   72), M(   14,   91), M(   19,  106),
+        M(   22,  119), M(   22,  126), M(   20,  130), M(   19,  134), M(   21,  133),
+        M(   26,  128), M(   40,  121), M(   46,  129), M(   65,  104), };
 
 EvalScore mobilityRook[15] = {
-    M(  -50,   45), M(  -43,   86), M(  -40,  122), M(  -39,  148), M(  -38,  163),
-    M(  -33,  170), M(  -27,  177), M(  -20,  179), M(  -14,  184), M(   -9,  190),
-    M(   -4,  194), M(   -0,  197), M(    9,  195), M(   33,  179), M(   89,  149), };
+        M(  -47,   74), M(  -40,  116), M(  -38,  147), M(  -37,  167), M(  -36,  176),
+        M(  -31,  182), M(  -26,  187), M(  -19,  189), M(  -12,  191), M(   -5,  194),
+        M(    2,  195), M(   10,  193), M(   21,  189), M(   46,  175), M(  100,  144), };
 
 EvalScore mobilityQueen[28] = {
-    M( -186,   88), M( -170,   90), M( -158,  209), M( -154,  286), M( -152,  327),
-    M( -152,  356), M( -151,  379), M( -149,  394), M( -147,  406), M( -145,  413),
-    M( -143,  419), M( -141,  423), M( -139,  425), M( -139,  429), M( -139,  432),
-    M( -140,  432), M( -140,  430), M( -141,  429), M( -140,  425), M( -132,  415),
-    M( -125,  401), M( -122,  392), M( -125,  383), M( -107,  367), M( -166,  386),
-    M(  -41,  310), M(  -75,  349), M( -138,  387), };
+        M( -178,  142), M( -161,  231), M( -155,  303), M( -152,  337), M( -151,  357),
+        M( -151,  373), M( -150,  386), M( -149,  394), M( -147,  400), M( -144,  404),
+        M( -142,  406), M( -139,  407), M( -139,  409), M( -134,  408), M( -131,  407),
+        M( -126,  405), M( -133,  410), M( -132,  408), M( -116,  399), M( -119,  399),
+        M( -106,  387), M(  -88,  368), M( -141,  388), M(  -49,  336), M( -155,  380),
+        M(  -54,  318), M( -153,  395), M( -217,  431), };
 
 EvalScore hangingEval[5] = {
-    M(   -3,   -2), M(   -4,   -1), M(   -5,   -7), M(   -5,   -6), M(   -4,   -8), };
+        M(   -2,   -1), M(   -3,   -0), M(   -4,   -6), M(   -5,   -5), M(   -5,   -9), };
 
 EvalScore pinnedEval[15] = {
-    M(    1,   -5), M(   -8,    8), M(   -9,   53), M(  -20,  -59), M(  -24,  -12),
-    M(  -20,   49), M(   -1,   -8), M(  -29,  -13), M(  -19,   37), M(  -10,  -12),
-    M(    1,   -9), M(  -15,   39), M(   13,  -23), M(  -11,  -32), M(  -18,   58), };
+        M(   -1,   -5), M(   -8,    8), M(   -9,   53), M(  -25,  -59), M(  -20,  -13),
+        M(  -20,   45), M(   -4,   -7), M(  -24,  -15), M(  -16,   35), M(  -12,  -10),
+        M(    4,  -13), M(  -16,   39), M(   11,  -23), M(   -6,  -35), M(  -17,   56), };
 
 EvalScore passer_rank_n[N_RANKS] = {
-    M(    0,    0), M(  -16,    4), M(  -27,    7), M(  -23,   31),
-    M(    5,   53), M(   29,   99), M(   14,   30), M(    0,    0), };
+        M(    0,    0), M(  -16,    5), M(  -27,    8), M(  -24,   32),
+        M(    6,   54), M(   30,  100), M(   16,   33), M(    0,    0), };
 
 EvalScore bishop_pawn_same_color_table_o[9] = {
-    M(  -36,   35), M(  -42,   37), M(  -42,   25),
-    M(  -46,   17), M(  -50,    7), M(  -55,   -4),
-    M(  -58,  -21), M(  -59,  -37), M(  -68,  -82), };
+        M(  -42,   33), M(  -48,   34), M(  -47,   22),
+        M(  -50,   13), M(  -54,    4), M(  -59,   -8),
+        M(  -62,  -25), M(  -63,  -41), M(  -72,  -84), };
 
 EvalScore bishop_pawn_same_color_table_e[9] = {
-    M(  -28,   22), M(  -44,   33), M(  -48,   28),
-    M(  -54,   24), M(  -57,   16), M(  -61,    5),
-    M(  -63,  -11), M(  -62,  -22), M(  -70,  -32), };
+        M(  -34,   25), M(  -50,   34), M(  -55,   27),
+        M(  -61,   21), M(  -65,   12), M(  -69,   -1),
+        M(  -71,  -18), M(  -70,  -31), M(  -78,  -42), };
 
 EvalScore kingSafetyTable[100] = {
-    M(   -6,   -4), M(    0,    0), M(  -10,   -4), M(   -3,   -7), M(   -7,   -7),
-    M(   21,  -10), M(    8,  -11), M(   29,  -10), M(   16,  -11), M(   43,  -20),
-    M(   59,  -14), M(   78,  -24), M(   47,  -26), M(  105,  -24), M(  105,  -23),
-    M(  116,  -22), M(  108,  -37), M(  170,  -27), M(  198,  -48), M(  216,  -67),
-    M(  225,  -79), M(  182,  -37), M(  301,  -68), M(  244,  -32), M(  284,  -41),
-    M(  277,  -10), M(  382,  -36), M(  399, -106), M(  331,   50), M(  430,  -37),
-    M(  457, -191), M(  512, -150), M(  611, -269), M(  691, -268), M(  524, -129),
-    M( 1987,-3608), M(  103, 1019), M( 1855,-2582), M(  375,  464), M( 1120,  866),
-    M( 1363,-1828), M( 1087, -875), M( 1608, 1334), M(  500,  500), M(  501,  500),
-    M( 1758, 1498), M(  500,  500), M(  954,  700), M(  500,  500), M( -509, -514),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), };
-
+        M(   -3,   -6), M(    0,    0), M(   -8,   -6), M(    3,   -9), M(   -4,   -8),
+        M(   27,  -10), M(   11,  -12), M(   35,  -11), M(   18,  -11), M(   50,  -22),
+        M(   62,  -14), M(   84,  -26), M(   50,  -26), M(  111,  -25), M(  107,  -21),
+        M(  120,  -21), M(  108,  -33), M(  173,  -23), M(  200,  -46), M(  218,  -62),
+        M(  222,  -73), M(  186,  -36), M(  299,  -59), M(  246,  -27), M(  284,  -35),
+        M(  273,    0), M(  386,  -35), M(  399,  -93), M(  326,   62), M(  421,  -22),
+        M(  464, -196), M(  493, -110), M(  613, -270), M(  698, -272), M(  517, -108),
+        M( 1914,-3458), M(  134,  980), M( 1774,-2418), M(  334,  579), M( 1135,  871),
+        M( 1508,-1912), M( 1113, -876), M( 1625, 1339), M(  500,  500), M(  501,  500),
+        M( 1768, 1501), M(  500,  500), M(  977,  706), M(  500,  500), M( -510, -515),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
+        M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), };
 
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
