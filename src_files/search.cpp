@@ -993,7 +993,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, -alpha, (ply == 0) +  depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
             if (pv) sd->reduce = true;
@@ -1001,7 +1001,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
+                score = -pvSearch(b, -beta, -alpha, (ply == 0) + depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
         }
         
