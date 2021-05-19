@@ -47,6 +47,7 @@ struct SearchData {
     bool  sideToReduce;
     bool reduce;
 
+    int reduceChildSide = 2;
 
     SearchData();
 

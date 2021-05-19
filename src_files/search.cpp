@@ -946,6 +946,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             m = moveOrderer.next();
         }
         
+
         // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at.
@@ -955,6 +956,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             sd->reduce = false;
             if (legalMoves == 0){
                 sd->reduce = true;
+            }
+            if (ply == 0) {
+                sd->reduceChildSide = 2;
+                if (legalMoves == 0)
+                    sd->reduceChildSide = b->getActivePlayer();
             }
         }
         
@@ -973,6 +979,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
+            lmr += depth * (b->getActivePlayer() == sd->reduceChildSide) / 5;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
@@ -982,6 +989,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = depth - 2;
             }
         }
+        
         
         // doing the move
         b->move(m);
@@ -993,15 +1001,18 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, -alpha, (ply == 0) + depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
             if (pv) sd->reduce = true;
+            if (ply == 0) {
+                sd->reduceChildSide = !b->getActivePlayer();
+            }
             if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
+                score = -pvSearch(b, -alpha - 1, -alpha, (ply == 0) + depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
+                score = -pvSearch(b, -beta, -alpha, (ply == 0) + depth - ONE_PLY + extension, ply + ONE_PLY, td,
                                   0);    // re-search
         }
         
