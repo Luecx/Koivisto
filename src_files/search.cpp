@@ -877,9 +877,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool quiet = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
-            
-            if (!givesCheck && !isCapture(m) && getMovingPiece(m) % 8 != PAWN && ONE << getSquareTo(m) & enemyPawnCover)
-                continue;
 
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
             
@@ -898,6 +895,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 }
             }
             
+            if (!givesCheck && !isCapture(m) && getMovingPiece(m) % 8 != PAWN && ONE << getSquareTo(m) & enemyPawnCover)
+                continue;
+
             // ******************************************************************************************************
             // static exchange evaluation pruning (see pruning):
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
