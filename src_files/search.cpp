@@ -859,6 +859,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     int legalMoves = 0;
     int quiets     = 0;
     
+    U64 enemyPawnCover =  b->getActivePlayer() == WHITE ? ((shiftSouthEast(b->getPieceBB(BLACK, PAWN)) & b->getPieceBB(BLACK, PAWN)) | (shiftSouthWest(b->getPieceBB(BLACK, PAWN)) & b->getPieceBB(BLACK, PAWN))) : ((shiftNorthEast(b->getPieceBB(WHITE, PAWN)) & b->getPieceBB(WHITE, PAWN)) | (shiftSouthWest(b->getPieceBB(WHITE, PAWN)) & b->getPieceBB(WHITE, PAWN))) ; 
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
@@ -873,9 +875,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet = !isCapture(m) && !isPromotion && !givesCheck;
-        
+
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             
+            if (!givesCheck && !isCapture(m) && getMovingPiece(m) % 8 != PAWN && ONE << getSquareTo(m) & enemyPawnCover)
+                continue;
+
             Depth moveDepth = depth-lmrReductions[depth][legalMoves];
             
             if (quiet) {
