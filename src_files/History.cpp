@@ -42,6 +42,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                     - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)]
                           / MAX_HISTORY_SCORE;
             } else {
+                slow_history[side][getSquareFrom(m)][getSquareTo(m)][0]++;
                 history[side][getSquareFrom(m)][getSquareTo(m)] +=
                     (depth * depth + 5 * depth)
                     - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
@@ -59,6 +60,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                 - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)]
                       / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
+            slow_history[side][getSquareFrom(m2)][getSquareTo(m2)][1]++;
             history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
                 -(depth * depth + 5 * depth)
                 - (depth * depth + 5 * depth) * history[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;

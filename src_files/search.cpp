@@ -523,6 +523,15 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     
     // the thread id starts at 0 for the first thread
     ThreadData* td = &tds[threadId];
+
+    for (Square sq = 0; sq < 64; sq++){
+        for (Square sq2 = 0; sq2 < 64; sq2++) {
+            td->searchData->slow_history[WHITE][sq][sq2][0] /= 2;
+            td->searchData->slow_history[WHITE][sq][sq2][1] /= 2;
+            td->searchData->slow_history[BLACK][sq][sq2][0] /= 2;
+            td->searchData->slow_history[BLACK][sq][sq2][1] /= 2;
+        }
+    }
     
     // start the basic search on all threads
     Depth d = 1;
@@ -868,7 +877,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
             continue;
-        
+/*        
+        if (ply == 0)
+            std::cout << toString(m) << " - " << sd->slow_history[b->getActivePlayer()][getSquareFrom(m)][getSquareTo(m)][0]*100 << " - " << sd->slow_history[b->getActivePlayer()][getSquareFrom(m)][getSquareTo(m)][0]*100 / (1 + sd->slow_history[b->getActivePlayer()][getSquareFrom(m)][getSquareTo(m)][1]) << std::endl;
+*/
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
