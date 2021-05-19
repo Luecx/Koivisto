@@ -660,7 +660,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[WHITE_ROOK] & ~b->getPieceBB()[WHITE_QUEEN]);
         evalData.attacks[WHITE][ROOK] |= attacks;
 
-        mobScore += mobilityRook[bitCount(attacks & mobilitySquaresWhite)];
+        mobScore += mobilityRook[bitCount(attacks & mobilitySquaresWhite & ~(evalData.attacks[BLACK][KNIGHT]|evalData.attacks[BLACK][BISHOP]))];
 
         evalData.threats[WHITE] += ROOK_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
 
@@ -677,7 +677,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[BLACK_ROOK] & ~b->getPieceBB()[BLACK_QUEEN]);
         evalData.attacks[BLACK][ROOK] |= attacks;
 
-        mobScore -= mobilityRook[bitCount(attacks & mobilitySquaresBlack)];
+        mobScore -= mobilityRook[bitCount(attacks & mobilitySquaresBlack & ~(evalData.attacks[WHITE][KNIGHT]|evalData.attacks[WHITE][BISHOP]))];
 
         evalData.threats[BLACK] += ROOK_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
 
@@ -711,7 +711,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                   | lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_BISHOP]);
         evalData.attacks[WHITE][QUEEN] |= attacks;
 
-        mobScore += mobilityQueen[bitCount(attacks & mobilitySquaresWhite)];
+        mobScore += mobilityQueen[bitCount(attacks & mobilitySquaresWhite & ~(evalData.attacks[BLACK][KNIGHT]|evalData.attacks[BLACK][BISHOP]|evalData.attacks[BLACK][ROOK]))];
         featureScore += QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
         featureScore += SAFE_QUEEN_CHECK * bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~evalData.attacks[BLACK][PAWN]);
 
@@ -727,7 +727,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                   | lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_BISHOP]);
         evalData.attacks[BLACK][QUEEN] |= attacks;
 
-        mobScore -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack)];
+        mobScore -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack & ~(evalData.attacks[WHITE][KNIGHT]|evalData.attacks[WHITE][BISHOP]|evalData.attacks[WHITE][ROOK]))];
         featureScore -= QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
         featureScore -= SAFE_QUEEN_CHECK * bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~evalData.attacks[WHITE][PAWN]);
 

@@ -40,9 +40,9 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
-#define N_THREAD 16
+#define N_THREAD 4
 namespace tuning {
 
     inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -1061,6 +1061,34 @@ namespace tuning {
 
             U64 occupied = *b->getOccupiedBB();
 
+            U64 unsafeSq[2][2] = {0};
+
+            for (Piece p = KNIGHT; p <= ROOK; p++) {
+                for (int c= 0; c <= 1; c++) {
+                    k = b->getPieceBB(c, p);
+                    while (k) {
+                        square = bitscanForward(k);
+                        attacks = ZERO;
+                        switch (p) {
+                            case KNIGHT:
+                                unsafeSq[c][0] |= KNIGHT_ATTACKS[square];
+                                break;
+                            case BISHOP:
+                                unsafeSq[c][0] |=
+                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
+                                break;
+                            case ROOK:
+                                unsafeSq[c][1] |=
+                                        lookUpRookAttack    (square,occupied &
+                                                ~b->getPieceBB(c, QUEEN)&
+                                                ~b->getPieceBB(c, ROOK));
+                                break;
+                        }
+                        k = lsbReset(k);
+                    }
+                }
+            }
+
             for (Piece p = KNIGHT; p <= QUEEN; p++) {
                 for (int c= 0; c <= 1; c++) {
                     k = b->getPieceBB(c, p);
@@ -1088,9 +1116,13 @@ namespace tuning {
                                 break;
                         }
                         if (c == WHITE) {
-                            indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
+                            if (p < ROOK)   indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
+                            if (p == ROOK)  indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite & ~unsafeSq[!c][0]));
+                            if (p == QUEEN) indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite & ~(unsafeSq[!c][0]|unsafeSq[!c][1])));
                         } else {
-                            indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack));
+                            if (p < ROOK)   indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack));
+                            if (p == ROOK)  indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack & ~unsafeSq[!c][0]));
+                            if (p == QUEEN) indices_black[p][++indices_black[p][0]] = (bitCount(attacks & mobilitySquaresBlack & ~(unsafeSq[!c][0]|unsafeSq[!c][1])));
                         }
 
                         k = lsbReset(k);
