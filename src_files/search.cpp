@@ -990,7 +990,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
-        mv->scoreMove(moveOrderer.counter-1, depth);
 
         // principal variation search recursion.
         if (legalMoves == 0) {
