@@ -926,7 +926,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
+            score         = pvSearch(b, betaCut - 1, betaCut, depth - (depth/3)*2, ply, td, m);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -936,7 +936,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
-                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m);
+                score     = pvSearch(b, beta - 1, beta, depth - (depth/3)*2, ply, td, m);
                 if (score>=beta)
                     return score;
             }
