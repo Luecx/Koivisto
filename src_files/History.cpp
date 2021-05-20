@@ -131,14 +131,14 @@ void SearchData::decHS(Move m, Depth depth, MoveList* mv, Color side, Move previ
 }
 int SearchData::getHistories(Move m, Color side, Move previous) {
     if (isCapture(m)) {
-        return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
+        return 750 + captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
     } else {
         Piece  prevPiece   = getMovingPiece(previous) % 8;
         Square prevTo      = getSquareTo(previous);
         Piece  movingPiece = getMovingPiece(m) % 8;
         Square squareTo    = getSquareTo(m);
 
-        return 500 + cmh[prevPiece][prevTo][side][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
+        return 750 + cmh[prevPiece][prevTo][side][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
     }
 }
 
