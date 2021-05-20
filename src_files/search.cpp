@@ -1032,7 +1032,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Score newAverage = (sd->average[1] - tempAverageD) > 0 ? ((sd->average[0] - tempAverage) / (sd->average[1] - tempAverageD)) * ((b->getActivePlayer() == WHITE) ? 1 : -1) : -MAX_MATE_SCORE;
 
         if (ply == 0)
-            //std::cout << toString(m) << " <--- mcts move" << newAverage << std::endl;
+            std::cout << toString(m) << " <--- mcts move" << newAverage << std::endl;
 
 
         if (newAverage > bestAverage) {
