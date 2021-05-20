@@ -784,7 +784,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && sd->evaluator.evalData.threats[!b->getActivePlayer()] > 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0, behindLmr);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -921,7 +921,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the node turns 
         // out to be singular.
         // *********************************************************************************************************
-        if (depth >= 8 && !skipMove && behindLmr != b->getActivePlayer() && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
+        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
@@ -998,7 +998,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, !b->getActivePlayer(), &lmr);
             if (pv) sd->reduce = true;
-            if (lmr && score > alpha) 
+            if (lmr && score > alpha && behindLmr == !b->getActivePlayer()) 
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                     0, behindLmr);    // re-search
             if (score > alpha && score < beta)
