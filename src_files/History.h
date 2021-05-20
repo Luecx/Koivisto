@@ -47,6 +47,7 @@ struct SearchData {
     bool  sideToReduce;
     bool reduce;
 
+    int64_t average    [2];
 
     SearchData();
 

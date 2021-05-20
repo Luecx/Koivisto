@@ -670,6 +670,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Score       score         = -MAX_MATE_SCORE;
     Move        bestMove      = 0;
     Move        hashMove      = 0;
+    Score       bestAverage     = -MAX_MATE_SCORE;
+    Move        bestAverageMove = 0;
+    int64_t     tempAverage     = sd->average[0];
+    int64_t     tempAverageD    = sd->average[1];
     Score       staticEval;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
@@ -982,6 +986,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
+        tempAverage     = sd->average[0];
+        tempAverageD    = sd->average[1];
+
         // doing the move
         b->move(m);
         
@@ -1008,16 +1015,23 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // undo the move
         b->undoMove();
-        
+
+        Score newAverage = (sd->average[1] - tempAverageD) > 0 ? ((sd->average[0] - tempAverage) / (sd->average[1] - tempAverageD)) * ((b->getActivePlayer() == WHITE) ? 1 : -1) : -MAX_MATE_SCORE;
+
+        if (newAverage > bestAverage) {
+            bestAverage = newAverage;
+            bestAverageMove = m;
+        }
+
         // if we got a new best score for this node, update the highest score and keep track of the best move
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
-                sd->bestMove = m;
+                //sd->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
+                //search_timeManager->updatePV(m, score, depth);
             }
         }
         
@@ -1068,6 +1082,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
+            if (ply == 0)
+                sd->bestMove = bestMove;
+                //std::cout << toString(bestAverageMove) << " <--- mcts move" << std::endl;
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
             table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
@@ -1129,6 +1146,11 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     } else {
         stand_pat = bestScore = 
             inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        if (!inCheck) {
+            sd->average[0] += stand_pat * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            sd->average[1] += 1;
+        }
+
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.
