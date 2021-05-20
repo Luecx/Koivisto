@@ -123,19 +123,19 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
+bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, int64_t average, int64_t averaged) {
 
     U64 index = zobrist & m_mask;
 
     Entry* enP = &m_entries[index];
 
     if (enP->zobrist == 0) {
-        enP->set(zobrist, score, move, type, depth);
+        enP->set(zobrist, score, move, type, depth, average, averaged);
         enP->setAge(m_currentAge);
         return true;
     } else {
         if (enP->getAge() != m_currentAge || type == PV_NODE || ((enP->type != PV_NODE||enP->zobrist == zobrist) && enP->depth <= depth)) {
-            enP->set(zobrist, score, move, type, depth);
+            enP->set(zobrist, score, move, type, depth, average, averaged);
             enP->setAge(m_currentAge);
             return true;
         }

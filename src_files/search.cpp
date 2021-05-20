@@ -674,6 +674,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestAverageMove = 0;
     int64_t     tempAverage     = sd->average[0];
     int64_t     tempAverageD    = sd->average[1];
+    int64_t     totalAverage    = sd->average[0];
+    int64_t     totalAverageD   = sd->average[1];
     Score       staticEval;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
@@ -684,8 +686,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval =
             inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
         if (!inCheck) {
-            sd->average[0] += staticEval * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-            sd->average[1] += 1;
+            sd->average[0] += depth*depth* staticEval * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            sd->average[1] += depth*depth;
         }
     }
     // we check if the evaluation improves across plies.
@@ -717,13 +719,19 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // we still do a normal search. Thus the standard of proof required is different.
         if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta)*100 >= depth) {
             if (en.type == PV_NODE) {
+                sd->average[0] += en.average;
+                sd->average[1] += en.averaged;
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 if (en.score >= beta) {
+                    sd->average[0] += en.average;
+                    sd->average[1] += en.averaged;
                     return en.score;
                 }
             } else if (en.type == ALL_NODE) {
                 if (en.score <= alpha) {
+                    sd->average[0] += en.average;
+                    sd->average[1] += en.averaged;
                     return en.score;
                 }
             }
@@ -827,8 +835,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             b->undoMove();
 
+
             if (score >= betaCut) {
-                table->put(zobrist, score, m, CUT_NODE, depth - 3);
+                table->put(zobrist, score, m, CUT_NODE, depth - 3, (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
                 return betaCut;
             }
 
@@ -1037,7 +1046,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             bestMove     = m;
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
-                sd->bestMove = m;
+                //sd->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
                 search_timeManager->updatePV(m, score, depth);
             }
@@ -1047,7 +1056,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                table->put(zobrist, score, m, CUT_NODE, depth, (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -1090,11 +1099,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            //if (ply == 0)
-                //sd->bestMove = bestAverageMove;
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            if (ply == 0)
+                sd->bestMove = bestAverageMove;
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
         } else {
-            table->put(zobrist, highestScore, bestAverageMove, ALL_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
         }
     }
     
@@ -1218,7 +1227,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, 0 , 0);
                 return beta;
             }
             if (score > alpha) {
@@ -1230,7 +1239,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+        table->put(zobrist, bestScore, bestMove, ttNodeType, 0, 0 ,0);
     return alpha;
     
     //    return 0;
