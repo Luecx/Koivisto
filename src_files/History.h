@@ -53,6 +53,9 @@ struct SearchData {
     virtual ~SearchData();
 
     void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
+    
+    void incHS(Move m, Depth depth, MoveList* mv, Color side, Move previous);
+    void decHS(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
     int getHistories(Move m, Color side, Move previous);
     

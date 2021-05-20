@@ -73,6 +73,62 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
     return;
 }
 
+void SearchData::incHS(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
+        if (depth > 20)
+        return;
+    Move m2;
+
+    Piece  prevPiece = getMovingPiece(previous) % 8;
+    Square prevTo    = getSquareTo(previous);
+    Color  color     = getMovingPiece(m) / 8;
+
+    Piece  movingPiece = getMovingPiece(m) % 8;
+    Square squareTo    = getSquareTo(m);
+
+    if (isCapture(m)) {
+        captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
+        (depth * depth + 5 * depth)
+        - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)]
+        / MAX_HISTORY_SCORE;
+    } else {
+        history[side][getSquareFrom(m)][getSquareTo(m)] +=
+            (depth * depth + 5 * depth)
+            - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+        cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
+            (depth * depth + 5 * depth)
+            - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]
+            / MAX_HISTORY_SCORE;
+    }
+    return;
+}
+void SearchData::decHS(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
+        if (depth > 20)
+        return;
+    Move m2;
+
+    Piece  prevPiece = getMovingPiece(previous) % 8;
+    Square prevTo    = getSquareTo(previous);
+    Color  color     = getMovingPiece(m) / 8;
+
+    Piece  movingPiece = getMovingPiece(m) % 8;
+    Square squareTo    = getSquareTo(m);
+
+    if (isCapture(m)) {
+        captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
+            - (depth * depth + 5 * depth)
+            - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)]
+            / MAX_HISTORY_SCORE;
+    } else {
+        history[side][getSquareFrom(m)][getSquareTo(m)] +=
+            - (depth * depth + 5 * depth)
+            - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+        cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
+            - (depth * depth + 5 * depth)
+            - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]
+            / MAX_HISTORY_SCORE;
+    }
+    return;
+}
 int SearchData::getHistories(Move m, Color side, Move previous) {
     if (isCapture(m)) {
         return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
@@ -82,7 +138,7 @@ int SearchData::getHistories(Move m, Color side, Move previous) {
         Piece  movingPiece = getMovingPiece(m) % 8;
         Square squareTo    = getSquareTo(m);
 
-        return cmh[prevPiece][prevTo][side][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
+        return 500 + cmh[prevPiece][prevTo][side][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
     }
 }
 
