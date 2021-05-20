@@ -928,10 +928,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
-                if (lmrFactor != nullptr) {
-                    depth += *lmrFactor;
-                    *lmrFactor = 0;
-                }
                 extension++;
             } else if (score >= beta){
                 return score;
