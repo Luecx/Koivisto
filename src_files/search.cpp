@@ -995,7 +995,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
-        sd->average[0] += depth*depth*depth*100 *  ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        sd->average[0] += depth*depth*depth*-100 *  ((b->getActivePlayer() == WHITE) ? 1 : -1);
         sd->average[1] += depth*depth*depth;
 
         tempAverage     = sd->average[0];
@@ -1031,7 +1031,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         Score newAverage = ((sd->average[0] - tempAverage) / (sd->average[1] - tempAverageD + 1)) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
 
         if (ply == 0)
-            std::cout << toString(m) << " <--- mcts move" << newAverage << std::endl;
+            //std::cout << toString(m) << " <--- mcts move" << newAverage << std::endl;
 
 
         if (newAverage > bestAverage) {
@@ -1102,7 +1102,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 sd->bestMove = bestAverageMove;
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
+            table->put(zobrist, highestScore, bestAverageMove, ALL_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
         }
     }
     
