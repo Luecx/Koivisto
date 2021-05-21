@@ -218,7 +218,10 @@ namespace tuning {
             matingMaterialBlack = hasMatingMaterial(b, BLACK);
         }
 
-        float evaluate(float &mg, float&eg , ThreadData* td) {
+        float evaluate(float &mg, float&eg , ThreadData* td, int pawnCount[2]) {
+
+            eg = eg*(120-(8-pawnCount[eg > 0 ? WHITE : BLACK])*(8-pawnCount[eg > 0 ? WHITE : BLACK])) / 100;
+
             float res = (int) (phase * eg) + (int) ((1 - phase) * mg);
             
             if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
@@ -1148,6 +1151,8 @@ namespace tuning {
         Pst225Data pst225{};
         MetaData meta{};
 
+        int pawnCount[N_COLORS];
+
         void init(Board *b, EvalData *ev) {
             features.init(b, ev);
             mobility.init(b, ev);
@@ -1159,6 +1164,8 @@ namespace tuning {
             pst64.init(b, ev);
             pst225.init(b, ev);
             meta.init(b, ev);
+            pawnCount[WHITE] = bitCount(b->getPieceBB(WHITE,PAWN)); 
+            pawnCount[BLACK] = bitCount(b->getPieceBB(BLACK,PAWN)); 
         }
 
         double evaluate(int threadID = 0) {
@@ -1176,7 +1183,7 @@ namespace tuning {
             pst64.evaluate(midgame, endgame, &threadData[threadID]);
             pst225.evaluate(midgame, endgame, &threadData[threadID]);
 
-            float res = meta.evaluate(midgame, endgame, &threadData[threadID]);
+            float res = meta.evaluate(midgame, endgame, &threadData[threadID], pawnCount);
 
             return res;
         }

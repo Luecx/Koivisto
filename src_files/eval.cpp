@@ -779,9 +779,12 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                        - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
                        - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
+
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + passedScore + evalData.threats[WHITE] - evalData.threats[BLACK];
-    res += (int) ((float) MgScore(totalScore) * (1 - phase));
-    res += (int) ((float) EgScore(totalScore) * (phase));
+    res = (int) ((float) MgScore(totalScore + materialScore) * (1 - phase));
+    Score eg = EgScore(totalScore + materialScore);
+    eg = eg*(120-(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))*(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))) / 100;
+    res += (int) ((float) eg * (phase));
 
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
