@@ -1065,7 +1065,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
             
-            return beta;
+            return highestScore;
         }
         
         // we consider this seperate to having a new best score for simplicity
@@ -1107,7 +1107,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
-    return alpha;
+    return highestScore;
 }
 
 /**
@@ -1227,8 +1227,13 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
+<<<<<<< HEAD
                 table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, 0 , 0);
                 return beta;
+=======
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                return score;
+>>>>>>> master
             }
             if (score > alpha) {
                 ttNodeType = PV_NODE;
@@ -1239,8 +1244,13 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // store the current position inside the transposition table
     if (bestMove)
+<<<<<<< HEAD
         table->put(zobrist, bestScore, bestMove, ttNodeType, 0, 0 ,0);
     return alpha;
+=======
+        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+    return bestScore;
+>>>>>>> master
     
     //    return 0;
 }
