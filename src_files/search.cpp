@@ -936,7 +936,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
-                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+1, ply, td, m);
+                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+3, ply, td, m);
                 if (score>=beta)
                     return score;
             }
