@@ -40,7 +40,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 #define N_THREAD 16
 namespace tuning {
@@ -218,13 +218,20 @@ namespace tuning {
             matingMaterialBlack = hasMatingMaterial(b, BLACK);
         }
 
-        void evaluate(float &res, ThreadData* td) {
+        float evaluate(float &mg, float&eg , ThreadData* td) {
+            float res = (int) (phase * eg) + (int) ((1 - phase) * mg);
+            
             if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
                 evalReduction = 1.0 / 10;
             else {
                 evalReduction = 1;
             }
             res *= evalReduction;
+            return res;
+        }
+        void gradient(float& mg_grad, float& eg_grad, float loss_grad, ThreadData* pData) {
+            mg_grad = loss_grad * (1-phase) * evalReduction;
+            eg_grad = loss_grad * (  phase) * evalReduction;
         }
     };
 
@@ -295,38 +302,30 @@ namespace tuning {
             }
         }
 
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
             for (Piece p = PAWN; p < KING; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
-                    td->w_piece_square_table[p][!sameside_castle][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_square_table[p][!sameside_castle][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_piece_square_table[p][!sameside_castle][w].midgame.gradient += mg_grad;
+                    td->w_piece_square_table[p][!sameside_castle][w].endgame.gradient += eg_grad;
                 }
                 for (int i = 1; i <= indices_black[p][0]; i++) {
                     int8_t b = indices_black[p][i];
-                    td->w_piece_square_table[p][!sameside_castle][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_piece_square_table[p][!sameside_castle][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_piece_square_table[p][!sameside_castle][b].midgame.gradient -= mg_grad;
+                    td->w_piece_square_table[p][!sameside_castle][b].endgame.gradient -= eg_grad;
                 }
             }
 
             // the kings are done seperate as they are not affected by castling side
             for (int i = 1; i <= indices_white[KING][0]; i++) {
                 int8_t w = indices_white[KING][i];
-                td->w_piece_square_table[KING][0][w].midgame.gradient +=
-                        (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_piece_square_table[KING][0][w].endgame.gradient +=
-                        (meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_square_table[KING][0][w].midgame.gradient += mg_grad;
+                td->w_piece_square_table[KING][0][w].endgame.gradient += eg_grad;
             }
             for (int i = 1; i <= indices_black[KING][0]; i++) {
                 int8_t b = indices_black[KING][i];
-                td->w_piece_square_table[KING][0][b].midgame.gradient -=
-                        (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_piece_square_table[KING][0][b].endgame.gradient -=
-                        (meta->phase) * meta->evalReduction * lossgrad;
+                td->w_piece_square_table[KING][0][b].midgame.gradient -= mg_grad;
+                td->w_piece_square_table[KING][0][b].endgame.gradient -= eg_grad;
             }
         }
     };
@@ -391,38 +390,38 @@ namespace tuning {
                 }
             }
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
             for (Piece p: {PAWN, QUEEN}) {
                 for (int i = 1; i <= indices_white_wk[p][0]; i++) {
                     uint8_t w = indices_white_wk[p][i];
                     td->w_piece_our_king_square_table[p][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_our_king_square_table[p][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
 
                 for (int i = 1; i <= indices_white_bk[p][0]; i++) {
                     uint8_t w = indices_white_bk[p][i];
                     td->w_piece_opp_king_square_table[p][w].midgame.gradient +=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_opp_king_square_table[p][w].endgame.gradient +=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
                 for (int i = 1; i <= indices_black_bk[p][0]; i++) {
                     uint8_t b = indices_black_bk[p][i];
                     td->w_piece_our_king_square_table[p][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_our_king_square_table[p][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
 
                 for (int i = 1; i <= indices_black_wk[p][0]; i++) {
                     uint8_t b = indices_black_wk[p][i];
                     td->w_piece_opp_king_square_table[p][b].midgame.gradient -=
-                            (1 - meta->phase) * meta->evalReduction * lossgrad;
+                            mg_grad;
                     td->w_piece_opp_king_square_table[p][b].endgame.gradient -=
-                            (meta->phase) * meta->evalReduction * lossgrad;
+                            eg_grad;
                 }
             }
         }
@@ -504,17 +503,17 @@ namespace tuning {
             midgame += td->w_king_safety[bkingsafety_index].midgame.value - td->w_king_safety[wkingsafety_index].midgame.value;
             endgame += td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
             td->w_king_safety[bkingsafety_index].midgame.gradient +=
-                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                    mg_grad;
             td->w_king_safety[bkingsafety_index].endgame.gradient +=
-                    (meta->phase) * meta->evalReduction * lossgrad;
+                    eg_grad;
 
             td->w_king_safety[wkingsafety_index].midgame.gradient -=
-                    (1 - meta->phase) * meta->evalReduction * lossgrad;
+                    mg_grad;
             td->w_king_safety[wkingsafety_index].endgame.gradient -=
-                    (meta->phase) * meta->evalReduction * lossgrad;
+                    eg_grad;
         }
     };
 
@@ -559,20 +558,20 @@ namespace tuning {
                 endgame += count_o[i] * td->w_bishop_pawn_o[i].endgame.value;
             }
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
             for (int i = 0; i < 9; i++) {
                 td->w_bishop_pawn_e[i].midgame.gradient +=
-                        count_e[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
+                        count_e[i] * mg_grad;
                 td->w_bishop_pawn_e[i].endgame.gradient +=
-                        count_e[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count_e[i] * eg_grad;
                 //            midgame += count_e[i] * w_bishop_pawn_e[i].midgame.value;
                 //            endgame += count_e[i] * w_bishop_pawn_e[i].endgame.value;
 
                 td->w_bishop_pawn_o[i].midgame.gradient +=
-                        count_o[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
+                        count_o[i] * mg_grad;
                 td->w_bishop_pawn_o[i].endgame.gradient +=
-                        count_o[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count_o[i] * eg_grad;
                 //            midgame += count_o[i] * w_bishop_pawn_o[i].midgame.value;
                 //            endgame += count_o[i] * w_bishop_pawn_o[i].endgame.value;
             }
@@ -618,12 +617,12 @@ namespace tuning {
                 endgame += count[i] * td->w_passer[i].endgame.value;
             }
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
 
             for (int i = 0; i < 8; i++) {
-                td->w_passer[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_passer[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                td->w_passer[i].midgame.gradient += count[i] * mg_grad;
+                td->w_passer[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -919,13 +918,13 @@ namespace tuning {
                 endgame += count[i] * td->w_features[i].endgame.value;
             }
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
 
             for (int i = 0; i < I_END; i++) {
                 td->w_features[i].midgame.gradient +=
-                        count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_features[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count[i] * mg_grad;
+                td->w_features[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -1002,12 +1001,12 @@ namespace tuning {
             }
             
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
 
             for (int i = 0; i < 15; i++) {
-                td->w_pinned[i].midgame.gradient += count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_pinned[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                td->w_pinned[i].midgame.gradient += count[i] * mg_grad;
+                td->w_pinned[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -1032,13 +1031,13 @@ namespace tuning {
                 endgame += count[i] * td->w_hanging[i].endgame.value;
             }
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
 
             for (int i = 0; i < 5; i++) {
                 td->w_hanging[i].midgame.gradient +=
-                        count[i] * (1 - meta->phase) * meta->evalReduction * lossgrad;
-                td->w_hanging[i].endgame.gradient += count[i] * (meta->phase) * meta->evalReduction * lossgrad;
+                        count[i] * mg_grad;
+                td->w_hanging[i].endgame.gradient += count[i] * eg_grad;
             }
         }
     };
@@ -1113,22 +1112,22 @@ namespace tuning {
                 }
             }
         }
-
-        void gradient(MetaData *meta, float lossgrad, ThreadData* td) {
+    
+        void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
 
             for (Piece p = PAWN; p <= QUEEN; p++) {
                 for (int i = 1; i <= indices_white[p][0]; i++) {
                     int8_t w = indices_white[p][i];
 
-                    td->w_mobility[p][w].midgame.gradient += (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_mobility[p][w].endgame.gradient += (meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_mobility[p][w].midgame.gradient += mg_grad;
+                    td->w_mobility[p][w].endgame.gradient += eg_grad;
 
                 }
                 for (int i = 1; i <= indices_black[p][0]; i++) {
                     int8_t b = indices_black[p][i];
 
-                    td->w_mobility[p][b].midgame.gradient -= (1 - meta->phase) * meta->evalReduction * lossgrad;
-                    td->w_mobility[p][b].endgame.gradient -= (meta->phase) * meta->evalReduction * lossgrad;
+                    td->w_mobility[p][b].midgame.gradient -= mg_grad;
+                    td->w_mobility[p][b].endgame.gradient -= eg_grad;
 
                 }
             }
@@ -1177,22 +1176,26 @@ namespace tuning {
             pst64.evaluate(midgame, endgame, &threadData[threadID]);
             pst225.evaluate(midgame, endgame, &threadData[threadID]);
 
-            float res = (int) (meta.phase * endgame) + (int) ((1 - meta.phase) * midgame);
-            meta.evaluate(res, &threadData[threadID]);
+            float res = meta.evaluate(midgame, endgame, &threadData[threadID]);
 
             return res;
         }
 
         void gradient(float lossgrad, int threadID) {
-            features.gradient(&meta, lossgrad, &threadData[threadID]);
-            mobility.gradient(&meta, lossgrad, &threadData[threadID]);
-            hanging.gradient(&meta, lossgrad, &threadData[threadID]);
-            pinned.gradient(&meta, lossgrad, &threadData[threadID]);
-            passed.gradient(&meta, lossgrad, &threadData[threadID]);
-            bishop_pawn.gradient(&meta, lossgrad, &threadData[threadID]);
-            king_safety.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst64.gradient(&meta, lossgrad, &threadData[threadID]);
-            pst225.gradient(&meta, lossgrad, &threadData[threadID]);
+
+            float mg_grad = 0;
+            float eg_grad = 0;
+            meta.gradient(mg_grad, eg_grad, lossgrad, &threadData[threadID]);
+
+            features.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            mobility.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            hanging.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            pinned.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            passed.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            bishop_pawn.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            king_safety.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            pst64.gradient(mg_grad, eg_grad, &threadData[threadID]);
+            pst225.gradient(mg_grad, eg_grad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
