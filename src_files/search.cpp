@@ -685,10 +685,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     } else {
         staticEval =
             inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-        if (!inCheck) {
-            sd->average[0] += depth*depth* staticEval * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-            sd->average[1] += depth*depth;
-        }
     }
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -999,9 +995,12 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
+        sd->average[0] += depth*depth*depth*100 *  ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        sd->average[1] += depth*depth*depth;
+
         tempAverage     = sd->average[0];
         tempAverageD    = sd->average[1];
-
+        
         // doing the move
         b->move(m);
         
@@ -1029,7 +1028,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // undo the move
         b->undoMove();
 
-        Score newAverage = (sd->average[1] - tempAverageD) > 0 ? ((sd->average[0] - tempAverage) / (sd->average[1] - tempAverageD)) * ((b->getActivePlayer() == WHITE) ? 1 : -1) : -MAX_MATE_SCORE;
+        Score newAverage = ((sd->average[0] - tempAverage) / (sd->average[1] - tempAverageD + 1)) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
 
         if (ply == 0)
             std::cout << toString(m) << " <--- mcts move" << newAverage << std::endl;
@@ -1227,13 +1226,8 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             bestMove  = m;
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
-<<<<<<< HEAD
                 table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, 0 , 0);
                 return beta;
-=======
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
-                return score;
->>>>>>> master
             }
             if (score > alpha) {
                 ttNodeType = PV_NODE;
@@ -1244,13 +1238,8 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     // store the current position inside the transposition table
     if (bestMove)
-<<<<<<< HEAD
         table->put(zobrist, bestScore, bestMove, ttNodeType, 0, 0 ,0);
     return alpha;
-=======
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
-    return bestScore;
->>>>>>> master
     
     //    return 0;
 }
