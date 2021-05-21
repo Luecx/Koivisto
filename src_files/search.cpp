@@ -998,7 +998,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         } else {
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, !b->getActivePlayer(), &lmr);
             if (pv) sd->reduce = true;
-            if (lmr && score > alpha && behindLmr == !b->getActivePlayer()) 
+            if (lmr && score > alpha && (pv || behindLmr == b->getActivePlayer())) 
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
                     0, behindLmr);    // re-search
             if (score > alpha && score < beta)
