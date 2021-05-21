@@ -1045,7 +1045,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             bestMove     = m;
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
-                //sd->bestMove = m;
+                sd->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
                 search_timeManager->updatePV(m, score, depth);
             }
@@ -1098,8 +1098,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            if (ply == 0)
-                sd->bestMove = bestAverageMove;
+            //if (ply == 0)
+                //sd->bestMove = bestAverageMove;
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
         } else {
             table->put(zobrist, highestScore, bestAverageMove, ALL_NODE, depth,  (sd->average[0] - totalAverage), (sd->average[1] - totalAverageD));
@@ -1174,7 +1174,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     }
     
     if (bestScore >= beta)
-        return beta;
+        return bestScore;
     if (alpha < bestScore)
         alpha = bestScore;
     
@@ -1227,7 +1227,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
                 table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, 0 , 0);
-                return beta;
+                return bestScore;
             }
             if (score > alpha) {
                 ttNodeType = PV_NODE;
@@ -1239,7 +1239,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // store the current position inside the transposition table
     if (bestMove)
         table->put(zobrist, bestScore, bestMove, ttNodeType, 0, 0 ,0);
-    return alpha;
+    return bestScore;
     
     //    return 0;
 }
