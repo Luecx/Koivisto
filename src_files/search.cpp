@@ -945,7 +945,33 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             m = moveOrderer.next();
         }
+
         
+        if (depth > 8 && threadCount > 1) {
+            Entry en2 = table->get(zobrist);
+        
+            if (en2.zobrist == zobrist && !skipMove) {
+                // We treat child nodes of null moves differently. The reason a null move
+                // search has to be searched to great depth is to make sure that we dont
+                // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
+                // we still do a normal search. Thus the standard of proof required is different.
+                if (!pv && en2.depth >= depth) {
+                    if (en2.type == PV_NODE) {
+                        return en2.score;
+                    } else if (en2.type == CUT_NODE) {
+                        if (en2.score >= beta) {
+                            return en2.score;
+                        }
+                    } else if (en2.type == ALL_NODE) {
+                        if (en2.score <= alpha) {
+                            return en2.score;
+                        }
+                    }
+                }
+            }
+        }
+    
+
         // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at.
