@@ -55,7 +55,9 @@ struct SearchData {
     void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
     int getHistories(Move m, Color side, Move previous);
-    
+
+    bool negativeHistory(Move m, Color side, Move previous);
+
     void setKiller(Move move, Depth ply, Color color);
 
     int isKiller(Move move, Depth ply, Color color);

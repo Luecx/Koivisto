@@ -86,6 +86,18 @@ int SearchData::getHistories(Move m, Color side, Move previous) {
     }
 }
 
+bool SearchData::negativeHistory(Move m, Color side, Move previous) {
+    if (isCapture(m)) {
+        return captureHistory[side][getSquareFrom(m)][getSquareTo(m)] < 0;
+    } else {
+        Piece  prevPiece   = getMovingPiece(previous) % 8;
+        Square prevTo      = getSquareTo(previous);
+        Piece  movingPiece = getMovingPiece(m) % 8;
+        Square squareTo    = getSquareTo(m);
+
+        return cmh[prevPiece][prevTo][side][movingPiece][squareTo] < 0  ||  history[side][getSquareFrom(m)][getSquareTo(m)] < 0;
+    }
+}
 /*
  * Set killer
  */
