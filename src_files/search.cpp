@@ -972,6 +972,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
+            lmr -= givesCheck;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
             if (lmr > MAX_PLY) {
@@ -984,11 +985,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // doing the move
         b->move(m);
-        
-        // adjust the extension policy for checks. we could use the givesCheck value but it has not been validated to
-        // work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()) && staticExchangeEval > 0)
-            extension = 1;
         
         mv->scoreMove(moveOrderer.counter-1, depth);
 
