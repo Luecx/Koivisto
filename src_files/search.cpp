@@ -888,19 +888,25 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < std::min(200-30*(depth*depth), 0)){
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < std::min(300-30*(depth*depth), 100)){
                     continue;
                 }
+                // ******************************************************************************************************
+                // static exchange evaluation pruning (see pruning):
+                // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
+                // consider this quiet move as well.
+                // ******************************************************************************************************
+                if (moveDepth <= 5 && b->staticExchangeEvaluation(m) <= -40*moveDepth)
+                    continue;
+            } else {
+                // ******************************************************************************************************
+                // static exchange evaluation pruning (see pruning):
+                // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
+                // consider this quiet move as well.
+                // ******************************************************************************************************
+                if ((getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) <= -100 * depth)
+                    continue;
             }
-            
-            // ******************************************************************************************************
-            // static exchange evaluation pruning (see pruning):
-            // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
-            // consider this quiet move as well.
-            // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
-                continue;
         }
 
         // dont search illegal moves
