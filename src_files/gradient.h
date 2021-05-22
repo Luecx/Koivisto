@@ -40,9 +40,9 @@
  * If it is a new array, ask Finn first
  *
  */
-#define TUNING
+//#define TUNING
 #ifdef TUNING
-#define N_THREAD 16
+#define N_THREAD 4
 namespace tuning {
 
     inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
