@@ -640,7 +640,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // increased / decreased by 1 score grain.
         // The implementation in Koivisto is based on a different idea, namely the Beal effect.
         // (see https://www.chessprogramming.org/Search_with_Random_Leaf_Values).
-        return 8 - (td->nodes & MASK_4);
+        return 4;
     }
 
     // beside keeping track of the nodes, we need to keep track of the selective depth for this thread.
