@@ -946,7 +946,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             m = moveOrderer.next();
         }
 
-        
+
         if (depth > 8 && threadCount > 1) {
             Entry en2 = table->get(zobrist);
         
@@ -1039,7 +1039,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
+            if (ply == 0 && (threadCount == 1 || score > alpha) && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
                 // the time manager needs to be updated to know if its safe to stop the search
