@@ -888,7 +888,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
-                if (moveDepth < 2 && sd->negativeHistory(m, b->getActivePlayer(), b->getPreviousMove())){
+                if (moveDepth < 3 && sd->negativeHistory(m, b->getActivePlayer(), b->getPreviousMove())){
                     continue;
                 }
             }
