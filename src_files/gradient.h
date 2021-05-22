@@ -243,8 +243,8 @@ namespace tuning {
         // and how often is being used. We also need to know if we deal with same side or opposite side castling
         bool sameside_castle;
 
-        int8_t indices_white[6][10]{};
-        int8_t indices_black[6][10]{};
+        int8_t indices_white[6][9]{};
+        int8_t indices_black[6][9]{};
 
         void init(Board *b, EvalData *ev) {
 
@@ -336,16 +336,17 @@ namespace tuning {
     struct Pst225Data {
 
         // only for pawns currently,
-        uint8_t indices_white_wk[5][10]{};
-        uint8_t indices_black_wk[5][10]{};
-        uint8_t indices_white_bk[5][10]{};
-        uint8_t indices_black_bk[5][10]{};
+        uint8_t indices_white_wk[2][9]{};
+        uint8_t indices_black_wk[2][9]{};
+        uint8_t indices_white_bk[2][9]{};
+        uint8_t indices_black_bk[2][9]{};
 
         void init(Board *b, EvalData *ev) {
 
             Square wKingSq = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square bKingSq = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
+            int index = 0;
             for (Piece p: {PAWN, QUEEN}) {
                 for (int c= 0; c <= 1; c++) {
                     U64 k = b->getPieceBB(c, p);
@@ -353,79 +354,84 @@ namespace tuning {
                         Square s = bitscanForward(k);
 
                         if (c == WHITE) {
-                            indices_white_wk[p][++indices_white_wk[p][0]] = (pst_index_relative_white(s, wKingSq));
-                            indices_white_bk[p][++indices_white_bk[p][0]] = (pst_index_relative_white(s, bKingSq));
+                            indices_white_wk[index][++indices_white_wk[index][0]] = (pst_index_relative_white(s, wKingSq));
+                            indices_white_bk[index][++indices_white_bk[index][0]] = (pst_index_relative_white(s, bKingSq));
                         } else {
-                            indices_black_wk[p][++indices_black_wk[p][0]] = (pst_index_relative_black(s, wKingSq));
-                            indices_black_bk[p][++indices_black_bk[p][0]] = (pst_index_relative_black(s, bKingSq));
+                            indices_black_wk[index][++indices_black_wk[index][0]] = (pst_index_relative_black(s, wKingSq));
+                            indices_black_bk[index][++indices_black_bk[index][0]] = (pst_index_relative_black(s, bKingSq));
                         }
 
                         k = lsbReset(k);
                     }
                 }
+                index++;
             }
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
+            int index = 0;
             for (Piece p : {PAWN, QUEEN}) {
 
-                for (int i = 1; i <= indices_white_wk[p][0]; i++) {
-                    uint8_t w = indices_white_wk[p][i];
+                for (int i = 1; i <= indices_white_wk[index][0]; i++) {
+                    uint8_t w = indices_white_wk[index][i];
                     midgame += td->w_piece_our_king_square_table[p][w].midgame.value;
                     endgame += td->w_piece_our_king_square_table[p][w].endgame.value;
                 }
 
-                for (int i = 1; i <= indices_white_bk[p][0]; i++) {
-                    uint8_t w = indices_white_bk[p][i];
+                for (int i = 1; i <= indices_white_bk[index][0]; i++) {
+                    uint8_t w = indices_white_bk[index][i];
                     midgame += td->w_piece_opp_king_square_table[p][w].midgame.value;
                     endgame += td->w_piece_opp_king_square_table[p][w].endgame.value;
                 }
-                for (int i = 1; i <= indices_black_bk[p][0]; i++) {
-                    uint8_t b = indices_black_bk[p][i];
+                for (int i = 1; i <= indices_black_bk[index][0]; i++) {
+                    uint8_t b = indices_black_bk[index][i];
                     midgame -= td->w_piece_our_king_square_table[p][b].midgame.value;
                     endgame -= td->w_piece_our_king_square_table[p][b].endgame.value;
                 }
 
-                for (int i = 1; i <= indices_black_wk[p][0]; i++) {
-                    uint8_t b = indices_black_wk[p][i];
+                for (int i = 1; i <= indices_black_wk[index][0]; i++) {
+                    uint8_t b = indices_black_wk[index][i];
                     midgame -= td->w_piece_opp_king_square_table[p][b].midgame.value;
                     endgame -= td->w_piece_opp_king_square_table[p][b].endgame.value;
                 }
+                index ++;
             }
         }
     
         void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
+            int index = 0;
             for (Piece p: {PAWN, QUEEN}) {
-                for (int i = 1; i <= indices_white_wk[p][0]; i++) {
-                    uint8_t w = indices_white_wk[p][i];
+                for (int i = 1; i <= indices_white_wk[index][0]; i++) {
+                    uint8_t w = indices_white_wk[index][i];
                     td->w_piece_our_king_square_table[p][w].midgame.gradient +=
                             mg_grad;
                     td->w_piece_our_king_square_table[p][w].endgame.gradient +=
                             eg_grad;
                 }
 
-                for (int i = 1; i <= indices_white_bk[p][0]; i++) {
-                    uint8_t w = indices_white_bk[p][i];
+                for (int i = 1; i <= indices_white_bk[index][0]; i++) {
+                    uint8_t w = indices_white_bk[index][i];
                     td->w_piece_opp_king_square_table[p][w].midgame.gradient +=
                             mg_grad;
                     td->w_piece_opp_king_square_table[p][w].endgame.gradient +=
                             eg_grad;
                 }
-                for (int i = 1; i <= indices_black_bk[p][0]; i++) {
-                    uint8_t b = indices_black_bk[p][i];
+                for (int i = 1; i <= indices_black_bk[index][0]; i++) {
+                    uint8_t b = indices_black_bk[index][i];
                     td->w_piece_our_king_square_table[p][b].midgame.gradient -=
                             mg_grad;
                     td->w_piece_our_king_square_table[p][b].endgame.gradient -=
                             eg_grad;
                 }
 
-                for (int i = 1; i <= indices_black_wk[p][0]; i++) {
-                    uint8_t b = indices_black_wk[p][i];
+                for (int i = 1; i <= indices_black_wk[index][0]; i++) {
+                    uint8_t b = indices_black_wk[index][i];
                     td->w_piece_opp_king_square_table[p][b].midgame.gradient -=
                             mg_grad;
                     td->w_piece_opp_king_square_table[p][b].endgame.gradient -=
                             eg_grad;
                 }
+                index ++;
             }
         }
     };
@@ -1047,8 +1053,8 @@ namespace tuning {
 
     struct MobilityData {
 
-        uint8_t indices_white[5][10]{};
-        uint8_t indices_black[5][10]{};
+        uint8_t indices_white[5][5]{};
+        uint8_t indices_black[5][5]{};
 
         void init(Board *b, EvalData *ev) {
 
@@ -1089,6 +1095,13 @@ namespace tuning {
                                                 ~b->getPieceBB(c, ROOK));
                                 break;
                         }
+
+                        // checks we dont have positions with any pieces more than 4
+                        if(indices_white[p][0] >= 4 && c == WHITE || indices_black[p][0] >= 4 && c == BLACK){
+                            std::cout << "cannot have mobility entries with more than 4 pieces per side" << std::endl;
+                            std::exit(-1);
+                        }
+
                         if (c == WHITE) {
                             indices_white[p][++indices_white[p][0]] = (bitCount(attacks & mobilitySquaresWhite));
                         } else {
