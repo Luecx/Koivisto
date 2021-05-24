@@ -185,7 +185,7 @@ namespace tuning {
         Weight w_bishop_pawn_o[9]{};
         Weight w_king_safety[100]{};
         Weight w_passer[8]{};
-        Weight w_canidate[8]{};
+        Weight w_candidate[8]{};
         Weight w_pinned[15]{};
         Weight w_hanging[5]{};
     };
@@ -647,8 +647,8 @@ namespace tuning {
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
             for (int i = 0; i < 8; i++) {
-                midgame += count[i] * td->w_passer[i].midgame.value + candidate[i] * td->w_canidate[i].midgame.value;
-                endgame *= count[i] * td->w_passer[i].endgame.value + candidate[i] * td->w_canidate[i].endgame.value;
+                midgame += count[i] * td->w_passer[i].midgame.value + candidate[i] * td->w_candidate[i].midgame.value;
+                endgame += count[i] * td->w_passer[i].endgame.value + candidate[i] * td->w_candidate[i].endgame.value;
             }
         }
     
@@ -658,8 +658,8 @@ namespace tuning {
                 td->w_passer[i].midgame.gradient += count[i] * mg_grad;
                 td->w_passer[i].endgame.gradient += count[i] * eg_grad;
 
-                td->w_canidate[i].midgame.gradient += candidate[i] * mg_grad;
-                td->w_canidate[i].endgame.gradient += candidate[i] * eg_grad;
+                td->w_candidate[i].midgame.gradient += candidate[i] * mg_grad;
+                td->w_candidate[i].endgame.gradient += candidate[i] * eg_grad;
             }
         }
     };
@@ -1320,7 +1320,7 @@ namespace tuning {
                 }
                 if (i < 8) {
                     threadData[t].w_passer[i].set(passer_rank_n[i]);
-                    threadData[t].w_canidate[i].set(candidate_passer[i]);
+                    threadData[t].w_candidate[i].set(candidate_passer[i]);
                 }
                 if (i < 15) {
                     threadData[t].w_pinned[i].set(pinnedEval[i]);
@@ -1371,7 +1371,7 @@ namespace tuning {
                 }
                 if (i < 8) {
                     threadData[t].w_passer[i].merge(threadData[0].w_passer[i]);
-                    threadData[t].w_canidate[i].merge(threadData[0].w_canidate[i]);
+                    threadData[t].w_candidate[i].merge(threadData[0].w_candidate[i]);
                 }
                 if (i < 15) {
 
@@ -1424,7 +1424,7 @@ namespace tuning {
                 }
                 if (i < 8) {
                     threadData[t].w_passer[i].set(threadData[0].w_passer[i]);
-                    threadData[t].w_canidate[i].set(threadData[0].w_canidate[i]);
+                    threadData[t].w_candidate[i].set(threadData[0].w_candidate[i]);
                 }
                 if (i < 15) {
 
@@ -1482,7 +1482,7 @@ namespace tuning {
             }
             if (i < 8) {
                 threadData[0].w_passer[i].update(eta);
-                threadData[0].w_canidate[i].update(eta);
+                threadData[0].w_candidate[i].update(eta);
             }
             if (i < 15) {
                 threadData[0].w_pinned[i].update(eta);
@@ -1724,7 +1724,7 @@ namespace tuning {
         std::cout << "EvalScore candidate_passer[N_RANKS] = {";
         for (int n = 0; n < 8; n++) {
             if (n % 4 == 0) std::cout << std::endl << "\t";
-            std::cout << threadData[0].w_canidate[n] << ", ";
+            std::cout << threadData[0].w_candidate[n] << ", ";
         }
         std::cout << "};\n" << std::endl;
 
