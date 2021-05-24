@@ -34,6 +34,7 @@ extern int        mobEntryCount[N_PIECE_TYPES];
 extern float* phaseValues;
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[N_RANKS];
+extern EvalScore candidate_passer[N_RANKS];
 
 extern int lazyEvalAlphaBound;
 extern int lazyEvalBetaBound ;
