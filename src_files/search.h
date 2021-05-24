@@ -27,6 +27,7 @@
 #include "TimeManager.h"
 #include "TranspositionTable.h"
 #include "eval.h"
+#include "MovePicker.h"
 
 #include <chrono>
 #include <cmath>
@@ -54,6 +55,24 @@ struct SearchOverview {
     int   depth;
     int   time;
     Move  move;
+};
+
+/**
+ * data about each thread
+ */
+struct ThreadData {
+    int threadID = 0;
+    U64 nodes    = 0;
+    int seldepth = 0;
+    int tbhits   = 0;
+    bool dropOut = false;
+    SearchData* searchData = nullptr;
+    moveList** mvs;
+    char padding[1024 * 128];
+
+    ThreadData();
+
+    ThreadData(int threadId);
 };
 
 void           search_stop();

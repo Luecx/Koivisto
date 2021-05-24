@@ -23,6 +23,7 @@
 #include "Bitboard.h"
 #include "Move.h"
 #include "eval.h"
+#include "History.h"
 
 using namespace bb;
 using namespace move;
@@ -31,7 +32,6 @@ struct SearchData {
 
     Move bestMove = 0;
 
-    MoveList** moves;
     Evaluator  evaluator {};
     
     // capture history table (side-from-to)
@@ -47,11 +47,6 @@ struct SearchData {
     bool  sideToReduce;
     bool reduce;
 
-
-    SearchData();
-
-    virtual ~SearchData();
-
     void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
     int getHistories(Move m, Color side, Move previous);
@@ -64,23 +59,6 @@ struct SearchData {
 
     bool isImproving(Score eval, Color color, Depth ply);
 
-};
-
-/**
- * data about each thread
- */
-struct ThreadData {
-    int threadID = 0;
-    U64 nodes    = 0;
-    int seldepth = 0;
-    int tbhits   = 0;
-    bool dropOut = false;
-    SearchData* searchData = nullptr;
-    char padding[1024 * 128];
-
-    ThreadData();
-
-    ThreadData(int threadId);
 };
 
 #endif    // KOIVISTO_HISTORY_H

@@ -22,8 +22,10 @@
 #include "UCIAssert.h"
 #include "History.h"
 #include "TimeManager.h"
+#include "MovePicker.h"
 #include "movegen.h"
 #include "syzygy/tbprobe.h"
+#include "MovePicker.h"
 
 #include <thread>
 
@@ -63,6 +65,20 @@ int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
  * =================================================================================
  */
 
+ThreadData::ThreadData() {
+    mvs = new moveList*[MAX_INTERNAL_PLY];
+    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
+        mvs[i] = new moveList();
+    }
+}
+
+ThreadData::ThreadData(int threadId) : threadID(threadId) {
+    mvs = new moveList*[MAX_INTERNAL_PLY];
+    for (int i = 0; i < MAX_INTERNAL_PLY; i++) {
+        mvs[i] = new moveList();
+    }
+}
+
 /**
  * returns the total amount of searched nodes across all threads
  * @return
@@ -86,6 +102,7 @@ int selDepth() {
     }
     return maxSd;
 }
+
 
 /**
  * returns the amount of tablebase hits across all threads
@@ -185,10 +202,7 @@ void search_setThreads(int threads){
         threads = MAX_THREADS;
     threadCount = threads;
     for(int i = 0; i < threadCount; i++){
-        if(tds[i].searchData != nullptr){
-            delete tds[i].searchData;
-        }
-        tds[i].searchData = new SearchData();
+        //tds[i].searchData = new SearchData();
     }
 }
 
@@ -203,7 +217,6 @@ void search_init(int hashSize) {
     for (int i = 0; i < MAX_THREADS; i++) {
         tds[i].threadID = i;
     }
-    tds[0].searchData = new SearchData();
 }
 
 /**
@@ -215,7 +228,6 @@ void search_cleanUp() {
     
     for (int i = 0; i < MAX_THREADS; i++) {
         if(tds[i].searchData != nullptr){
-            delete tds[i].searchData;
             tds[i].searchData = nullptr;
         }
     }
@@ -794,18 +806,17 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     
     // we reuse movelists for memory reasons.
-    MoveList* mv = sd->moves[ply];
+    moveList* mv = td->mvs[ply];
+    Move m;
+
     // **********************************************************************************************************
     // probcut was first implemented in StockFish by Gary Linscott. See https://www.chessprogramming.org/ProbCut.
     // **********************************************************************************************************
 
     Score betaCut = beta + FUTILITY_MARGIN;
     if (!inCheck && !pv && depth > 4 && !skipMove && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
-        generateNonQuietMoves(b, mv, hashMove, sd, ply);
-        MoveOrderer moveOrderer {mv};
-        while (moveOrderer.hasNext()) {
-            // get the current move
-            Move m = moveOrderer.next();
+        mv->init(b, sd, hashMove, ply);
+        while (mv->next(&m)) {
 
             if (!b->isLegal(m))
                 continue;
@@ -851,19 +862,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return matingValue;
     }
     
-    // create a moveorderer and assign the movelist to score the moves.
-    generateMoves(b, mv, hashMove, sd, ply);
-    MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
-    
-    // loop over all moves in the movelist
-    while (moveOrderer.hasNext()) {
-        
-        // get the current move
-        Move m = moveOrderer.next();
+
+    mv->init(b, sd, hashMove, ply);
+    while (mv->next(&m)) {
         
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
@@ -885,7 +890,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth]) {
-                    moveOrderer.skip = true;
                     continue;
                 }
                 if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < std::min(200-30*(depth*depth), 0)){
@@ -940,10 +944,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 if (score>=beta)
                     return score;
             }
-            generateMoves(b, mv, hashMove, sd, ply);
-            moveOrderer = {mv};
-
-            m = moveOrderer.next();
+            mv->init(b, sd, hashMove, ply);
+            mv->next(&m);
         }
         
         // *********************************************************************************************************
@@ -990,8 +992,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
         
-        mv->scoreMove(moveOrderer.counter-1, depth);
-
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
@@ -1032,7 +1032,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 sd->setKiller(m, ply, b->getActivePlayer());
             // if the move is not a capture, we also update counter move history tables and history scores.
             
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+            //sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
             
             return highestScore;
         }
@@ -1153,18 +1153,14 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // moves that give check are not considered non-quiet in
     // getNonQuietMoves() although they are not quiet.
     //
-    MoveList* mv = sd->moves[ply];
-    
-    // create a moveorderer to sort the moves during the search
-    generateNonQuietMoves(b, mv);
-    MoveOrderer moveOrderer {mv};
+    moveList* mv = td->mvs[ply];
+    Move m;
     
     // keping track of the best move for the transpositions
     Move  bestMove  = 0;
 
-    for (int i = 0; i < mv->getSize(); i++) {
-        
-        Move m = moveOrderer.next();
+    mv->init(b, sd, 0, ply);
+    while (mv->next(&m)) {
         
         // do not consider illegal moves
         if (!b->isLegal(m))
