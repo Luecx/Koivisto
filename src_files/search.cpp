@@ -535,8 +535,9 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     Board searchBoard{b};
     Board printBoard {b};
     td->dropOut = false;
+    td->searchData->FUTILITY_MARGIN = FUTILITY_MARGIN * 1000;
     for (d = 1; d <= maxDepth; d++) {
-        
+        //std::cout << "adaptive margin" << td->searchData->FUTILITY_MARGIN << std::endl;
         if (d < 6) {
             s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
         } else {
@@ -754,6 +755,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
+    bool halfFutility = staticEval > beta + sd->FUTILITY_MARGIN / 2000 * depth; 
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -774,7 +776,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + depth * sd->FUTILITY_MARGIN / 1000 && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
@@ -1023,6 +1025,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // beta -cutoff
         if (score >= beta) {
+            if (halfFutility) sd->FUTILITY_MARGIN -= 1;
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
@@ -1064,6 +1067,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
+    if (halfFutility) sd->FUTILITY_MARGIN += 20;
+
     // we need to write the current score/position into the transposition table if and only if we havent skipped a move
     // due to our extension policy.
     if (!skipMove && !td->dropOut) {

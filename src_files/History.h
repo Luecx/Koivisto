@@ -47,6 +47,7 @@ struct SearchData {
     bool  sideToReduce;
     bool reduce;
 
+    int FUTILITY_MARGIN;
 
     SearchData();
 
