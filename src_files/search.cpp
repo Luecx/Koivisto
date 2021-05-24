@@ -755,7 +755,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
-    bool halfFutility = staticEval > beta + sd->FUTILITY_MARGIN / 2000 * depth; 
+    bool halfFutility = depth <= 7 && staticEval > beta + sd->FUTILITY_MARGIN / 1500 * depth; 
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -1025,7 +1025,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // beta -cutoff
         if (score >= beta) {
-            if (halfFutility) sd->FUTILITY_MARGIN -= 1;
+            if (halfFutility) sd->FUTILITY_MARGIN -= 4;
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
@@ -1067,7 +1067,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
-    if (halfFutility) sd->FUTILITY_MARGIN += 20;
+    if (halfFutility) sd->FUTILITY_MARGIN += 100;
 
     // we need to write the current score/position into the transposition table if and only if we havent skipped a move
     // due to our extension policy.
