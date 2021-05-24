@@ -94,6 +94,10 @@ EvalScore passer_rank_n[N_RANKS] = {
         M(    0,    0), M(  -19,   11), M(  -30,   13), M(  -28,   38),
         M(   -1,   62), M(   20,  111), M(    5,   38), M(    0,    0), };
 
+EvalScore candidate_passer[N_RANKS] = {
+        M(    0,    0), M(    0,    0), M(   10,   10), M(    5,    5), 
+        M(    0,    0), M(    0,    0), M(    0,    0), M(    0,    0), };
+
 EvalScore bishop_pawn_same_color_table_o[9] = {
         M(  -41,   42), M(  -48,   44), M(  -47,   32),
         M(  -49,   23), M(  -53,   14), M(  -58,    3),
@@ -346,8 +350,10 @@ EvalScore Evaluator::computePassedPawns(Board* b){
 
         U64 passerMask = passedPawnMask[color][s];
 
+        bool passed = !(passerMask & oppPawns);
+
         // check if passer
-        if (!(passerMask & oppPawns)){
+        if (passed) {
             U64    teleBB  = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
             U64    promBB  = FILES_BB[f] & (color == WHITE ? RANK_8_BB:RANK_1_BB);
             U64    promCBB = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
@@ -377,19 +383,27 @@ EvalScore Evaluator::computePassedPawns(Board* b){
                       bitscanForward(promBB),
                       bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
         }
+
+        if (!passed && (sqBB & evalData.semiOpen[color])) {
+            U64 antiPassers = passerMask & oppPawns;                                 // pawns that make this NOT a passer
+            U64 pawnAdvance = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB); // advance square
+            U64 levers = oppPawns & (color == WHITE ?                                // levers are pawns in active tension
+                (shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) :                      // https://www.chessprogramming.org/Pawn_Levers_(Bitboards)
+                (shiftSouthEast(sqBB) | shiftSouthWest(sqBB)));                      //
+            U64 forwardLevers = oppPawns & (color == WHITE ?                         //
+                (shiftNorthEast(pawnAdvance) | shiftNorthWest(pawnAdvance)) :        // levers that would apply if pawn was advanced
+                (shiftSouthEast(pawnAdvance) | shiftSouthWest(pawnAdvance)));        //
+            U64 helpers = (shiftEast(sqBB) | shiftWest(sqBB)) & pawns;               // friendly pawns on either side
+
+            bool push = !(antiPassers ^ levers); // Are all the pawns currently levers, we can make this pawn passed by pushing it
+            bool helped = !(antiPassers ^ forwardLevers) // Are all the pawns forward lever, we can push through with support
+                && (bitCount(helpers) >= bitCount(forwardLevers)); // <-- supporters
+
+            if (push || helped) {
+                h += candidate_passer[r];
+            }
+        }
         
-//        // check for candidates
-//        if((ONE << s) & evalData.semiOpen[color]){
-//            U64 frontSpan           = color == WHITE ? wFrontSpans(sqBB) : bFrontSpans(sqBB);
-//            int defendingPawnCount  = bitCount(frontSpan & evalData.pawnEastAttacks[!color]) +
-//                                      bitCount(frontSpan & evalData.pawnWestAttacks[!color]);
-//            int attackingPawnCount  = bitCount(fillFile(FILES_NEIGHBOUR_BB[f] & pawns)) >> 3;
-//
-//            // it is a candidate
-//            if(attackingPawnCount >= defendingPawnCount){
-//                h += PAWN_PASSED_CANDIDATE * (attackingPawnCount - defendingPawnCount + 1);
-//            }
-//        }
         bb = lsbReset(bb);
     }
     return h;
