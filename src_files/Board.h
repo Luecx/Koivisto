@@ -44,11 +44,12 @@ struct seeCacheEntry {
     Score score;
 };
 
-// index for internal castling rights
-constexpr U64 STATUS_INDEX_WHITE_QUEENSIDE_CASTLING = 0;
-constexpr U64 STATUS_INDEX_WHITE_KINGSIDE_CASTLING  = 1;
-constexpr U64 STATUS_INDEX_BLACK_QUEENSIDE_CASTLING = 2;
-constexpr U64 STATUS_INDEX_BLACK_KINGSIDE_CASTLING  = 3;
+enum CastlingRights{
+    WHITE_QUEENSIDE_CASTLING,
+    WHITE_KINGSIDE_CASTLING,
+    BLACK_QUEENSIDE_CASTLING,
+    BLACK_KINGSIDE_CASTLING,
+};
 
 // zobrist key for white/black to move
 constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
@@ -262,11 +263,11 @@ class Board {
     [[nodiscard]] inline const U64* getTeamOccupiedBB() const {return m_teamOccupiedBB;}
     
     // returns all occupied squares by the team
-    [[nodiscard]] inline const U64 getTeamOccupiedBB(Color color) const {return m_teamOccupiedBB[color];}
+    [[nodiscard]] inline U64 getTeamOccupiedBB(Color color) const {return m_teamOccupiedBB[color];}
     
     // returns all occupied squares by the team
     template<Color color>
-    [[nodiscard]] inline const U64 getTeamOccupiedBB() const {return m_teamOccupiedBB[color];}
+    [[nodiscard]] inline U64 getTeamOccupiedBB() const {return m_teamOccupiedBB[color];}
 
     // returns the occupied squares by each piece (array with 14 entries).
     [[nodiscard]] inline const U64* getPieceBB() const {return m_piecesBB;};

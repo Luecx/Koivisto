@@ -812,15 +812,15 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             b->move(m);
             
-            Score score = -qSearch(b, -betaCut, -betaCut+1, ply + 1, td);
+            Score qScore = -qSearch(b, -betaCut, -betaCut+1, ply + 1, td);
             
-            if (score >= betaCut)
-                score = -pvSearch(b, -betaCut, -betaCut+1, depth - 4, ply+1, td, 0);
+            if (qScore >= betaCut)
+                qScore = -pvSearch(b, -betaCut, -betaCut+1, depth - 4, ply+1, td, 0);
 
             b->undoMove();
 
-            if (score >= betaCut) {
-                table->put(zobrist, score, m, CUT_NODE, depth - 3);
+            if (qScore >= betaCut) {
+                table->put(zobrist, qScore, m, CUT_NODE, depth - 3);
                 return betaCut;
             }
 
@@ -925,7 +925,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
-            Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
+            betaCut       = en.score - SE_MARGIN_STATIC - depth * 2;
             score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
@@ -1016,8 +1016,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
-                // the time manager needs to be updated to know if its safe to stop the search
-                search_timeManager->updatePV(m, score, depth);
             }
         }
         

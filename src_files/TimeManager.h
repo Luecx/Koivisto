@@ -41,9 +41,6 @@ class TimeManager {
     int timeToUse;
     U64 nodesToUse;
     int upperTimeBound;
-
-    bool ignorePV;
-    bool isSafeToStop;
     bool forceStop;
     
     public:
@@ -60,13 +57,6 @@ class TimeManager {
      * @return
      */
     int elapsedTime();
-
-    /**
-     * updates the pv etc
-     * @param move
-     * @param score
-     */
-    void updatePV(Move move, Score score, Depth depth);
 
     /**
      * stops the search. this should be considered to check if time is left

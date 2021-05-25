@@ -116,19 +116,19 @@ Board::Board(std::string fen) {
             switch (c) {
                 case 'K':
                     if (getPiece(E1) == WHITE_KING)
-                        setCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING, true);
+                        setCastlingRights(WHITE_KINGSIDE_CASTLING, true);
                     break;
                 case 'Q':
                     if (getPiece(E1) == WHITE_KING)
-                        setCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING, true);
+                        setCastlingRights(WHITE_QUEENSIDE_CASTLING, true);
                     break;
                 case 'k':
                     if (getPiece(E8) == BLACK_KING)
-                        setCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING, true);
+                        setCastlingRights(BLACK_KINGSIDE_CASTLING, true);
                     break;
                 case 'q':
                     if (getPiece(E8) == BLACK_KING)
-                        setCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING, true);
+                        setCastlingRights(BLACK_QUEENSIDE_CASTLING, true);
                     break;
             }
         }
@@ -226,19 +226,19 @@ std::string Board::fen() {
 
     // its relevant to add a '-' if no castling rights exist
     bool anyCastling = false;
-    if (getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)) {
+    if (getCastlingRights(WHITE_QUEENSIDE_CASTLING)) {
         anyCastling = true;
         ss << "Q";
     }
-    if (getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)) {
+    if (getCastlingRights(WHITE_KINGSIDE_CASTLING)) {
         anyCastling = true;
         ss << "K";
     }
-    if (getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)) {
+    if (getCastlingRights(BLACK_QUEENSIDE_CASTLING)) {
         anyCastling = true;
         ss << "q";
     }
-    if (getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING)) {
+    if (getCastlingRights(BLACK_KINGSIDE_CASTLING)) {
         anyCastling = true;
         ss << "k";
     }
@@ -412,15 +412,15 @@ void Board::move(Move m) {
         if (getPiece(sqTo) % 8 == ROOK) {
             if (color == BLACK) {
                 if (sqTo == A1) {
-                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_QUEENSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (WHITE_QUEENSIDE_CASTLING));
                 } else if (sqTo == H1) {
-                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_WHITE_KINGSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (WHITE_KINGSIDE_CASTLING));
                 }
             } else {
                 if (sqTo == A8) {
-                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_BLACK_QUEENSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (BLACK_QUEENSIDE_CASTLING));
                 } else if (sqTo == H8) {
-                    newBoardStatus.castlingRights &= ~(ONE << (STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                    newBoardStatus.castlingRights &= ~(ONE << (BLACK_KINGSIDE_CASTLING));
                 }
             }
         }
@@ -830,8 +830,6 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
  * @return
  */
 bool Board::isUnderAttack(Square square, Color attacker) {
-    U64 sqBB = ONE << square;
-
     if (attacker == WHITE) {
         return isUnderAttack<WHITE>(square);
     } else {
@@ -1191,7 +1189,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
     pinners |= pinner;
     while (pinner) {
         Square s = bitscanForward(pinner);
-        pinned |= inBetweenSquares[kingSq][s] & m_teamOccupiedBB[side];
+        pinned |= IN_BETWEEN_SQUARES[kingSq][s] & m_teamOccupiedBB[side];
         pinner = lsbReset(pinner);
     }
 
@@ -1201,7 +1199,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
 
     while (pinner) {
         Square s = bitscanForward(pinner);
-        pinned |= inBetweenSquares[kingSq][s] & m_teamOccupiedBB[side];
+        pinned |= IN_BETWEEN_SQUARES[kingSq][s] & m_teamOccupiedBB[side];
         pinner = lsbReset(pinner);
     }
     return pinned;

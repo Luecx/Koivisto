@@ -17,7 +17,6 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "movegen.h"
-#include "psqt.h"
 #include "UCIAssert.h"
 
 
@@ -216,10 +215,8 @@ void generatePieceMoves(
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->template getTeamOccupiedBB<them>();
     const U64 friendly   = b->template getTeamOccupiedBB<us  >();
     
     for(Piece p = KNIGHT; p <= QUEEN; p++){
@@ -291,12 +288,10 @@ void generateKingMoves(
     UCI_ASSERT(mv);
     
     constexpr Color us   =  c;
-    constexpr Color them = !c;
     
     constexpr Piece movingPiece = KING + us * 8;
     
     const U64 occupied   = *b->getOccupiedBB();
-    const U64 opponents  = b->getTeamOccupiedBB<them>();
     const U64 friendly   = b->getTeamOccupiedBB<us  >();
     
     U64 kings      = b->getPieceBB<us>(KING);
@@ -323,12 +318,12 @@ void generateKingMoves(
     
         if constexpr (m != GENERATE_NON_QUIET) {
             if constexpr (c == WHITE) {
-                if (b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
+                if (b->getCastlingRights(WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
                     && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
                     mv->add(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
                     if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
                 }
-                if (b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING) && b->getPiece(H1) == WHITE_ROOK
+                if (b->getCastlingRights(WHITE_KINGSIDE_CASTLING) && b->getPiece(H1) == WHITE_ROOK
                     && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
                     mv->add(genMove(E1, G1, KING_CASTLE, WHITE_KING));
                     if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
@@ -336,12 +331,12 @@ void generateKingMoves(
                 
             } else {
                 
-                if (b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
+                if (b->getCastlingRights(BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
                     && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
                     mv->add(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
                     if constexpr (score) scoreMove<c, QUEEN_CASTLE, m>(b, mv, hashMove, sd, ply);
                 }
-                if (b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING) && b->getPiece(H8) == BLACK_ROOK
+                if (b->getCastlingRights(BLACK_KINGSIDE_CASTLING) && b->getPiece(H8) == BLACK_ROOK
                     && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
                     mv->add(genMove(E8, G8, KING_CASTLE, BLACK_KING));
                     if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);

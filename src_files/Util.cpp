@@ -50,9 +50,7 @@ std::string& ltrim(std::string& s, const char* t) {
  * @param t
  * @return
  */
-std::string& trim(std::string& s, const char* t) {
-    return ltrim(rtrim(s, t), t);
-}
+std::string& trim(std::string& s, const char* t) { return ltrim(rtrim(s, t), t); }
 
 /**
  * https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
@@ -61,8 +59,7 @@ std::string& trim(std::string& s, const char* t) {
  * @param replaceStr
  * @return
  */
-std::string& findAndReplaceAll(std::string& data, std::string toSearch,
-                               std::string replaceStr) {
+std::string& findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr) {
     // Get the first occurrence
     size_t pos = data.find(toSearch);
 
@@ -83,8 +80,7 @@ std::string& findAndReplaceAll(std::string& data, std::string toSearch,
  * @param ch
  * @return
  */
-std::vector<std::string>& splitString(const std::string&        txt,
-                                      std::vector<std::string>& strs, char ch) {
+std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch) {
     size_t pos        = txt.find(ch);
     size_t initialPos = 0;
     strs.clear();
@@ -94,12 +90,11 @@ std::vector<std::string>& splitString(const std::string&        txt,
         strs.push_back(txt.substr(initialPos, pos - initialPos));
         initialPos = pos + 1;
 
-        pos = txt.find(ch, initialPos);
+        pos        = txt.find(ch, initialPos);
     }
 
     // Add the last one
-    strs.push_back(
-        txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
+    strs.push_back(txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
 
     return strs;
 }
@@ -111,7 +106,7 @@ std::vector<std::string>& splitString(const std::string&        txt,
  * @param msg
  * @return
  */
-std::string loadingBar(int count, int max, std::string msg) {
+std::string loadingBar(int count, int max, const std::string& msg) {
     std::stringstream ss {};
     double            p = count / (double) max;
 
