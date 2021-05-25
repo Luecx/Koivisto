@@ -1025,7 +1025,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // beta -cutoff
         if (score >= beta) {
-            if (halfFutility) sd->FUTILITY_MARGIN -= 8;
+            if (halfFutility) sd->FUTILITY_MARGIN -= 13;
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
