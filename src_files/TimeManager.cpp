@@ -32,11 +32,9 @@ auto startTime =
  */
 TimeManager::TimeManager(int moveTime) : 
     mode(MOVETIME), 
-    timeToUse(moveTime), 
-    upperTimeBound(moveTime),
+    timeToUse(moveTime),
     nodesToUse(-1),
-    ignorePV(true), 
-    isSafeToStop(true), 
+    upperTimeBound(moveTime),
     forceStop() {
 
     startTime =
@@ -50,11 +48,9 @@ TimeManager::TimeManager(int moveTime) :
  */
 TimeManager::TimeManager() : 
     mode(DEPTH), 
-    timeToUse(1 << 30), 
-    upperTimeBound(1 << 30),
+    timeToUse(1 << 30),
     nodesToUse(-1),
-    ignorePV(true), 
-    isSafeToStop(true), 
+    upperTimeBound(1 << 30),
     forceStop() {
 
     startTime =
@@ -78,9 +74,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     mode(TOURNAMENT), 
     timeToUse(),
     nodesToUse(-1),
-    upperTimeBound(), 
-    ignorePV(), 
-    isSafeToStop(true),
+    upperTimeBound(),
     forceStop() {
     UCI_ASSERT(board);
     UCI_ASSERT(white > 0);
@@ -120,20 +114,6 @@ int TimeManager::elapsedTime() {
  * a destructor for the sake of completeness.
  */
 TimeManager::~TimeManager() {
-}
-
-/**
- * when the pv is updated during the search, this is called. Could be used to consider time extensions but is not used
- * at this point.
- * @param move
- * @param score
- * @param depth
- */
-void TimeManager::updatePV(Move move, Score score, Depth depth) {
-
-    // dont keep track of pv changes if timing doesnt matter
-    if (ignorePV)
-        return;
 }
 
 /**

@@ -23,13 +23,13 @@
 
 using namespace bb;
 
-U64** bb::ROOK_ATTACKS   = new U64*[N_SQUARES];
-U64** bb::BISHOP_ATTACKS = new U64*[N_SQUARES];
+U64* bb::ROOK_ATTACKS  [N_SQUARES]{};
+U64* bb::BISHOP_ATTACKS[N_SQUARES]{};
 
-U64** bb::all_hashes = {};
+U64 bb::ALL_HASHES[N_PIECES][N_SQUARES] = {};
 
-U64 bb::inBetweenSquares[N_SQUARES][N_SQUARES];
-U64 bb::passedPawnMask  [N_COLORS][N_SQUARES];
+U64 bb::IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
+U64 bb::PASSED_PAWN_MASK[N_COLORS][N_SQUARES];
 
 std::mt19937_64 rng;
 
@@ -49,19 +49,6 @@ void bb::bb_cleanUp() {
         BISHOP_ATTACKS[i] = nullptr;
        
     }
-    delete[] ROOK_ATTACKS;
-    ROOK_ATTACKS = nullptr;
-    delete[] BISHOP_ATTACKS;
-    BISHOP_ATTACKS = nullptr;
-    
-
-    for (int i = 0; i < N_PIECES; i++) {
-        delete[] all_hashes[i];
-        all_hashes[i] = nullptr;
-    }
-
-    delete[] all_hashes;
-    all_hashes = nullptr;
 }
 
 U64 bb::randU64() {
@@ -172,7 +159,7 @@ void bb::generateData() {
 
             m &= ~occ;
 
-            inBetweenSquares[n][i] = m;
+            IN_BETWEEN_SQUARES[n][i] = m;
         }
     }
 
@@ -182,9 +169,9 @@ void bb::generateData() {
             U64 h = ONE << s;
             h |= shiftWest(h) | shiftEast(h);
             if(c == WHITE){
-                passedPawnMask[c][s] = fillNorth(shiftNorth(h));
+                PASSED_PAWN_MASK[c][s] = fillNorth(shiftNorth(h));
             }else{
-                passedPawnMask[c][s] = fillSouth(shiftSouth(h));
+                PASSED_PAWN_MASK[c][s] = fillSouth(shiftSouth(h));
             }
         }
     }
@@ -219,13 +206,10 @@ U64 bb::populateMask(U64 mask, U64 index) {
 
 void bb::generateZobristKeys() {
 
-    all_hashes = new U64*[N_PIECES];
     for (int i = 0; i < 6; i++) {
-        all_hashes[i]     = new U64[64];
-        all_hashes[i + 8] = new U64[64];
         for (int n = 0; n < 64; n++) {
-            all_hashes[i][n]     = randU64();
-            all_hashes[i + 8][n] = randU64();
+            ALL_HASHES[i][n]     = randU64();
+            ALL_HASHES[i + 8][n] = randU64();
         }
     }
 }

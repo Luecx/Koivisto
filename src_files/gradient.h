@@ -20,15 +20,6 @@
 #ifndef KOIVISTO_GRADIENT_H
 #define KOIVISTO_GRADIENT_H
 
-#include "Board.h"
-#include "eval.h"
-
-#include <atomic>
-#include <cstdint>
-#include <omp.h>
-#include <ostream>
-#include <vector>
-#include <fstream>
 
 /**
  * How to add new eval params:
@@ -42,6 +33,17 @@
  */
 //#define TUNING
 #ifdef TUNING
+
+#include "Board.h"
+#include "eval.h"
+
+#include <atomic>
+#include <cstdint>
+#include <omp.h>
+#include <ostream>
+#include <vector>
+#include <fstream>
+
 #define N_THREAD 16
 namespace tuning {
 
@@ -606,7 +608,7 @@ namespace tuning {
                     File   f      = fileIndex(s);
                     U64    sqBB   = ONE << s;
         
-                    U64 passerMask = passedPawnMask[color][s];
+                    U64 passerMask = PASSED_PAWN_MASK[color][s];
                     int passed = !(passerMask & oppPawns);
         
                     // check if passer
@@ -737,7 +739,7 @@ namespace tuning {
                     File   f      = fileIndex(s);
                     U64    sqBB   = ONE << s;
         
-                    U64 passerMask = passedPawnMask[color][s];
+                    U64 passerMask = PASSED_PAWN_MASK[color][s];
         
                     // check if passer
                     if (!(passerMask & oppPawns)){
@@ -942,10 +944,10 @@ namespace tuning {
             }
 
             count[I_CASTLING_RIGHTS] +=
-                    + b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
-                    + b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
-                    - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-                    - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING);
+                    + b->getCastlingRights(WHITE_QUEENSIDE_CASTLING)
+                    + b->getCastlingRights(WHITE_KINGSIDE_CASTLING)
+                    - b->getCastlingRights(BLACK_QUEENSIDE_CASTLING)
+                    - b->getCastlingRights(BLACK_KINGSIDE_CASTLING);
             count[I_SIDE_TO_MOVE] += (b->getActivePlayer() == WHITE ? 1 : -1);
         }
 
@@ -1000,7 +1002,7 @@ namespace tuning {
                     Square pinnerSquare = bitscanForward(potentialPinners);
 
                     // get all the squares in between the king and the potential pinner
-                    U64 inBetween = inBetweenSquares[kingSq][pinnerSquare];
+                    U64 inBetween = IN_BETWEEN_SQUARES[kingSq][pinnerSquare];
 
                     // if there is exactly one of our pieces in the way, consider it pinned. Otherwise, continue
                     U64 potentialPinned = ourOcc & inBetween;

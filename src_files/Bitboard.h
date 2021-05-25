@@ -359,26 +359,13 @@ constexpr U64 KNIGHT_ATTACKS[] {
     0x2000204000000000L, 0x0004020000000000L, 0x0008050000000000L, 0x00110a0000000000L, 0x0022140000000000L,
     0x0044280000000000L, 0x0088500000000000L, 0x0010a00000000000L, 0x0020400000000000L};
 
-extern U64** ROOK_ATTACKS;
-extern U64** BISHOP_ATTACKS;
+extern U64* ROOK_ATTACKS[N_SQUARES];
+extern U64* BISHOP_ATTACKS[N_SQUARES];
 
-extern U64** all_hashes;
+extern U64 ALL_HASHES[N_PIECES][N_SQUARES];
 
-extern U64 inBetweenSquares[N_SQUARES][N_SQUARES];
-extern U64 passedPawnMask[N_COLORS][N_SQUARES];
-
-
-
-template<class T> inline T abs(const T a) {
-    if (a < 0)
-        return -a;
-    return a;
-}
-
-template<class T> inline T max(const T a, const T b) {
-    return (a < b) ? b : a;    // or: return comp(a,b)?b:a; for version (2)
-}
-
+extern U64 IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
+extern U64 PASSED_PAWN_MASK[N_COLORS][N_SQUARES];
 
 inline Rank rankIndex(Square square_index) { return square_index >> 3; }
 
@@ -731,7 +718,7 @@ double randDouble(double min = 0, double max = 1);
  * @param sq
  * @return
  */
-inline U64 getHash(Piece piece, Square sq) { return all_hashes[piece][sq]; }
+inline U64 getHash(Piece piece, Square sq) { return ALL_HASHES[piece][sq]; }
 
 /**
  * looks up the rook attack for a rook on the given square.
@@ -819,7 +806,7 @@ inline int bitCount(U64 bb) {
  * @param r2
  * @return
  */
-inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) { return max(abs(r2 - r1), abs(f2 - f1)); }
+inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) { return std::max(std::abs(r2 - r1), std::abs(f2 - f1)); }
 
 /**
  * The Chebyshev distance is the maximum of the absolute rank- and file-distance of both squares.
@@ -845,7 +832,7 @@ inline int chebyshevDistance(Square sq1, Square sq2) {
  * @param r2
  * @return
  */
-inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) { return max(abs(r2 - r1), abs(f2 - f1)); }
+inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) { return std::max(std::abs(r2 - r1), std::abs(f2 - f1)); }
 
 /**
  * the orthogonal Manhattan-Distance is the sum of both absolute rank- and file-distance distances

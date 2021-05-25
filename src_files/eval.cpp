@@ -20,7 +20,6 @@
 #include "eval.h"
 #include "UCIAssert.h"
 
-#include <immintrin.h>
 #include <iomanip>
 
 EvalScore SIDE_TO_MOVE                  = M(   13,   12);
@@ -183,13 +182,13 @@ EvalScore* evfeatures[] {
 
 int mobEntryCount[N_PIECE_TYPES] {0, 9, 14, 15, 28, 0};
 
-float* phaseValues = new float[6] {
+float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };
 
 
-int lazyEvalAlphaBound = 803;
-int lazyEvalBetaBound  = 392;
+constexpr int lazyEvalAlphaBound = 803;
+constexpr int lazyEvalBetaBound  = 392;
 
 EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 
@@ -223,17 +222,7 @@ void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAtt
  */
 bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
     U64 sq = ONE << s;
-
-    if (c == WHITE) {
-        if (((passedPawnMask[c][s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
-            return true;
-        }
-    } else {
-        if (((passedPawnMask[c][s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover)) {
-            return true;
-        }
-    }
-    return false;
+    return (((PASSED_PAWN_MASK[c][s] & ~FILES_BB[fileIndex(s)]) & opponentPawns) == 0 && (sq & pawnCover));
 }
 
 bb::Score Evaluator::evaluateTempo(Board* b) {
@@ -303,7 +292,7 @@ EvalScore Evaluator::computePinnedPieces(Board* b) {
         Square pinnerSquare = bitscanForward(potentialPinners);
 
         // get all the squares in between the king and the potential pinner
-        U64 inBetween = inBetweenSquares[kingSq][pinnerSquare];
+        U64 inBetween = IN_BETWEEN_SQUARES[kingSq][pinnerSquare];
 
         // if there is exactly one of our pieces in the way, consider it pinned. Otherwise, continue
         U64 potentialPinned = ourOcc & inBetween;
@@ -349,7 +338,7 @@ EvalScore Evaluator::computePassedPawns(Board* b){
         File   f      = fileIndex(s);
         U64    sqBB   = ONE << s;
 
-        U64 passerMask = passedPawnMask[color][s];
+        U64 passerMask = PASSED_PAWN_MASK[color][s];
 
         bool passed = !(passerMask & oppPawns);
 
@@ -789,10 +778,10 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
 
     featureScore += CASTLING_RIGHTS
-                    * (+b->getCastlingRights(STATUS_INDEX_WHITE_QUEENSIDE_CASTLING)
-                       + b->getCastlingRights(STATUS_INDEX_WHITE_KINGSIDE_CASTLING)
-                       - b->getCastlingRights(STATUS_INDEX_BLACK_QUEENSIDE_CASTLING)
-                       - b->getCastlingRights(STATUS_INDEX_BLACK_KINGSIDE_CASTLING));
+                    * (+b->getCastlingRights(WHITE_QUEENSIDE_CASTLING)
+                       + b->getCastlingRights(WHITE_KINGSIDE_CASTLING)
+                       - b->getCastlingRights(BLACK_QUEENSIDE_CASTLING)
+                       - b->getCastlingRights(BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
 
     EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + passedScore + evalData.threats[WHITE] - evalData.threats[BLACK];
@@ -813,9 +802,8 @@ void printEvaluation(Board* board) {
 
     Evaluator ev {};
     Score     score = ev.evaluate(board);
-    float     phase = ev.getPhase();
+    float     phase = ev.phase;
 
     std::cout << setw(15) << right << "evaluation: " << left << setw(8) << score << setw(15) << right << "phase: " << left << setprecision(3) << setw(8) << phase << std::endl;
 }
 
-float Evaluator::getPhase() { return phase; }
