@@ -1067,7 +1067,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
-    if (halfFutility) sd->FUTILITY_MARGIN += 100;
+    if (halfFutility) sd->FUTILITY_MARGIN += 150;
 
     // we need to write the current score/position into the transposition table if and only if we havent skipped a move
     // due to our extension policy.
