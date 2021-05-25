@@ -967,7 +967,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
-        if (b->getActivePlayer() == behindNMP) lmr++;
+        if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP) lmr++;
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
