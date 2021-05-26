@@ -65,7 +65,7 @@ class Evaluator {
     EvalScore computeHangingPieces(Board* b);
     
     template<Color color>
-    EvalScore computePassedPawns(Board* b);
+    EvalScore computePassedPawns(Board* b, EvalData* ev);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
