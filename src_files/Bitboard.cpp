@@ -33,27 +33,26 @@ U64 bb::PASSED_PAWN_MASK[N_COLORS][N_SQUARES];
 
 std::mt19937_64 rng;
 
-void bb::bb_init() {
-
+void bb::init() {
+    
     rng.seed(seed);
-
+    
     generateZobristKeys();
     generateData();
 }
 
-void bb::bb_cleanUp() {
+void bb::cleanUp() {
     for (int i = 0; i < N_SQUARES; i++) {
         delete[] ROOK_ATTACKS[i];
         ROOK_ATTACKS[i] = nullptr;
         delete[] BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
-       
     }
 }
 
 U64 bb::randU64() {
     U64 res {0};
-
+    
     res ^= U64(rng()) << 0;
     res ^= U64(rng()) << 10;
     res ^= U64(rng()) << 20;
@@ -61,21 +60,16 @@ U64 bb::randU64() {
     res ^= U64(rng()) << 40;
     res ^= U64(rng()) << 50;
     res ^= U64(rng()) << 60;
-
+    
     return res;
-}
-
-double bb::randDouble(double min, double max) {
-    double f = static_cast<double>(rng()) / rng.max();
-    return min + f * (max - min);
 }
 
 U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     U64 res {0};
-
+    
     static const U64 topBottom = RANK_1_BB | RANK_8_BB;
     static const U64 leftRight = FILE_A_BB | FILE_H_BB;
-
+    
     if ((1ULL << sq) & RANK_1_BB && direction < -2) {
         return res;
     }
@@ -88,14 +82,14 @@ U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     if ((1ULL << sq) & FILE_H_BB && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
         return res;
     }
-
+    
     while (true) {
         sq += direction;
-
+        
         U64 currentSq = (U64) 1 << sq;
-
+        
         res |= currentSq;
-
+        
         if (occ & currentSq) {
             return res;
         }
@@ -119,34 +113,34 @@ void bb::generateData() {
     for (int n = 0; n < 64; n++) {
         ROOK_ATTACKS[n]   = new U64[ONE << (64 - rookShifts[n])];
         BISHOP_ATTACKS[n] = new U64[ONE << (64 - bishopShifts[n])];
-
+        
         for (int i = 0; i < pow(2, 64 - rookShifts[n]); i++) {
             U64 rel_occ            = populateMask(rookMasks[n], i);
             int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
             ROOK_ATTACKS[n][index] = generateRookAttack(n, rel_occ);
         }
-
+        
         for (int i = 0; i < pow(2, 64 - bishopShifts[n]); i++) {
             U64 rel_occ              = populateMask(bishopMasks[n], i);
             int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
             BISHOP_ATTACKS[n][index] = generateBishopAttack(n, rel_occ);
         }
     }
-
+    
     // in between squares
     for (Square n = A1; n <= H8; n++) {
-
+        
         for (Square i = A1; i <= H8; i++) {
             if (i == n)
                 continue;
-
+            
             U64 m   = ZERO;
             U64 occ = ZERO;
             setBit(occ, n);
             setBit(occ, i);
-
+            
             Direction r = i - n;
-
+            
             if (rankIndex(n) == rankIndex(i)) {
                 m = generateSlidingAttacks(n, EAST * r / abs(r), occ);
             } else if (fileIndex(n) == fileIndex(i)) {
@@ -156,13 +150,13 @@ void bb::generateData() {
             } else if (antiDiagonalIndex(n) == antiDiagonalIndex(i)) {
                 m = generateSlidingAttacks(n, NORTH_WEST * r / abs(r), occ);
             }
-
+            
             m &= ~occ;
-
+            
             IN_BETWEEN_SQUARES[n][i] = m;
         }
     }
-
+    
     // passed pawn mask
     for (Color c:{WHITE,BLACK}){
         for(Square s = A1; s <= H8; s++){
@@ -186,26 +180,26 @@ void bb::generateData() {
  * @return
  */
 U64 bb::populateMask(U64 mask, U64 index) {
-
+    
     U64    res = 0;
     Square i   = 0;
-
+    
     while (mask) {
         Square bit = bitscanForward(mask);
-
+        
         if (getBit(index, i)) {
             setBit(res, bit);
         }
-
+        
         mask = lsbReset(mask);
         i++;
     }
-
+    
     return res;
 }
 
 void bb::generateZobristKeys() {
-
+    
     for (int i = 0; i < 6; i++) {
         for (int n = 0; n < 64; n++) {
             ALL_HASHES[i][n]     = randU64();
