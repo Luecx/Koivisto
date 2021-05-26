@@ -57,7 +57,6 @@ namespace tuning {
     enum feature_indices {
         I_SIDE_TO_MOVE,
 
-        I_PAWN_STRUCTURE,
         I_PAWN_PASSED_AND_DOUBLED,
         I_PAWN_PASSED_AND_BLOCKED,
         I_PAWN_PASSED_COVERED_PROMO,
@@ -763,11 +762,6 @@ namespace tuning {
             U64 openFilesBlack = ~fillFile(blackPawns);
             U64 openFiles = openFilesBlack & openFilesWhite;
 
-            U64 whitePawnEastCover = shiftNorthEast(whitePawns) & whitePawns;
-            U64 whitePawnWestCover = shiftNorthWest(whitePawns) & whitePawns;
-            U64 blackPawnEastCover = shiftSouthEast(blackPawns) & blackPawns;
-            U64 blackPawnWestCover = shiftSouthWest(blackPawns) & blackPawns;
-
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     
@@ -846,11 +840,6 @@ namespace tuning {
             count[I_PAWN_ISOLATED] += (
                     +bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
                     - bitCount(blackIsolatedPawns & ~blackDoubledPawns));
-            count[I_PAWN_STRUCTURE] += (
-                    +bitCount(whitePawnEastCover)
-                    + bitCount(whitePawnWestCover)
-                    - bitCount(blackPawnEastCover)
-                    - bitCount(blackPawnWestCover));
             count[I_PAWN_OPEN] += (
                     +bitCount(whitePawns & ~fillSouth(blackPawns))
                     - bitCount(blackPawns & ~fillNorth(whitePawns)));
@@ -1697,7 +1686,6 @@ namespace tuning {
         // --------------------------------- features ---------------------------------
         const static std::string feature_names[]{
                 "SIDE_TO_MOVE",
-                "PAWN_STRUCTURE",
                 "PAWN_PASSED_AND_DOUBLED",
                 "PAWN_PASSED_AND_BLOCKED",
                 "PAWN_PASSED_COVERED_PROMO",
