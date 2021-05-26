@@ -72,7 +72,7 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
  */
 void uci::mainloop(bool bench) {
 
-    bb_init();
+    bb::init();
     search_init(16);
     psqt_init();
 
@@ -80,7 +80,7 @@ void uci::mainloop(bool bench) {
         uci::bench();
 
         search_cleanUp();
-        bb_cleanUp();
+        bb::cleanUp();
     } else {
         std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
                   << std::endl;
@@ -501,7 +501,7 @@ void uci::quit() {
     delete board;
     board = nullptr;
 
-    bb_cleanUp();
+    bb:cleanUp();
     search_cleanUp();
 }
 

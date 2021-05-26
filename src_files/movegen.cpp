@@ -47,15 +47,15 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
         if constexpr (isCapture){
             Score     SEE    = board->staticExchangeEvaluation(move);
-            MoveScore mvvLVA = MgScore(piece_values[(getCapturedPiece(move) % 8)]);
+            MoveScore mvvLVA = MgScore(piece_values[(getCapturedPieceType(move))]);
             if (SEE >= 0) {
                 mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
         } else if constexpr (isPromotion){
-            MoveScore mvvLVA = (getCapturedPiece(move) % 8) - (getMovingPiece(move) % 8);
-            mv->scoreMove(idx, 40000 + mvvLVA + promotionPiece(move));
+            MoveScore mvvLVA = (getCapturedPieceType(move)) - (getMovingPieceType(move));
+            mv->scoreMove(idx, 40000 + mvvLVA + getPromotionPiece(move));
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
         } else{
@@ -64,7 +64,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
     }else if constexpr (m == GENERATE_NON_QUIET){
         // scoring when only non quiet moves are generated
-        MoveScore mvvLVA = 100 * (getCapturedPiece(move) % 8) - 10 * (getMovingPiece(move) % 8)
+        MoveScore mvvLVA = 100 * (getCapturedPieceType(move)) - 10 * (getMovingPieceType(move))
                            + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
         mv->scoreMove(idx, 240 + mvvLVA);
         

@@ -25,64 +25,61 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         return;
     Move m2;
 
-    Piece  prevPiece = getMovingPiece(previous) % 8;
+    Piece  prevPiece = getMovingPieceType(previous);
     Square prevTo    = getSquareTo(previous);
-    Color  color     = getMovingPiece(m) / 8;
+    Color  color     = getMovingPieceColor(m);
 
     for (int i = 0; i < mv->getSize(); i++) {
-        m2 = mv->getMove(i);
+        m2                 = mv->getMove(i);
 
-        int score = mv->getScore(i);
+        int    score       = mv->getScore(i);
 
-        Piece  movingPiece = getMovingPiece(m2) % 8;
+        Piece  movingPiece = getMovingPieceType(m2);
         Square squareTo    = getSquareTo(m2);
-
+        int       scalar      = score * score + 5 * score;
+    
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
                 captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
-                    (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * captureHistory[side][getSquareFrom(m)][getSquareTo(m)]
-                          / MAX_HISTORY_SCORE;
+                    + scalar
+                    - scalar * captureHistory[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
             } else {
                 history[side][getSquareFrom(m)][getSquareTo(m)] +=
-                    (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                    + scalar
+                    - scalar * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
                 cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
-                    (depth * depth + 5 * depth)
-                    - (depth * depth + 5 * depth) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]
-                          / MAX_HISTORY_SCORE;
+                    + scalar
+                    - scalar * cmh[prevPiece][prevTo][color][movingPiece][squareTo] / MAX_HISTORY_SCORE;
             }
-
+        
             // we can return at this point because all moves searched are in front of this move
             return;
         } else if (isCapture(m2)) {
             captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
-                -(score * score + 5 * score)
-                - (score * score + 5 * score) * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)]
-                      / MAX_HISTORY_SCORE;
+                - scalar
+                - scalar * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
             history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
-                -(score * score + 5 * score)
-                - (score * score + 5 * score) * history[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+                - scalar
+                - scalar * history[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
             cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
-                -(score * score + 5 * score)
-                - (score * score + 5 * score) * cmh[prevPiece][prevTo][color][movingPiece][squareTo]
-                      / MAX_HISTORY_SCORE;
+                - scalar
+                - scalar * cmh[prevPiece][prevTo][color][movingPiece][squareTo] / MAX_HISTORY_SCORE;
         }
     }
-    return;
 }
 
 int SearchData::getHistories(Move m, Color side, Move previous) {
     if (isCapture(m)) {
         return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
     } else {
-        Piece  prevPiece   = getMovingPiece(previous) % 8;
-        Square prevTo      = getSquareTo(previous);
-        Piece  movingPiece = getMovingPiece(m) % 8;
-        Square squareTo    = getSquareTo(m);
-
-        return cmh[prevPiece][prevTo][side][movingPiece][squareTo] + history[side][getSquareFrom(m)][getSquareTo(m)];
+        PieceType prevPiece   = getMovingPieceType(previous);
+        Square    prevTo      = getSquareTo(previous);
+        PieceType movingPiece = getMovingPieceType(m);
+        Square    squareTo    = getSquareTo(m);
+        
+        return cmh[prevPiece][prevTo][side][movingPiece][squareTo]
+               + history[side][getSquareFrom(m)][getSquareTo(m)];
     }
 }
 
@@ -137,5 +134,7 @@ SearchData::SearchData() {
     }
 }
 
-ThreadData::ThreadData(int threadId) : threadID(threadId) {}
-ThreadData::ThreadData() {}
+ThreadData::ThreadData(int threadId) : threadID(threadId) {
+}
+ThreadData::ThreadData() {
+}

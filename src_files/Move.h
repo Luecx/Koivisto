@@ -50,21 +50,6 @@ typedef uint32_t Move;
 typedef uint8_t  MoveType;
 typedef uint32_t MoveScore;
 
-constexpr Move MASK_4  = 15;
-constexpr Move MASK_6  = 63;
-constexpr Move MASK_8  = 255;
-constexpr Move MASK_9  = 511;
-constexpr Move MASK_10 = 1023;
-constexpr Move MASK_24 = (1 << 24) - 1;
-
-constexpr int SHIFT_FROM           = 0;
-constexpr int SHIFT_TO             = 6;
-constexpr int SHIFT_TYPE           = 16;
-constexpr int SHIFT_MOVING_PIECE   = 12;
-constexpr int SHIFT_CAPTURED_PIECE = 20;
-constexpr int SHIFT_SCORE_INFO     = 24;
-
-// https://www.chessprogramming.org/Encoding_Moves
 enum MoveTypes{
     QUIET                    = 0,
     DOUBLED_PAWN_PUSH        = 1,
@@ -82,38 +67,47 @@ enum MoveTypes{
     QUEEN_PROMOTION_CAPTURE  = 15,
 };
 
-enum MoveTypeMasks{
-    PROMOTION_MASK           = 0x8,
-    CAPTURE_MASK             = 0x4,
-    SPECIAL_MASK             = 0x3,
+enum MoveTypeMasks {
+    PROMOTION_MASK = 0x8,
+    CAPTURE_MASK   = 0x4,
+    SPECIAL_MASK   = 0x3,
 };
 
-Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece);
-Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece,
-             const bb::Piece &capturedPiece);
+enum MoveShifts{
+    SHIFT_FROM           = 0,
+    SHIFT_TO             = 6,
+    SHIFT_TYPE           = 16,
+    SHIFT_MOVING_PIECE   = 12,
+    SHIFT_CAPTURED_PIECE = 20,
+    SHIFT_SCORE_INFO     = 24,
+};
+
+template<uint8_t N>
+constexpr uint32_t MASK = (1 << N) - 1;
 
 inline bool sameMove(const Move& m1, const Move& m2) {
     // toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
-    return ((m1 ^ m2) & MASK_24) == 0;
+    return ((m1 ^ m2) & MASK<24>) == 0;
 }
-
 inline void setScore(      Move& move, const int moveScore) {
-    move = (move & ~(MASK_8 << SHIFT_SCORE_INFO));    // clearing
+    move = (move & ~(MASK<8> << SHIFT_SCORE_INFO));    // clearing
     move |= (moveScore << SHIFT_SCORE_INFO);
 }
 inline int  getScore(const Move& move) { return (move >> SHIFT_SCORE_INFO); }
 
-inline int getPieceSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK_10;}
-inline int getPieceTypeSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK_9;}
+inline int getPieceSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK<10>;}
+inline int getPieceTypeSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK<9>;}
 
-inline bb::Square    getSquareFrom      (const Move& move) { return ((move >> SHIFT_FROM) & MASK_6); }
-inline bb::Square    getSquareTo        (const Move& move) { return ((move >> SHIFT_TO) & MASK_6); }
-inline MoveType      getType            (const Move& move) { return ((move >> SHIFT_TYPE) & MASK_4); }
-inline bb::Piece     getMovingPiece     (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & MASK_4); }
-inline bb::PieceType getMovingPieceType (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & 0x7);}
-inline bb::Color     getMovingPieceColor(const Move& move) { return (move & 0x8);}
-inline bb::Piece     getCapturedPiece   (const Move& move) { return ((move >> SHIFT_CAPTURED_PIECE) & MASK_4); }
-
+inline bb::Square    getSquareFrom          (const Move& move) { return ((move >> SHIFT_FROM) & MASK<6>); }
+inline bb::Square    getSquareTo            (const Move& move) { return ((move >> SHIFT_TO) & MASK<6>); }
+inline MoveType      getType                (const Move& move) { return ((move >> SHIFT_TYPE) & MASK<4>); }
+inline bb::Piece     getMovingPiece         (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & MASK<4>); }
+inline bb::PieceType getMovingPieceType     (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & MASK<3>);}
+inline bb::Piece     getCapturedPiece       (const Move& move) { return ((move >> SHIFT_CAPTURED_PIECE) & MASK<4>); }
+inline bb::PieceType getCapturedPieceType   (const Move& move) { return ((move >> SHIFT_CAPTURED_PIECE) & MASK<3>); }
+inline bb::Color     getMovingPieceColor    (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & 0x8);}
+inline bb::Piece     getPromotionPiece      (const Move& move){ return ((move & 0x30000) >> SHIFT_TYPE) + getMovingPiece(move) + 1; }
+inline bb::Piece     getPromotionPieceType  (const Move& move){ return ((move & 0x30000) >> SHIFT_TYPE) + 1; }
 inline void setSquareFrom   (Move& move, const bb::Square from) {
     // move = (move & ~(MASK_6 << SHIFT_FROM));  //clearing
     move |= (from << SHIFT_FROM);
@@ -135,6 +129,27 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
 
+inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece){
+    Move m {0};
+    setSquareFrom(m, from);
+    setSquareTo(m, to);
+    setType(m, type);
+    setMovingPiece(m, movingPiece);
+    return m;
+}
+inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece,
+                    const bb::Piece &capturedPiece){
+    Move m {0};
+    
+    setSquareFrom(m, from);
+    setSquareTo(m, to);
+    setType(m, type);
+    setMovingPiece(m, movingPiece);
+    setCapturedPiece(m, capturedPiece);
+    
+    return m;
+}
+
 inline bool         isDoubledPawnPush   (Move move){
     
     return getType(move) == DOUBLED_PAWN_PUSH;
@@ -152,40 +167,26 @@ inline bool         isEnPassant         (Move move){
 inline bool         isPromotion         (Move move){
     return move & 0x80000;
 }
-inline bb::Piece    promotionPiece      (Move move){
-    return ((move & 0x30000) >> SHIFT_TYPE) + getMovingPiece(move) + 1;
-}
 
-std::string toString        (const Move &move);
-void        printMoveBits   (Move move, bool bitInfo = true);
+std::string toString(const Move& move);
+void        printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {
-
+    
     private:
-    move::Move      moves[256];
+    move::Move      moves [256];
     move::MoveScore scores[256];
     int             size;
-
+    
     public:
-    MoveList();
-
-    virtual ~MoveList();
-
-    void swap(int i1, int i2);
-
+    void       swap(int i1, int i2);
     move::Move getMove(int index);
-
-    void clear();
-
-    void add(move::Move move);
-
-    void scoreMove(int index, MoveScore score);
-
-    MoveScore getScore(int index);
-
-    void printMoveBits();
-
-    int getSize() const;
+    void       clear();
+    void       add(move::Move move);
+    void       scoreMove(int index, MoveScore score);
+    MoveScore  getScore(int index);
+    void       printMoveBits();
+    int        getSize() const;
 };
 
 }    // namespace move
