@@ -35,6 +35,8 @@ extern float phaseValues[N_PIECE_TYPES];
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[N_RANKS];
 extern EvalScore candidate_passer[N_RANKS];
+extern EvalScore connected_pawn[N_RANKS];
+extern EvalScore defense_connected_pawn[N_RANKS];
 
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
@@ -66,6 +68,9 @@ class Evaluator {
     
     template<Color color>
     EvalScore computePassedPawns(Board* b);
+
+    template<Color color>
+    EvalScore computePawns(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
