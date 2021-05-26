@@ -57,6 +57,7 @@ namespace tuning {
     enum feature_indices {
         I_SIDE_TO_MOVE,
 
+        I_PAWN_DEFENDED,
         I_PAWN_PASSED_AND_DOUBLED,
         I_PAWN_PASSED_AND_BLOCKED,
         I_PAWN_PASSED_COVERED_PROMO,
@@ -189,7 +190,6 @@ namespace tuning {
         Weight w_passer[8]{};
         Weight w_candidate[8]{};
         Weight w_connected_pawn[8]{};
-        Weight w_defense_connected_pawn[8]{};
         Weight w_pinned[15]{};
         Weight w_hanging[5]{};
     };
@@ -669,31 +669,19 @@ namespace tuning {
 
     struct PawnData {
         int8_t connected_pawn[N_RANKS]{};
-        int8_t defense_connected_pawn[N_RANKS]{};
 
         void init(Board *b, EvalData *ev) {
             for(Color color:{WHITE,BLACK}) {
                 int h = color == WHITE ? 1 : -1;
 
                 U64 pawns = b->getPieceBB( color, PAWN);
-                U64 pawnAttacks = color == WHITE ? 
-                    (shiftNorthEast(pawns) | shiftNorthWest(pawns)) : 
-                    (shiftSouthEast(pawns) | shiftSouthWest(pawns));
-                U64 connected = pawns & (shiftEast(pawns) | shiftWest(pawns) | pawnAttacks);
 
+                U64 connected = pawns & (shiftEast(pawns) | shiftWest(pawns));
                 U64 bb = connected;
                 while (bb) {
-                    U64 sqBB = bb & -bb;
                     Square sq = bitscanForward(bb);
-                    Rank r = color == WHITE ? rankIndex(sq) : 7 - rankIndex(sq);
-                    bool rankConnected = pawns & (shiftWest(sqBB) | shiftEast(sqBB));
                     
-                    if (rankConnected) {
-                        connected_pawn[r] += h;
-                    } else {
-                        defense_connected_pawn[r] += h;
-                    }
-
+                    connected_pawn[color == WHITE ? rankIndex(sq) : 7 - rankIndex(sq)] += h;
                     bb = lsbReset(bb);
                 }
             }
@@ -703,9 +691,6 @@ namespace tuning {
             for (int i = 0; i < N_RANKS; i++) {
                 midgame += connected_pawn[i] * td->w_connected_pawn[i].midgame.value;
                 endgame += connected_pawn[i] * td->w_connected_pawn[i].endgame.value;
-
-                midgame += defense_connected_pawn[i] * td->w_defense_connected_pawn[i].midgame.value;
-                endgame += defense_connected_pawn[i] * td->w_defense_connected_pawn[i].endgame.value;
             }
         }
     
@@ -713,9 +698,6 @@ namespace tuning {
             for (int i = 0; i < N_RANKS; i++) {
                 td->w_connected_pawn[i].midgame.gradient += connected_pawn[i] * mg_grad;
                 td->w_connected_pawn[i].endgame.gradient += connected_pawn[i] * eg_grad;
-
-                td->w_defense_connected_pawn[i].midgame.gradient += defense_connected_pawn[i] * mg_grad;
-                td->w_defense_connected_pawn[i].endgame.gradient += defense_connected_pawn[i] * eg_grad;
             }
         }
     };
@@ -764,7 +746,6 @@ namespace tuning {
 
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
-    
             
             U64 occupied = *b->getOccupiedBB();
             U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
@@ -774,14 +755,18 @@ namespace tuning {
             U64 wKingKnightAttacks = KNIGHT_ATTACKS    [whiteKingSquare]            & ~blackTeam;
             U64 bKingKnightAttacks = KNIGHT_ATTACKS    [blackKingSquare]            & ~whiteTeam;
             
-            for(Color color:{WHITE,BLACK}){
+            for(Color color:{WHITE,BLACK}) {
+                int h  = color == WHITE ? 1:-1;
     
                 U64 pawns    = b->getPieceBB( color, PAWN);
                 U64 oppPawns = b->getPieceBB(!color, PAWN);
+
+                U64 pawnAttacksEast = color == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
+                U64 pawnAttacksWest = color == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
     
+                count[I_PAWN_DEFENDED] += h * (bitCount(pawnAttacksEast & pawns) + bitCount(pawnAttacksWest & pawns));
+
                 U64 bb = pawns;
-                int h  = color == WHITE ? 1:-1;
-    
                 while (bb) {
                     Square s      = bitscanForward(bb);
                     Rank   r      = color == WHITE ? rankIndex(s) : 7 - rankIndex(s);
@@ -1365,7 +1350,6 @@ namespace tuning {
                     threadData[t].w_passer[i].set(passer_rank_n[i]);
                     threadData[t].w_candidate[i].set(candidate_passer[i]);
                     threadData[t].w_connected_pawn[i].set(connected_pawn[i]);
-                    threadData[t].w_defense_connected_pawn[i].set(defense_connected_pawn[i]);
                 }
                 if (i < 15) {
                     threadData[t].w_pinned[i].set(pinnedEval[i]);
@@ -1418,7 +1402,6 @@ namespace tuning {
                     threadData[t].w_passer[i].merge(threadData[0].w_passer[i]);
                     threadData[t].w_candidate[i].merge(threadData[0].w_candidate[i]);
                     threadData[t].w_connected_pawn[i].merge(threadData[0].w_connected_pawn[i]);
-                    threadData[t].w_defense_connected_pawn[i].merge(threadData[0].w_defense_connected_pawn[i]);
                 }
                 if (i < 15) {
 
@@ -1473,7 +1456,6 @@ namespace tuning {
                     threadData[t].w_passer[i].set(threadData[0].w_passer[i]);
                     threadData[t].w_candidate[i].set(threadData[0].w_candidate[i]);
                     threadData[t].w_connected_pawn[i].set(threadData[0].w_connected_pawn[i]);
-                    threadData[t].w_defense_connected_pawn[i].set(threadData[0].w_defense_connected_pawn[i]);
                 }
                 if (i < 15) {
 
@@ -1533,7 +1515,6 @@ namespace tuning {
                 threadData[0].w_passer[i].update(eta);
                 threadData[0].w_candidate[i].update(eta);
                 threadData[0].w_connected_pawn[i].update(eta);
-                threadData[0].w_defense_connected_pawn[i].update(eta);
             }
             if (i < 15) {
                 threadData[0].w_pinned[i].update(eta);
@@ -1686,6 +1667,7 @@ namespace tuning {
         // --------------------------------- features ---------------------------------
         const static std::string feature_names[]{
                 "SIDE_TO_MOVE",
+                "PAWN_DEFENDED",
                 "PAWN_PASSED_AND_DOUBLED",
                 "PAWN_PASSED_AND_BLOCKED",
                 "PAWN_PASSED_COVERED_PROMO",
@@ -1784,14 +1766,6 @@ namespace tuning {
         for (int n = 0; n < 8; n++) {
             if (n % 4 == 0) std::cout << std::endl << "\t";
             std::cout << threadData[0].w_connected_pawn[n] << ", ";
-        }
-        std::cout << "};\n" << std::endl;
-
-        // --------------------------------- defense_connected_pawn ---------------------------------
-        std::cout << "EvalScore defense_connected_pawn[N_RANKS] = {";
-        for (int n = 0; n < 8; n++) {
-            if (n % 4 == 0) std::cout << std::endl << "\t";
-            std::cout << threadData[0].w_defense_connected_pawn[n] << ", ";
         }
         std::cout << "};\n" << std::endl;
 
