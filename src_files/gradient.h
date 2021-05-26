@@ -761,24 +761,26 @@ namespace tuning {
             
                         // check if square in front is blocked
                         count[I_PAWN_PASSED_AND_BLOCKED] += bitCount(teleBB & b->getTeamOccupiedBB(!color)) * h;
-            
-                        // check if promotion square can be covered
-                        count[I_PAWN_PASSED_COVERED_PROMO] +=
-                               (  bitCount(b->getPieceBB(color, BISHOP) & promCBB)
-                                + bitCount(b->getPieceBB(color, QUEEN))
-                                - bitCount(b->getPieceBB(!color, BISHOP) & promCBB)
-                                - bitCount(b->getPieceBB(!color, QUEEN))) * h;
-            
-                        // check if there is a helper
-                        count[I_PAWN_PASSED_HELPER]       += (bitCount(pawns & (color == WHITE ? wAttackRearSpans(pawns) : bAttackRearSpans(pawns)))) * h;
-            
-                        // check if its defended
-                        count[I_PAWN_PASSED_AND_DEFENDED] += (bitCount(sqBB & ev->pawnWestAttacks[color]) + bitCount(sqBB & ev->pawnEastAttacks[color])) * h;
-            
-                        // check if can be caught by king
-                        count[I_PAWN_PASSED_SQUARE_RULE]  += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
-                            bitscanForward(promBB),
-                            bitscanForward(b->getPieceBB(!color, KING)))) * h;
+
+                        if (r >= RANK_4) {
+                            // check if promotion square can be covered
+                            count[I_PAWN_PASSED_COVERED_PROMO] +=
+                                (  bitCount(b->getPieceBB(color, BISHOP) & promCBB)
+                                    + bitCount(b->getPieceBB(color, QUEEN))
+                                    - bitCount(b->getPieceBB(!color, BISHOP) & promCBB)
+                                    - bitCount(b->getPieceBB(!color, QUEEN))) * h;
+                
+                            // check if there is a helper
+                            count[I_PAWN_PASSED_HELPER]       += (bitCount(pawns & (color == WHITE ? wAttackRearSpans(pawns) : bAttackRearSpans(pawns)))) * h;
+                
+                            // check if its defended
+                            count[I_PAWN_PASSED_AND_DEFENDED] += (bitCount(sqBB & ev->pawnWestAttacks[color]) + bitCount(sqBB & ev->pawnEastAttacks[color])) * h;
+                
+                            // check if can be caught by king
+                            count[I_PAWN_PASSED_SQUARE_RULE]  += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
+                                bitscanForward(promBB),
+                                bitscanForward(b->getPieceBB(!color, KING)))) * h;
+                        }
                     }
                     
                     bb = lsbReset(bb);
