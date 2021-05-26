@@ -70,6 +70,7 @@ namespace tuning {
         I_PAWN_BACKWARD,
         I_PAWN_OPEN,
         I_PAWN_BLOCKED,
+        I_PAWN_CONNECTED,
 
         I_KNIGHT_OUTPOST,
         I_KNIGHT_DISTANCE_ENEMY_KING,
@@ -704,6 +705,11 @@ namespace tuning {
             U64 whiteBlockedPawns = shiftNorth(whitePawns) & (whiteTeam | blackTeam);
             U64 blackBlockedPawns = shiftSouth(blackPawns) & (whiteTeam | blackTeam);
 
+            U64 whiteConnectedPawns = whitePawns & (shiftEast(whitePawns) | shiftWest(whitePawns)) 
+                & (RANK_4_BB | RANK_5_BB | RANK_6_BB | RANK_7_BB);
+            U64 blackConnectedPawns = blackPawns & (shiftEast(blackPawns) | shiftWest(blackPawns)) 
+                & (RANK_5_BB | RANK_4_BB | RANK_3_BB | RANK_2_BB);
+
             U64 openFilesWhite = ~fillFile(whitePawns);
             U64 openFilesBlack = ~fillFile(blackPawns);
             U64 openFiles = openFilesBlack & openFilesWhite;
@@ -804,6 +810,9 @@ namespace tuning {
             count[I_PAWN_BLOCKED] += (
                     +bitCount(whiteBlockedPawns)
                     - bitCount(blackBlockedPawns));
+            count[I_PAWN_CONNECTED] += (
+                bitCount(whiteConnectedPawns)
+                - bitCount(blackConnectedPawns));
             count[I_MINOR_BEHIND_PAWN] += (
                     +bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[WHITE_BISHOP]) &
                               (b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN]))
@@ -1642,6 +1651,7 @@ namespace tuning {
                 "PAWN_BACKWARD",
                 "PAWN_OPEN",
                 "PAWN_BLOCKED",
+                "PAWN_CONNECTED",
                 "KNIGHT_OUTPOST",
                 "KNIGHT_DISTANCE_ENEMY_KING",
                 "ROOK_OPEN_FILE",
