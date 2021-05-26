@@ -538,14 +538,14 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
     for (d = 1; d <= maxDepth; d++) {
         
         if (d < 6) {
-            s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0);
+            s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
             Score window = 10;
             Score alpha  = s - window;
             Score beta   = s + window;
             
             while (isTimeLeft()) {
-                s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0);
+                s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0, 2);
                 
                 window += window;
                 if (window > 500)
@@ -606,7 +606,7 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
  * @param ply
  * @return
  */
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, Depth* lmrFactor) {
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td, Move skipMove, int behindNMP, Depth* lmrFactor) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -784,7 +784,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && sd->evaluator.evalData.threats[!b->getActivePlayer()] > 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
@@ -815,7 +815,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Score qScore = -qSearch(b, -betaCut, -betaCut+1, ply + 1, td);
             
             if (qScore >= betaCut)
-                qScore = -pvSearch(b, -betaCut, -betaCut+1, depth - 4, ply+1, td, 0);
+                qScore = -pvSearch(b, -betaCut, -betaCut+1, depth - 4, ply+1, td, 0, behindNMP);
 
             b->undoMove();
 
@@ -926,7 +926,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut       = en.score - SE_MARGIN_STATIC - depth * 2;
-            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m);
+            score         = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -936,7 +936,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             } else if (score >= beta){
                 return score;
             } else if (en.score >= beta) {
-                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+3, ply, td, m);
+                score     = pvSearch(b, beta - 1, beta, (depth >> 1)+3, ply, td, m, behindNMP);
                 if (score>=beta)
                     return score;
             }
@@ -967,6 +967,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
+        if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP) lmr++;
+
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
@@ -994,16 +996,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0);
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0, behindNMP);
         } else {
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, &lmr);
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, behindNMP, &lmr);
             if (pv) sd->reduce = true;
             if (lmr && score > alpha) 
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                    0);    // re-search
+                    0, behindNMP);    // re-search
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td,
-                                  0);    // re-search
+                                  0, behindNMP);    // re-search
         }
         
         // undo the move
