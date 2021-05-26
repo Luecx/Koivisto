@@ -31,7 +31,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+// #define TUNING
 #ifdef TUNING
 
 #include "Board.h"
@@ -838,17 +838,13 @@ namespace tuning {
             k = b->getPieceBB()[WHITE_BISHOP];
             while (k) {
                 square = bitscanForward(k);
+                U64 sqBB = k & -k;
                 attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_QUEEN]);
                 count[I_MINOR_ATTACK_ROOK] +=  bitCount(attacks & b->getPieceBB<BLACK>(ROOK));
                 count[I_MINOR_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] +=
                         bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
-                count[I_BISHOP_FIANCHETTO] +=
-                        (square == G2 && whitePawns & ONE << F2 && whitePawns & ONE << H2
-                         && whitePawns & (ONE << G3 | ONE << G4));
-                count[I_BISHOP_FIANCHETTO] +=
-                        (square == B2 && whitePawns & ONE << A2 && whitePawns & ONE << C2
-                         && whitePawns & (ONE << B3 | ONE << B4));
+                count[I_BISHOP_FIANCHETTO] += (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1);
                 count[I_SAFE_BISHOP_CHECK] += bitCount(bKingBishopAttacks & attacks & ~blackPawnCover);
                 k = lsbReset(k);
             }
@@ -856,17 +852,13 @@ namespace tuning {
             k = b->getPieceBB()[BLACK_BISHOP];
             while (k) {
                 square = bitscanForward(k);
+                U64 sqBB = k & -k;
                 attacks = lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_QUEEN]);
                 count[I_MINOR_ATTACK_ROOK] -=  bitCount(attacks & b->getPieceBB<WHITE>(ROOK));
                 count[I_MINOR_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] -=
                         bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
-                count[I_BISHOP_FIANCHETTO] -=
-                        (square == G7 && blackPawns & ONE << F7 && blackPawns & ONE << H7
-                         && blackPawns & (ONE << G6 | ONE << G5));
-                count[I_BISHOP_FIANCHETTO] -=
-                        (square == B2 && blackPawns & ONE << A7 && blackPawns & ONE << C7
-                         && blackPawns & (ONE << B6 | ONE << B5));
+                count[I_BISHOP_FIANCHETTO] -= (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1);
                 count[I_SAFE_BISHOP_CHECK] -= bitCount(wKingBishopAttacks & attacks & ~whitePawnCover);
 
                 k = lsbReset(k);
