@@ -323,7 +323,6 @@ void printInfoString(Board* b, Depth d, Score score) {
     
     std::cout << std::endl;
 }
-
 /**
  * probes the wdl tables if tablebases can be used.
  */
@@ -336,16 +335,21 @@ Score getWDL(Board* board) {
     
     // use the given files to prove the tables using the information from the board.
     unsigned res = tb_probe_wdl(
-        board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
-        board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
-        board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
-        board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
+        board->getTeamOccupiedBB()[WHITE],
+        board->getTeamOccupiedBB()[BLACK],
+        board->getPieceBB()[WHITE_KING]   | board->getPieceBB()[BLACK_KING],
+        board->getPieceBB()[WHITE_QUEEN]  | board->getPieceBB()[BLACK_QUEEN],
+        board->getPieceBB()[WHITE_ROOK]   | board->getPieceBB()[BLACK_ROOK],
         board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
         board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
-        board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
-        | board->getCastlingRights(3),
-        board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE);
+        board->getPieceBB()[WHITE_PAWN]   | board->getPieceBB()[BLACK_PAWN],
+        board->getBoardStatus()->fiftyMoveCounter,
+        board->getCastlingRights(0) |
+        board->getCastlingRights(1) |
+        board->getCastlingRights(2) |
+        board->getCastlingRights(3),
+        board->getEnPassantSquare() != -1 ? board->getEnPassantSquare() : 0,
+        board->getActivePlayer() == WHITE);
     
     // if the result failed, we return the max_mate_score internally. This is not used within the search and will be
     // catched later.
@@ -383,16 +387,21 @@ Move getDTZMove(Board* board) {
         return 0;
     
     unsigned result = tb_probe_root(
-        board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
-        board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
-        board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
-        board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
+        board->getTeamOccupiedBB()[WHITE],
+        board->getTeamOccupiedBB()[BLACK],
+        board->getPieceBB()[WHITE_KING]   | board->getPieceBB()[BLACK_KING],
+        board->getPieceBB()[WHITE_QUEEN]  | board->getPieceBB()[BLACK_QUEEN],
+        board->getPieceBB()[WHITE_ROOK]   | board->getPieceBB()[BLACK_ROOK],
         board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
         board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
-        board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN], board->getCurrent50MoveRuleCount(),
-        board->getCastlingRights(0) | board->getCastlingRights(1) | board->getCastlingRights(2)
-        | board->getCastlingRights(3),
-        board->getEnPassantSquare() != 64 ? board->getEnPassantSquare() : 0, board->getActivePlayer() == WHITE, NULL);
+        board->getPieceBB()[WHITE_PAWN]   | board->getPieceBB()[BLACK_PAWN],
+        board->getBoardStatus()->fiftyMoveCounter,
+        board->getCastlingRights(0) |
+        board->getCastlingRights(1) |
+        board->getCastlingRights(2) |
+        board->getCastlingRights(3),
+        board->getEnPassantSquare() != -1 ? board->getEnPassantSquare() : 0,
+        board->getActivePlayer() == WHITE, NULL);
     
     // if the result failed for some reason or the game is over, dont do anything
     if (result == TB_RESULT_FAILED || result == TB_RESULT_CHECKMATE || result == TB_RESULT_STALEMATE)
@@ -437,7 +446,7 @@ Move getDTZMove(Board* board) {
         
         // check if its the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && getPieceType(getPromotionPiece(m)) == promo)) {
+            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && getPromotionPieceType(m) == promo)) {
                 
                 std::cout << "info"
                              " depth "
