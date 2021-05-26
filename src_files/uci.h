@@ -30,12 +30,12 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <thread>
 #include <unistd.h>
 
-namespace uci{
+namespace uci {
 
 void mainloop(bool bench);
 
@@ -65,7 +65,7 @@ void position_startpos(std::string moves);
 void bench();
 
 void quit();
-    
-}
+
+}    // namespace uci
 
 #endif    // KOIVISTO_UCI_H

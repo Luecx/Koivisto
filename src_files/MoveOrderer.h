@@ -30,14 +30,14 @@ class MoveOrderer {
     move::MoveList* moves;
 
     public:
-    int             counter;
+    int  counter;
     bool skip;
-    
+
     MoveOrderer(move::MoveList* p_moves);
 
     virtual ~MoveOrderer();
-    
-    bool hasNext();
+
+    bool       hasNext();
 
     move::Move next();
 };

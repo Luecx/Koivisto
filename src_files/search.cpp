@@ -437,7 +437,7 @@ Move getDTZMove(Board* board) {
         
         // check if its the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && promotionPiece(m) % 8 == promo)) {
+            if ((promo == 6 && !isPromotion(m)) || (isPromotion(m) && promo < 6 && getPieceType(getPromotionPiece(m)) == promo)) {
                 
                 std::cout << "info"
                              " depth "
@@ -640,7 +640,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // increased / decreased by 1 score grain.
         // The implementation in Koivisto is based on a different idea, namely the Beal effect.
         // (see https://www.chessprogramming.org/Search_with_Random_Leaf_Values).
-        return 8 - (td->nodes & MASK_4);
+        return 8 - (td->nodes & MASK<4>);
     }
 
     // beside keeping track of the nodes, we need to keep track of the selective depth for this thread.
@@ -898,7 +898,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange evaluation for the given move is very negative, dont
             // consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)
+            if (moveDepth <= 5 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
@@ -909,7 +909,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
-        if (isCapture(m) && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8)) {
+        if (isCapture(m) && (getCapturedPieceType(m)) < (getMovingPieceType(m))) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
         
@@ -963,7 +963,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // depth is too small.
         // furthermore no queen promotions are reduced
         Depth lmr = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
-                     || (isPromotion && (promotionPiece(m) % 8 == QUEEN)))
+                     || (isPromotion && (getPromotionPiece(m) % 8 == QUEEN)))
                     ? 0
                     : lmrReductions[depth][legalMoves];
         
@@ -1169,16 +1169,20 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
-        
-        if (see_piece_vals[(getCapturedPiece(m) % 8)] - see_piece_vals[(getMovingPiece(m) % 8)] - 300 + stand_pat > beta)
+
+        if (    + see_piece_vals[(getPieceType(getCapturedPiece(m)))]
+                - see_piece_vals[getPieceType(getMovingPiece(m))]
+                - 300 + stand_pat > beta)
             return beta;
 
-        // **********************************************************************************************************
+        // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
-        // if the depth is small enough and the static exchange evaluation for the given move is very negative, dont
-        // consider this quiet move as well.
-        // **********************************************************************************************************
-        if (!inCheck && (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) && b->staticExchangeEvaluation(m) < 0)
+        // if the depth is small enough and the static exchange evaluation for the given move is very
+        // negative, dont consider this quiet move as well.
+        // *******************************************************************************************
+        if (    !inCheck &&
+                (getCapturedPiece(m) % 8) < (getMovingPiece(m) % 8) &&
+                b->staticExchangeEvaluation(m) < 0)
             continue;
             
         b->move(m);

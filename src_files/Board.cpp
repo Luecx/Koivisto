@@ -409,7 +409,7 @@ void Board::move(Move m) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
 
-        if (getPiece(sqTo) % 8 == ROOK) {
+        if (getPieceType(getPiece(sqTo)) == ROOK) {
             if (color == BLACK) {
                 if (sqTo == A1) {
                     newBoardStatus.castlingRights &= ~(ONE << (WHITE_QUEENSIDE_CASTLING));
@@ -427,7 +427,7 @@ void Board::move(Move m) {
     }
 
     newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
-    if (pFrom % 8 == PAWN) {
+    if (getPieceType(pFrom) == PAWN) {
 
         // reset fifty move counter if pawn has moved
         newBoardStatus.fiftyMoveCounter = 0;
@@ -449,14 +449,14 @@ void Board::move(Move m) {
             this->unsetPiece(sqFrom);
             // update material
             material.unsetPiece(pFrom, sqFrom);
-            material.setPiece(promotionPiece(m), sqTo);
+            material.setPiece(getPromotionPiece(m), sqTo);
             // do the "basic" move
             if (isCapture(m)) {
                 // update material
                 material.unsetPiece(getPiece(sqTo), sqTo);
-                this->replacePiece(sqTo, promotionPiece(m));
+                this->replacePiece(sqTo, getPromotionPiece(m));
             } else {
-                this->setPiece(sqTo, promotionPiece(m));
+                this->setPiece(sqTo, getPromotionPiece(m));
             }
 
             getBoardStatus()->material = material;
@@ -479,7 +479,7 @@ void Board::move(Move m) {
             getBoardStatus()->material = material;
             return;
         }
-    } else if (pFrom % 8 == KING) {
+    } else if (getPieceType(pFrom) == KING) {
 
         // revoke castling rights if king moves
         newBoardStatus.castlingRights &= ~(ONE << (color * 2));
@@ -516,7 +516,7 @@ void Board::move(Move m) {
     }
 
     // revoke castling rights if rook moves and it is on the initial square
-    else if (pFrom % 8 == ROOK) {
+    else if (getPieceType(pFrom) == ROOK) {
         if (color == WHITE) {
             if (sqFrom == A1) {
                 newBoardStatus.castlingRights &= ~(ONE << (color * 2));
@@ -577,7 +577,7 @@ void Board::undoMove() {
         setPiece(sqTo - 8 * factor, (1 - color) * 8);
     }
 
-    if (pFrom % 8 == KING && isCastle(m)) {
+    if (getPieceType(pFrom) == KING && isCastle(m)) {
         Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
         Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
         setPiece(rookSquare, ROOK + 8 * color);
@@ -745,7 +745,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         (fixed | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
 
     if (isCapture(m))
-        gain[d] = see_piece_vals[capturedPiece % 8];
+        gain[d] = see_piece_vals[getPieceType(capturedPiece)];
     else {
         gain[d] = 0;
     }
@@ -754,7 +754,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         d++;
         attacker = 1 - attacker;
 
-        gain[d] = see_piece_vals[capturingPiece % 8] - gain[d - 1];
+        gain[d] = see_piece_vals[getPieceType(capturingPiece)] - gain[d - 1];
 
         if (-gain[d - 1] < 0 && gain[d] < 0)
             break;    // pruning does not influence the result
@@ -864,7 +864,7 @@ bool Board::givesCheck(Move m) {
     // replace the moving piece with the piece to promote to if promotion to detect direct check
     if (isPromotion(m)) {
         unsetBit(m_occupiedBB, sqFrom);
-        pFrom = promotionPiece(m);
+        pFrom = getPromotionPiece(m);
     }
 
     // direct check

@@ -70,7 +70,8 @@ std::string               loadingBar(int count, int max, const std::string& msg)
  * @param replaceStr
  * @return
  */
-std::string&              findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr);
+std::string&              findAndReplaceAll(std::string& data, const std::string& toSearch,
+                                            const std::string& replaceStr);
 
 /**
  * splits the string into subparts at the specified char.
@@ -79,7 +80,8 @@ std::string&              findAndReplaceAll(std::string& data, const std::string
  * @param ch
  * @return
  */
-std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch);
+std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs,
+                                      char ch);
 
 /**
  * starts the time measurement.

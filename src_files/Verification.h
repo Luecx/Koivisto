@@ -24,16 +24,16 @@
 #include "Move.h"
 
 /**
- * verifies the given static-exchange evaluation case. requires a fen and a move and compares the see output with the
- * expected output
+ * verifies the given static-exchange evaluation case. requires a fen and a move and compares the see
+ * output with the expected output
  * @param fen
  * @param m
  * @param s
  */
 void verifySEECase(std::string fen, Move m, Score s) {
-    Board* b = new Board(fen);
+    Board* b   = new Board(fen);
 
-    Score see = b->staticExchangeEvaluation(m);
+    Score  see = b->staticExchangeEvaluation(m);
 
     if (see != s) {
         std::cerr << "problem in: " << fen << " result=" << see << " expected: " << s << std::endl;

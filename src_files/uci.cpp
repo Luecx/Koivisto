@@ -18,15 +18,14 @@
  ****************************************************************************************************/
 
 #include "uci.h"
-#include "search.h"
-#include "UCIAssert.h"
 
+#include "UCIAssert.h"
+#include "search.h"
 #include "syzygy/tbprobe.h"
 
 #include <fstream>
 #include <iostream>
 #include <thread>
-
 
 TimeManager timeManager;
 Board*      board;
@@ -34,7 +33,8 @@ std::thread searchThread;
 
 /**
  * assuming the input to the engine has been split by spaces into the given vector, this function
- * retrieves the entry after the given key. e.g. [a, 10, b 20, 300] with key='b' will return 20 as a string.
+ * retrieves the entry after the given key. e.g. [a, 10, b 20, 300] with key='b' will return 20 as a
+ * string.
  * @param vec
  * @param key
  * @return
@@ -50,11 +50,10 @@ std::string getValue(std::vector<std::string>& vec, std::string key) {
     return "";
 }
 
-
 /**
  * this function will invoke the search with a given max depth and a time manager.
- * If no depth has been specified, it will be set to the maximum depth and the time manager will handle
- * all stop-management.
+ * If no depth has been specified, it will be set to the maximum depth and the time manager will
+ * handle all stop-management.
  *
  * @param maxDepth
  * @param p_timeManager
@@ -64,15 +63,15 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
     std::cout << "bestmove " << toString(m) << std::endl;
 }
 
-
 /**
- * the Main loop for received inputs from the user. Prints information about the engine (version, authors)
- * and continues reading the lines until 'quit' is parsed which will shut down the engine and deallocate arrays.
+ * the Main loop for received inputs from the user. Prints information about the engine (version,
+ * authors) and continues reading the lines until 'quit' is parsed which will shut down the engine and
+ * deallocate arrays.
  * @param bench
  */
 void uci::mainloop(bool bench) {
 
-    bb_init();
+    init();
     search_init(16);
     psqt_init();
 
@@ -80,10 +79,10 @@ void uci::mainloop(bool bench) {
         uci::bench();
 
         search_cleanUp();
-        bb_cleanUp();
+        cleanUp();
     } else {
-        std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
-                  << std::endl;
+        std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION
+                  << " by K. Kahre, F. Eggers, E. Bruno" << std::endl;
 
         board = new Board();
 
@@ -104,7 +103,8 @@ void uci::mainloop(bool bench) {
 /**
  * Parses the uci command: uci
  * Displays engine version and the authors.
- * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive further commands.
+ * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive
+ * further commands.
  */
 void uci::uci() {
     std::cout << "id name Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
@@ -115,8 +115,6 @@ void uci::uci() {
 
     std::cout << "uciok" << std::endl;
 }
-
-
 
 /**
  * processes a single command.
@@ -155,9 +153,10 @@ void uci::processCommand(std::string str) {
             string mvtog = getValue(split, "movestogo");
             string depth = getValue(split, "depth");
 
-            uci::go_match((wtime.empty()) ? 60000000 : stoi(wtime), (btime.empty()) ? 60000000 : stoi(btime),
-                         (wincr.empty()) ? 0 : stoi(wincr), (bincr.empty()) ? 0 : stoi(bincr),
-                         (mvtog.empty()) ? 29 : stoi(mvtog), (depth.empty()) ? MAX_PLY : stoi(depth));
+            uci::go_match((wtime.empty()) ? 60000000 : stoi(wtime),
+                          (btime.empty()) ? 60000000 : stoi(btime), (wincr.empty()) ? 0 : stoi(wincr),
+                          (bincr.empty()) ? 0 : stoi(bincr), (mvtog.empty()) ? 29 : stoi(mvtog),
+                          (depth.empty()) ? MAX_PLY : stoi(depth));
 
         } else if (str.find("depth") != string::npos) {
             uci::go_depth(stoi(getValue(split, "depth")));
@@ -194,8 +193,8 @@ void uci::processCommand(std::string str) {
         }
     } else if (split.at(0) == "position") {
 
-        auto fenPos  = str.find("fen");
-        auto movePos = str.find("moves");
+        auto   fenPos  = str.find("fen");
+        auto   movePos = str.find("moves");
 
         string moves {};
         if (movePos != string::npos) {
@@ -254,7 +253,7 @@ void uci::go_match(int wtime, int btime, int winc, int binc, int movesToGo, int 
 
     uci::stop();
 
-    timeManager = TimeManager(wtime, btime, winc, binc, movesToGo, board);
+    timeManager  = TimeManager(wtime, btime, winc, binc, movesToGo, board);
 
     searchThread = std::thread(searchAndPrint, depth, &timeManager);
 }
@@ -268,7 +267,7 @@ void uci::go_depth(int depth) {
 
     uci::stop();
 
-    timeManager = TimeManager();
+    timeManager  = TimeManager();
 
     searchThread = std::thread(searchAndPrint, depth, &timeManager);
 }
@@ -280,12 +279,11 @@ void uci::go_depth(int depth) {
  */
 void uci::go_nodes(int nodes) {
     uci::stop();
-    
+
     timeManager = TimeManager();
     timeManager.setNodeLimit(nodes);
-    
+
     searchThread = std::thread(searchAndPrint, MAX_PLY, &timeManager);
-    
 }
 
 /**
@@ -298,7 +296,7 @@ void uci::go_time(int movetime) {
 
     uci::stop();
 
-    timeManager = TimeManager(movetime);
+    timeManager  = TimeManager(movetime);
 
     searchThread = std::thread(searchAndPrint, MAX_PLY, &timeManager);
 }
@@ -368,7 +366,7 @@ void uci::set_option(std::string& name, std::string& value) {
             count = 1;
         if (count > MAX_THREADS)
             count = MAX_THREADS;
-        
+
         search_setThreads(count);
     }
 }
@@ -395,8 +393,8 @@ void uci::debug(bool mode) {
 
 /**
  * parses the uci command: position fen [fen] moves [m1, m2,...]
- * If the fen is not specified, the start position will be used which can also be invoked using 'startpos' instead of
- * fen ...
+ * If the fen is not specified, the start position will be used which can also be invoked using
+ * 'startpos' instead of fen ...
  * @param fen
  * @param moves
  */
@@ -412,13 +410,13 @@ void uci::position_fen(std::string fen, std::string moves) {
 
     for (string s : mv) {
 
-        string str1 = s.substr(0, 2);
-        string str2 = s.substr(2, 4);
-        Square s1   = squareIndex(str1);
-        Square s2   = squareIndex(str2);
+        string   str1     = s.substr(0, 2);
+        string   str2     = s.substr(2, 4);
+        Square   s1       = squareIndex(str1);
+        Square   s2       = squareIndex(str2);
 
-        Piece moving   = board->getPiece(s1);
-        Piece captured = board->getPiece(s2);
+        Piece    moving   = board->getPiece(s1);
+        Piece    captured = board->getPiece(s2);
 
         MoveType type;
 
@@ -482,13 +480,13 @@ void uci::position_fen(std::string fen, std::string moves) {
 
 /**
  * parses the uci command: position fen [fen] moves [m1, m2,...]
- * If the fen is not specified, the start position will be used which can also be invoked using 'startpos' instead of
- * fen ...
+ * If the fen is not specified, the start position will be used which can also be invoked using
+ * 'startpos' instead of fen ...
  * @param fen
  * @param moves
  */
 void uci::position_startpos(std::string moves) {
-    uci::position_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves);
+    uci::position_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", std::move(moves));
 }
 
 /**
@@ -501,7 +499,7 @@ void uci::quit() {
     delete board;
     board = nullptr;
 
-    bb_cleanUp();
+    cleanUp();
     search_cleanUp();
 }
 
@@ -521,7 +519,7 @@ void uci::bench() {
     search_disable_infoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
 
-        Board b(Benchmarks[i]);
+        Board       b(Benchmarks[i]);
 
         TimeManager manager;
         bestMove(&b, 13, &manager, 0);
@@ -541,5 +539,4 @@ void uci::bench() {
     printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
     search_enable_infoStrings();
-
 }

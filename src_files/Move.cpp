@@ -21,48 +21,6 @@
 using namespace move;
 
 /**
- * generates a new non-capture by taking the fromSq, toSq, type and the moving piece.
- * For a List of types, look at Move.h.
- * @param from
- * @param to
- * @param type
- * @param movingPiece
- * @return
- */
-Move move::genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece) {
-
-    Move m {0};
-    setSquareFrom(m, from);
-    setSquareTo(m, to);
-    setType(m, type);
-    setMovingPiece(m, movingPiece);
-    return m;
-}
-
-/**
- * generates a new capture by taking the fromSq, toSq, type and the moving piece.
- * For a List of types, look at Move.h.
- * @param from
- * @param to
- * @param type
- * @param movingPiece
- * @return
- */
-Move move::genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece,
-                   const bb::Piece &capturedPiece) {
-
-    Move m {0};
-
-    setSquareFrom(m, from);
-    setSquareTo(m, to);
-    setType(m, type);
-    setMovingPiece(m, movingPiece);
-    setCapturedPiece(m, capturedPiece);
-
-    return m;
-}
-
-/**
  * prints the bits of the move.
  * Useful for debugging.
  * @param move
@@ -120,30 +78,26 @@ void move::printMoveBits(Move move, bool bitInfo) {
  * @param move
  * @return
  */
-std::string move::toString(const Move &move) {
+std::string move::toString(const Move& move) {
 
     std::string res {};
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
     res.append(bb::SQUARE_IDENTIFIER[getSquareTo(move)]);
     if (isPromotion(move)) {
-        char c = tolower(bb::PIECE_IDENTIFER[promotionPiece(move)]);
+        char c = tolower(bb::PIECE_IDENTIFER[getPromotionPiece(move)]);
         res.push_back(c);
     }
 
     return res;
 }
 
-MoveList::~MoveList() {}
-
-MoveList::MoveList() {}
-
 /**
  * swaps the move object at index i1 and index i2
  */
 void MoveList::swap(int i1, int i2) {
-    Move m1   = moves[i1];
-    moves[i1] = moves[i2];
-    moves[i2] = m1;
+    Move m1      = moves[i1];
+    moves[i1]    = moves[i2];
+    moves[i2]    = m1;
 
     MoveScore s1 = scores[i1];
     scores[i1]   = scores[i2];
@@ -155,24 +109,32 @@ void MoveList::swap(int i1, int i2) {
  * @param index
  * @return
  */
-move::Move MoveList::getMove(int index) { return moves[index]; }
+move::Move MoveList::getMove(int index) {
+    return moves[index];
+}
 
 /**
  * removes all moves
  */
-void MoveList::clear() { size = 0; }
+void MoveList::clear() {
+    size = 0;
+}
 
 /**
  * adds a move
  * @param move
  */
-void MoveList::add(Move move) { moves[size++] = move; }
+void MoveList::add(Move move) {
+    moves[size++] = move;
+}
 
 /**
  * returns the amount of stored moves
  * @return
  */
-int MoveList::getSize() const { return size; }
+int MoveList::getSize() const {
+    return size;
+}
 
 /**
  * assigns the score to the move at the given index
@@ -185,13 +147,15 @@ void MoveList::scoreMove(int index, MoveScore score) {
 /**
  *
  */
-MoveScore MoveList::getScore(int index) { return scores[index]; }
+MoveScore MoveList::getScore(int index) {
+    return scores[index];
+}
 
 /**
  * prints the bits of all the moves
  */
 void MoveList::printMoveBits() {
     for (int i = 0; i < this->size; i++) {
-        ::move::printMoveBits(getMove(i), false);
+        move::printMoveBits(getMove(i), false);
     }
 }

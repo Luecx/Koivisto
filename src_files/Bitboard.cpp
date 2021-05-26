@@ -33,7 +33,7 @@ U64 bb::PASSED_PAWN_MASK[N_COLORS][N_SQUARES];
 
 std::mt19937_64 rng;
 
-void bb::bb_init() {
+void bb::init() {
 
     rng.seed(seed);
 
@@ -41,13 +41,12 @@ void bb::bb_init() {
     generateData();
 }
 
-void bb::bb_cleanUp() {
+void bb::cleanUp() {
     for (int i = 0; i < N_SQUARES; i++) {
         delete[] ROOK_ATTACKS[i];
         ROOK_ATTACKS[i] = nullptr;
         delete[] BISHOP_ATTACKS[i];
         BISHOP_ATTACKS[i] = nullptr;
-       
     }
 }
 
@@ -63,11 +62,6 @@ U64 bb::randU64() {
     res ^= U64(rng()) << 60;
 
     return res;
-}
-
-double bb::randDouble(double min, double max) {
-    double f = static_cast<double>(rng()) / rng.max();
-    return min + f * (max - min);
 }
 
 U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {

@@ -10,14 +10,15 @@ AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 AlignEscapedNewlines: Right
 AlignOperands: true
 AlignTrailingComments: true
-AllowAllArgumentsOnNextLine: false
-AllowAllConstructorInitializersOnNextLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
 
 BinPackArguments: true
 BinPackParameters: true
@@ -26,7 +27,7 @@ BreakBeforeBraces: Attach
 BreakBeforeTernaryOperators: true
 
 Cpp11BracedListStyle: true
-ColumnLimit: 180
+ColumnLimit: 102
 
 DeriveLineEnding: true
 DerivePointerAlignment: false
