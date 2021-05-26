@@ -64,6 +64,7 @@ namespace tuning {
         I_PAWN_PASSED_HELPER,
         I_PAWN_PASSED_AND_DEFENDED,
         I_PAWN_PASSED_SQUARE_RULE,
+        I_PAWN_PASSED_EDGE_DISTANCE,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -753,7 +754,8 @@ namespace tuning {
                         U64    promBB  = FILES_BB[f] & (color == WHITE ? RANK_8_BB:RANK_1_BB);
                         U64    promCBB = promBB & WHITE_SQUARES_BB ? WHITE_SQUARES_BB : BLACK_SQUARES_BB;
             
-            
+                        count[I_PAWN_PASSED_EDGE_DISTANCE] += (f > 3 ? 7 - f : f) * h;
+
                         // check if doubled
                         count[I_PAWN_PASSED_AND_DOUBLED] += bitCount(teleBB & pawns) * h;
             
@@ -1645,6 +1647,7 @@ namespace tuning {
                 "PAWN_PASSED_HELPER",
                 "PAWN_PASSED_AND_DEFENDED",
                 "PAWN_PASSED_SQUARE_RULE",
+                "PAWN_PASSED_EDGE_DISTANCE",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
