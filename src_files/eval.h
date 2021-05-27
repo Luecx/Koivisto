@@ -66,6 +66,8 @@ class Evaluator {
     
     template<Color color>
     EvalScore computePassedPawns(Board* b);
+    
+    bb::Score adjustFinalScore(Board* b, bb::Score res);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 

@@ -403,11 +403,33 @@ EvalScore Evaluator::computePassedPawns(Board* b){
     return h;
 }
 
-/**
- * evaluates the board.
- * @param b
- * @return
- */
+
+bb::Score Evaluator::adjustFinalScore(Board* b, bb::Score res){
+    
+    if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
+        res = res / 10;
+    
+    // check for OCB ending
+    if( b->getPieceBB<WHITE>(QUEEN)  == ZERO &&
+        b->getPieceBB<BLACK>(QUEEN)  == ZERO &&
+        b->getPieceBB<WHITE>(ROOK)   == ZERO &&
+        b->getPieceBB<BLACK>(ROOK)   == ZERO &&
+        b->getPieceBB<WHITE>(KNIGHT) == ZERO &&
+        b->getPieceBB<BLACK>(KNIGHT) == ZERO){
+
+        U64 bishops = (b->getPieceBB<WHITE>(BISHOP) | b->getPieceBB<BLACK>(BISHOP));
+
+        if( bitCount(b->getPieceBB<WHITE>(BISHOP)) == 1 &&
+            bitCount(b->getPieceBB<BLACK>(BISHOP)) == 1 &&
+            bitCount(WHITE_SQUARES_BB & bishops)   == 1){
+
+            res = res / 4;
+        }
+
+    }
+    return res;
+}
+
 bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     UCI_ASSERT(b);
 
@@ -784,6 +806,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
+    EvalScore threatScore      = evalData.threats[WHITE] - evalData.threats[BLACK];
 
     evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
 
@@ -794,14 +817,28 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                        - b->getCastlingRights(BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
 
-    EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + passedScore + evalData.threats[WHITE] - evalData.threats[BLACK];
-    res = (int) ((float) MgScore(totalScore + materialScore) * (1 - phase));
-    Score eg = EgScore(totalScore + materialScore);
-    eg = eg*(120-(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))*(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))) / 100;
-    res += (int) ((float) eg * (phase));
+    EvalScore totalScore = evalScore
+                           + pinnedEvalScore
+                           + hangingEvalScore
+                           + featureScore
+                           + mobScore
+                           + passedScore
+                           + threatScore
+                           + materialScore;
 
-    if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
-        res = res / 10;
+    Score mgScore = MgScore(totalScore);
+    Score egScore = EgScore(totalScore);
+
+    egScore = egScore * (120 -
+                    (8 - bitCount(b->getPieceBB(egScore > 0 ? WHITE : BLACK, PAWN))) *
+                    (8 - bitCount(b->getPieceBB(egScore > 0 ? WHITE : BLACK, PAWN))))
+               / 100;
+    
+    res  = (int) ((float) mgScore * (1 - phase));
+    res += (int) ((float) egScore * (phase));
+    
+    
+    res  = adjustFinalScore(b, res);
     return res;
 }
 
