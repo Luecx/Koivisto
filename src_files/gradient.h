@@ -811,8 +811,8 @@ namespace tuning {
                     - bitCount(blackPawnEastCover)
                     - bitCount(blackPawnWestCover));
             count[I_PAWN_OPEN] += (
-                    +bitCount(whitePawns & ~fillSouth(blackPawns))
-                    - bitCount(blackPawns & ~fillNorth(whitePawns)));
+                    +bitCount(whitePawns & ~ev->attacks[WHITE][PAWN] & ~fillSouth(blackPawns))
+                    - bitCount(blackPawns & ~ev->attacks[BLACK][PAWN] & ~fillNorth(whitePawns)));
             count[I_PAWN_BACKWARD] += (
                     +bitCount(fillSouth(~wAttackFrontSpans(whitePawns) & blackPawnCover) & whitePawns)
                     - bitCount(fillNorth(~bAttackFrontSpans(blackPawns) & whitePawnCover) & blackPawns));
