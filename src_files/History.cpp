@@ -23,63 +23,59 @@
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
     if (depth > 20)
         return;
-    Move m2;
+    Move  m2;
 
-    Piece  prevPiece = getMovingPieceType(previous);
-    Square prevTo    = getSquareTo(previous);
-    Color  color     = getMovingPieceColor(m);
+    Color color = getMovingPieceColor(m);
 
     for (int i = 0; i < mv->getSize(); i++) {
-        m2                 = mv->getMove(i);
+        m2         = mv->getMove(i);
 
-        int    score       = mv->getScore(i);
+        int score  = mv->getScore(i);
+        int scalar = score * score + 5 * score;
 
-        Piece  movingPiece = getMovingPieceType(m2);
-        Square squareTo    = getSquareTo(m2);
-        int       scalar      = score * score + 5 * score;
-    
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
-                captureHistory[side][getSquareFrom(m)][getSquareTo(m)] +=
+                captureHistory[side][getSqToSqFromCombination(m)] +=
                     + scalar
-                    - scalar * captureHistory[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
+                    - scalar * captureHistory[side][getSqToSqFromCombination(m)]
+                          / MAX_HISTORY_SCORE;
             } else {
-                history[side][getSquareFrom(m)][getSquareTo(m)] +=
+                history[side][getSqToSqFromCombination(m)] +=
                     + scalar
-                    - scalar * history[side][getSquareFrom(m)][getSquareTo(m)] / MAX_HISTORY_SCORE;
-                cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
+                    - scalar * history[side][getSqToSqFromCombination(m)]
+                          / MAX_HISTORY_SCORE;
+                cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                     + scalar
-                    - scalar * cmh[prevPiece][prevTo][color][movingPiece][squareTo] / MAX_HISTORY_SCORE;
+                    - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
+                          / MAX_HISTORY_SCORE;
             }
         
             // we can return at this point because all moves searched are in front of this move
             return;
         } else if (isCapture(m2)) {
-            captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] +=
+            captureHistory[side][getSqToSqFromCombination(m2)] +=
                 - scalar
-                - scalar * captureHistory[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
+                - scalar * captureHistory[side][getSqToSqFromCombination(m2)]
+                      / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
-            history[side][getSquareFrom(m2)][getSquareTo(m2)] +=
+            history[side][getSqToSqFromCombination(m2)] +=
                 - scalar
-                - scalar * history[side][getSquareFrom(m2)][getSquareTo(m2)] / MAX_HISTORY_SCORE;
-            cmh[prevPiece][prevTo][color][movingPiece][squareTo] +=
+                - scalar * history[side][getSqToSqFromCombination(m2)]
+                      / MAX_HISTORY_SCORE;
+            cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                 - scalar
-                - scalar * cmh[prevPiece][prevTo][color][movingPiece][squareTo] / MAX_HISTORY_SCORE;
+                - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
+                      / MAX_HISTORY_SCORE;
         }
     }
 }
 
 int SearchData::getHistories(Move m, Color side, Move previous) {
     if (isCapture(m)) {
-        return captureHistory[side][getSquareFrom(m)][getSquareTo(m)];
+        return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
-        PieceType prevPiece   = getMovingPieceType(previous);
-        Square    prevTo      = getSquareTo(previous);
-        PieceType movingPiece = getMovingPieceType(m);
-        Square    squareTo    = getSquareTo(m);
-        
-        return cmh[prevPiece][prevTo][side][movingPiece][squareTo]
-               + history[side][getSquareFrom(m)][getSquareTo(m)];
+        return cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+               + history[side][getSqToSqFromCombination(m)];
     }
 }
 

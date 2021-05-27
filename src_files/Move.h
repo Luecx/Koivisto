@@ -97,6 +97,7 @@ inline int  getScore(const Move& move) { return (move >> SHIFT_SCORE_INFO); }
 
 inline int getPieceSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK<10>;}
 inline int getPieceTypeSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK<9>;}
+inline int getSqToSqFromCombination(const Move& move) {return move & MASK<12>;}
 
 inline bb::Square    getSquareFrom          (const Move& move) { return ((move >> SHIFT_FROM) & MASK<6>); }
 inline bb::Square    getSquareTo            (const Move& move) { return ((move >> SHIFT_TO) & MASK<6>); }
