@@ -67,7 +67,6 @@ namespace tuning {
         I_PAWN_PASSED_EDGE_DISTANCE,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
-        I_PAWN_DOUBLED_AND_ISOLATED,
         I_PAWN_BACKWARD,
         I_PAWN_OPEN,
         I_PAWN_BLOCKED,
@@ -789,15 +788,12 @@ namespace tuning {
             count[I_PAWN_ATTACK_MINOR]          = (bitCount(whitePawnCover & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)))-bitCount(blackPawnCover & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP))));
             count[I_PAWN_ATTACK_ROOK]           = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(ROOK))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(ROOK)));
             count[I_PAWN_ATTACK_QUEEN]          = (bitCount(whitePawnCover & b->getPieceBB<BLACK>(QUEEN))-bitCount(blackPawnCover & b->getPieceBB<WHITE>(QUEEN)));
-            count[I_PAWN_DOUBLED_AND_ISOLATED]  = (
-                    +bitCount(whiteIsolatedPawns & whiteDoubledPawns)
-                    - bitCount(blackIsolatedPawns & blackDoubledPawns));
             count[I_PAWN_DOUBLED] += (
-                    +bitCount(~whiteIsolatedPawns & whiteDoubledPawns)
-                    - bitCount(~blackIsolatedPawns & blackDoubledPawns));
+                    +bitCount(whiteDoubledPawns)
+                    - bitCount(blackDoubledPawns));
             count[I_PAWN_ISOLATED] += (
-                    +bitCount(whiteIsolatedPawns & ~whiteDoubledPawns)
-                    - bitCount(blackIsolatedPawns & ~blackDoubledPawns));
+                    +bitCount(whiteIsolatedPawns)
+                    - bitCount(blackIsolatedPawns));
             count[I_PAWN_STRUCTURE] += (
                     +bitCount(whitePawnEastCover)
                     + bitCount(whitePawnWestCover)
@@ -1650,7 +1646,6 @@ namespace tuning {
                 "PAWN_PASSED_EDGE_DISTANCE",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
-                "PAWN_DOUBLED_AND_ISOLATED",
                 "PAWN_BACKWARD",
                 "PAWN_OPEN",
                 "PAWN_BLOCKED",
