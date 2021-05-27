@@ -65,6 +65,7 @@ namespace tuning {
         I_PAWN_PASSED_AND_DEFENDED,
         I_PAWN_PASSED_SQUARE_RULE,
         I_PAWN_PASSED_EDGE_DISTANCE,
+        I_PAWN_PASSED_KING_TROPISM,
         I_PAWN_ISOLATED,
         I_PAWN_DOUBLED,
         I_PAWN_DOUBLED_AND_ISOLATED,
@@ -736,6 +737,8 @@ namespace tuning {
     
                 U64 pawns    = b->getPieceBB( color, PAWN);
                 U64 oppPawns = b->getPieceBB(!color, PAWN);
+                Square kingSq = bitscanForward(b->getPieceBB(color, KING));
+                Square oppKingSq = bitscanForward(b->getPieceBB(!color, KING));
     
                 U64 bb = pawns;
                 int h  = color == WHITE ? 1:-1;
@@ -745,6 +748,8 @@ namespace tuning {
                     Rank   r      = color == WHITE ? rankIndex(s) : 7 - rankIndex(s);
                     File   f      = fileIndex(s);
                     U64    sqBB   = ONE << s;
+                    U64   advBB   = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
+                    Square adv    = bitscanForward(advBB);
         
                     U64 passerMask = PASSED_PAWN_MASK[color][s];
         
@@ -779,6 +784,8 @@ namespace tuning {
                         count[I_PAWN_PASSED_SQUARE_RULE]  += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
                             bitscanForward(promBB),
                             bitscanForward(b->getPieceBB(!color, KING)))) * h;
+
+                        count[I_PAWN_PASSED_KING_TROPISM] += h * std::clamp(chebyshevDistance(oppKingSq, adv) - chebyshevDistance(kingSq, adv), -4, 4);
                     }
                     
                     bb = lsbReset(bb);
@@ -1648,6 +1655,7 @@ namespace tuning {
                 "PAWN_PASSED_AND_DEFENDED",
                 "PAWN_PASSED_SQUARE_RULE",
                 "PAWN_PASSED_EDGE_DISTANCE",
+                "PAWN_PASSED_KING_TROPISM",
                 "PAWN_ISOLATED",
                 "PAWN_DOUBLED",
                 "PAWN_DOUBLED_AND_ISOLATED",
