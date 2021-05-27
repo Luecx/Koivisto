@@ -692,9 +692,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+    int oponentImprovement = (ply > 1 && sd->eval[1 - b->getActivePlayer()][ply-1] > -MIN_MATE_SCORE && staticEval > -MIN_MATE_SCORE) ? std::max(0, 30 - staticEval - sd->eval[!b->getActivePlayer()][ply-1]) : 0;
     
     // **************************************************************************************************************
-    // transposition table probing:
+    // transposition table probing
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
     // position. First, we adjust the static evaluation and second, we might be able to return the tablebase score if
     // the depth of that entry is larger than our current depth.
@@ -783,7 +784,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN + oponentImprovement && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
