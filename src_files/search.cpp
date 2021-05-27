@@ -692,7 +692,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-    int  improvement = (ply > 1 && sd->eval[b->getActivePlayer()][ply-2] > -MIN_MATE_SCORE && staticEval > -MIN_MATE_SCORE) ? std::min(0, staticEval - sd->eval[b->getActivePlayer()][ply-2]) : 0;
+    int  improvement = (ply > 1 && sd->eval[b->getActivePlayer()][ply-2] > -MIN_MATE_SCORE && staticEval > -MIN_MATE_SCORE) ? std::min(0, -staticEval + sd->eval[b->getActivePlayer()][ply-2]) : 0;
     
     // **************************************************************************************************************
     // transposition table probing
