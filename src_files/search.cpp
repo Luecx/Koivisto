@@ -692,7 +692,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-    int oponentImprovement = (ply > 1 && sd->eval[1 - b->getActivePlayer()][ply-1] > -MIN_MATE_SCORE && staticEval > -MIN_MATE_SCORE) ? std::min(0, staticEval - sd->eval[!b->getActivePlayer()][ply-1]) : 0;
+    int  improvement = (ply > 1 && sd->eval[b->getActivePlayer()][ply-2] > -MIN_MATE_SCORE && staticEval > -MIN_MATE_SCORE) ? std::min(0, staticEval - sd->eval[b->getActivePlayer()][ply-2]) : 0;
     
     // **************************************************************************************************************
     // transposition table probing
@@ -784,7 +784,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN + oponentImprovement && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN + improvement && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
         // **********************************************************************************************************
