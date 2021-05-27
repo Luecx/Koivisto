@@ -73,6 +73,7 @@ namespace tuning {
         I_PAWN_OPEN,
         I_PAWN_BLOCKED,
         I_PAWN_CONNECTED,
+        I_PAWN_CONNECTED_FAR,
 
         I_KNIGHT_OUTPOST,
         I_KNIGHT_DISTANCE_ENEMY_KING,
@@ -822,6 +823,9 @@ namespace tuning {
             count[I_PAWN_CONNECTED] += (
                 bitCount(whiteConnectedPawns)
                 - bitCount(blackConnectedPawns));
+            count[I_PAWN_CONNECTED_FAR] += (
+                bitCount(whiteConnectedPawns & (RANK_6_BB | RANK_7_BB))
+                - bitCount(blackConnectedPawns & (RANK_3_BB | RANK_2_BB)));
             count[I_MINOR_BEHIND_PAWN] += (
                     +bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[WHITE_BISHOP]) &
                               (b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN]))
@@ -1663,6 +1667,7 @@ namespace tuning {
                 "PAWN_OPEN",
                 "PAWN_BLOCKED",
                 "PAWN_CONNECTED",
+                "PAWN_CONNECTED_FAR",
                 "KNIGHT_OUTPOST",
                 "KNIGHT_DISTANCE_ENEMY_KING",
                 "ROOK_OPEN_FILE",
