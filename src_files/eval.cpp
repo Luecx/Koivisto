@@ -385,6 +385,8 @@ EvalScore Evaluator::computePassedPawns(Board* b){
                       bitscanForward(promBB),
                       bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
 
+            // https://www.chessprogramming.org/King_Pawn_Tropism
+            // looking to the advanced square is more important
             h += PAWN_PASSED_KING_TROPISM 
                 * std::clamp(chebyshevDistance(oppKingSq, adv) - chebyshevDistance(kingSq, adv), -4, 4);
         }
@@ -565,6 +567,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
             + bitCount(whiteBlockedPawns)
             - bitCount(blackBlockedPawns));
     
+    // https://www.chessprogramming.org/Connected_Pawns
     featureScore += PAWN_CONNECTED * (
               bitCount(whiteConnectedPawns)
             - bitCount(blackConnectedPawns));
@@ -635,6 +638,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         featureScore    += BISHOP_PIECE_SAME_SQUARE_E
                            * bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
 
+        // as implemented in well-known engines i.e. Ethereal (it doesn't seem to gain if you recognize full occupancy)
         if (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1)
             featureScore += BISHOP_FIANCHETTO;
                         
@@ -661,6 +665,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         featureScore    -= BISHOP_PIECE_SAME_SQUARE_E
                            * bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
                            
+        // as implemented in well-known engines i.e. Ethereal (it doesn't seem to gain if you recognize full occupancy)
         if (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1)
             featureScore -= BISHOP_FIANCHETTO;
                         
