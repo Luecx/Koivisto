@@ -73,6 +73,7 @@ namespace tuning {
         I_PAWN_OPEN,
         I_PAWN_BLOCKED,
         I_PAWN_CONNECTED,
+        I_PAWN_HOME_BLOCKED,
 
         I_KNIGHT_OUTPOST,
         I_KNIGHT_DISTANCE_ENEMY_KING,
@@ -724,7 +725,9 @@ namespace tuning {
 
             U64 whitePawnCover = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
-    
+
+            U64 whiteBlockedHomePawns = shiftSouth(*b->getOccupiedBB()) & whitePawns & RANK_2_BB & (FILE_C_BB | FILE_D_BB | FILE_E_BB);
+            U64 blackBlockedHomePawns = shiftNorth(*b->getOccupiedBB()) & blackPawns & RANK_7_BB & (FILE_C_BB | FILE_D_BB | FILE_E_BB);
             
             U64 occupied = *b->getOccupiedBB();
             U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
@@ -823,6 +826,9 @@ namespace tuning {
             count[I_PAWN_CONNECTED] += (
                 bitCount(whiteConnectedPawns)
                 - bitCount(blackConnectedPawns));
+            count[I_PAWN_HOME_BLOCKED] += (
+                bitCount(whiteBlockedHomePawns)
+                - bitCount(blackBlockedHomePawns));
             count[I_MINOR_BEHIND_PAWN] += (
                     +bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[WHITE_BISHOP]) &
                               (b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN]))
@@ -1666,6 +1672,7 @@ namespace tuning {
                 "PAWN_OPEN",
                 "PAWN_BLOCKED",
                 "PAWN_CONNECTED",
+                "PAWN_HOME_BLOCKED",
                 "KNIGHT_OUTPOST",
                 "KNIGHT_DISTANCE_ENEMY_KING",
                 "ROOK_OPEN_FILE",
