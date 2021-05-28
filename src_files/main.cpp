@@ -17,16 +17,9 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "Bitboard.h"
-#include "Board.h"
-#include "Move.h"
-#include "MoveOrderer.h"
-#include "Verification.h"
+#include "MovePicker.h"
+#include "search.h"
 #include "uci.h"
-
-#include <iomanip>
-#include "gradient.h"
-#include "movegen.h"
 
 using namespace std;
 using namespace bb;
@@ -34,6 +27,17 @@ using namespace move;
 
 
 int main(int argc, char *argv[]) {
+    
+//    bb::init();
+//
+//
+//    Board b{};
+//    MovePicker<PERFT> movePicker{&b};
+//
+//    while(movePicker.hasNext()){
+//        Move m = movePicker.next();
+//        std::cout << toString(m) << std::endl;
+//    }
 
 #ifndef TUNING
     if (argc == 1) {

@@ -22,6 +22,7 @@
 
 #include "Bitboard.h"
 #include "Move.h"
+#include "MoveList.h"
 #include "eval.h"
 
 using namespace bb;

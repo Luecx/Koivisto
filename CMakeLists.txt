@@ -23,8 +23,6 @@ add_executable(Koivisto
         src_files/uci.h
         src_files/eval.cpp
         src_files/eval.h
-        src_files/MoveOrderer.cpp
-        src_files/MoveOrderer.h
         src_files/History.cpp
         src_files/History.h
         src_files/Verification.h
@@ -38,10 +36,16 @@ add_executable(Koivisto
         src_files/psqt.cpp
         src_files/psqt.h
         src_files/gradient.h
-        src_files/movegen.h
-        src_files/movegen.cpp
         src_files/material.h
-        src_files/material.cpp)
+        src_files/material.cpp
+        src_files/MovePicker.cpp
+        src_files/MovePicker.h
+        src_files/MoveList.cpp
+        src_files/MoveList.h
+        src_files/MoveOrderer.h
+        src_files/movegen.h
+        src_files/MoveOrderer.cpp
+        src_files/movegen.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=65")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAJOR_VERSION=4")

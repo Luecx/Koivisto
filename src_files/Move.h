@@ -172,23 +172,7 @@ inline bool         isPromotion         (Move move){
 std::string toString(const Move& move);
 void        printMoveBits(Move move, bool bitInfo = true);
 
-class MoveList {
-    
-    private:
-    move::Move      moves [256];
-    move::MoveScore scores[256];
-    int             size;
-    
-    public:
-    void       swap(int i1, int i2);
-    move::Move getMove(int index);
-    void       clear();
-    void       add(move::Move move);
-    void       scoreMove(int index, MoveScore score);
-    MoveScore  getScore(int index);
-    void       printMoveBits();
-    int        getSize() const;
-};
+
 
 }    // namespace move
 

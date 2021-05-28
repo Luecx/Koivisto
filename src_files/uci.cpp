@@ -230,7 +230,7 @@ void uci::go_perft(int depth, bool hash) {
     perft_init(hash);
 
     startMeasure();
-    auto nodes = perft(board, depth, true, true, hash);
+    auto nodes = perft(board, depth, true, false, hash);
     auto time  = stopMeasure();
 
     std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000 << std::endl;

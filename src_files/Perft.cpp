@@ -18,12 +18,12 @@
  ****************************************************************************************************/
 #include "Perft.h"
 
+#include "MovePicker.h"
 #include "UCIAssert.h"
 #include "movegen.h"
 
 using namespace std;
 
-MoveList**          perft_mvlist_buffer;
 TranspositionTable* perft_tt;
 
 /**
@@ -33,12 +33,7 @@ TranspositionTable* perft_tt;
 void perft_init(bool hash) {
     if (hash)
         perft_tt = new TranspositionTable(512);
-
-    perft_mvlist_buffer = new MoveList*[100];
-
-    for (int i = 0; i < 100; i++) {
-        perft_mvlist_buffer[i] = new MoveList();
-    }
+    
 }
 
 /**
@@ -49,11 +44,6 @@ void perft_cleanUp() {
     if (perft_tt != nullptr)
         delete perft_tt;
 
-    for (int i = 0; i < 100; i++) {
-        delete perft_mvlist_buffer[i];
-    }
-
-    delete[] perft_mvlist_buffer;
 }
 
 /**
@@ -96,16 +86,12 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     if (depth == 0)
         return 1;
 
+    MovePicker<PERFT> movePicker{b};
     
-//    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
-    generatePerftMoves(b, perft_mvlist_buffer[depth]);
-    
-    //    generations ++;
+    while(movePicker.hasNext()){
 
-    for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
-
-        Move m = perft_mvlist_buffer[depth]->getMove(i);
-        //        checks ++;
+        Move m = movePicker.next();
+        if(m == 0) continue;
 
         if (!b->isLegal(m)) {
             continue;
