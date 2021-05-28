@@ -980,6 +980,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
+            lmr -= isCapture(m);
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
