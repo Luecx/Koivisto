@@ -85,6 +85,7 @@ namespace tuning {
         I_BISHOP_FIANCHETTO,
         I_BISHOP_STUNTED,
         I_BISHOP_PIECE_SAME_SQUARE_E,
+        I_BISHOP_OUTPOST,
 
         I_QUEEN_DISTANCE_ENEMY_KING,
 
@@ -863,6 +864,7 @@ namespace tuning {
                 count[I_MINOR_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] +=
                         bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
+                count[I_BISHOP_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
                 count[I_BISHOP_FIANCHETTO] += (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1);
                 count[I_BISHOP_STUNTED] += !!(attacks & blackPawns & ev->attacks[BLACK][PAWN]);
                 count[I_SAFE_BISHOP_CHECK] += bitCount(bKingBishopAttacks & attacks & ~blackPawnCover);
@@ -878,6 +880,7 @@ namespace tuning {
                 count[I_MINOR_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
                 count[I_BISHOP_PIECE_SAME_SQUARE_E] -=
                         bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
+                count[I_BISHOP_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
                 count[I_BISHOP_FIANCHETTO] -= (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1);
                 count[I_BISHOP_STUNTED] -= !!(attacks & whitePawns & ev->attacks[WHITE][PAWN]);
                 count[I_SAFE_BISHOP_CHECK] -= bitCount(wKingBishopAttacks & attacks & ~whitePawnCover);
@@ -1675,6 +1678,7 @@ namespace tuning {
                 "BISHOP_FIANCHETTO",
                 "BISHOP_STUNTED",
                 "BISHOP_PIECE_SAME_SQUARE_E",
+                "BISHOP_OUTPOST",
                 "QUEEN_DISTANCE_ENEMY_KING",
                 "KING_CLOSE_OPPONENT",
                 "KING_PAWN_SHIELD",
