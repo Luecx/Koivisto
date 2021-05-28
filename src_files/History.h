@@ -29,24 +29,23 @@ using namespace move;
 
 struct SearchData {
 
-    Move bestMove = 0;
+    Move       bestMove = 0;
 
     MoveList** moves;
     Evaluator  evaluator {};
-    
-    // capture history table (side-from-to)
-    int   captureHistory[N_COLORS][N_SQUARES][N_SQUARES] = {0};
-    // history table (side-from-to)
-    int   history       [N_COLORS][N_SQUARES][N_SQUARES] = {0};
-    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    int   cmh           [N_PIECE_TYPES][N_SQUARES][N_COLORS][N_PIECE_TYPES][N_SQUARES]      = {0};
-    // kill table
-    Move  killer        [N_COLORS][MAX_INTERNAL_PLY+2][2]   = {0};    // +2 used to make sure we can always reset +2
-    // eval history across plies
-    Score eval          [N_COLORS][MAX_INTERNAL_PLY]        = {0};
-    bool  sideToReduce;
-    bool reduce;
 
+    // capture history table (side-from-to)
+    int        captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
+    // history table (side-from-to)
+    int        history[N_COLORS][N_SQUARES * N_SQUARES]                            = {0};
+    // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
+    int        cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
+    // kill table, +2 used to make sure we can always reset +2
+    Move       killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
+    // eval history across plies
+    Score eval[N_COLORS][MAX_INTERNAL_PLY] = {0};
+    bool  sideToReduce;
+    bool  reduce;
 
     SearchData();
 
@@ -54,29 +53,28 @@ struct SearchData {
 
     void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
-    int getHistories(Move m, Color side, Move previous);
-    
+    int  getHistories(Move m, Color side, Move previous);
+
     void setKiller(Move move, Depth ply, Color color);
 
-    int isKiller(Move move, Depth ply, Color color);
+    int  isKiller(Move move, Depth ply, Color color);
 
     void setHistoricEval(Score eval, Color color, Depth ply);
 
     bool isImproving(Score eval, Color color, Depth ply);
-
 };
 
 /**
  * data about each thread
  */
 struct ThreadData {
-    int threadID = 0;
-    U64 nodes    = 0;
-    int seldepth = 0;
-    int tbhits   = 0;
-    bool dropOut = false;
+    int         threadID   = 0;
+    U64         nodes      = 0;
+    int         seldepth   = 0;
+    int         tbhits     = 0;
+    bool        dropOut    = false;
     SearchData* searchData = nullptr;
-    char padding[1024 * 128];
+    char        padding[1024 * 128];
 
     ThreadData();
 
