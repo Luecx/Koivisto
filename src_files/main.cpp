@@ -31,8 +31,9 @@ int main(int argc, char *argv[]) {
 //    bb::init();
 //
 //
-//    Board b{};
-//    MovePicker<PERFT> movePicker{&b};
+//    Board b{"2kr3r/P2bq1pp/2np1n2/1pp1ppBb/1pP5/3P1NPB/4PP1P/RN1QR1K1 w Qk - 0 1"};
+//    SearchData sd{};
+//    MovePicker<PV_SEARCH> movePicker{&b, &sd, 10, 0};
 //
 //    while(movePicker.hasNext()){
 //        Move m = movePicker.next();

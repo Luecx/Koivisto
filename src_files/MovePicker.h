@@ -102,7 +102,7 @@ template<PickerType type> class MovePicker {
                     } else {
                         stage = GENERATE_PROMO;
                     }
-                case GENERATE_PROMO: generate<GENERATE_PROMO>(); stage = GOOD_CAPS;
+                case GENERATE_PROMO: generate<GENERATE_PROMO>(); stage = PROMOS;
                 case PROMOS:
                     if (promotions.movesLeft()) {
                         Move m = promotions.pollBest();
@@ -177,6 +177,7 @@ template<PickerType type> class MovePicker {
         generatePawnMoves<stage>();
         generatePieceMoves<stage>();
         generateKingMoves<stage>();
+        
     }
 
     template<Stage stage> void generatePawnMoves() {
@@ -325,21 +326,24 @@ template<PickerType type> class MovePicker {
                 Square square  = bitscanForward(pieceOcc);
                 U64    attacks = ZERO;
                 switch (p) {
-                    case KNIGHT: attacks = KNIGHT_ATTACKS[square]; break;
-                    case BISHOP: attacks = lookUpBishopAttack(square, occupied); break;
-                    case ROOK: attacks = lookUpRookAttack(square, occupied); break;
+                    case KNIGHT:
+                        attacks = KNIGHT_ATTACKS[square]; break;
+                    case BISHOP:
+                        attacks = lookUpBishopAttack(square, occupied); break;
+                    case ROOK:
+                        attacks = lookUpRookAttack(square, occupied); break;
                     case QUEEN:
                         attacks =
                             lookUpBishopAttack(square, occupied) | lookUpRookAttack(square, occupied);
                         break;
                 }
                 attacks &= ~friendly;
-
+                
                 if constexpr (type != PERFT) {
                     if constexpr (stage == GENERATE_CAPS || type == Q_SEARCH) {
                         attacks &= opponent;
                     } else if constexpr (stage == GENERATE_QUIETS) {
-                        attacks &= !opponent;
+                        attacks &= ~opponent;
                     }
                 }
 
@@ -386,8 +390,8 @@ template<PickerType type> class MovePicker {
         U64         attacks     = KING_ATTACKS[kingSq] & ~friendly;
 
         if constexpr (type != PERFT) {
-            U64 mask = stage == GENERATE_CAPS ? board->getTeamOccupiedBB(!us)
-                                              : !board->getTeamOccupiedBB(!us);
+            U64 mask = stage == GENERATE_CAPS ?  board->getTeamOccupiedBB(!us)
+                                              : ~board->getTeamOccupiedBB(!us);
             attacks &= mask;
         }
 
