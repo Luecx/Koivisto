@@ -893,8 +893,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
-                    moveOrderer.skip = true;
+                if (depth <= 7 && (quiets > lmp[isImproving][depth] 
+                || getSquareTo(m) == getSquareTo(sd->killer[!b->getActivePlayer()][ply+1][0]) 
+                || getSquareTo(m) == getSquareTo(sd->killer[!b->getActivePlayer()][ply+1][1]))) {
+                    moveOrderer.skip = (quiets > lmp[isImproving][depth]);
                     continue;
                 }
                 if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < std::min(200-30*(depth*depth), 0)){
