@@ -54,6 +54,7 @@ template<PickerType type> class MovePicker {
         this->color      = board->getActivePlayer();
         this->hashMove   = hashMove;
         UCI_ASSERT(type == PV_SEARCH);
+        stage = !hashMove ? GENERATE_CAPS : TT_MOVE;
     }
 
     MovePicker(Board* board) {
@@ -61,10 +62,10 @@ template<PickerType type> class MovePicker {
         this->color = board->getActivePlayer();
         UCI_ASSERT(type != PV_SEARCH);
         generate<GOOD_CAPS>();
+        stage = GOOD_CAPS;
         if (goodCaptures.movesLeft() == 0) {
             stage = NO_MOVES_LEFT;
         }
-        stage = GOOD_CAPS;
     }
 
     bool       hasNext() { return stage != NO_MOVES_LEFT; }
