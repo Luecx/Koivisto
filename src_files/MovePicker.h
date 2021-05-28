@@ -46,6 +46,7 @@ template<PickerType type> class MovePicker {
 
     public:
     move::MoveList searchedMoves {};
+    bool           ignoreQuietScore = false;
 
     MovePicker(Board* board, SearchData* searchData, Depth ply, Move hashMove) {
         this->board      = board;
@@ -115,7 +116,11 @@ template<PickerType type> class MovePicker {
                 case GENERATE_QUIETS: generate<GENERATE_QUIETS>(); stage = QUIETS;
                 case QUIETS:
                     if (quiets.movesLeft()) {
-                        Move m = quiets.pollBest();
+                        Move m;
+                        if(ignoreQuietScore)
+                            m = quiets.pollNext();
+                        else
+                            m = quiets.pollBest();
                         searchedMoves.add(m);
                         return m;
                     } else {
@@ -123,7 +128,11 @@ template<PickerType type> class MovePicker {
                     }
                 case BAD_CAPS:
                     if (badCaptures.movesLeft() > 1) {
-                        Move m = badCaptures.pollBest();
+                        Move m ;
+                        if(ignoreQuietScore)
+                            m = badCaptures.pollNext();
+                        else
+                            m = badCaptures.pollBest();
                         searchedMoves.add(m);
                         return m;
                     } else {
