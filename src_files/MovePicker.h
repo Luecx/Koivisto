@@ -30,7 +30,7 @@ enum Stage {
 };
 
 template<PickerType type> class MovePicker {
-    public:
+    private:
     Board*         board;
     SearchData*    searchData;
     Color          color;
@@ -43,6 +43,9 @@ template<PickerType type> class MovePicker {
     move::MoveList badCaptures {};
     move::MoveList promotions {};
     move::MoveList quiets {};
+
+    public:
+    move::MoveList searchedMoves {};
 
     MovePicker(Board* board, SearchData* searchData, Depth ply, Move hashMove) {
         this->board      = board;
@@ -86,45 +89,53 @@ template<PickerType type> class MovePicker {
             switch (stage) {
                 case TT_MOVE:
                     stage = GENERATE_CAPS;
-                    if(board->isPseudoLegal(hashMove)){
+                    if (board->isPseudoLegal(hashMove)) {
+                        searchedMoves.add(hashMove);
                         return hashMove;
                     }
                 case GENERATE_CAPS: generate<GENERATE_CAPS>(); stage = GOOD_CAPS;
                 case GOOD_CAPS:
                     if (goodCaptures.movesLeft()) {
-                        return goodCaptures.pollBest();
+                        Move m = goodCaptures.pollBest();
+                        searchedMoves.add(m);
+                        return m;
                     } else {
                         stage = GENERATE_PROMO;
                     }
                 case GENERATE_PROMO: generate<GENERATE_PROMO>(); stage = GOOD_CAPS;
                 case PROMOS:
                     if (promotions.movesLeft()) {
-                        return promotions.pollBest();
+                        Move m = promotions.pollBest();
+                        searchedMoves.add(m);
+                        return m;
                     } else {
                         stage = GENERATE_PROMO;
                     }
                 case GENERATE_QUIETS: generate<GENERATE_QUIETS>(); stage = QUIETS;
                 case QUIETS:
                     if (quiets.movesLeft()) {
-                        return quiets.pollBest();
+                        Move m = quiets.pollBest();
+                        searchedMoves.add(m);
+                        return m;
                     } else {
                         stage = BAD_CAPS;
                     }
                 case BAD_CAPS:
                     if (badCaptures.movesLeft() > 1) {
-                        return badCaptures.pollBest();
+                        Move m = badCaptures.pollBest();
+                        searchedMoves.add(m);
+                        return m;
                     } else {
                         stage = NO_MOVES_LEFT;
                         return badCaptures.pollNext();
                     }
-            
             }
         }
         return 0;
     }
 
     template<Stage stage> void addMove(move::Move move) {
-        
+
         if constexpr (type == PERFT) {
             goodCaptures.add(move);
         } else if constexpr (type == Q_SEARCH) {
@@ -148,7 +159,7 @@ template<PickerType type> class MovePicker {
                 }
             } else if constexpr (stage == GENERATE_QUIETS) {
                 if (searchData->isKiller(move, ply, color)) {
-                    quiets.add(move, 30000  + searchData->isKiller(move, ply, color));
+                    quiets.add(move, 30000 + searchData->isKiller(move, ply, color));
                 } else {
                     quiets.add(move, 20000
                                          + searchData->getHistories(move, board->getActivePlayer(),
@@ -159,11 +170,10 @@ template<PickerType type> class MovePicker {
                 promotions.add(move, 40000 + mvvLVA + getPromotionPiece(move));
             }
         }
-
     }
 
     template<Stage stage> void generate() {
-        
+
         generatePawnMoves<stage>();
         generatePieceMoves<stage>();
         generateKingMoves<stage>();
@@ -386,8 +396,8 @@ template<PickerType type> class MovePicker {
 
             if constexpr (type == PERFT) {
                 if (board->getPiece(target) != -1) {
-                    addMove<stage>(genMove(kingSq, target, CAPTURE, movingPiece,
-                                           board->getPiece(target)));
+                    addMove<stage>(
+                        genMove(kingSq, target, CAPTURE, movingPiece, board->getPiece(target)));
                 } else {
                     addMove<stage>(genMove(kingSq, target, QUIET, movingPiece));
                 }

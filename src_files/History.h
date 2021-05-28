@@ -32,7 +32,6 @@ struct SearchData {
 
     Move       bestMove = 0;
 
-    MoveList** moves;
     Evaluator  evaluator {};
 
     // capture history table (side-from-to)
@@ -47,10 +46,6 @@ struct SearchData {
     Score eval[N_COLORS][MAX_INTERNAL_PLY] = {0};
     bool  sideToReduce;
     bool  reduce;
-
-    SearchData();
-
-    virtual ~SearchData();
 
     void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
