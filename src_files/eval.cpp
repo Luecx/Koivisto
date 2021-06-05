@@ -195,6 +195,9 @@ float phaseValues[N_PIECE_TYPES] {
 };
 
 
+int egPawnReductionA = 1248;
+int egPawnReductionB = 14;
+
 constexpr int lazyEvalAlphaBound = 803;
 constexpr int lazyEvalBetaBound  = 392;
 
@@ -265,6 +268,21 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
                                  - bitCount(b->getPieceBB(BLACK, i) & BnotAttacked));
     }
     return res;
+}
+
+void Evaluator::computePartialScoreReduction(Board* b, Score& mgScore, Score& egScore) {
+    // reduce by pawn count for winning side -> less pawns = worse
+    int egPawnReductionPawnFactor = 8 - bitCount(b->getPieceBB(egScore > 0 ? WHITE : BLACK, PAWN));
+    egScore                       = egScore
+              * (egPawnReductionA
+               - egPawnReductionB
+                       * egPawnReductionPawnFactor
+                       * egPawnReductionPawnFactor) / 1024;
+}
+
+void Evaluator::computeFinalScoreReduction(Board* b, Score& finalScore) {
+    if (!hasMatingMaterial(b, finalScore > 0 ? WHITE : BLACK))
+        finalScore = finalScore / 10;
 }
 
 template<Color color>
@@ -808,8 +826,10 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
-
-    evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
+    EvalScore threatScore      = evalData.threats[WHITE] - evalData.threats[BLACK];
+    EvalScore kingSafetyScore  = kingSafetyTable[bkingSafety_valueOfAttacks]
+                               - kingSafetyTable[wkingSafety_valueOfAttacks];
+    
 
     featureScore += CASTLING_RIGHTS
                     * (+b->getCastlingRights(WHITE_QUEENSIDE_CASTLING)
@@ -817,15 +837,26 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                        - b->getCastlingRights(BLACK_QUEENSIDE_CASTLING)
                        - b->getCastlingRights(BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
-
-    EvalScore totalScore = evalScore + pinnedEvalScore + hangingEvalScore + featureScore + mobScore + passedScore + evalData.threats[WHITE] - evalData.threats[BLACK];
-    res = (int) ((float) MgScore(totalScore + materialScore) * (1 - phase));
-    Score eg = EgScore(totalScore + materialScore);
-    eg = eg*(120-(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))*(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))) / 100;
-    res += (int) ((float) eg * (phase));
-
-    if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
-        res = res / 10;
+    
+    EvalScore totalScore = evalScore
+                           + pinnedEvalScore
+                           + hangingEvalScore
+                           + featureScore
+                           + mobScore
+                           + passedScore
+                           + threatScore
+                           + kingSafetyScore
+                           + materialScore;
+    
+    Score mgScore = MgScore(totalScore);
+    Score egScore = EgScore(totalScore);
+    
+    computePartialScoreReduction(b, mgScore, egScore);
+   
+    res  = (int) ((float) mgScore * (1 - phase));
+    res += (int) ((float) egScore * (phase));
+    
+    computeFinalScoreReduction(b, res);
     return res;
 }
 

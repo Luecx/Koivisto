@@ -36,6 +36,8 @@ extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[N_RANKS];
 extern EvalScore candidate_passer[N_RANKS];
 
+extern int egPawnReductionA;
+extern int egPawnReductionB;
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
@@ -64,9 +66,13 @@ class Evaluator {
 
     EvalScore computeHangingPieces(Board* b);
     
+    void      computePartialScoreReduction(Board* b, Score &mgScore, Score &egScore);
+    
+    void      computeFinalScoreReduction(Board* b, Score &finalScore);
+    
     template<Color color>
     EvalScore computePassedPawns(Board* b);
-
+    
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
     bb::Score evaluateTempo(Board* b);

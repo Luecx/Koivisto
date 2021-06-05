@@ -17,16 +17,9 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "Bitboard.h"
-#include "Board.h"
-#include "Move.h"
-#include "MoveOrderer.h"
-#include "Verification.h"
 #include "uci.h"
-
-#include <iomanip>
 #include "gradient.h"
-#include "movegen.h"
+#include "Bitboard.h"
 
 using namespace std;
 using namespace bb;
@@ -44,7 +37,7 @@ int main(int argc, char *argv[]) {
 #else
 using namespace tuning;
 
-    bb_init();
+    bb::init();
     psqt_init();
 
     load_weights();
