@@ -444,6 +444,9 @@ EvalScore Evaluator::computePieces(Board* b){
             attacks = lookUpRookAttack(square, b->getOccupiedBB()
                                                    & ~b->getPieceBB<color>(QUEEN)
                                                    & ~b->getPieceBB<color>(ROOK));
+        } else if constexpr (pieceType == QUEEN){
+            attacks = lookUpRookAttack  (square, b->getOccupiedBB() & ~b->getPieceBB<color>(ROOK))
+                    | lookUpBishopAttack(square, b->getOccupiedBB() & ~b->getPieceBB<color>(BISHOP));
         }
         
         // add to the attack table
@@ -521,6 +524,20 @@ EvalScore Evaluator::computePieces(Board* b){
                 & ~evalData.attacks[!color][PAWN]);
         }
         
+        if constexpr (pieceType == QUEEN){
+            
+            // distance to enemy king, acts sort of as some king safety
+            score += QUEEN_DISTANCE_ENEMY_KING *
+                        manhattanDistance(square, evalData.kingSquare[!color]);
+
+            score += SAFE_QUEEN_CHECK
+                     * bitCount((lookUpRookAttack(evalData.kingSquare[!color], b->getOccupiedBB())
+                                     & ~b->getTeamOccupiedBB<color>()
+                     | lookUpBishopAttack(evalData.kingSquare[!color], b->getOccupiedBB())
+                                     & ~b->getTeamOccupiedBB<color>())
+                                & attacks & ~evalData.attacks[!color][PAWN]);
+        }
+        
         // king safety
         evalData.ksAttackValue[!color] += kingSafetyAttackWeights[pieceType] *
                                           bitCount(evalData.kingZone[!color] &  attacks);
@@ -555,8 +572,19 @@ EvalScore Evaluator::computePieces(Board* b){
     return score;
 }
 
-
-
+template<Color color> EvalScore Evaluator::computeKings(Board* b) {
+    EvalScore res = 0;
+    
+    evalData.attacks   [color][KING] = KING_ATTACKS[evalData.kingSquare[color]];
+    evalData.allAttacks[color]      |= evalData.attacks   [color][KING];
+    res += KING_PAWN_SHIELD
+           * bitCount(KING_ATTACKS[evalData.kingSquare[color]] & b->getPieceBB<color>(PAWN));
+    res += KING_CLOSE_OPPONENT
+           * bitCount(KING_ATTACKS[evalData.kingSquare[color]] & b->getTeamOccupiedBB<!color>());
+    
+    
+    return res;
+}
 
 /**
  * evaluates the board.
@@ -724,69 +752,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     featureScore += computePieces<WHITE, KNIGHT>(b) - computePieces<BLACK, KNIGHT>(b);
     featureScore += computePieces<WHITE, BISHOP>(b) - computePieces<BLACK, BISHOP>(b);
     featureScore += computePieces<WHITE, ROOK  >(b) - computePieces<BLACK, ROOK  >(b);
-
-
-    /**********************************************************************************
-     *                                  Q U E E N S                                   *
-     **********************************************************************************/
-
-    k = b->getPieceBB()[WHITE_QUEEN];
-    while (k) {
-        square  = bitscanForward(k);
-        attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[WHITE_ROOK])
-                  | lookUpBishopAttack(square, occupied & ~b->getPieceBB()[WHITE_BISHOP]);
-        evalData.attacks[WHITE][QUEEN] |= attacks;
-
-        mobScore += mobilityQueen[bitCount(attacks & mobilitySquaresWhite)];
-        featureScore += QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, blackKingSquare);
-        featureScore += SAFE_QUEEN_CHECK * bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~evalData.attacks[BLACK][PAWN]);
-
-        addToKingSafety(attacks, evalData.kingZone[BLACK], bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 4);
-
-        k = lsbReset(k);
-    }
-
-    k = b->getPieceBB()[BLACK_QUEEN];
-    while (k) {
-        square  = bitscanForward(k);
-        attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[BLACK_ROOK])
-                  | lookUpBishopAttack(square, occupied & ~b->getPieceBB()[BLACK_BISHOP]);
-        evalData.attacks[BLACK][QUEEN] |= attacks;
-
-        mobScore -= mobilityQueen[bitCount(attacks & mobilitySquaresBlack)];
-        featureScore -= QUEEN_DISTANCE_ENEMY_KING * manhattanDistance(square, whiteKingSquare);
-        featureScore -= SAFE_QUEEN_CHECK * bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~evalData.attacks[WHITE][PAWN]);
-
-        addToKingSafety(attacks, evalData.kingZone[WHITE], wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 4);
-
-        k = lsbReset(k);
-    }
-
-    /**********************************************************************************
-     *                                  K I N G S                                     *
-     **********************************************************************************/
-    k = b->getPieceBB()[WHITE_KING];
-
-    while (k) {
-        square                        = bitscanForward(k);
-        evalData.attacks[WHITE][KING] = KING_ATTACKS[square];
-
-        featureScore += KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & whitePawns);
-        featureScore += KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & blackTeam);
-
-        k = lsbReset(k);
-    }
-
-    k = b->getPieceBB()[BLACK_KING];
-    while (k) {
-        square                        = bitscanForward(k);
-        evalData.attacks[BLACK][KING] = KING_ATTACKS[square];
-
-        featureScore -= KING_PAWN_SHIELD * bitCount(KING_ATTACKS[square] & blackPawns);
-        featureScore -= KING_CLOSE_OPPONENT * bitCount(KING_ATTACKS[square] & whiteTeam);
-
-        k = lsbReset(k);
-    }
+    featureScore += computePieces<WHITE, QUEEN >(b) - computePieces<BLACK, QUEEN >(b);
+    featureScore += computeKings <WHITE>        (b) - computeKings <BLACK>        (b);
 
     for(Piece p = 0; p < 6; p++){
         evalData.allAttacks[WHITE] |= evalData.attacks[WHITE][p];

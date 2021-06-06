@@ -75,6 +75,9 @@ class Evaluator {
     
     template<Color color, PieceType pieceType>
     EvalScore computePieces(Board* b);
+    
+    template<Color color>
+    EvalScore computeKings(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
