@@ -164,7 +164,7 @@ Board::Board(Board* board) {
     }
     
     // we need to copy occupancy bitboards for all pieces
-    m_occupiedBB = *board->getOccupiedBB();
+    m_occupiedBB = board->getOccupiedBB();
     
     // we also need to copy the active player
     m_activePlayer = board->getActivePlayer();

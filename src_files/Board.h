@@ -257,7 +257,7 @@ class Board {
     [[nodiscard]] inline BoardStatus* getBoardStatus(){ return &m_boardStatusHistory.back();}
     
     // returns all occupied squares.
-    [[nodiscard]] inline const U64* getOccupiedBB(){return &m_occupiedBB;}
+    [[nodiscard]] inline U64 getOccupiedBB(){return m_occupiedBB;}
     
     // returns all occupied squares by both teams (arrays with 2 entries).
     [[nodiscard]] inline const U64* getTeamOccupiedBB() const {return m_teamOccupiedBB;}
