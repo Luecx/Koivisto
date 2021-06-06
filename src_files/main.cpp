@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 #else
 using namespace tuning;
 
-    bb_init();
+    bb::init();
     psqt_init();
 
     load_weights();
