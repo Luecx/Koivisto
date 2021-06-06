@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 16
+#define N_THREAD 8
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -1319,7 +1319,7 @@ struct TrainEntry {
 
 std::vector<TrainEntry> positions {};
 
-void                    load_weights() {
+void load_weights() {
     for (int t = 0; t < N_THREAD; t++) {
         for (int i = 0; i < 6; i++) {
 
