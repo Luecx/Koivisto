@@ -73,6 +73,8 @@ class Evaluator {
     template<Color color>
     EvalScore computePassedPawns(Board* b);
     
+    EvalScore computePawns(Board* b);
+    
     template<Color color, PieceType pieceType>
     EvalScore computePieces(Board* b);
     
