@@ -931,7 +931,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // out to be singular.
         // *********************************************************************************************************
         if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0
-            && !(isCapture(hashMove) && inCheck)
+            && !inCheck
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
             
