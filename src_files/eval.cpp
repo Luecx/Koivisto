@@ -190,6 +190,8 @@ EvalScore* evfeatures[] {
 
 int mobEntryCount[N_PIECE_TYPES] {0, 9, 14, 15, 28, 0};
 
+int kingSafetyAttackWeights[N_PIECE_TYPES]{0,2,2,3,4,0};
+
 float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };
@@ -418,6 +420,56 @@ EvalScore Evaluator::computePassedPawns(Board* b){
     return h;
 }
 
+template<Color color, PieceType pieceType>
+EvalScore Evaluator::computePieces(Board* b){
+    EvalScore score = 0;
+    
+    U64 k = b->getPieceBB<color>(pieceType);
+    while (k) {
+        
+        // get the square
+        Square square  = bitscanForward(k);
+        U64 attacks;
+        U64 squareBB = ONE << square;
+        
+        // compute the attacks
+        if constexpr (pieceType == KNIGHT){
+            attacks = KNIGHT_ATTACKS[square];
+        }
+        
+        // add to the attack table
+        evalData.attacks[color][pieceType] |= attacks;
+    
+        // compute mobility values
+        score        += mobilities[pieceType][bitCount(attacks & evalData.mobilitySquares[color])];
+    
+        // minors attacking rooks or queens
+        if constexpr (pieceType == KNIGHT || pieceType == BISHOP){
+            evalData.threats[color] += MINOR_ATTACK_ROOK  * bitCount(attacks & b->getPieceBB<!color>(ROOK));
+            evalData.threats[color] += MINOR_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<!color>(QUEEN));
+        }
+        
+        // knight specific code
+        if constexpr (pieceType == KNIGHT) {
+            score += KNIGHT_OUTPOST *
+                     isOutpost(square, color, b->getPieceBB<!color>(PAWN), evalData.attacks[color][PAWN]);
+            score += KNIGHT_DISTANCE_ENEMY_KING *
+                     manhattanDistance(square, evalData.kingSquare[!color]);
+            score += SAFE_KNIGHT_CHECK * bitCount(
+                         KNIGHT_ATTACKS[evalData.kingSquare[!color]]
+                         & attacks
+                         & ~evalData.attacks[BLACK][PAWN]);
+        }
+
+        // king safety
+        evalData.ksAttackValue[!color] += kingSafetyAttackWeights[pieceType] *
+                                          bitCount(evalData.kingZone[BLACK] &  attacks);
+        
+        k = lsbReset(k);
+    }
+    return score;
+}
+
 /**
  * evaluates the board.
  * @param b
@@ -532,6 +584,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     evalData.attacks[WHITE][PAWN] = evalData.pawnEastAttacks[WHITE] | evalData.pawnWestAttacks[WHITE];
     evalData.attacks[BLACK][PAWN] = evalData.pawnEastAttacks[BLACK] | evalData.pawnWestAttacks[BLACK];
 
+    evalData.mobilitySquares[WHITE] = ~whiteTeam & ~(evalData.attacks[BLACK][PAWN]);
+    evalData.mobilitySquares[BLACK] = ~blackTeam & ~(evalData.attacks[WHITE][PAWN]);
     U64 mobilitySquaresWhite = ~whiteTeam & ~(evalData.attacks[BLACK][PAWN]);
     U64 mobilitySquaresBlack = ~blackTeam & ~(evalData.attacks[WHITE][PAWN]);
 
@@ -568,12 +622,9 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     featureScore += PAWN_BLOCKED * (
             + bitCount(whiteBlockedPawns)
             - bitCount(blackBlockedPawns));
-    
-    // https://www.chessprogramming.org/Connected_Pawns
-    featureScore += PAWN_CONNECTED * (
+     featureScore += PAWN_CONNECTED * (
               bitCount(whiteConnectedPawns)
             - bitCount(blackConnectedPawns));
-
     featureScore += MINOR_BEHIND_PAWN * (
             + bitCount(shiftNorth(b->getPieceBB()[WHITE_KNIGHT]|b->getPieceBB()[WHITE_BISHOP])&(b->getPieceBB()[WHITE_PAWN]|b->getPieceBB()[BLACK_PAWN]))
             - bitCount(shiftSouth(b->getPieceBB()[BLACK_KNIGHT]|b->getPieceBB()[BLACK_BISHOP])&(b->getPieceBB()[WHITE_PAWN]|b->getPieceBB()[BLACK_PAWN])));
@@ -581,44 +632,9 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     /**********************************************************************************
      *                                  K N I G H T S                                 *
      **********************************************************************************/
-    k = b->getPieceBB()[WHITE_KNIGHT];
-    while (k) {
-        square  = bitscanForward(k);
-        attacks = KNIGHT_ATTACKS[square];
-        evalData.attacks[WHITE][KNIGHT] |= attacks;
-     
-        mobScore        += mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresWhite)];
-
-        evalData.threats[WHITE] += MINOR_ATTACK_ROOK            * bitCount(attacks & b->getPieceBB<BLACK>(ROOK));
-        evalData.threats[WHITE] += MINOR_ATTACK_QUEEN           * bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
-        featureScore    += KNIGHT_OUTPOST               * isOutpost(square, WHITE, blackPawns, evalData.attacks[WHITE][PAWN]);
-        featureScore    += KNIGHT_DISTANCE_ENEMY_KING   * manhattanDistance(square, blackKingSquare);
-        featureScore    += SAFE_KNIGHT_CHECK            * bitCount(bKingKnightAttacks & attacks & ~evalData.attacks[BLACK][PAWN]);
-
-        addToKingSafety(attacks, evalData.kingZone[BLACK], bkingSafety_attPiecesCount, bkingSafety_valueOfAttacks, 2);
-
-        k = lsbReset(k);
-    }
-
-    k = b->getPieceBB()[BLACK_KNIGHT];
-    while (k) {
-        square  = bitscanForward(k);
-        attacks = KNIGHT_ATTACKS[square];
-        evalData.attacks[BLACK][KNIGHT] |= attacks;
     
-        mobScore        -= mobilityKnight[bitCount(KNIGHT_ATTACKS[square] & mobilitySquaresBlack)];
+    featureScore += computePieces<WHITE, KNIGHT>(b) - computePieces<BLACK, KNIGHT>(b);
 
-        evalData.threats[BLACK] += MINOR_ATTACK_ROOK            * bitCount(attacks & b->getPieceBB<WHITE>(ROOK));
-        evalData.threats[BLACK] += MINOR_ATTACK_QUEEN           * bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
-        featureScore    -= KNIGHT_OUTPOST               * isOutpost(square, BLACK, whitePawns, evalData.attacks[BLACK][PAWN]);
-        featureScore    -= KNIGHT_DISTANCE_ENEMY_KING   * manhattanDistance(square, whiteKingSquare);
-        featureScore    -= SAFE_KNIGHT_CHECK            * bitCount(wKingKnightAttacks & attacks & ~evalData.attacks[WHITE][PAWN]);
-    
-        addToKingSafety(attacks, evalData.kingZone[WHITE], wkingSafety_attPiecesCount, wkingSafety_valueOfAttacks, 2);
-
-        k = lsbReset(k);
-    }
-  
     /**********************************************************************************
      *                                  B I S H O P S                                 *
      **********************************************************************************/
@@ -809,7 +825,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
 
-    evalScore += kingSafetyTable[bkingSafety_valueOfAttacks] - kingSafetyTable[wkingSafety_valueOfAttacks];
+    evalScore += kingSafetyTable[bkingSafety_valueOfAttacks + evalData.ksAttackValue[BLACK]] - kingSafetyTable[wkingSafety_valueOfAttacks + evalData.ksAttackValue[WHITE]];
 
     featureScore += CASTLING_RIGHTS
                     * (+b->getCastlingRights(WHITE_QUEENSIDE_CASTLING)
