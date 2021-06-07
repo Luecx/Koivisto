@@ -624,7 +624,8 @@ EvalScore Evaluator::computePieces(Board* b){
                 & attacks
                 & ~evalData.attacks[!color][PAWN]);
         }
-        
+    
+        // queen specific code
         if constexpr (pieceType == QUEEN){
             
             // distance to enemy king, acts sort of as some king safety
