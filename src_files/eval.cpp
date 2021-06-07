@@ -112,28 +112,7 @@ EvalScore bishop_pawn_same_color_table_e[9] = {
     M(  -61,   47), M(  -64,   38), M(  -66,   25),
     M(  -67,    8), M(  -64,   -4), M(  -73,  -14), };
 
-EvalScore kingSafetyTable[100] = {
-    M(   97,  -91), M(    0,    0), M(   97,  -93), M(   91,  -93), M(  104,  -92),
-    M(   18,   -9), M(   94, -103), M(   27,   -9), M(  112, -101), M(   81,   14),
-    M(  110, -101), M(   76,  -24), M(  108,  -98), M(  102,  -23), M(  134, -100),
-    M(  127, -107), M(  106,  -93), M(  162,  -21), M(  113,  -91), M(  206,  -58),
-    M(  136, -112), M(  148, -105), M(  286,  -54), M(  226,  -16), M(  152, -103),
-    M(  118,   25), M(  355,  -14), M(  121,  -41), M(  159, -105), M(  394,   -9),
-    M(  158,  -84), M(  457,  -75), M(  173, -108), M(  120,  -21), M(  493, -109),
-    M( 1496, -626), M(  170,  -71), M( 1656,-2032), M(  214,  788), M(  182,  -40),
-    M(  194,  -92), M(  988, -690), M(  205, -102), M(  500,  500), M(  162,  -58),
-    M(  219,  -91), M(  500,  500), M( 1001,  712), M(  222,  -80), M(  610, -237),
-    M(  253, -115), M(  500,  500), M(  199,   -6), M(  500,  500), M(  293, -118),
-    M(  240, -116), M(  258,  -82), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  257,  -92), M(  500,  500), M(  500,  500), M(  313, -115), M(  268,  -39),
-    M(  275, -101), M(  293, -140), M(  500,  500), M(  305,  -70), M(  500,  500),
-    M(  287,  -74), M(  500,  500), M(  305,  -61), M(  500,  500), M(  500,  500),
-    M(  222,   74), M(  561,  505), M(  355, -132), M(  302,  -56), M(  500,  500),
-    M(  395,  -93), M(  449,   13), M(  500,  500), M(  500,  500), M(  332,  -64),
-    M(  322,  -82), M(  500,  500), M(  500,  500), M(  456, -175), M(  500,  500),
-    M(  333,  -17), M(  377, -116), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  276,  679), M(  396,  -74), M(  500,  500), M(  374, -173), M(  445, -114), };
-
+int kingSafetyAttackWeights[6]{0, 12, 8, 32, 34, 0, };
 
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
@@ -194,9 +173,7 @@ float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };
 
-int kingSafetyAttackWeights[6]{
-    0,3,2,4,6,0
-};
+
 
 constexpr int lazyEvalAlphaBound = 803;
 constexpr int lazyEvalBetaBound  = 392;
@@ -513,6 +490,20 @@ EvalScore Evaluator::computePawns(Board* b){
     return res;
 }
 
+template<Color color>
+EvalScore Evaluator::computeKingSafety(Board* b){
+    EvalScore res = 0;
+    
+    int danger =
+        evalData.ksAttackWeight[color] * evalData.ksAttackCount[color]
+        + ;
+    
+    if (danger > 0)
+        res += M(-danger * danger / 1024, -danger / 32);
+        
+    return res;
+}
+
 template<Color color, PieceType pieceType>
 EvalScore Evaluator::computePieces(Board* b){
     EvalScore score = 0;
@@ -745,9 +736,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
     EvalScore threatScore      = evalData.threats[WHITE] - evalData.threats[BLACK];
-    
-    EvalScore kingSafetyScore  = + kingSafetyTable[std::min(99,evalData.ksAttackWeight[BLACK] * evalData.ksAttackCount[BLACK])]
-                                 - kingSafetyTable[std::min(99,evalData.ksAttackWeight[WHITE] * evalData.ksAttackCount[WHITE])];
+    EvalScore kingSafetyScore  = computeKingSafety<WHITE>(b) - computeKingSafety<BLACK>(b);
 
 
     EvalScore totalScore =

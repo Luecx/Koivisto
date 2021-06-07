@@ -189,11 +189,11 @@ namespace tuning {
         Weight w_features[I_END]{};
         Weight w_bishop_pawn_e[9]{};
         Weight w_bishop_pawn_o[9]{};
-        Weight w_king_safety[100]{};
         Weight w_passer[8]{};
         Weight w_candidate[8]{};
         Weight w_pinned[15]{};
         Weight w_hanging[5]{};
+        Weight w_king_safety_attack_weight[6]{};
     };
 
     ThreadData threadData[N_THREAD]{};
@@ -448,8 +448,9 @@ namespace tuning {
     struct KingSafetyData {
         // we only need to store one index for the white and black king
 
-        int8_t wkingsafety_index;
-        int8_t bkingsafety_index;
+        int8_t attackWeightCounts[N_COLORS][N_PIECE_TYPES]{};
+        int8_t attackCount       [N_COLORS]{};
+        float  danger             [N_COLORS]{};
         
         void init(Board *b, EvalData *ev) {
 
@@ -461,16 +462,13 @@ namespace tuning {
             Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
-            U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
-            U64 blackKingZone = KING_ATTACKS[blackKingSquare];
-
             int wAttackCount = 0;
             int wAttackWeight = 0;
 
             int bAttackCount = 0;
             int bAttackWeight = 0;
 
-            for (Piece p = KNIGHT; p <= QUEEN; p++) {
+            for (PieceType p = KNIGHT; p <= QUEEN; p++) {
                 for (int c= 0; c <= 1; c++) {
                     k = b->getPieceBB(c, p);
                     while (k) {
@@ -496,44 +494,53 @@ namespace tuning {
                                                                     ~b->getPieceBB(c, ROOK));
                                 break;
                         }
-                        if (c == WHITE) {
-                            if(blackKingZone & attacks){
-    
-                                bAttackCount  += bitCount(blackKingZone & attacks);
-                                bAttackWeight += kingSafetyAttackWeights[p];
-                            }
-                        } else {
-                            if(whiteKingZone & attacks){
-        
-                                wAttackCount  += bitCount(whiteKingZone & attacks);
-                                wAttackWeight += kingSafetyAttackWeights[p];
-                            }
+                        
+                        
+                        if(ev->kingZone[!c] & attacks){
+                            attackCount[!c]            += bitCount(ev->kingZone[!c] & attacks);
+                            attackWeightCounts[!c][p]  += 1;
                         }
-
+                        
                         k = lsbReset(k);
                     }
                 }
             }
             
-            wkingsafety_index = std::min(99 ,wAttackWeight * wAttackCount);
-            bkingsafety_index = std::min(99, bAttackWeight * bAttackCount);
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            midgame += td->w_king_safety[bkingsafety_index].midgame.value - td->w_king_safety[wkingsafety_index].midgame.value;
-            endgame += td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
+            for(Color c:{WHITE, BLACK}){
+                
+                float attackWeight = 0;
+                for(int i = 0; i < 6; i++){
+                    attackWeight += td->w_king_safety_attack_weight[i].midgame.value * attackWeightCounts[c][i];
+                }
+                
+                danger[c] = attackWeight * attackCount[c];
+                
+                float midgameChange = - danger[c] * danger[c] / 1024;
+                float endgameChange = - danger[c] / 32;
+                
+                if(c == WHITE){
+                    midgame += midgameChange;
+                    endgame += endgameChange;
+                }else{
+                    midgame -= midgameChange;
+                    endgame -= endgameChange;
+                }
+            }
         }
     
         void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
-            td->w_king_safety[bkingsafety_index].midgame.gradient +=
-                    mg_grad;
-            td->w_king_safety[bkingsafety_index].endgame.gradient +=
-                    eg_grad;
-
-            td->w_king_safety[wkingsafety_index].midgame.gradient -=
-                    mg_grad;
-            td->w_king_safety[wkingsafety_index].endgame.gradient -=
-                    eg_grad;
+            for(Color c:{WHITE, BLACK}){
+                float danger_grad = -2 / 1024.0 * danger[c] * mg_grad - 1 / 32.0 * eg_grad;
+                if(c == BLACK) danger_grad = -danger_grad;
+                
+                // compute gradients for attack weights
+                for(PieceType pt = 0; pt < 6; pt++){
+                    td->w_king_safety_attack_weight[pt].midgame.gradient += danger_grad * attackWeightCounts[c][pt];
+                }
+            }
         }
     };
 
@@ -964,6 +971,7 @@ namespace tuning {
                     + b->getCastlingRights(WHITE_KINGSIDE_CASTLING)
                     - b->getCastlingRights(BLACK_QUEENSIDE_CASTLING)
                     - b->getCastlingRights(BLACK_KINGSIDE_CASTLING);
+            // clang-format on
             count[I_SIDE_TO_MOVE] += (b->getActivePlayer() == WHITE ? 1 : -1);
         }
 
@@ -1253,15 +1261,15 @@ namespace tuning {
             float eg_grad = 0;
             meta.gradient(mg_grad, eg_grad, lossgrad, &threadData[threadID]);
 
-            features.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            mobility.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            hanging.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            pinned.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            passed.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            bishop_pawn.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            features.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            mobility.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            hanging.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            pinned.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            passed.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            bishop_pawn.gradient(mg_grad, eg_grad, &threadData[threadID]);
             king_safety.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            pst64.gradient(mg_grad, eg_grad, &threadData[threadID]);
-            pst225.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            pst64.gradient(mg_grad, eg_grad, &threadData[threadID]);
+//            pst225.gradient(mg_grad, eg_grad, &threadData[threadID]);
         }
 
         double train(float target, float K, int threadID) {
@@ -1333,9 +1341,6 @@ namespace tuning {
                     threadData[t].w_bishop_pawn_o[i].set(bishop_pawn_same_color_table_o[i]);
                 }
 
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].set(kingSafetyTable[i]);
-                }
                 if (i < 8) {
                     threadData[t].w_passer[i].set(passer_rank_n[i]);
                     threadData[t].w_candidate[i].set(candidate_passer[i]);
@@ -1345,6 +1350,9 @@ namespace tuning {
                 }
                 if (i < 5) {
                     threadData[t].w_hanging[i].set(hangingEval[i]);
+                }
+                if (i < 6){
+                    threadData[t].w_king_safety_attack_weight[i] = {kingSafetyAttackWeights[i], 0};
                 }
             }
         }
@@ -1383,10 +1391,6 @@ namespace tuning {
                     threadData[t].w_bishop_pawn_o[i].merge(threadData[0].w_bishop_pawn_o[i]);
                 }
 
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].merge(threadData[0].w_king_safety[i]);
-
-                }
                 if (i < 8) {
                     threadData[t].w_passer[i].merge(threadData[0].w_passer[i]);
                     threadData[t].w_candidate[i].merge(threadData[0].w_candidate[i]);
@@ -1399,6 +1403,9 @@ namespace tuning {
                 if (i < 5) {
                     threadData[t].w_hanging[i].merge(threadData[0].w_hanging[i]);
 
+                }
+                if (i < 6){
+                    threadData[t].w_king_safety_attack_weight[i].merge(threadData[0].w_king_safety_attack_weight[i]);
                 }
             }
         }
@@ -1435,11 +1442,6 @@ namespace tuning {
                     threadData[t].w_bishop_pawn_e[i].set(threadData[0].w_bishop_pawn_e[i]);
                     threadData[t].w_bishop_pawn_o[i].set(threadData[0].w_bishop_pawn_o[i]);
                 }
-
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].set(threadData[0].w_king_safety[i]);
-
-                }
                 if (i < 8) {
                     threadData[t].w_passer[i].set(threadData[0].w_passer[i]);
                     threadData[t].w_candidate[i].set(threadData[0].w_candidate[i]);
@@ -1452,6 +1454,10 @@ namespace tuning {
                 if (i < 5) {
                     threadData[t].w_hanging[i].set(threadData[0].w_hanging[i]);
 
+                }
+                if (i < 6) {
+                    threadData[t].w_king_safety_attack_weight[i].set(threadData[0].w_king_safety_attack_weight[i]);
+        
                 }
             }
         }
@@ -1495,9 +1501,6 @@ namespace tuning {
             if (i < 9) {
                 threadData[0].w_bishop_pawn_o[i].update(eta);
             }
-            if (i < 100) {
-                threadData[0].w_king_safety[i].update(eta);
-            }
             if (i < 8) {
                 threadData[0].w_passer[i].update(eta);
                 threadData[0].w_candidate[i].update(eta);
@@ -1507,6 +1510,9 @@ namespace tuning {
             }
             if (i < 5) {
                 threadData[0].w_hanging[i].update(eta);
+            }
+            if (i < 6) {
+                threadData[0].w_king_safety_attack_weight[i].update(eta);
             }
         }
 
@@ -1622,7 +1628,7 @@ namespace tuning {
             startMeasure();
             std::cout << left;
             std::cout << "loss= " << setw(20) << compute_loss(K)
-                      << " eps= " << setw(20) << positions.size() / stopMeasure() * 1000 << std::endl;
+                      << " eps= " << setw(20) << positions.size() / std::max(1,stopMeasure()) * 1000 << std::endl;
             adjust_weights(eta);
         }
     }
@@ -1765,15 +1771,14 @@ namespace tuning {
             std::cout << threadData[0].w_bishop_pawn_e[n] << ", ";
         }
         std::cout << "};\n" << std::endl;
-
-        // --------------------------------- kingSafetyTable ---------------------------------
-        std::cout << "EvalScore kingSafetyTable[100] = {";
-        for (int n = 0; n < 100; n++) {
-            if (n % 5 == 0) std::cout << std::endl << "\t";
-            std::cout << threadData[0].w_king_safety[n] << ", ";
+        
+        // ---------------------------------- king safety ---------------------------------------
+        std::cout << "int kingSafetyAttackWeights[6]{";
+        for(PieceType pt = 0; pt < 6; pt++){
+            std::cout << round(threadData[0].w_king_safety_attack_weight[pt].midgame.value) << ", ";
         }
         std::cout << "};\n" << std::endl;
-
+        
         // --------------------------------- piece_square_table ---------------------------------
 
         std::cout << "EvalScore piece_square_table[6][2][64]{\n";
