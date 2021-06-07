@@ -762,6 +762,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    sd->searchKiller[ply + 2] = 0;
     
     
     if (!skipMove && !inCheck && !pv) {
@@ -983,6 +984,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (lmr) {
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
+            Move oponentKiller = sd->searchKiller[ply+1];
+            if (isCapture(oponentKiller) && b->getTeamOccupiedBB(b->getActivePlayer()) & (ONE << getSquareTo(oponentKiller)) && getSquareTo(oponentKiller) != getSquareFrom(m)) lmr++;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
@@ -1040,8 +1043,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // also set this move as a killer move into the history
             if (!isCapture(m))
                 sd->setKiller(m, ply, b->getActivePlayer());
-            // if the move is not a capture, we also update counter move history tables and history scores.
+            //update search killer even if not a capture
+            sd->searchKiller[ply] = m;
             
+            // if the move is not a capture, we also update counter move history tables and history scores.
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
             
             return highestScore;
