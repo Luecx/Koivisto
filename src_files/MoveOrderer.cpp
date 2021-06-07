@@ -32,10 +32,16 @@ MoveOrderer::~MoveOrderer() {}
 
 bool MoveOrderer::hasNext() { return counter < moves->getSize(); }
 
-move::Move MoveOrderer::next() {
-    if (skip) {
-        moves->scoreMove(counter, 0);
-        return moves->getMove(counter++);
+move::Move MoveOrderer::next(U64 kingBB) {
+    if (skip) {    
+        for (int i = counter; i < moves->getSize(); i++) {
+            moves->scoreMove(i, 0);
+            if (isCapture(moves->getMove(i)) || (kingBB & (ONE << getSquareTo(moves->getMove(i))))) {
+                counter = i+1;
+                return moves->getMove(i);
+            }
+        }
+        return 0;
     }
     int bestIndex = counter;
     // Move best = moves->getMove(0);
