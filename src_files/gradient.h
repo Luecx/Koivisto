@@ -202,6 +202,7 @@ namespace tuning {
         // it can happen that the final evaluation is reduced by a given scalar
 
         float evalReduction = 1;
+        float egReduction = 1;
         float phase = 0;
         float matingMaterialWhite = false;
         float matingMaterialBlack = false;
@@ -226,9 +227,10 @@ namespace tuning {
         }
 
         float evaluate(float &mg, float&eg , ThreadData* td, int pawnCount[2]) {
-
-            eg = eg*(120-(8-pawnCount[eg > 0 ? WHITE : BLACK])*(8-pawnCount[eg > 0 ? WHITE : BLACK])) / 100;
-
+        
+            egReduction = (120-(8-pawnCount[eg > 0 ? WHITE : BLACK])*(8-pawnCount[eg > 0 ? WHITE : BLACK])) / 100.0;
+            eg = eg*egReduction;
+            
             float res = (int) (phase * eg) + (int) ((1 - phase) * mg);
             
             if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
@@ -241,7 +243,7 @@ namespace tuning {
         }
         void gradient(float& mg_grad, float& eg_grad, float loss_grad, ThreadData* pData) {
             mg_grad = loss_grad * (1-phase) * evalReduction;
-            eg_grad = loss_grad * (  phase) * evalReduction;
+            eg_grad = loss_grad * (  phase) * evalReduction * egReduction;
         }
     };
 
@@ -448,7 +450,7 @@ namespace tuning {
 
         int8_t wkingsafety_index;
         int8_t bkingsafety_index;
-
+        
         void init(Board *b, EvalData *ev) {
 
             U64 k;
@@ -456,19 +458,17 @@ namespace tuning {
             U64 attacks;
             U64 occupied = (b->getOccupiedBB());
 
-            static int factors[6] = {0, 2, 2, 3, 4};
-
             Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
 
             U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
             U64 blackKingZone = KING_ATTACKS[blackKingSquare];
 
-            int wkingSafety_attPiecesCount = 0;
-            int wkingSafety_valueOfAttacks = 0;
+            int wAttackCount = 0;
+            int wAttackWeight = 0;
 
-            int bkingSafety_attPiecesCount = 0;
-            int bkingSafety_valueOfAttacks = 0;
+            int bAttackCount = 0;
+            int bAttackWeight = 0;
 
             for (Piece p = KNIGHT; p <= QUEEN; p++) {
                 for (int c= 0; c <= 1; c++) {
@@ -497,22 +497,26 @@ namespace tuning {
                                 break;
                         }
                         if (c == WHITE) {
-                            addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount,
-                                            bkingSafety_valueOfAttacks,
-                                            factors[p]);
+                            if(blackKingZone & attacks){
+    
+                                bAttackCount  += bitCount(blackKingZone & attacks);
+                                bAttackWeight += kingSafetyAttackWeights[p];
+                            }
                         } else {
-                            addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount,
-                                            wkingSafety_valueOfAttacks,
-                                            factors[p]);
+                            if(whiteKingZone & attacks){
+        
+                                wAttackCount  += bitCount(whiteKingZone & attacks);
+                                wAttackWeight += kingSafetyAttackWeights[p];
+                            }
                         }
 
                         k = lsbReset(k);
                     }
                 }
             }
-
-            wkingsafety_index = wkingSafety_valueOfAttacks;
-            bkingsafety_index = bkingSafety_valueOfAttacks;
+            
+            wkingsafety_index = std::min(99 ,wAttackWeight * wAttackCount);
+            bkingsafety_index = std::min(99, bAttackWeight * bAttackCount);
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {

@@ -35,11 +35,9 @@ extern float phaseValues[N_PIECE_TYPES];
 extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[N_RANKS];
 extern EvalScore candidate_passer[N_RANKS];
-
-
+extern int kingSafetyAttackWeights[6];
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
-void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 struct EvalData{
     
@@ -56,7 +54,8 @@ struct EvalData{
     
     EvalScore threats   [N_COLORS]{};
     
-    int ksAttackValue   [N_COLORS]{};
+    int ksAttackCount   [N_COLORS]{};
+    int ksAttackWeight  [N_COLORS]{};
 };
 
 class Evaluator {
