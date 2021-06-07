@@ -112,7 +112,7 @@ namespace tuning {
     };
     
     enum king_safety_factors{
-//        S_QUEEN_EXISTS,
+        S_QUEEN_EXISTS,
 //        S_WEAK_SQUARES,
         S_END
     };
@@ -513,7 +513,7 @@ namespace tuning {
             
             // factor counts
             for (Color c:{WHITE, BLACK}){
-//                safetyFactorCount[c][S_QUEEN_EXISTS] = !b->getPieceBB(!c, QUEEN);
+                safetyFactorCount[c][S_QUEEN_EXISTS] = !b->getPieceBB(!c, QUEEN);
 //                safetyFactorCount[c][S_WEAK_SQUARES] = bitCount(ev->kingZone[c] & ~(
 //                          ev->attacks[c][PAWN]
 //                        | ev->attacks[c][KNIGHT]
