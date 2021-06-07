@@ -27,16 +27,17 @@ extern EvalScore bishop_pawn_same_color_table_o[9];
 extern EvalScore bishop_pawn_same_color_table_e[9];
 
 extern EvalScore* evfeatures[];
+extern int*       kingSafetyFactors[];
 extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
 extern EvalScore* mobilities[N_PIECE_TYPES];
 extern int        mobEntryCount[N_PIECE_TYPES];
-extern float phaseValues[N_PIECE_TYPES];
-extern EvalScore passer_rank_n[N_RANKS];
-extern EvalScore candidate_passer[N_RANKS];
-extern int kingSafetyAttackWeights[6];
-bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
-bool hasMatingMaterial  (Board* b, bool side);
+extern float      phaseValues[N_PIECE_TYPES];
+extern EvalScore  passer_rank_n[N_RANKS];
+extern EvalScore  candidate_passer[N_RANKS];
+extern int        kingSafetyAttackWeights[6];
+bool              isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover);
+bool              hasMatingMaterial(Board* b, bool side);
 
 struct EvalData{
     
