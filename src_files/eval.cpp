@@ -43,7 +43,6 @@ EvalScore KNIGHT_OUTPOST                = M(   22,   18);
 EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -5,   -2);
 EvalScore ROOK_OPEN_FILE                = M(   23,   -1);
 EvalScore ROOK_HALF_OPEN_FILE           = M(    1,   -9);
-EvalScore ROOK_DOUBLED                  = M(    8,  -22);
 EvalScore ROOK_KING_LINE                = M(   22,    2);
 EvalScore BISHOP_DOUBLED                = M(   13,   74);
 EvalScore BISHOP_FIANCHETTO             = M(   23,   29);
@@ -160,7 +159,6 @@ EvalScore* evfeatures[] {
     
     &ROOK_OPEN_FILE,
     &ROOK_HALF_OPEN_FILE,
-    &ROOK_DOUBLED,
     &ROOK_KING_LINE,
     
     &BISHOP_DOUBLED,
@@ -669,9 +667,6 @@ EvalScore Evaluator::computePieces(Board* b){
             score += ROOK_HALF_OPEN_FILE * (
                 + bitCount(evalData.semiOpen[WHITE] & ~evalData.openFiles & b->getPieceBB(WHITE, ROOK))
                 - bitCount(evalData.semiOpen[BLACK] & ~evalData.openFiles & b->getPieceBB(BLACK, ROOK)));
-            score += ROOK_DOUBLED * (
-                + (bitCount(b->getPieceBB()[WHITE_ROOK]) == 2)
-                - (bitCount(b->getPieceBB()[BLACK_ROOK]) == 2));
         }
     }
     

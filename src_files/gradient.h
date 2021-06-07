@@ -31,7 +31,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+#define TUNING
 #ifdef TUNING
 
 #include "Board.h"
@@ -79,7 +79,6 @@ namespace tuning {
 
         I_ROOK_OPEN_FILE,
         I_ROOK_HALF_OPEN_FILE,
-        I_ROOK_DOUBLED,
         I_ROOK_KING_LINE,
 
         I_BISHOP_DOUBLED,
@@ -919,10 +918,7 @@ namespace tuning {
             count[I_ROOK_HALF_OPEN_FILE] += (
                     +bitCount(openFilesBlack & ~openFiles & b->getPieceBB(WHITE, ROOK))
                     - bitCount(openFilesWhite & ~openFiles & b->getPieceBB(BLACK, ROOK)));
-            count[I_ROOK_DOUBLED] += (
-                + (bitCount(b->getPieceBB()[WHITE_ROOK]) == 2)
-                - (bitCount(b->getPieceBB()[BLACK_ROOK]) == 2));
-    
+            
             k = b->getPieceBB()[WHITE_QUEEN];
             while (k) {
                 square = bitscanForward(k);
@@ -1673,7 +1669,6 @@ namespace tuning {
                 "KNIGHT_DISTANCE_ENEMY_KING",
                 "ROOK_OPEN_FILE",
                 "ROOK_HALF_OPEN_FILE",
-                "ROOK_DOUBLED",
                 "ROOK_KING_LINE",
                 "BISHOP_DOUBLED",
                 "BISHOP_FIANCHETTO",
