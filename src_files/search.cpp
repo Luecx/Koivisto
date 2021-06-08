@@ -787,21 +787,23 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return staticEval;
         
         // **********************************************************************************************************
-        // futlity pruning:
+        // null move pruning:
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && sd->evaluator.evalData.threats[!b->getActivePlayer()] > 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
+        Depth nullDepth = depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3);
+        if (lmrFactor != nullptr) nullDepth++;
+        if (nullDepth > MAX_PLY) nullDepth = 0;
+        if (staticEval >= beta + (nullDepth == 0 ? 30 : 0) && !(nullDepth == 0 && sd->evaluator.evalData.threats[!b->getActivePlayer()] > 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0, !b->getActivePlayer());
+            score = -pvSearch(b, -beta, 1 - beta, nullDepth, ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
                 return beta;
             }
         }
     }
-    
-    
+
     // we reuse movelists for memory reasons.
     MoveList* mv = sd->moves[ply];
     // **********************************************************************************************************
