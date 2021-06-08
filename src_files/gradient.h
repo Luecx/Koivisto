@@ -540,7 +540,7 @@ namespace tuning {
                 if (danger[c] < 0) continue;
                 
                 float midgameChange = - danger[c] * danger[c] / 1024;
-                float endgameChange = - danger[c] / 32;
+                float endgameChange = - danger[c] / 8;
                 
                 if(c == WHITE){
                     midgame += midgameChange;
@@ -557,7 +557,7 @@ namespace tuning {
                 
                 if (danger[c] < 0) continue;
                 
-                float danger_grad = -2 / 1024.0 * danger[c] * mg_grad - 1 / 32.0 * eg_grad;
+                float danger_grad = -2 / 1024.0 * danger[c] * mg_grad - 1 / 8.0 * eg_grad;
                 if(c == BLACK) danger_grad = -danger_grad;
                 
                 // compute gradients for attack weights
