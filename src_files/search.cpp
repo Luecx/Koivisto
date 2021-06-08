@@ -814,7 +814,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
             // get the current move
-            Move m = moveOrderer.next();
+            Move m = moveOrderer.next(0);
             
             if (!b->isLegal(m))
                 continue;
@@ -867,13 +867,18 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // count the legal and quiet moves.
     int legalMoves = 0;
     int quiets     = 0;
+
+    Square kingSq  = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
+    U64 kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
     
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
         
         // get the current move
-        Move m = moveOrderer.next();
+        Move m = moveOrderer.next(kingBB);
         
+        if (!m) break;
+
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
             continue;
@@ -953,7 +958,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             generateMoves(b, mv, hashMove, sd, ply);
             moveOrderer = {mv};
             
-            m = moveOrderer.next();
+            m = moveOrderer.next(0);
         }
         
         // *********************************************************************************************************
@@ -1174,7 +1179,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     
     for (int i = 0; i < mv->getSize(); i++) {
         
-        Move m = moveOrderer.next();
+        Move m = moveOrderer.next(0);
         
         // do not consider illegal moves
         if (!b->isLegal(m))
