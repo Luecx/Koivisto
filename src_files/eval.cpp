@@ -751,7 +751,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
     EvalScore threatScore      = evalData.threats[WHITE] - evalData.threats[BLACK];
-    EvalScore kingSafetyScore  = computeKingSafety<WHITE>(b) - computeKingSafety<BLACK>(b);
+//    EvalScore kingSafetyScore  = computeKingSafety<WHITE>(b) - computeKingSafety<BLACK>(b);
 
 
     EvalScore totalScore =
@@ -760,8 +760,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
             + featureScore
             + mobScore
             + passedScore
-            + threatScore
-            + kingSafetyScore;
+            + threatScore;
+//            + kingSafetyScore;
 
     res = (int) ((float) MgScore(totalScore + materialScore) * (1 - phase));
     Score eg = EgScore(totalScore + materialScore);
