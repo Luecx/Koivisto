@@ -470,47 +470,61 @@ namespace tuning {
 
             Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
-            
 
-            for (PieceType p = KNIGHT; p <= QUEEN; p++) {
-                for (int c= 0; c <= 1; c++) {
+            for (Color c:{WHITE, BLACK}) {
+                
+                // pawns
+                if(ev->kingZone[!c] & ev->pawnWestAttacks[c]){
+                    attackCount[!c] += bitCount(ev->kingZone[!c] &
+                                                ev->pawnWestAttacks[c]);
+                    attackWeightCounts[!c][PAWN] += 1;
+                }
+                if(ev->kingZone[!c] & ev->pawnEastAttacks[c]){
+                    attackCount[!c] += bitCount(ev->kingZone[!c] &
+                                                ev->pawnEastAttacks[c]);
+                    attackWeightCounts[!c][PAWN] += 1;
+                }
+                
+                // knight -> queen
+                for (PieceType p = KNIGHT; p <= QUEEN; p++) {
                     k = b->getPieceBB(c, p);
                     while (k) {
-                        square = bitscanForward(k);
+                        square  = bitscanForward(k);
                         attacks = ZERO;
                         switch (p) {
-                            case KNIGHT:
-                                attacks = KNIGHT_ATTACKS[square];
-                                break;
+                            case KNIGHT: attacks = KNIGHT_ATTACKS[square]; break;
                             case BISHOP:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
+                                    lookUpBishopAttack(square, occupied & ~b->getPieceBB(c, QUEEN));
                                 break;
                             case QUEEN:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, BISHOP)) |
-                                        lookUpRookAttack    (square, occupied &~b->getPieceBB(c, ROOK));
+                                    lookUpBishopAttack(square, occupied & ~b->getPieceBB(c, BISHOP))
+                                    | lookUpRookAttack(square, occupied & ~b->getPieceBB(c, ROOK));
                                 break;
                             case ROOK:
-                                attacks =
-                                        lookUpRookAttack    (square,occupied &
-                                                                    ~b->getPieceBB(c, QUEEN)&
-                                                                    ~b->getPieceBB(c, ROOK));
+                                attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB(c, QUEEN)
+                                                                       & ~b->getPieceBB(c, ROOK));
                                 break;
                         }
-                        
-                        
-                        if(ev->kingZone[!c] & attacks){
-                            attackCount[!c]            += bitCount(ev->kingZone[!c] & attacks);
-                            attackWeightCounts[!c][p]  += 1;
+
+                        if (ev->kingZone[!c] & attacks) {
+                            attackCount[!c] += bitCount(ev->kingZone[!c] & attacks);
+                            attackWeightCounts[!c][p] += 1;
                         }
-                        
+
                         k = lsbReset(k);
                     }
                 }
+                
+                // king
+                if(ev->kingZone[!c] & ev->attacks[c][KING]){
+                    attackCount[!c] += bitCount(ev->kingZone[!c] &
+                                                ev->attacks  [c][KING]);
+                    attackWeightCounts[!c][KING] += 1;
+                }
             }
-            
-            
+
             // factor counts
             for (Color c:{WHITE, BLACK}){
                 safetyFactorCount[c][S_QUEEN_EXISTS] = !b->getPieceBB(!c, QUEEN);
