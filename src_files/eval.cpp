@@ -514,7 +514,7 @@ EvalScore Evaluator::computeKingSafety(Board* b){
         + kingSafetyQueenExists * !b->getPieceBB<!color>(QUEEN);
 //        + kingSafetyWeakSquares * bitCount(weakSquares);
     if (danger > 0)
-        res += M(-danger * danger / 1024, -danger / 32);
+        res += M(-danger * danger / 1024, -danger / 8);
         
     return res;
 }
