@@ -134,6 +134,15 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
         enP->setAge(m_currentAge);
         return true;
     } else {
+
+        //  on enP->depth < depth * 2: 
+        //  The idea behind this replacement scheme is to allow faster searches of subtrees by allowing more localized 
+        //  search results to be stored in the TT. A hard replacement scheme has been tested on another engine, and has 
+        //  been shown to be worse (there is a limit to how great of a depth override should occur).
+
+        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however they use a static margin. 
+        //  Martin (author of Cheng) tested and validated a variable margin.
+
         if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == zobrist && enP->depth < depth * 2)) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
