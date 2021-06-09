@@ -22,99 +22,99 @@
 
 #include <iomanip>
 
-EvalScore SIDE_TO_MOVE                  = M(   15,   16);
+EvalScore SIDE_TO_MOVE                  = M(   16,   16);
 EvalScore PAWN_STRUCTURE                = M(    9,    3);
-EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -14,  -41);
-EvalScore PAWN_PASSED_AND_BLOCKED       = M(    1,  -40);
-EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    8);
+EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -14,  -42);
+EvalScore PAWN_PASSED_AND_BLOCKED       = M(    1,  -42);
+EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    9);
 EvalScore PAWN_PASSED_HELPER            = M(    2,    5);
-EvalScore PAWN_PASSED_AND_DEFENDED      = M(   12,    1);
-EvalScore PAWN_PASSED_SQUARE_RULE       = M(    3,   18);
-EvalScore PAWN_PASSED_EDGE_DISTANCE     = M(   -5,   -5);
+EvalScore PAWN_PASSED_AND_DEFENDED      = M(   13,    1);
+EvalScore PAWN_PASSED_SQUARE_RULE       = M(    5,   18);
+EvalScore PAWN_PASSED_EDGE_DISTANCE     = M(   -4,   -5);
 EvalScore PAWN_PASSED_KING_TROPISM      = M(   -1,   15);
 EvalScore PAWN_ISOLATED                 = M(   -0,   -8);
-EvalScore PAWN_DOUBLED                  = M(   -6,   -8);
-EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -5,  -24);
-EvalScore PAWN_BACKWARD                 = M(  -10,   -3);
-EvalScore PAWN_OPEN                     = M(  -10,  -11);
-EvalScore PAWN_BLOCKED                  = M(   -4,  -10);
-EvalScore PAWN_CONNECTED                = M(    9,    9);
-EvalScore KNIGHT_OUTPOST                = M(   25,   21);
-EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -4,   -2);
-EvalScore ROOK_OPEN_FILE                = M(   25,    0);
-EvalScore ROOK_HALF_OPEN_FILE           = M(    1,  -10);
-EvalScore ROOK_KING_LINE                = M(   15,    5);
-EvalScore BISHOP_DOUBLED                = M(   14,   85);
-EvalScore BISHOP_FIANCHETTO             = M(   26,   33);
-EvalScore BISHOP_STUNTED                = M(   -7,  -12);
+EvalScore PAWN_DOUBLED                  = M(   -7,   -8);
+EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -6,  -25);
+EvalScore PAWN_BACKWARD                 = M(  -11,   -3);
+EvalScore PAWN_OPEN                     = M(  -10,  -12);
+EvalScore PAWN_BLOCKED                  = M(   -5,  -10);
+EvalScore PAWN_CONNECTED                = M(   10,    9);
+EvalScore KNIGHT_OUTPOST                = M(   27,   21);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -3,   -3);
+EvalScore ROOK_OPEN_FILE                = M(   26,   -1);
+EvalScore ROOK_HALF_OPEN_FILE           = M(    2,  -11);
+EvalScore ROOK_KING_LINE                = M(    7,    7);
+EvalScore BISHOP_DOUBLED                = M(   15,   88);
+EvalScore BISHOP_FIANCHETTO             = M(   27,   35);
+EvalScore BISHOP_STUNTED                = M(   -8,  -12);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    4);
-EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(  -17,   20);
-EvalScore KING_CLOSE_OPPONENT           = M(  -13,   15);
-EvalScore KING_PAWN_SHIELD              = M(   31,   12);
+EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(  -11,   28);
+EvalScore KING_CLOSE_OPPONENT           = M(  -26,   19);
+EvalScore KING_PAWN_SHIELD              = M(   34,   13);
 EvalScore CASTLING_RIGHTS               = M(   18,    1);
-EvalScore MINOR_BEHIND_PAWN             = M(    6,   22);
-EvalScore SAFE_QUEEN_CHECK              = M(    8,   27);
-EvalScore SAFE_ROOK_CHECK               = M(   11,    6);
-EvalScore SAFE_BISHOP_CHECK             = M(    6,    5);
-EvalScore SAFE_KNIGHT_CHECK             = M(   13,    4);
-EvalScore PAWN_ATTACK_MINOR             = M(   42,   74);
-EvalScore PAWN_ATTACK_ROOK              = M(   44,   29);
-EvalScore PAWN_ATTACK_QUEEN             = M(   33,   34);
-EvalScore MINOR_ATTACK_ROOK             = M(   37,   30);
-EvalScore MINOR_ATTACK_QUEEN            = M(   26,   42);
-EvalScore ROOK_ATTACK_QUEEN             = M(   35,   19);
+EvalScore MINOR_BEHIND_PAWN             = M(    6,   23);
+EvalScore SAFE_QUEEN_CHECK              = M(    8,   30);
+EvalScore SAFE_ROOK_CHECK               = M(   13,    5);
+EvalScore SAFE_BISHOP_CHECK             = M(    5,    6);
+EvalScore SAFE_KNIGHT_CHECK             = M(   12,    5);
+EvalScore PAWN_ATTACK_MINOR             = M(   44,   77);
+EvalScore PAWN_ATTACK_ROOK              = M(   47,   30);
+EvalScore PAWN_ATTACK_QUEEN             = M(   34,   35);
+EvalScore MINOR_ATTACK_ROOK             = M(   40,   30);
+EvalScore MINOR_ATTACK_QUEEN            = M(   29,   43);
+EvalScore ROOK_ATTACK_QUEEN             = M(   38,   17);
 
 EvalScore mobilityKnight[9] = {
-    M(  -63,   53), M(  -51,  103), M(  -46,  133), M(  -42,  149), M(  -37,  160),
-    M(  -32,  171), M(  -26,  173), M(  -16,  167), M(   -3,  151), };
+    M(  -57,   58), M(  -44,  111), M(  -39,  142), M(  -34,  159), M(  -29,  170),
+    M(  -24,  181), M(  -17,  183), M(   -7,  178), M(    7,  160), };
 
 EvalScore mobilityBishop[14] = {
-    M(  -16,   -3), M(   -5,   59), M(    2,   90), M(    6,  109), M(   11,  123),
-    M(   14,  135), M(   15,  144), M(   14,  148), M(   15,  151), M(   18,  150),
-    M(   25,  144), M(   41,  136), M(   50,  147), M(   75,  114), };
+    M(  -13,   -3), M(   -1,   62), M(    7,   94), M(   11,  113), M(   16,  128),
+    M(   19,  141), M(   20,  149), M(   19,  153), M(   20,  157), M(   23,  156),
+    M(   31,  150), M(   48,  140), M(   59,  151), M(   84,  117), };
 
 EvalScore mobilityRook[15] = {
-    M(  -61,  142), M(  -55,  183), M(  -51,  219), M(  -50,  246), M(  -49,  262),
-    M(  -43,  269), M(  -37,  277), M(  -29,  280), M(  -23,  287), M(  -18,  294),
-    M(  -14,  299), M(   -9,  303), M(    2,  300), M(   33,  280), M(   91,  247), };
+    M(  -50,  153), M(  -43,  196), M(  -40,  234), M(  -40,  261), M(  -38,  278),
+    M(  -32,  286), M(  -26,  294), M(  -19,  298), M(  -14,  305), M(   -9,  312),
+    M(   -5,  317), M(   -0,  322), M(   12,  319), M(   44,  298), M(  103,  264), };
 
 EvalScore mobilityQueen[28] = {
-    M( -188,  187), M( -171,  186), M( -158,  298), M( -153,  372), M( -151,  411),
-    M( -151,  438), M( -150,  461), M( -147,  476), M( -146,  488), M( -143,  494),
-    M( -140,  500), M( -138,  504), M( -136,  505), M( -136,  509), M( -136,  511),
-    M( -137,  511), M( -136,  509), M( -136,  507), M( -133,  503), M( -125,  492),
-    M( -116,  477), M( -112,  467), M( -113,  455), M(  -94,  437), M( -147,  453),
-    M(  -24,  365), M(  -82,  433), M( -128,  478), };
+    M( -183,  189), M( -165,  192), M( -151,  308), M( -147,  384), M( -145,  426),
+    M( -144,  453), M( -143,  477), M( -141,  493), M( -139,  505), M( -136,  513),
+    M( -134,  519), M( -131,  522), M( -130,  524), M( -129,  528), M( -129,  530),
+    M( -130,  530), M( -129,  527), M( -129,  525), M( -127,  520), M( -117,  508),
+    M( -108,  493), M( -103,  482), M( -105,  470), M(  -85,  451), M( -141,  468),
+    M(   -8,  372), M(  -77,  447), M( -126,  496), };
 
 EvalScore hangingEval[5] = {
-    M(   -3,   -2), M(   -4,   -1), M(   -6,   -7), M(   -5,   -5), M(   -4,   -8), };
+    M(   -3,   -2), M(   -3,   -1), M(   -5,   -7), M(   -4,   -5), M(   -3,   -9), };
 
 EvalScore pinnedEval[15] = {
-    M(    3,   -4), M(  -10,   10), M(   -8,   54), M(  -20,  -63), M(  -20,  -17),
-    M(  -19,   49), M(   -2,  -11), M(  -27,  -15), M(  -15,   36), M(  -13,  -10),
-    M(    4,   -9), M(  -14,   39), M(   13,  -23), M(  -11,  -29), M(  -16,   55), };
+    M(    1,   -4), M(   -6,    8), M(   -8,   54), M(  -22,  -65), M(  -16,  -19),
+    M(  -18,   47), M(   -3,  -11), M(  -24,  -18), M(  -15,   34), M(  -16,  -11),
+    M(    8,  -10), M(  -14,   38), M(   12,  -25), M(   -2,  -36), M(  -16,   54), };
 
 EvalScore passer_rank_n[N_RANKS] = {
-    M(    0,    0), M(  -16,    5), M(  -25,   20), M(  -17,   62),
-    M(   14,  103), M(   35,  173), M(   27,   84), M(    0,    0), };
+    M(    0,    0), M(  -16,    5), M(  -26,   21), M(  -18,   64),
+    M(   13,  108), M(   37,  180), M(   33,   90), M(    0,    0), };
 
 EvalScore candidate_passer[N_RANKS] = {
-    M(    0,    0), M(  -24,    6), M(   -7,   15), M(   -4,   28),
-    M(    2,   83), M(    4,   75), M(    0,    0), M(    0,    0), };
+    M(    0,    0), M(  -25,    7), M(   -7,   16), M(   -4,   29),
+    M(    3,   86), M(    5,   78), M(    0,    0), M(    0,    0), };
 
 EvalScore bishop_pawn_same_color_table_o[9] = {
-    M(  -42,   71), M(  -48,   71), M(  -46,   58),
-    M(  -49,   47), M(  -51,   36), M(  -55,   23),
-    M(  -57,    5), M(  -56,  -12), M(  -63,  -56), };
+    M(  -36,   76), M(  -42,   76), M(  -41,   62),
+    M(  -43,   51), M(  -46,   40), M(  -50,   26),
+    M(  -52,    7), M(  -51,  -11), M(  -59,  -56), };
 
 EvalScore bishop_pawn_same_color_table_e[9] = {
-    M(  -31,   49), M(  -49,   60), M(  -54,   53),
-    M(  -59,   46), M(  -62,   38), M(  -65,   25),
-    M(  -65,    8), M(  -63,   -3), M(  -72,  -13), };
+    M(  -25,   53), M(  -44,   65), M(  -50,   58),
+    M(  -55,   51), M(  -59,   42), M(  -62,   29),
+    M(  -63,   12), M(  -60,    0), M(  -70,  -10), };
 
-int kingSafetyAttackWeights[6]{0, 32, 25, 38, 26, 0, };
+int kingSafetyAttackWeights[6]{0, 24, 13, 26, 22, 0, };
 
-int kingSafetyQueenExists         = -240;
+int kingSafetyQueenExists         = -84;
 int kingSafetyWeakSquares         = 0;
 
 int *kingSafetyFactors[]{
@@ -159,7 +159,7 @@ EvalScore* evfeatures[] {
     &KING_PAWN_SHIELD,
     
     &CASTLING_RIGHTS,
-
+    
     &MINOR_BEHIND_PAWN,
     &SAFE_QUEEN_CHECK,
     &SAFE_ROOK_CHECK,
@@ -169,7 +169,7 @@ EvalScore* evfeatures[] {
     &PAWN_ATTACK_MINOR,
     &PAWN_ATTACK_ROOK,
     &PAWN_ATTACK_QUEEN,
-
+    
     &MINOR_ATTACK_ROOK,
     &MINOR_ATTACK_QUEEN,
     &ROOK_ATTACK_QUEEN,
@@ -199,7 +199,7 @@ EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, m
 
 bool hasMatingMaterial(Board* b, bool side) {
     UCI_ASSERT(b);
-
+    
     if ((b->getPieceBB()[QUEEN + side * 8] | b->getPieceBB()[ROOK + side * 8] | b->getPieceBB()[PAWN + side * 8])
         || (bitCount(b->getPieceBB()[BISHOP + side * 8] | b->getPieceBB()[KNIGHT + side * 8]) > 1 && b->getPieceBB()[BISHOP + side * 8]))
         return true;
@@ -216,31 +216,31 @@ bool isOutpost(Square s, Color c, U64 opponentPawns, U64 pawnCover) {
 
 bb::Score Evaluator::evaluateTempo(Board* b) {
     UCI_ASSERT(b);
-
+    
     phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
              - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
              - phaseValues[2] * bitCount(b->getPieceBB()[WHITE_BISHOP] | b->getPieceBB()[BLACK_BISHOP])
              - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
              - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
             / 24.0f;
-
+    
     if (phase > 1)
         phase = 1;
     if (phase < 0)
         phase = 0;
-
+    
     return MgScore(SIDE_TO_MOVE) * (1 - phase) + EgScore(SIDE_TO_MOVE) * (phase);
 }
 
 EvalScore Evaluator::computeHangingPieces(Board* b) {
     UCI_ASSERT(b);
-
-
+    
+    
     U64 WnotAttacked = ~evalData.allAttacks[WHITE];
     U64 BnotAttacked = ~evalData.allAttacks[BLACK];
-
+    
     EvalScore res = M(0, 0);
-
+    
     for (int i = PAWN; i <= QUEEN; i++) {
         res += hangingEval[i] * (+ bitCount(b->getPieceBB(WHITE, i) & WnotAttacked)
                                  - bitCount(b->getPieceBB(BLACK, i) & BnotAttacked));
@@ -251,63 +251,63 @@ EvalScore Evaluator::computeHangingPieces(Board* b) {
 template<Color color>
 EvalScore Evaluator::computePinnedPieces(Board* b) {
     UCI_ASSERT(b);
-
+    
     EvalScore result = 0;
-
+    
     constexpr Color us   = color;
     constexpr Color them = 1 - color;
-
+    
     // figure out where the opponent has pieces
     U64 opponentOcc = b->getTeamOccupiedBB()[them];
     U64 ourOcc      = b->getTeamOccupiedBB()[us];
-
+    
     // get the pieces which can pin our king
     U64 bishops = b->getPieceBB(them, BISHOP);
     U64 rooks   = b->getPieceBB(them, ROOK);
     U64 queens  = b->getPieceBB(them, QUEEN);
-
+    
     // get the king positions
     Square kingSq = bitscanForward(b->getPieceBB(us, KING));
-
+    
     // get the potential pinners for rook/bishop attacks
     U64 rookAttacks   = lookUpRookAttack(kingSq, opponentOcc) & (rooks | queens);
     U64 bishopAttacks = lookUpBishopAttack(kingSq, opponentOcc) & (bishops | queens);
-
+    
     // get all pinners (either rook or bishop attackers)
     U64 potentialPinners = (rookAttacks | bishopAttacks);
-
+    
     while (potentialPinners) {
-
+        
         Square pinnerSquare = bitscanForward(potentialPinners);
-
+        
         // get all the squares in between the king and the potential pinner
         U64 inBetween = IN_BETWEEN_SQUARES[kingSq][pinnerSquare];
-
+        
         // if there is exactly one of our pieces in the way, consider it pinned. Otherwise, continue
         U64 potentialPinned = ourOcc & inBetween;
         if (potentialPinned == 0 || lsbIsolation(potentialPinned) != potentialPinned) {
             potentialPinners = lsbReset(potentialPinners);
             continue;
         }
-
+        
         // extract the pinner pieces and the piece that pins
         Piece pinnedPiece = b->getPiece(bitscanForward(potentialPinned));
         Piece pinnerPiece = b->getPiece(pinnerSquare) - BISHOP;
-
+        
         // normalise the values (black pieces will be made to white pieces)
         if constexpr (us == WHITE) {
             pinnerPiece -= 8;
         } else {
             pinnedPiece -= 8;
         }
-
+        
         // add to the result indexing using pinnedPiece for which there are 5 different pieces and the pinner
         result += pinnedEval[pinnedPiece * 3 + pinnerPiece];
-
+        
         // reset the lsb
         potentialPinners = lsbReset(potentialPinners);
     }
-
+    
     return result;
 }
 
@@ -315,12 +315,12 @@ template<Color color>
 EvalScore Evaluator::computePassedPawns(Board* b){
     
     EvalScore h = M(0,0);
-
+    
     U64       pawns     = b->getPieceBB(color, PAWN);
     U64       oppPawns  = b->getPieceBB(!color, PAWN);
     Square    kingSq    = evalData.kingSquare[color];
     Square    oppKingSq = evalData.kingSquare[!color];
-
+    
     U64 bb = pawns;
     
     while (bb) {
@@ -330,12 +330,12 @@ EvalScore Evaluator::computePassedPawns(Board* b){
         U64    sqBB   = ONE << s;
         U64   advBB   = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
         Square adv    = bitscanForward(advBB);
-
+        
         U64 passerMask = PASSED_PAWN_MASK[color][s];
-
+        
         bool passed = !(passerMask & oppPawns);
-
-
+        
+        
         // check if passer
         if (passed) {
             U64    teleBB  = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB);
@@ -352,10 +352,10 @@ EvalScore Evaluator::computePassedPawns(Board* b){
             
             // check if promotion square can be covered
             h += (  bitCount(b->getPieceBB(color, BISHOP) & promCBB)
-                  + bitCount(b->getPieceBB(color, QUEEN))
-                  - bitCount(b->getPieceBB(!color, BISHOP) & promCBB)
-                  - bitCount(b->getPieceBB(!color, QUEEN))) * PAWN_PASSED_COVERED_PROMO;
-           
+                    + bitCount(b->getPieceBB(color, QUEEN))
+                    - bitCount(b->getPieceBB(!color, BISHOP) & promCBB)
+                    - bitCount(b->getPieceBB(!color, QUEEN))) * PAWN_PASSED_COVERED_PROMO;
+            
             // check if there is a helper
             h += (bitCount(pawns & (color == WHITE ? wAttackRearSpans(pawns) : bAttackRearSpans(pawns)))) * PAWN_PASSED_HELPER;
             
@@ -364,30 +364,30 @@ EvalScore Evaluator::computePassedPawns(Board* b){
             
             // check if can be caught by king
             h += ((7 - r + (color != b->getActivePlayer())) < manhattanDistance(
-                      bitscanForward(promBB),
-                      bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
-
+                bitscanForward(promBB),
+                bitscanForward(b->getPieceBB(!color, KING)))) * PAWN_PASSED_SQUARE_RULE;
+            
             // https://www.chessprogramming.org/King_Pawn_Tropism
             // looking to the advanced square is more important
-            h += PAWN_PASSED_KING_TROPISM 
-                * std::clamp(chebyshevDistance(oppKingSq, adv) - chebyshevDistance(kingSq, adv), -4, 4);
+            h += PAWN_PASSED_KING_TROPISM
+                 * std::clamp(chebyshevDistance(oppKingSq, adv) - chebyshevDistance(kingSq, adv), -4, 4);
         }
-
+        
         if (!passed && (sqBB & evalData.semiOpen[color])) {
             U64 antiPassers = passerMask & oppPawns;                                 // pawns that make this NOT a passer
             U64 pawnAdvance = color == WHITE ? shiftNorth(sqBB) : shiftSouth(sqBB); // advance square
             U64 levers = oppPawns & (color == WHITE ?                                // levers are pawns in active tension
-                (shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) :                      // https://www.chessprogramming.org/Pawn_Levers_(Bitboards)
-                (shiftSouthEast(sqBB) | shiftSouthWest(sqBB)));                      //
+                                     (shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) :                      // https://www.chessprogramming.org/Pawn_Levers_(Bitboards)
+                                     (shiftSouthEast(sqBB) | shiftSouthWest(sqBB)));                      //
             U64 forwardLevers = oppPawns & (color == WHITE ?                         //
-                (shiftNorthEast(pawnAdvance) | shiftNorthWest(pawnAdvance)) :        // levers that would apply if pawn was advanced
-                (shiftSouthEast(pawnAdvance) | shiftSouthWest(pawnAdvance)));        //
+                                            (shiftNorthEast(pawnAdvance) | shiftNorthWest(pawnAdvance)) :        // levers that would apply if pawn was advanced
+                                            (shiftSouthEast(pawnAdvance) | shiftSouthWest(pawnAdvance)));        //
             U64 helpers = (shiftEast(sqBB) | shiftWest(sqBB)) & pawns;               // friendly pawns on either side
-
+            
             bool push = !(antiPassers ^ levers); // Are all the pawns currently levers, we can make this pawn passed by pushing it
             bool helped = !(antiPassers ^ forwardLevers) // Are all the pawns forward lever, we can push through with support
-                && (bitCount(helpers) >= bitCount(forwardLevers)); // <-- supporters
-
+                          && (bitCount(helpers) >= bitCount(forwardLevers)); // <-- supporters
+            
             if (push || helped) {
                 h += candidate_passer[r];
             }
@@ -501,8 +501,8 @@ EvalScore Evaluator::computePawns(Board* b){
 template<Color color>
 EvalScore Evaluator::computeKingSafety(Board* b){
     EvalScore res = 0;
-    
-    
+
+
 //    U64 weakSquares = evalData.kingZone[color] & ~(
 //        evalData.attacks[color][PAWN]
 //        | evalData.attacks[color][KNIGHT]
@@ -510,12 +510,12 @@ EvalScore Evaluator::computeKingSafety(Board* b){
 //        | evalData.attacks[color][ROOK]);
     
     int danger =
-        evalData.ksAttackWeight[color] * evalData.ksAttackCount[color]
-        + kingSafetyQueenExists * !b->getPieceBB<!color>(QUEEN);
+            evalData.ksAttackWeight[color] * evalData.ksAttackCount[color]
+            + kingSafetyQueenExists * !b->getPieceBB<!color>(QUEEN);
 //        + kingSafetyWeakSquares * bitCount(weakSquares);
     if (danger > 0)
         res += M(-danger * danger / 1024, -danger / 32);
-        
+    
     return res;
 }
 
@@ -537,14 +537,14 @@ EvalScore Evaluator::computePieces(Board* b){
             attacks = KNIGHT_ATTACKS[square];
         } else if constexpr (pieceType == BISHOP){
             attacks = lookUpBishopAttack(square, b->getOccupiedBB()
-                                                   & ~b->getPieceBB<color>(QUEEN));
+                                                 & ~b->getPieceBB<color>(QUEEN));
         } else if constexpr (pieceType == ROOK){
             attacks = lookUpRookAttack(square, b->getOccupiedBB()
-                                                   & ~b->getPieceBB<color>(QUEEN)
-                                                   & ~b->getPieceBB<color>(ROOK));
+                                               & ~b->getPieceBB<color>(QUEEN)
+                                               & ~b->getPieceBB<color>(ROOK));
         } else if constexpr (pieceType == QUEEN){
             attacks = lookUpRookAttack  (square, b->getOccupiedBB() & ~b->getPieceBB<color>(ROOK))
-                    | lookUpBishopAttack(square, b->getOccupiedBB() & ~b->getPieceBB<color>(BISHOP));
+                      | lookUpBishopAttack(square, b->getOccupiedBB() & ~b->getPieceBB<color>(BISHOP));
         }
         
         // add to the attack table
@@ -559,7 +559,7 @@ EvalScore Evaluator::computePieces(Board* b){
             evalData.threats[color] += MINOR_ATTACK_ROOK  * bitCount(attacks & b->getPieceBB<!color>(ROOK));
             evalData.threats[color] += MINOR_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<!color>(QUEEN));
         }
-
+        
         // knight specific code
         if constexpr (pieceType == KNIGHT) {
             score += KNIGHT_OUTPOST *
@@ -581,19 +581,19 @@ EvalScore Evaluator::computePieces(Board* b){
             
             // bonus for pawns of each color on the same colored squares
             score    += bishop_pawn_same_color_table_e[bitCount(b->getPieceBB<!color>(PAWN)
-                & sameColoredSquares)];
+                                                                & sameColoredSquares)];
             score    += bishop_pawn_same_color_table_o[bitCount(b->getPieceBB< color>(PAWN)
-                & sameColoredSquares)];
+                                                                & sameColoredSquares)];
             // bonus for hostile pieces on the same colored squares
             score    += BISHOP_PIECE_SAME_SQUARE_E
-                           * bitCount(b->getTeamOccupiedBB<!color>() & sameColoredSquares);
-
-
+                        * bitCount(b->getTeamOccupiedBB<!color>() & sameColoredSquares);
+            
+            
             // as implemented in well-known engines i.e. Ethereal (it doesn't seem to gain if you
             // recognize full occupancy)
             if (!(CENTER_SQUARES_BB & squareBB)
                 && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(
-                          square, (b->getPieceBB<WHITE>(PAWN) | b->getPieceBB<BLACK>(PAWN)))) > 1)
+                square, (b->getPieceBB<WHITE>(PAWN) | b->getPieceBB<BLACK>(PAWN)))) > 1)
                 score += BISHOP_FIANCHETTO;
             
             // penality for bishops attacking defended pawns
@@ -603,17 +603,17 @@ EvalScore Evaluator::computePieces(Board* b){
             // bonus for safe bishop checks
             score += SAFE_BISHOP_CHECK * bitCount(
                 lookUpBishopAttack(
-                             evalData.kingSquare[!color],
-                             b->getOccupiedBB()) & ~b->getTeamOccupiedBB<color>()
+                    evalData.kingSquare[!color],
+                    b->getOccupiedBB()) & ~b->getTeamOccupiedBB<color>()
                 & attacks
                 & ~evalData.attacks[!color][PAWN]);
         }
-    
+        
         // rook specific code
         if constexpr (pieceType == ROOK){
             // rooks attacking queens
             evalData.threats[color] += ROOK_ATTACK_QUEEN * bitCount(attacks & b->getPieceBB<!color>(QUEEN));
-    
+            
             // safe rook checks
             score += SAFE_ROOK_CHECK  * bitCount(
                 lookUpRookAttack(
@@ -622,19 +622,19 @@ EvalScore Evaluator::computePieces(Board* b){
                 & attacks
                 & ~evalData.attacks[!color][PAWN]);
         }
-    
+        
         // queen specific code
         if constexpr (pieceType == QUEEN){
             
             // distance to enemy king, acts sort of as some king safety
             score += QUEEN_DISTANCE_ENEMY_KING *
-                        manhattanDistance(square, evalData.kingSquare[!color]);
-
+                     manhattanDistance(square, evalData.kingSquare[!color]);
+            
             score += SAFE_QUEEN_CHECK
                      * bitCount((lookUpRookAttack(evalData.kingSquare[!color], b->getOccupiedBB())
-                                     & ~b->getTeamOccupiedBB<color>()
-                     | lookUpBishopAttack(evalData.kingSquare[!color], b->getOccupiedBB())
-                                     & ~b->getTeamOccupiedBB<color>())
+                                 & ~b->getTeamOccupiedBB<color>()
+                                 | lookUpBishopAttack(evalData.kingSquare[!color], b->getOccupiedBB())
+                                   & ~b->getTeamOccupiedBB<color>())
                                 & attacks & ~evalData.attacks[!color][PAWN]);
         }
         
@@ -659,9 +659,9 @@ EvalScore Evaluator::computePieces(Board* b){
         if constexpr (pieceType == ROOK){
             score += ROOK_KING_LINE * (
                 + bitCount(lookUpRookAttack(evalData.kingSquare[BLACK], b->getOccupiedBB())
-                                   & b->getPieceBB(WHITE, ROOK))
+                           & b->getPieceBB(WHITE, ROOK))
                 - bitCount(lookUpRookAttack(evalData.kingSquare[WHITE], b->getOccupiedBB())
-                                   & b->getPieceBB(BLACK, ROOK)));
+                           & b->getPieceBB(BLACK, ROOK)));
             score += ROOK_OPEN_FILE * (
                 + bitCount(evalData.openFiles & b->getPieceBB(WHITE, ROOK))
                 - bitCount(evalData.openFiles & b->getPieceBB(BLACK, ROOK)));
@@ -690,13 +690,13 @@ template<Color color> EvalScore Evaluator::computeKings(Board* b) {
 
 bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     UCI_ASSERT(b);
-
+    
     Score res = 0;
-
+    
     EvalScore featureScore  = M(0, 0);
     EvalScore mobScore      = M(0, 0);
     EvalScore materialScore = b->getBoardStatus()->material();
-
+    
     phase = (24.0f + phaseValues[5]
              - phaseValues[0] * bitCount(b->getPieceBB()[WHITE_PAWN] | b->getPieceBB()[BLACK_PAWN])
              - phaseValues[1] * bitCount(b->getPieceBB()[WHITE_KNIGHT] | b->getPieceBB()[BLACK_KNIGHT])
@@ -704,12 +704,12 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
              - phaseValues[3] * bitCount(b->getPieceBB()[WHITE_ROOK] | b->getPieceBB()[BLACK_ROOK])
              - phaseValues[4] * bitCount(b->getPieceBB()[WHITE_QUEEN] | b->getPieceBB()[BLACK_QUEEN]))
             / 24.0f;
-
+    
     if (phase > 1)
         phase = 1;
     if (phase < 0)
         phase = 0;
-
+    
     // lazy eval
     res += (int) ((float) MgScore(materialScore) * (1 - phase));
     res += (int) ((float) EgScore(materialScore) * (phase));
@@ -722,17 +722,22 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
         return res;
     }
     
-
+    evalData = {};
+    
     Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
-
-    evalData = {};
-    evalData.kingZone[WHITE] = KING_ATTACKS[whiteKingSquare];
-    evalData.kingZone[BLACK] = KING_ATTACKS[blackKingSquare];
     evalData.kingSquare[WHITE] = whiteKingSquare;
     evalData.kingSquare[BLACK] = blackKingSquare;
-
-
+    
+    File whiteKingF = std::max((File)1, std::min((File)6, fileIndex(whiteKingSquare)));
+    Rank whiteKingR = std::max((Rank)1, std::min((Rank)6, rankIndex(whiteKingSquare)));
+    File blackKingF = std::max((File)1, std::min((File)6, fileIndex(blackKingSquare)));
+    Rank blackKingR = std::max((Rank)1, std::min((Rank)6, rankIndex(blackKingSquare)));
+    
+    evalData.kingZone[WHITE] = KING_ATTACKS[squareIndex(whiteKingR, whiteKingF)];
+    evalData.kingZone[BLACK] = KING_ATTACKS[squareIndex(blackKingR, blackKingF)];
+    
+    
     featureScore += computePawns                (b);
     featureScore += computePieces<WHITE, KNIGHT>(b) - computePieces<BLACK, KNIGHT>(b);
     featureScore += computePieces<WHITE, BISHOP>(b) - computePieces<BLACK, BISHOP>(b);
@@ -746,28 +751,28 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
                        - b->getCastlingRights(BLACK_QUEENSIDE_CASTLING)
                        - b->getCastlingRights(BLACK_KINGSIDE_CASTLING));
     featureScore += SIDE_TO_MOVE             * (b->getActivePlayer() == WHITE ? 1 : -1);
-
+    
     EvalScore hangingEvalScore = computeHangingPieces(b);
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
     EvalScore threatScore      = evalData.threats[WHITE] - evalData.threats[BLACK];
     EvalScore kingSafetyScore  = computeKingSafety<WHITE>(b) - computeKingSafety<BLACK>(b);
-
-
+    
+    
     EvalScore totalScore =
-            + pinnedEvalScore
-            + hangingEvalScore
-            + featureScore
-            + mobScore
-            + passedScore
-            + threatScore
-            + kingSafetyScore;
-
+                  + pinnedEvalScore
+                  + hangingEvalScore
+                  + featureScore
+                  + mobScore
+                  + passedScore
+                  + threatScore
+                  + kingSafetyScore;
+    
     res = (int) ((float) MgScore(totalScore + materialScore) * (1 - phase));
     Score eg = EgScore(totalScore + materialScore);
     eg = eg*(120-(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))*(8-bitCount(b->getPieceBB(eg > 0 ? WHITE : BLACK, PAWN)))) / 100;
     res += (int) ((float) eg * (phase));
-
+    
     if (!hasMatingMaterial(b, res > 0 ? WHITE : BLACK))
         res = res / 10;
     return res;
@@ -775,13 +780,13 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
 
 void printEvaluation(Board* board) {
     UCI_ASSERT(board);
-
+    
     using namespace std;
-
+    
     Evaluator ev {};
     Score     score = ev.evaluate(board);
     float     phase = ev.phase;
-
+    
     std::cout << setw(15) << right << "evaluation: " << left << setw(8) << score << setw(15) << right << "phase: " << left << setprecision(3) << setw(8) << phase << std::endl;
 }
 
