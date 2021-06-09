@@ -57,6 +57,7 @@ struct EvalData{
     EvalScore threats   [N_COLORS]{};
     
     int ksAttackValue   [N_COLORS]{};
+    int ksAttackCount   [N_COLORS]{};
 };
 
 class Evaluator {
@@ -80,6 +81,9 @@ class Evaluator {
     
     template<Color color>
     EvalScore computeKings(Board* b);
+    
+    template<Color color>
+    EvalScore computeKingSafety(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 

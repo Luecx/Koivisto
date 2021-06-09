@@ -111,29 +111,6 @@ EvalScore bishop_pawn_same_color_table_e[9] = {
     M(  -62,   28), M(  -65,   21), M(  -67,   10),
     M(  -68,   -4), M(  -65,  -15), M(  -73,  -23), };
 
-EvalScore kingSafetyTable[100] = {
-    M(   -5,   -4), M(    0,    0), M(  -10,   -4), M(   -4,   -6), M(   -6,   -6),
-    M(   18,   -8), M(    7,  -10), M(   27,   -8), M(   16,  -10), M(   43,  -19),
-    M(   57,  -12), M(   77,  -23), M(   45,  -23), M(  102,  -22), M(  102,  -19),
-    M(  111,  -17), M(  103,  -31), M(  162,  -19), M(  191,  -42), M(  208,  -58),
-    M(  214,  -69), M(  176,  -30), M(  287,  -55), M(  227,  -15), M(  270,  -30),
-    M(  257,   10), M(  356,  -12), M(  369,  -65), M(  300,   79), M(  394,   -4),
-    M(  431, -158), M(  458,  -70), M(  575, -238), M(  652, -241), M(  494, -105),
-    M( 1849,-3153), M(  -40, 1615), M( 1664,-2033), M(  216,  793), M( 1166,  881),
-    M(  457, -196), M(  990, -684), M( 1651, 1347), M(  500,  500), M(  501,  500),
-    M( 1785, 1506), M(  500,  500), M(  998,  711), M(  500,  500), M(-1683,-2057),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500),
-    M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), M(  500,  500), };
-
-
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
     &PAWN_STRUCTURE,
@@ -194,7 +171,7 @@ float phaseValues[N_PIECE_TYPES] {
 };
 
 int kingSafetyAttackWeights[6]{
-    0,2,2,3,4,0
+    0,20,20,40,80,0
 };
 
 constexpr int lazyEvalAlphaBound = 803;
@@ -218,13 +195,6 @@ bool hasMatingMaterial(Board* b, bool side) {
         || (bitCount(b->getPieceBB()[BISHOP + side * 8] | b->getPieceBB()[KNIGHT + side * 8]) > 1 && b->getPieceBB()[BISHOP + side * 8]))
         return true;
     return false;
-}
-
-void addToKingSafety(U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor) {
-    if (attacks & kingZone) {
-        pieceCount++;
-        valueOfAttacks += factor * bitCount(attacks & kingZone);
-    }
 }
 
 /**
@@ -640,8 +610,11 @@ EvalScore Evaluator::computePieces(Board* b){
         }
         
         // king safety
-        evalData.ksAttackValue[!color] += kingSafetyAttackWeights[pieceType] *
-                                          bitCount(evalData.kingZone[!color] &  attacks);
+        if(evalData.kingZone[!color] &  attacks){
+            evalData.ksAttackValue[!color] += kingSafetyAttackWeights[pieceType] *
+                                              bitCount(evalData.kingZone[!color] &  attacks);
+            evalData.ksAttackCount[!color] += 1;
+        }
         
         k = lsbReset(k);
     }
@@ -673,7 +646,8 @@ EvalScore Evaluator::computePieces(Board* b){
     return score;
 }
 
-template<Color color> EvalScore Evaluator::computeKings(Board* b) {
+template<Color color>
+EvalScore Evaluator::computeKings(Board* b) {
     EvalScore res = 0;
     
     evalData.attacks   [color][KING] = KING_ATTACKS[evalData.kingSquare[color]];
@@ -687,6 +661,15 @@ template<Color color> EvalScore Evaluator::computeKings(Board* b) {
     return res;
 }
 
+template<Color color>
+EvalScore Evaluator::computeKingSafety(Board* b){
+    const static int attackScale[8] {0,0,50,75,88,94,97,99};
+
+    int danger = evalData.ksAttackValue[color] * attackScale[evalData.ksAttackCount[color]] / 100;
+
+    EvalScore ev = M(-danger, 0);
+    return ev;
+}
 /**
  * evaluates the board.
  * @param b
@@ -755,9 +738,7 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     EvalScore pinnedEvalScore  = computePinnedPieces<WHITE>(b) - computePinnedPieces<BLACK>(b);
     EvalScore passedScore      = computePassedPawns<WHITE>(b) - computePassedPawns<BLACK>(b);
     EvalScore threatScore      = evalData.threats[WHITE] - evalData.threats[BLACK];
-
-    EvalScore kingSafetyScore  = + kingSafetyTable[evalData.ksAttackValue[BLACK]]
-                                 - kingSafetyTable[evalData.ksAttackValue[WHITE]];
+    EvalScore kingSafetyScore  = computeKingSafety<WHITE>(b) - computeKingSafety<BLACK>(b);
 
 
     EvalScore totalScore =
