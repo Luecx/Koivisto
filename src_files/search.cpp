@@ -977,9 +977,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         if (!inCheck && legalMoves == 1 && depth > 7) {
             b->move_null();
-            score = -pvSearch(b, -beta, 1 - beta, 3, ply + ONE_PLY, td, 0, !b->getActivePlayer());
+            Score window = staticEval - 200;
+            score = -pvSearch(b, -window, 1 - window, 1, ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
-            if (score < beta) nullKiller = sd->nullKiller[ply + 1];
+            if (score < window) nullKiller = sd->nullKiller[ply + 1];
         }
 
         // compute the lmr based on the depth, the amount of legal moves etc.
