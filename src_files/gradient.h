@@ -31,7 +31,7 @@
  * If it is a new array, ask Finn first
  *
  */
-// #define TUNING
+//#define TUNING
 #ifdef TUNING
 
 #include "Board.h"
@@ -454,7 +454,7 @@ namespace tuning {
             U64 k;
             Square square;
             U64 attacks;
-            U64 occupied = *(b->getOccupiedBB());
+            U64 occupied = (b->getOccupiedBB());
 
             static int factors[6] = {0, 2, 2, 3, 4};
 
@@ -726,7 +726,7 @@ namespace tuning {
             U64 blackPawnCover = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
     
             
-            U64 occupied = *b->getOccupiedBB();
+            U64 occupied = b->getOccupiedBB();
             U64 wKingBishopAttacks = lookUpBishopAttack(whiteKingSquare, occupied)  & ~blackTeam;
             U64 bKingBishopAttacks = lookUpBishopAttack(blackKingSquare, occupied)  & ~whiteTeam;
             U64 wKingRookAttacks   = lookUpRookAttack  (whiteKingSquare, occupied)  & ~blackTeam;
@@ -910,16 +910,15 @@ namespace tuning {
             }
 
             count[I_ROOK_KING_LINE] += (
-                    +bitCount(lookUpRookAttack(blackKingSquare, *b->getOccupiedBB()) & b->getPieceBB(WHITE, ROOK))
-                    - bitCount(lookUpRookAttack(whiteKingSquare, *b->getOccupiedBB()) & b->getPieceBB(BLACK, ROOK)));
+                    +bitCount(lookUpRookAttack(blackKingSquare, b->getOccupiedBB()) & b->getPieceBB(WHITE, ROOK))
+                    - bitCount(lookUpRookAttack(whiteKingSquare, b->getOccupiedBB()) & b->getPieceBB(BLACK, ROOK)));
             count[I_ROOK_OPEN_FILE] += (
                     +bitCount(openFiles & b->getPieceBB(WHITE, ROOK))
                     - bitCount(openFiles & b->getPieceBB(BLACK, ROOK)));
             count[I_ROOK_HALF_OPEN_FILE] += (
                     +bitCount(openFilesBlack & ~openFiles & b->getPieceBB(WHITE, ROOK))
                     - bitCount(openFilesWhite & ~openFiles & b->getPieceBB(BLACK, ROOK)));
-
-
+            
             k = b->getPieceBB()[WHITE_QUEEN];
             while (k) {
                 square = bitscanForward(k);
@@ -1110,7 +1109,7 @@ namespace tuning {
             U64 mobilitySquaresWhite = ~(b->getTeamOccupiedBB()[WHITE]) & ~(blackPawnCover);
             U64 mobilitySquaresBlack = ~(b->getTeamOccupiedBB()[BLACK]) & ~(whitePawnCover);
 
-            U64 occupied = *b->getOccupiedBB();
+            U64 occupied = b->getOccupiedBB();
 
             for (Piece p = KNIGHT; p <= QUEEN; p++) {
                 for (int c= 0; c <= 1; c++) {

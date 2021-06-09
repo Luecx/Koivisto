@@ -330,7 +330,7 @@ Score getWDL(Board* board) {
     UCI_ASSERT(board);
     
     // we cannot prove the tables if there are too many pieces on the board
-    if (bitCount(*board->getOccupiedBB()) > (signed) TB_LARGEST)
+    if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
         return MAX_MATE_SCORE;
     
     // use the given files to prove the tables using the information from the board.
@@ -383,7 +383,7 @@ Score getWDL(Board* board) {
 Move getDTZMove(Board* board) {
     UCI_ASSERT(board);
     
-    if (bitCount(*board->getOccupiedBB()) > (signed) TB_LARGEST)
+    if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
         return 0;
     
     unsigned result = tb_probe_root(

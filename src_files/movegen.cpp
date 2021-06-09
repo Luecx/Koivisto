@@ -96,7 +96,7 @@ void generatePawnMoves(
     const U64 opponents         =  b->getTeamOccupiedBB<them>();
     
     const U64 pawns             = b->getPieceBB<us>(PAWN);
-    const U64 occupied          = *b->getOccupiedBB();
+    const U64 occupied          = b->getOccupiedBB();
     
     const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
     const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
@@ -222,7 +222,7 @@ void generatePieceMoves(
     
     constexpr Color us   =  c;
     
-    const U64 occupied   = *b->getOccupiedBB();
+    const U64 occupied   = b->getOccupiedBB();
     const U64 friendly   = b->template getTeamOccupiedBB<us  >();
     
     for(Piece p = KNIGHT; p <= QUEEN; p++){
@@ -297,7 +297,7 @@ void generateKingMoves(
     
     constexpr Piece movingPiece = KING + us * 8;
     
-    const U64 occupied   = *b->getOccupiedBB();
+    const U64 occupied   = b->getOccupiedBB();
     const U64 friendly   = b->getTeamOccupiedBB<us  >();
     
     U64 kings      = b->getPieceBB<us>(KING);
