@@ -42,6 +42,7 @@ struct SearchData {
     int        cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
     Move       killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
+    Move       nullKiller[MAX_INTERNAL_PLY + 2]                                    = {0};
     // eval history across plies
     Score eval[N_COLORS][MAX_INTERNAL_PLY] = {0};
     bool  sideToReduce;

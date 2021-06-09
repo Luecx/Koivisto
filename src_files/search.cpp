@@ -761,9 +761,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
-    sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
-    
-    
+    sd->killer[b->getActivePlayer()][ply + 2][1] = 0; 
+    Move nullKiller = 0;  
+
+
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
         // razoring:
@@ -798,6 +799,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (score >= beta) {
                 return beta;
             }
+            nullKiller = sd->nullKiller[ply + 1];
         }
     }
     
@@ -873,7 +875,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
-        
+
         // get the current move
         Move m = moveOrderer.next(kingBB);
         
@@ -973,6 +975,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
+        if (!inCheck && legalMoves == 1 && depth > 7) {
+            b->move_null();
+            score = -pvSearch(b, -beta, 1 - beta, 3, ply + ONE_PLY, td, 0, !b->getActivePlayer());
+            b->undoMove_null();
+            if (score < beta) nullKiller = sd->nullKiller[ply + 1];
+        }
+
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see score or if the
         // depth is too small.
@@ -991,6 +1000,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer()) lmr++;
+            if (quiet && isCapture(nullKiller) && getSquareTo(nullKiller) != getSquareFrom(m)) lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -998,7 +1008,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = depth - 2;
             }
         }
-        
+
         // doing the move
         b->move(m);
         
@@ -1045,6 +1055,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // also set this move as a killer move into the history
             if (!isCapture(m))
                 sd->setKiller(m, ply, b->getActivePlayer());
+
+            if (!b->getPreviousMove()) sd->nullKiller[ply] = m;
             // if the move is not a capture, we also update counter move history tables and history scores.
             
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
