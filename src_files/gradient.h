@@ -189,10 +189,10 @@ namespace tuning {
         Weight w_features[I_END]{};
         Weight w_bishop_pawn_e[9]{};
         Weight w_bishop_pawn_o[9]{};
-        Weight w_king_safety[100]{};
         Weight w_passer[8]{};
         Weight w_candidate[8]{};
         Weight w_pinned[15]{};
+        Weight w_king_safety_attack_weight[6]{};
         Weight w_hanging[5]{};
     };
 
@@ -445,32 +445,22 @@ namespace tuning {
 
     struct KingSafetyData {
         // we only need to store one index for the white and black king
-
-        int8_t wkingsafety_index;
-        int8_t bkingsafety_index;
-
+    
+        int8_t attackValues [N_COLORS][N_PIECE_TYPES];
+        int8_t attackCount  [N_COLORS]{};
+    
         void init(Board *b, EvalData *ev) {
-
+        
             U64 k;
             Square square;
             U64 attacks;
             U64 occupied = (b->getOccupiedBB());
-
-            static int factors[6] = {0, 2, 2, 3, 4};
-
+        
             Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
             Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);
-
-            U64 whiteKingZone = KING_ATTACKS[whiteKingSquare];
-            U64 blackKingZone = KING_ATTACKS[blackKingSquare];
-
-            int wkingSafety_attPiecesCount = 0;
-            int wkingSafety_valueOfAttacks = 0;
-
-            int bkingSafety_attPiecesCount = 0;
-            int bkingSafety_valueOfAttacks = 0;
-
-            for (Piece p = KNIGHT; p <= QUEEN; p++) {
+        
+        
+            for (PieceType p = KNIGHT; p <= QUEEN; p++) {
                 for (int c= 0; c <= 1; c++) {
                     k = b->getPieceBB(c, p);
                     while (k) {
@@ -482,54 +472,74 @@ namespace tuning {
                                 break;
                             case BISHOP:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
+                                    lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, QUEEN));
                                 break;
                             case QUEEN:
                                 attacks =
-                                        lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, BISHOP)) |
-                                        lookUpRookAttack    (square, occupied &~b->getPieceBB(c, ROOK));
+                                    lookUpBishopAttack  (square, occupied &~b->getPieceBB(c, BISHOP)) |
+                                    lookUpRookAttack    (square, occupied &~b->getPieceBB(c, ROOK));
                                 break;
                             case ROOK:
                                 attacks =
-                                        lookUpRookAttack    (square,occupied &
-                                                                    ~b->getPieceBB(c, QUEEN)&
-                                                                    ~b->getPieceBB(c, ROOK));
+                                    lookUpRookAttack    (square,occupied &
+                                                                ~b->getPieceBB(c, QUEEN)&
+                                                                ~b->getPieceBB(c, ROOK));
                                 break;
                         }
-                        if (c == WHITE) {
-                            addToKingSafety(attacks, blackKingZone, bkingSafety_attPiecesCount,
-                                            bkingSafety_valueOfAttacks,
-                                            factors[p]);
-                        } else {
-                            addToKingSafety(attacks, whiteKingZone, wkingSafety_attPiecesCount,
-                                            wkingSafety_valueOfAttacks,
-                                            factors[p]);
+                    
+                    
+                        if(ev->kingZone[!c] & attacks){
+                            attackValues[!c][p] += bitCount(ev->kingZone[!c] & attacks);
+                            attackCount [!c]    += 1;
                         }
-
+                    
                         k = lsbReset(k);
                     }
                 }
             }
-
-            wkingsafety_index = wkingSafety_valueOfAttacks;
-            bkingsafety_index = bkingSafety_valueOfAttacks;
         }
 
         void evaluate(float &midgame, float &endgame, ThreadData* td) {
-            midgame += td->w_king_safety[bkingsafety_index].midgame.value - td->w_king_safety[wkingsafety_index].midgame.value;
-            endgame += td->w_king_safety[bkingsafety_index].endgame.value - td->w_king_safety[wkingsafety_index].endgame.value;
+            const static int attackScale[8] {0,0,50,75,88,94,97,99};
+            
+            for(Color c:{WHITE, BLACK}){
+        
+                float attackValue = 0;
+                for(int i = 0; i < 6; i++){
+                    attackValue += td->w_king_safety_attack_weight[i].midgame.value * attackValues[c][i];
+                }
+        
+                float danger = attackValue * attackScale[attackCount[c]] / 100.0;
+                
+        
+                float midgameChange = - danger;
+                float endgameChange = 0;
+        
+                if(c == WHITE){
+                    midgame += midgameChange;
+                    endgame += endgameChange;
+                }else{
+                    midgame -= midgameChange;
+                    endgame -= endgameChange;
+                }
+            }
         }
     
         void gradient(float &mg_grad, float &eg_grad, ThreadData* td) {
-            td->w_king_safety[bkingsafety_index].midgame.gradient +=
-                    mg_grad;
-            td->w_king_safety[bkingsafety_index].endgame.gradient +=
-                    eg_grad;
-
-            td->w_king_safety[wkingsafety_index].midgame.gradient -=
-                    mg_grad;
-            td->w_king_safety[wkingsafety_index].endgame.gradient -=
-                    eg_grad;
+            const static int attackScale[8] {0,0,50,75,88,94,97,99};
+            for(Color c:{WHITE, BLACK}){
+        
+                float danger_grad = - 1 * mg_grad + 0 * eg_grad;
+                if(c == BLACK) danger_grad = -danger_grad;
+        
+                danger_grad *= attackScale[attackCount[c]] / 100.0;
+                
+                // compute gradients for attack weights
+                for(PieceType pt = 0; pt < 6; pt++){
+                    td->w_king_safety_attack_weight[pt].midgame.gradient += danger_grad * attackValues[c][pt];
+                }
+        
+            }
         }
     };
 
@@ -1293,222 +1303,219 @@ namespace tuning {
 
     std::vector<TrainEntry> positions{};
 
-    void load_weights() {
-        for (int t = 0; t < N_THREAD; t++) {
-            for (int i = 0; i < 6; i++) {
-
-                for (int n = 0; n < 2; n++) {
-                    for (int j = 0; j < 64; j++) {
-                        float w1 = MgScore(piece_square_table[i][n][j] + piece_values[i]);
-                        float w2 = EgScore(piece_square_table[i][n][j] + piece_values[i]);
-                        threadData[t].w_piece_square_table[i][n][j] = {{w1},
-                                                                       {w2}};
-                    }
-                }
-
-                if (i < 5) {
-
-                    for (int n = 0; n < 15 * 15; n++) {
-                        threadData[t].w_piece_opp_king_square_table[i][n].set(piece_opp_king_square_table[i][n]);
-
-                        threadData[t].w_piece_our_king_square_table[i][n].set(piece_our_king_square_table[i][n]);
-                    }
-
-                    for (int n = 0; n < mobEntryCount[i]; n++) {
-                        threadData[t].w_mobility[i][n].set(mobilities[i][n]);
-                    }
-
-                }
-            }
-            for (int i = 0; i < 1000; i++) {
-                if (i < I_END) {
-                    threadData[t].w_features[i].set(*evfeatures[i]);
-                }
-                if (i < 9) {
-                    threadData[t].w_bishop_pawn_e[i].set(bishop_pawn_same_color_table_e[i]);
-                    threadData[t].w_bishop_pawn_o[i].set(bishop_pawn_same_color_table_o[i]);
-                }
-
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].set(kingSafetyTable[i]);
-                }
-                if (i < 8) {
-                    threadData[t].w_passer[i].set(passer_rank_n[i]);
-                    threadData[t].w_candidate[i].set(candidate_passer[i]);
-                }
-                if (i < 15) {
-                    threadData[t].w_pinned[i].set(pinnedEval[i]);
-                }
-                if (i < 5) {
-                    threadData[t].w_hanging[i].set(hangingEval[i]);
-                }
-            }
-        }
-
-    }
-
-    void merge_gradients() {
-        for (int t = 1; t < N_THREAD; t++) {
-            for (int i = 0; i < 6; i++) {
-
-                for (int n = 0; n < 2; n++) {
-                    for (int j = 0; j < 64; j++) {
-                        threadData[t].w_piece_square_table[i][n][j].merge(threadData[0].w_piece_square_table[i][n][j]);
-                    }
-                }
-
-                if (i < 5) {
-
-                    for (int n = 0; n < 15 * 15; n++) {
-                        threadData[t].w_piece_opp_king_square_table[i][n].merge(threadData[0].w_piece_opp_king_square_table[i][n]);
-                        threadData[t].w_piece_our_king_square_table[i][n].merge(threadData[0].w_piece_our_king_square_table[i][n]);
-                    }
-
-                    for (int n = 0; n < mobEntryCount[i]; n++) {
-                        threadData[t].w_mobility[i][n].merge(threadData[0].w_mobility[i][n]);
-                    }
-
-                }
-            }
-            for (int i = 0; i < 1000; i++) {
-                if (i < I_END) {
-                    threadData[t].w_features[i].merge(threadData[0].w_features[i]);
-                }
-                if (i < 9) {
-                    threadData[t].w_bishop_pawn_e[i].merge(threadData[0].w_bishop_pawn_e[i]);
-                    threadData[t].w_bishop_pawn_o[i].merge(threadData[0].w_bishop_pawn_o[i]);
-                }
-
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].merge(threadData[0].w_king_safety[i]);
-
-                }
-                if (i < 8) {
-                    threadData[t].w_passer[i].merge(threadData[0].w_passer[i]);
-                    threadData[t].w_candidate[i].merge(threadData[0].w_candidate[i]);
-                }
-                if (i < 15) {
-
-                    threadData[t].w_pinned[i].merge(threadData[0].w_pinned[i]);
-
-                }
-                if (i < 5) {
-                    threadData[t].w_hanging[i].merge(threadData[0].w_hanging[i]);
-
-                }
-            }
-        }
-    }
-
-    void share_weights() {
-        for (int t = 1; t < N_THREAD; t++) {
-            for (int i = 0; i < 6; i++) {
-
-                for (int n = 0; n < 2; n++) {
-                    for (int j = 0; j < 64; j++) {
-                        threadData[t].w_piece_square_table[i][n][j].set(threadData[0].w_piece_square_table[i][n][j]);
-                    }
-                }
-
-                if (i < 5) {
-
-                    for (int n = 0; n < 15 * 15; n++) {
-                        threadData[t].w_piece_opp_king_square_table[i][n].set(threadData[0].w_piece_opp_king_square_table[i][n]);
-                        threadData[t].w_piece_our_king_square_table[i][n].set(threadData[0].w_piece_our_king_square_table[i][n]);
-                    }
-
-                    for (int n = 0; n < mobEntryCount[i]; n++) {
-                        threadData[t].w_mobility[i][n].set(threadData[0].w_mobility[i][n]);
-                    }
-
-                }
-            }
-            for (int i = 0; i < 1000; i++) {
-                if (i < I_END) {
-                    threadData[t].w_features[i].set(threadData[0].w_features[i]);
-                }
-                if (i < 9) {
-                    threadData[t].w_bishop_pawn_e[i].set(threadData[0].w_bishop_pawn_e[i]);
-                    threadData[t].w_bishop_pawn_o[i].set(threadData[0].w_bishop_pawn_o[i]);
-                }
-
-                if (i < 100) {
-                    threadData[t].w_king_safety[i].set(threadData[0].w_king_safety[i]);
-
-                }
-                if (i < 8) {
-                    threadData[t].w_passer[i].set(threadData[0].w_passer[i]);
-                    threadData[t].w_candidate[i].set(threadData[0].w_candidate[i]);
-                }
-                if (i < 15) {
-
-                    threadData[t].w_pinned[i].set(threadData[0].w_pinned[i]);
-
-                }
-                if (i < 5) {
-                    threadData[t].w_hanging[i].set(threadData[0].w_hanging[i]);
-
-                }
-            }
-        }
-    }
-
-    void adjust_weights(float eta) {
-
-        merge_gradients();
-
+void load_weights() {
+    for (int t = 0; t < N_THREAD; t++) {
         for (int i = 0; i < 6; i++) {
-
+            
             for (int n = 0; n < 2; n++) {
                 for (int j = 0; j < 64; j++) {
-                    threadData[0].w_piece_square_table[i][n][j].update(eta);
+                    float w1 = MgScore(piece_square_table[i][n][j] + piece_values[i]);
+                    float w2 = EgScore(piece_square_table[i][n][j] + piece_values[i]);
+                    threadData[t].w_piece_square_table[i][n][j] = {{w1},
+                                                                   {w2}};
                 }
             }
-
+            
             if (i < 5) {
-
-                if (i == PAWN || i == QUEEN) {
-                    for (int n = 0; n < 15 * 15; n++) {
-                        threadData[0].w_piece_opp_king_square_table[i][n].update(eta);
-                        threadData[0].w_piece_our_king_square_table[i][n].update(eta);
-                    }
+                
+                for (int n = 0; n < 15 * 15; n++) {
+                    threadData[t].w_piece_opp_king_square_table[i][n].set(piece_opp_king_square_table[i][n]);
+                    
+                    threadData[t].w_piece_our_king_square_table[i][n].set(piece_our_king_square_table[i][n]);
                 }
-
-
+                
                 for (int n = 0; n < mobEntryCount[i]; n++) {
-                    threadData[0].w_mobility[i][n].update(eta);
+                    threadData[t].w_mobility[i][n].set(mobilities[i][n]);
                 }
-
+                
             }
         }
         for (int i = 0; i < 1000; i++) {
             if (i < I_END) {
-                threadData[0].w_features[i].update(eta);
+                threadData[t].w_features[i].set(*evfeatures[i]);
             }
             if (i < 9) {
-                threadData[0].w_bishop_pawn_e[i].update(eta);
+                threadData[t].w_bishop_pawn_e[i].set(bishop_pawn_same_color_table_e[i]);
+                threadData[t].w_bishop_pawn_o[i].set(bishop_pawn_same_color_table_o[i]);
             }
-            if (i < 9) {
-                threadData[0].w_bishop_pawn_o[i].update(eta);
-            }
-            if (i < 100) {
-                threadData[0].w_king_safety[i].update(eta);
-            }
+            
             if (i < 8) {
-                threadData[0].w_passer[i].update(eta);
-                threadData[0].w_candidate[i].update(eta);
+                threadData[t].w_passer[i].set(passer_rank_n[i]);
+                threadData[t].w_candidate[i].set(candidate_passer[i]);
             }
             if (i < 15) {
-                threadData[0].w_pinned[i].update(eta);
+                threadData[t].w_pinned[i].set(pinnedEval[i]);
             }
             if (i < 5) {
-                threadData[0].w_hanging[i].update(eta);
+                threadData[t].w_hanging[i].set(hangingEval[i]);
+            }
+            if (i < 6){
+                threadData[t].w_king_safety_attack_weight[i] = {kingSafetyAttackWeights[i], 0};
             }
         }
-
-        share_weights();
     }
+    
+}
 
+void merge_gradients() {
+    for (int t = 1; t < N_THREAD; t++) {
+        for (int i = 0; i < 6; i++) {
+            
+            for (int n = 0; n < 2; n++) {
+                for (int j = 0; j < 64; j++) {
+                    threadData[t].w_piece_square_table[i][n][j].merge(threadData[0].w_piece_square_table[i][n][j]);
+                }
+            }
+            
+            if (i < 5) {
+                
+                for (int n = 0; n < 15 * 15; n++) {
+                    threadData[t].w_piece_opp_king_square_table[i][n].merge(threadData[0].w_piece_opp_king_square_table[i][n]);
+                    threadData[t].w_piece_our_king_square_table[i][n].merge(threadData[0].w_piece_our_king_square_table[i][n]);
+                }
+                
+                for (int n = 0; n < mobEntryCount[i]; n++) {
+                    threadData[t].w_mobility[i][n].merge(threadData[0].w_mobility[i][n]);
+                }
+                
+            }
+        }
+        for (int i = 0; i < 1000; i++) {
+            if (i < I_END) {
+                threadData[t].w_features[i].merge(threadData[0].w_features[i]);
+            }
+            if (i < 9) {
+                threadData[t].w_bishop_pawn_e[i].merge(threadData[0].w_bishop_pawn_e[i]);
+                threadData[t].w_bishop_pawn_o[i].merge(threadData[0].w_bishop_pawn_o[i]);
+            }
+            
+            if (i < 8) {
+                threadData[t].w_passer[i].merge(threadData[0].w_passer[i]);
+                threadData[t].w_candidate[i].merge(threadData[0].w_candidate[i]);
+            }
+            if (i < 15) {
+                
+                threadData[t].w_pinned[i].merge(threadData[0].w_pinned[i]);
+                
+            }
+            if (i < 5) {
+                threadData[t].w_hanging[i].merge(threadData[0].w_hanging[i]);
+                
+            }
+            if (i < 6){
+                threadData[t].w_king_safety_attack_weight[i].merge(threadData[0].w_king_safety_attack_weight[i]);
+            }
+        }
+    }
+}
+
+void share_weights() {
+    for (int t = 1; t < N_THREAD; t++) {
+        for (int i = 0; i < 6; i++) {
+            
+            for (int n = 0; n < 2; n++) {
+                for (int j = 0; j < 64; j++) {
+                    threadData[t].w_piece_square_table[i][n][j].set(threadData[0].w_piece_square_table[i][n][j]);
+                }
+            }
+            
+            if (i < 5) {
+                
+                for (int n = 0; n < 15 * 15; n++) {
+                    threadData[t].w_piece_opp_king_square_table[i][n].set(threadData[0].w_piece_opp_king_square_table[i][n]);
+                    threadData[t].w_piece_our_king_square_table[i][n].set(threadData[0].w_piece_our_king_square_table[i][n]);
+                }
+                
+                for (int n = 0; n < mobEntryCount[i]; n++) {
+                    threadData[t].w_mobility[i][n].set(threadData[0].w_mobility[i][n]);
+                }
+                
+            }
+        }
+        for (int i = 0; i < 1000; i++) {
+            if (i < I_END) {
+                threadData[t].w_features[i].set(threadData[0].w_features[i]);
+            }
+            if (i < 9) {
+                threadData[t].w_bishop_pawn_e[i].set(threadData[0].w_bishop_pawn_e[i]);
+                threadData[t].w_bishop_pawn_o[i].set(threadData[0].w_bishop_pawn_o[i]);
+            }
+            if (i < 8) {
+                threadData[t].w_passer[i].set(threadData[0].w_passer[i]);
+                threadData[t].w_candidate[i].set(threadData[0].w_candidate[i]);
+            }
+            if (i < 15) {
+                
+                threadData[t].w_pinned[i].set(threadData[0].w_pinned[i]);
+                
+            }
+            if (i < 5) {
+                threadData[t].w_hanging[i].set(threadData[0].w_hanging[i]);
+                
+            }
+            if (i < 6) {
+                threadData[t].w_king_safety_attack_weight[i].set(threadData[0].w_king_safety_attack_weight[i]);
+                
+            }
+        }
+    }
+}
+
+void adjust_weights(float eta) {
+    
+    merge_gradients();
+    
+    for (int i = 0; i < 6; i++) {
+        
+        for (int n = 0; n < 2; n++) {
+            for (int j = 0; j < 64; j++) {
+                threadData[0].w_piece_square_table[i][n][j].update(eta);
+            }
+        }
+        
+        if (i < 5) {
+            
+            if (i == PAWN || i == QUEEN) {
+                for (int n = 0; n < 15 * 15; n++) {
+                    threadData[0].w_piece_opp_king_square_table[i][n].update(eta);
+                    threadData[0].w_piece_our_king_square_table[i][n].update(eta);
+                }
+            }
+            
+            
+            for (int n = 0; n < mobEntryCount[i]; n++) {
+                threadData[0].w_mobility[i][n].update(eta);
+            }
+            
+        }
+    }
+    for (int i = 0; i < 1000; i++) {
+        if (i < I_END) {
+            threadData[0].w_features[i].update(eta);
+        }
+        if (i < 9) {
+            threadData[0].w_bishop_pawn_e[i].update(eta);
+        }
+        if (i < 9) {
+            threadData[0].w_bishop_pawn_o[i].update(eta);
+        }
+        if (i < 8) {
+            threadData[0].w_passer[i].update(eta);
+            threadData[0].w_candidate[i].update(eta);
+        }
+        if (i < 15) {
+            threadData[0].w_pinned[i].update(eta);
+        }
+        if (i < 5) {
+            threadData[0].w_hanging[i].update(eta);
+        }
+        if (i < 6) {
+            threadData[0].w_king_safety_attack_weight[i].update(eta);
+        }
+    }
+    
+    share_weights();
+}
     void load_positions(const std::string &path, int count, int start=0) {
 
         positions.reserve(positions.size() + count);
@@ -1762,11 +1769,10 @@ namespace tuning {
         }
         std::cout << "};\n" << std::endl;
 
-        // --------------------------------- kingSafetyTable ---------------------------------
-        std::cout << "EvalScore kingSafetyTable[100] = {";
-        for (int n = 0; n < 100; n++) {
-            if (n % 5 == 0) std::cout << std::endl << "\t";
-            std::cout << threadData[0].w_king_safety[n] << ", ";
+        // --------------------------------- king safety ---------------------------------
+        std::cout << "int kingSafetyAttackWeights[6]{";
+        for(PieceType pt = 0; pt < 6; pt++){
+            std::cout << round(threadData[0].w_king_safety_attack_weight[pt].midgame.value) << ", ";
         }
         std::cout << "};\n" << std::endl;
 

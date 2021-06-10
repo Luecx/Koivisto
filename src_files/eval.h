@@ -31,15 +31,14 @@ extern EvalScore  hangingEval[5];
 extern EvalScore  pinnedEval[15];
 extern EvalScore* mobilities[N_PIECE_TYPES];
 extern int        mobEntryCount[N_PIECE_TYPES];
+extern int        kingSafetyAttackWeights[N_PIECE_TYPES];
 extern float phaseValues[N_PIECE_TYPES];
-extern EvalScore kingSafetyTable[100];
 extern EvalScore passer_rank_n[N_RANKS];
 extern EvalScore candidate_passer[N_RANKS];
 
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
-void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 struct EvalData{
     
