@@ -36,21 +36,21 @@ move::Move MoveOrderer::next(U64 kingBB) {
     if (skip) {    
         for (int i = counter; i < moves->getSize(); i++) {
             moves->scoreMove(i, 0);
-            if (isCapture(moves->getMove(i)) || (kingBB & (ONE << getSquareTo(moves->getMove(i))))) {
+            if (isCapture(moves->moves[i]) || (kingBB & (ONE << getSquareTo(moves->moves[i])))) {
                 counter = i+1;
-                return moves->getMove(i);
+                return moves->moves[i];
             }
         }
         return 0;
     }
     int bestIndex = counter;
     // Move best = moves->getMove(0);
-    for (int i = counter + 1; i < moves->getSize(); i++) {
-        if (moves->getScore(i) > moves->getScore(bestIndex)) {
+    for (int i = counter + 1; i < moves->size; i++) {
+        if (moves->scores[i] > moves->scores[bestIndex]) {
             bestIndex = i;
         }
     }
-    moves->scoreMove(bestIndex, 0);
+     moves->scores[bestIndex] = 0;
     moves->swap(bestIndex, counter);
-    return moves->getMove(counter++);
+    return moves->moves[counter++];
 }
