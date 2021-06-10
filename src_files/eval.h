@@ -47,6 +47,7 @@ struct EvalData{
     U64 attacks         [N_COLORS][N_PIECE_TYPES]{};
     U64 kingZone        [N_COLORS]{};
     U64 allAttacks      [N_COLORS]{};
+    U64 twoAttacks      [N_COLORS]{};
     U64 semiOpen        [N_COLORS]{};
     U64 pawnEastAttacks [N_COLORS]{};
     U64 pawnWestAttacks [N_COLORS]{};
@@ -84,7 +85,7 @@ class Evaluator {
     EvalScore computeKings(Board* b);
     
     template<Color color>
-    EvalScore computeKingSafety(Board* b, EvalData* ev);
+    EvalScore computeKingSafety(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 

@@ -493,7 +493,7 @@ struct KingSafetyData {
         }
 
         for (Color color: {WHITE, BLACK}) {
-            U64 weak = ev->allAttacks[!color] & 
+            U64 weak = ev->allAttacks[!color] & ~ev->twoAttacks[color] &
                 (~ev->allAttacks[color] | ev->attacks[color][QUEEN] | ev->attacks[color][KING]);
                             
             weakSqs[color] = bitCount(ev->kingZone[color] & weak);
