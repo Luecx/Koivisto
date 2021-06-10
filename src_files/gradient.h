@@ -189,6 +189,7 @@ struct ThreadData {
     Weight w_king_safety_attack_weight[6] {};
     Weight w_king_safety_attack_scale[8] {};
     Weight w_king_safety_weak_squares;
+    Weight w_king_safety_no_e_queen;
     Weight w_hanging[5] {};
 };
 
@@ -447,6 +448,7 @@ struct KingSafetyData {
     int8_t attackValues[N_COLORS][N_PIECE_TYPES];
     int8_t attackCount[N_COLORS] {};
     int8_t weakSqs[N_COLORS] {};
+    int8_t noEnemyQueen[N_COLORS] {};
     float danger[N_COLORS]{};
 
     void   init(Board* b, EvalData* ev) {
@@ -493,8 +495,9 @@ struct KingSafetyData {
         for (Color color: {WHITE, BLACK}) {
             U64 weak = ev->allAttacks[!color] & 
                 (~ev->allAttacks[color] | ev->attacks[color][QUEEN] | ev->attacks[color][KING]);
-                
+                            
             weakSqs[color] = bitCount(ev->kingZone[color] & weak);
+            noEnemyQueen[color] = !b->getPieceBB(!color, QUEEN);
         }
     }
 
@@ -506,7 +509,8 @@ struct KingSafetyData {
             }
             
             danger[c] = attackValue * attackCount[c]
-                        + (td->w_king_safety_weak_squares.midgame.value * weakSqs[c]);
+                        + (td->w_king_safety_weak_squares.midgame.value * weakSqs[c])
+                        + (td->w_king_safety_no_e_queen.midgame.value * noEnemyQueen[c]);
 
             float mg = -danger[c] * std::fmax(danger[c], 0) / 1024;
             float eg = -std::fmax(danger[c], 0) / 32;
@@ -537,6 +541,11 @@ struct KingSafetyData {
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * weakSqs[c]);
             td->w_king_safety_weak_squares.midgame.gradient +=
                 (danger_grad / 32) * ((danger[c] > 0) * weakSqs[c]);
+
+            td->w_king_safety_no_e_queen.midgame.gradient +=
+                (danger_grad / 512) * (std::fmax(danger[c], 0) * noEnemyQueen[c]);
+            td->w_king_safety_no_e_queen.midgame.gradient +=
+                (danger_grad / 32) * ((danger[c] > 0) * noEnemyQueen[c]);
         }
     }
 };
@@ -1377,6 +1386,7 @@ void                    load_weights() {
         }
 
         threadData[t].w_king_safety_weak_squares = {KING_SAFETY_WEAK_SQUARES, 0};
+        threadData[t].w_king_safety_no_e_queen = {KING_SAFETY_NO_ENEMY_QUEEN, 0};
     }
 }
 
@@ -1436,6 +1446,7 @@ void merge_gradients() {
         }
 
         threadData[t].w_king_safety_weak_squares.merge(threadData[0].w_king_safety_weak_squares);
+        threadData[t].w_king_safety_no_e_queen.merge(threadData[0].w_king_safety_no_e_queen);
     }
 }
 
@@ -1494,6 +1505,7 @@ void share_weights() {
         }
 
         threadData[t].w_king_safety_weak_squares.set(threadData[0].w_king_safety_weak_squares);
+        threadData[t].w_king_safety_no_e_queen.set(threadData[0].w_king_safety_no_e_queen);
     }
 }
 
@@ -1552,6 +1564,7 @@ void adjust_weights(float eta) {
     }
 
     threadData[0].w_king_safety_weak_squares.update(eta);
+    threadData[0].w_king_safety_no_e_queen.update(eta);
 
     share_weights();
 }
@@ -1823,6 +1836,9 @@ void display_params() {
 
     std::cout << "int KING_SAFETY_WEAK_SQUARES = ";
     std::cout << round(threadData[0].w_king_safety_weak_squares.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int KING_SAFETY_NO_ENEMY_QUEEN = ";
+    std::cout << round(threadData[0].w_king_safety_no_e_queen.midgame.value) << ";\n" << std::endl;
 
     std::cout << "int kingSafetyAttackWeights[N_PIECE_TYPES]{";
     for (PieceType pt = 0; pt < 6; pt++) {

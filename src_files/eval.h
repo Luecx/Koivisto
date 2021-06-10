@@ -37,6 +37,7 @@ extern EvalScore  passer_rank_n                 [N_RANKS];
 extern EvalScore  candidate_passer              [N_RANKS];
 
 extern int KING_SAFETY_WEAK_SQUARES;
+extern int KING_SAFETY_NO_ENEMY_QUEEN;
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
