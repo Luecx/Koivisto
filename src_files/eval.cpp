@@ -640,13 +640,26 @@ EvalScore Evaluator::computeKings(Board* b) {
     return res;
 }
 
+/**
+ * @brief King safety within Koivisto is heavily inspired by the engines coming before it.
+ * Concepts for how this is written come from SF, Ethereal, the Toga Log, Rebel's Documentation,
+ * and the CPW page. Tuning this was successful using Andrew Grant's concepts found in his
+ * texel tuning paper.
+ * 
+ * @tparam color 
+ * @param b 
+ * @return EvalScore 
+ */
 template<Color color>
 EvalScore Evaluator::computeKingSafety(Board* b) {
+    // Weak squares are those which are threatened by enemy and not defended by piece that isn't a K or Q
     U64 weak = evalData.allAttacks[!color] & ~evalData.twoAttacks[color] &
         (~evalData.allAttacks[color] | evalData.attacks[color][QUEEN] | evalData.attacks[color][KING]);
+    int nWeakSqs = bitCount(evalData.kingZone[color] & weak);
+
+    // Vulnerable squares are those open for movement by the enemy
     U64 vulnerable = (~evalData.allAttacks[color] | (weak & evalData.twoAttacks[!color])) 
         & ~b->getTeamOccupiedBB(!color);
-
     U64 queenChecks = (lookUpBishopAttack(evalData.kingSquare[color], b->getOccupiedBB()) | 
                        lookUpRookAttack(evalData.kingSquare[color], b->getOccupiedBB()))
         & evalData.attacks[!color][QUEEN] & ~b->getTeamOccupiedBB(!color);
@@ -657,20 +670,21 @@ EvalScore Evaluator::computeKingSafety(Board* b) {
     U64 knightChecks = KNIGHT_ATTACKS[evalData.kingSquare[color]]
         & evalData.attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
 
-    int nWeakSqs = bitCount(evalData.kingZone[color] & weak);
-    int noEnemyQueen = !b->getPieceBB(!color, QUEEN);
     int safeQueenChecks = bitCount(queenChecks & vulnerable);
     int safeRookChecks = bitCount(rookChecks & vulnerable);
     int safeBishopChecks = bitCount(bishopChecks & vulnerable);
     int safeKnightChecks = bitCount(knightChecks & vulnerable);
 
-    int danger = evalData.ksAttackValue[color] * evalData.ksAttackCount[color]
-                + (KING_SAFETY_WEAK_SQUARES * nWeakSqs)
-                + (KING_SAFETY_QUEEN_CHECK * safeQueenChecks)
-                + (KING_SAFETY_ROOK_CHECK * safeRookChecks)
-                + (KING_SAFETY_BISHOP_CHECK * safeBishopChecks)
-                + (KING_SAFETY_KNIGHT_CHECK * safeKnightChecks)
-                + (KING_SAFETY_NO_ENEMY_QUEEN * noEnemyQueen);
+    int noEnemyQueen = !b->getPieceBB(!color, QUEEN);
+
+
+    int danger = evalData.ksAttackValue[color] * evalData.ksAttackCount[color] // attack power concept
+                + (KING_SAFETY_WEAK_SQUARES * nWeakSqs)                        // Weak squares around the king
+                + (KING_SAFETY_QUEEN_CHECK * safeQueenChecks)                  // vulnerable to checks are bad
+                + (KING_SAFETY_ROOK_CHECK * safeRookChecks)                    //
+                + (KING_SAFETY_BISHOP_CHECK * safeBishopChecks)                //
+                + (KING_SAFETY_KNIGHT_CHECK * safeKnightChecks)                //
+                + (KING_SAFETY_NO_ENEMY_QUEEN * noEnemyQueen);                 // Way less in danger without queen
     
     return M(-danger * std::max(0, danger) / 1024, -std::max(0, danger) / 32);
 }
