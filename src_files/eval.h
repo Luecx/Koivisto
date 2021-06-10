@@ -36,6 +36,8 @@ extern float      phaseValues                   [N_PIECE_TYPES];
 extern EvalScore  passer_rank_n                 [N_RANKS];
 extern EvalScore  candidate_passer              [N_RANKS];
 
+extern int KING_SAFETY_WEAK_SQUARES;
+
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
 
@@ -81,7 +83,7 @@ class Evaluator {
     EvalScore computeKings(Board* b);
     
     template<Color color>
-    EvalScore computeKingSafety(Board* b);
+    EvalScore computeKingSafety(Board* b, EvalData* ev);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
