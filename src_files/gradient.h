@@ -93,11 +93,6 @@ enum feature_indices {
     I_CASTLING_RIGHTS,
     I_MINOR_BEHIND_PAWN,
 
-    I_SAFE_QUEEN_CHECK,
-    I_SAFE_ROOK_CHECK,
-    I_SAFE_BISHOP_CHECK,
-    I_SAFE_KNIGHT_CHECK,
-
     I_PAWN_ATTACK_MINOR,
     I_PAWN_ATTACK_ROOK,
     I_PAWN_ATTACK_QUEEN,
@@ -189,6 +184,10 @@ struct ThreadData {
     Weight w_king_safety_attack_weight[6] {};
     Weight w_king_safety_attack_scale[8] {};
     Weight w_king_safety_weak_squares;
+    Weight w_king_safety_queen_check;
+    Weight w_king_safety_rook_check;
+    Weight w_king_safety_bishop_check;
+    Weight w_king_safety_knight_check;
     Weight w_king_safety_no_e_queen;
     Weight w_hanging[5] {};
 };
@@ -449,6 +448,10 @@ struct KingSafetyData {
     int8_t attackCount[N_COLORS] {};
     int8_t weakSqs[N_COLORS] {};
     int8_t noEnemyQueen[N_COLORS] {};
+    int8_t safeQueenChecks[N_COLORS] {};
+    int8_t safeRookChecks[N_COLORS] {};
+    int8_t safeBishopChecks[N_COLORS] {};
+    int8_t safeKnightChecks[N_COLORS] {};
     float danger[N_COLORS]{};
 
     void   init(Board* b, EvalData* ev) {
@@ -495,9 +498,25 @@ struct KingSafetyData {
         for (Color color: {WHITE, BLACK}) {
             U64 weak = ev->allAttacks[!color] & ~ev->twoAttacks[color] &
                 (~ev->allAttacks[color] | ev->attacks[color][QUEEN] | ev->attacks[color][KING]);
-                            
+            U64 vulnerable = (~ev->allAttacks[color] | (weak & ev->twoAttacks[!color])) 
+                & ~b->getTeamOccupiedBB(!color);
+
+            U64 queenChecks = (lookUpBishopAttack(ev->kingSquare[color], b->getOccupiedBB()) | 
+                            lookUpRookAttack(ev->kingSquare[color], b->getOccupiedBB()))
+                & ev->attacks[!color][QUEEN] & ~b->getTeamOccupiedBB(!color);
+            U64 rookChecks = lookUpRookAttack(ev->kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB(color, QUEEN))
+                & ev->attacks[!color][ROOK] & ~b->getTeamOccupiedBB(!color);
+            U64 bishopChecks = lookUpBishopAttack(ev->kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB(color, QUEEN))
+                & ev->attacks[!color][BISHOP] & ~b->getTeamOccupiedBB(!color);
+            U64 knightChecks = KNIGHT_ATTACKS[ev->kingSquare[color]]
+                & ev->attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
+
             weakSqs[color] = bitCount(ev->kingZone[color] & weak);
             noEnemyQueen[color] = !b->getPieceBB(!color, QUEEN);
+            safeQueenChecks[color] = bitCount(queenChecks & vulnerable);
+            safeRookChecks[color] = bitCount(rookChecks & vulnerable);
+            safeBishopChecks[color] = bitCount(bishopChecks & vulnerable);
+            safeKnightChecks[color] = bitCount(knightChecks & vulnerable);
         }
     }
 
@@ -510,7 +529,11 @@ struct KingSafetyData {
             
             danger[c] = attackValue * attackCount[c]
                         + (td->w_king_safety_weak_squares.midgame.value * weakSqs[c])
-                        + (td->w_king_safety_no_e_queen.midgame.value * noEnemyQueen[c]);
+                        + (td->w_king_safety_no_e_queen.midgame.value * noEnemyQueen[c])
+                        + (td->w_king_safety_queen_check.midgame.value * safeQueenChecks[c])
+                        + (td->w_king_safety_rook_check.midgame.value * safeRookChecks[c])
+                        + (td->w_king_safety_bishop_check.midgame.value * safeBishopChecks[c])
+                        + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c]);
 
             float mg = -danger[c] * std::fmax(danger[c], 0) / 1024;
             float eg = -std::fmax(danger[c], 0) / 32;
@@ -541,6 +564,26 @@ struct KingSafetyData {
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * weakSqs[c]);
             td->w_king_safety_weak_squares.midgame.gradient +=
                 (danger_grad / 32) * ((danger[c] > 0) * weakSqs[c]);
+
+            td->w_king_safety_queen_check.midgame.gradient +=
+                (danger_grad / 512) * (std::fmax(danger[c], 0) * safeQueenChecks[c]);
+            td->w_king_safety_queen_check.midgame.gradient +=
+                (danger_grad / 32) * ((danger[c] > 0) * safeQueenChecks[c]);
+
+            td->w_king_safety_rook_check.midgame.gradient +=
+                (danger_grad / 512) * (std::fmax(danger[c], 0) * safeRookChecks[c]);
+            td->w_king_safety_rook_check.midgame.gradient +=
+                (danger_grad / 32) * ((danger[c] > 0) * safeRookChecks[c]);
+
+            td->w_king_safety_bishop_check.midgame.gradient +=
+                (danger_grad / 512) * (std::fmax(danger[c], 0) * safeBishopChecks[c]);
+            td->w_king_safety_bishop_check.midgame.gradient +=
+                (danger_grad / 32) * ((danger[c] > 0) * safeBishopChecks[c]);
+
+            td->w_king_safety_knight_check.midgame.gradient +=
+                (danger_grad / 512) * (std::fmax(danger[c], 0) * safeKnightChecks[c]);
+            td->w_king_safety_knight_check.midgame.gradient +=
+                (danger_grad / 32) * ((danger[c] > 0) * safeKnightChecks[c]);
 
             td->w_king_safety_no_e_queen.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * noEnemyQueen[c]);
@@ -883,7 +926,6 @@ struct FeatureData {
             count[I_MINOR_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
             count[I_KNIGHT_OUTPOST] += isOutpost(square, WHITE, blackPawns, whitePawnCover);
             count[I_KNIGHT_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
-            count[I_SAFE_KNIGHT_CHECK] += bitCount(bKingKnightAttacks & attacks & ~blackPawnCover);
             k = lsbReset(k);
         }
 
@@ -895,7 +937,6 @@ struct FeatureData {
             count[I_MINOR_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
             count[I_KNIGHT_OUTPOST] -= isOutpost(square, BLACK, whitePawns, blackPawnCover);
             count[I_KNIGHT_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
-            count[I_SAFE_KNIGHT_CHECK] -= bitCount(wKingKnightAttacks & attacks & ~whitePawnCover);
             k = lsbReset(k);
         }
 
@@ -911,7 +952,6 @@ struct FeatureData {
                     bitCount(blackTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
             count[I_BISHOP_FIANCHETTO] += (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1);
             count[I_BISHOP_STUNTED] += !!(attacks & blackPawns & ev->attacks[BLACK][PAWN]);
-            count[I_SAFE_BISHOP_CHECK] += bitCount(bKingBishopAttacks & attacks & ~blackPawnCover);
             k = lsbReset(k);
         }
 
@@ -926,7 +966,6 @@ struct FeatureData {
                     bitCount(whiteTeam & (((ONE << square) & WHITE_SQUARES_BB) ? WHITE_SQUARES_BB : BLACK_SQUARES_BB));
             count[I_BISHOP_FIANCHETTO] -= (!(CENTER_SQUARES_BB & sqBB) && bitCount(CENTER_SQUARES_BB & lookUpBishopAttack(square, (whitePawns | blackPawns))) > 1);
             count[I_BISHOP_STUNTED] -= !!(attacks & whitePawns & ev->attacks[WHITE][PAWN]);
-            count[I_SAFE_BISHOP_CHECK] -= bitCount(wKingBishopAttacks & attacks & ~whitePawnCover);
 
             k = lsbReset(k);
         }
@@ -940,7 +979,6 @@ struct FeatureData {
             square  = bitscanForward(k);
             attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[WHITE_ROOK] & ~b->getPieceBB()[WHITE_QUEEN]);
             count[I_ROOK_ATTACK_QUEEN] += bitCount(attacks & b->getPieceBB<BLACK>(QUEEN));
-            count[I_SAFE_ROOK_CHECK] += bitCount(bKingRookAttacks & attacks & ~blackPawnCover);
 
             k = lsbReset(k);
         }
@@ -950,7 +988,6 @@ struct FeatureData {
             square  = bitscanForward(k);
             attacks = lookUpRookAttack(square, occupied & ~b->getPieceBB()[BLACK_ROOK] & ~b->getPieceBB()[BLACK_QUEEN]);
             count[I_ROOK_ATTACK_QUEEN] -= bitCount(attacks & b->getPieceBB<WHITE>(QUEEN));
-            count[I_SAFE_ROOK_CHECK] -= bitCount(wKingRookAttacks & attacks & ~whitePawnCover);
 
             k = lsbReset(k);
         }
@@ -971,7 +1008,6 @@ struct FeatureData {
             attacks = lookUpRookAttack  (square,    occupied & ~b->getPieceBB()[WHITE_ROOK])
                     | lookUpBishopAttack(square,    occupied & ~b->getPieceBB()[WHITE_BISHOP]);
             count[I_QUEEN_DISTANCE_ENEMY_KING] += manhattanDistance(square, blackKingSquare);
-            count[I_SAFE_QUEEN_CHECK]          += bitCount((bKingRookAttacks | bKingBishopAttacks) & attacks & ~blackPawnCover);
             k = lsbReset(k);
         }
 
@@ -981,7 +1017,6 @@ struct FeatureData {
             attacks = lookUpRookAttack  (square,    occupied & ~b->getPieceBB()[BLACK_ROOK])
                     | lookUpBishopAttack(square,    occupied & ~b->getPieceBB()[BLACK_BISHOP]);
             count[I_QUEEN_DISTANCE_ENEMY_KING] -= manhattanDistance(square, whiteKingSquare);
-            count[I_SAFE_QUEEN_CHECK]          -= bitCount((wKingRookAttacks | wKingBishopAttacks) & attacks & ~whitePawnCover);
             k = lsbReset(k);
         }
 
@@ -1387,6 +1422,10 @@ void                    load_weights() {
 
         threadData[t].w_king_safety_weak_squares = {KING_SAFETY_WEAK_SQUARES, 0};
         threadData[t].w_king_safety_no_e_queen = {KING_SAFETY_NO_ENEMY_QUEEN, 0};
+        threadData[t].w_king_safety_queen_check = {KING_SAFETY_QUEEN_CHECK, 0};
+        threadData[t].w_king_safety_rook_check = {KING_SAFETY_ROOK_CHECK, 0};
+        threadData[t].w_king_safety_bishop_check = {KING_SAFETY_BISHOP_CHECK, 0};
+        threadData[t].w_king_safety_knight_check = {KING_SAFETY_KNIGHT_CHECK, 0};
     }
 }
 
@@ -1447,6 +1486,10 @@ void merge_gradients() {
 
         threadData[t].w_king_safety_weak_squares.merge(threadData[0].w_king_safety_weak_squares);
         threadData[t].w_king_safety_no_e_queen.merge(threadData[0].w_king_safety_no_e_queen);
+        threadData[t].w_king_safety_queen_check.merge(threadData[0].w_king_safety_queen_check);
+        threadData[t].w_king_safety_rook_check.merge(threadData[0].w_king_safety_rook_check);
+        threadData[t].w_king_safety_bishop_check.merge(threadData[0].w_king_safety_bishop_check);
+        threadData[t].w_king_safety_knight_check.merge(threadData[0].w_king_safety_knight_check);
     }
 }
 
@@ -1506,6 +1549,10 @@ void share_weights() {
 
         threadData[t].w_king_safety_weak_squares.set(threadData[0].w_king_safety_weak_squares);
         threadData[t].w_king_safety_no_e_queen.set(threadData[0].w_king_safety_no_e_queen);
+        threadData[t].w_king_safety_queen_check.set(threadData[0].w_king_safety_queen_check);
+        threadData[t].w_king_safety_rook_check.set(threadData[0].w_king_safety_rook_check);
+        threadData[t].w_king_safety_bishop_check.set(threadData[0].w_king_safety_bishop_check);
+        threadData[t].w_king_safety_knight_check.set(threadData[0].w_king_safety_knight_check);
     }
 }
 
@@ -1565,6 +1612,10 @@ void adjust_weights(float eta) {
 
     threadData[0].w_king_safety_weak_squares.update(eta);
     threadData[0].w_king_safety_no_e_queen.update(eta);
+    threadData[0].w_king_safety_queen_check.update(eta);
+    threadData[0].w_king_safety_rook_check.update(eta);
+    threadData[0].w_king_safety_bishop_check.update(eta);
+    threadData[0].w_king_safety_knight_check.update(eta);
 
     share_weights();
 }
@@ -1739,10 +1790,6 @@ void display_params() {
         "KING_PAWN_SHIELD",
         "CASTLING_RIGHTS",
         "MINOR_BEHIND_PAWN",
-        "SAFE_QUEEN_CHECK",
-        "SAFE_ROOK_CHECK",
-        "SAFE_BISHOP_CHECK",
-        "SAFE_KNIGHT_CHECK",
         "PAWN_ATTACK_MINOR",
         "PAWN_ATTACK_ROOK",
         "PAWN_ATTACK_QUEEN",
@@ -1839,6 +1886,18 @@ void display_params() {
 
     std::cout << "int KING_SAFETY_NO_ENEMY_QUEEN = ";
     std::cout << round(threadData[0].w_king_safety_no_e_queen.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int KING_SAFETY_QUEEN_CHECK = ";
+    std::cout << round(threadData[0].w_king_safety_queen_check.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int KING_SAFETY_ROOK_CHECK = ";
+    std::cout << round(threadData[0].w_king_safety_rook_check.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int KING_SAFETY_BISHOP_CHECK = ";
+    std::cout << round(threadData[0].w_king_safety_bishop_check.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int KING_SAFETY_KNIGHT_CHECK = ";
+    std::cout << round(threadData[0].w_king_safety_knight_check.midgame.value) << ";\n" << std::endl;
 
     std::cout << "int kingSafetyAttackWeights[N_PIECE_TYPES]{";
     for (PieceType pt = 0; pt < 6; pt++) {

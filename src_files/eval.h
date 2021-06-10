@@ -36,6 +36,10 @@ extern float      phaseValues                   [N_PIECE_TYPES];
 extern EvalScore  passer_rank_n                 [N_RANKS];
 extern EvalScore  candidate_passer              [N_RANKS];
 
+extern int KING_SAFETY_QUEEN_CHECK;
+extern int KING_SAFETY_ROOK_CHECK;
+extern int KING_SAFETY_BISHOP_CHECK;
+extern int KING_SAFETY_KNIGHT_CHECK;
 extern int KING_SAFETY_WEAK_SQUARES;
 extern int KING_SAFETY_NO_ENEMY_QUEEN;
 
