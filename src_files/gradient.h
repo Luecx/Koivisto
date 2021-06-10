@@ -30,7 +30,7 @@
  * If it is a new array, ask Finn first
  *
  */
-//#define TUNING
+// #define TUNING
 #ifdef TUNING
 
 #include "Board.h"
@@ -479,8 +479,8 @@ struct KingSafetyData {
                     }
 
                     if (ev->kingZone[!c] & attacks) {
-                        attackValues[!c][p] += bitCount(ev->kingZone[!c] & attacks);
-                        attackCount[!c] += 1;
+                        attackValues[!c][p]++;
+                        attackCount[!c]++;
                     }
 
                     k = lsbReset(k);
@@ -499,7 +499,7 @@ struct KingSafetyData {
             }
 
             danger[c] =
-                attackValue * td->w_king_safety_attack_scale[attackCount[c]].midgame.value / 100.0;
+                attackValue * kingSafetyAttackScale[attackCount[c]] / 128.0;
 
             float midgameChange = -danger[c];
             float endgameChange = 0;
@@ -516,22 +516,15 @@ struct KingSafetyData {
 
     void gradient(float& mg_grad, float& eg_grad, ThreadData* td) {
         for (Color c : {WHITE, BLACK}) {
-            
-            
-            
-            float danger_grad = -1 * mg_grad + 0 * eg_grad;
+            float danger_grad = -1 * mg_grad;
+
             if (c == BLACK)
                 danger_grad = -danger_grad;
-            
-            td->w_king_safety_attack_scale[attackCount[c]].midgame.gradient += danger_grad * danger[c] / 100.0;
-            danger_grad *= td->w_king_safety_attack_scale[attackCount[c]].midgame.value / 100.0;
-            
-            
-            
+                    
             // compute gradients for attack weights
             for (PieceType pt = 0; pt < 6; pt++) {
                 td->w_king_safety_attack_weight[pt].midgame.gradient +=
-                  danger_grad * attackValues[c][pt];
+                  danger_grad * attackValues[c][pt] * kingSafetyAttackScale[attackCount[c]] / 128.0;
             }
         }
     }

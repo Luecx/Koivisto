@@ -23,8 +23,8 @@
 #include <iomanip>
 EvalScore SIDE_TO_MOVE                  = M(   14,   14);
 EvalScore PAWN_STRUCTURE                = M(    8,    2);
-EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -12,  -36);
-EvalScore PAWN_PASSED_AND_BLOCKED       = M(    1,  -36);
+EvalScore PAWN_PASSED_AND_DOUBLED       = M(  -12,  -35);
+EvalScore PAWN_PASSED_AND_BLOCKED       = M(    1,  -35);
 EvalScore PAWN_PASSED_COVERED_PROMO     = M(   -1,    8);
 EvalScore PAWN_PASSED_HELPER            = M(    2,    4);
 EvalScore PAWN_PASSED_AND_DEFENDED      = M(   11,    0);
@@ -35,85 +35,85 @@ EvalScore PAWN_ISOLATED                 = M(   -0,   -7);
 EvalScore PAWN_DOUBLED                  = M(   -6,   -7);
 EvalScore PAWN_DOUBLED_AND_ISOLATED     = M(   -5,  -21);
 EvalScore PAWN_BACKWARD                 = M(   -9,   -2);
-EvalScore PAWN_OPEN                     = M(   -9,  -10);
+EvalScore PAWN_OPEN                     = M(   -8,  -10);
 EvalScore PAWN_BLOCKED                  = M(   -4,   -9);
 EvalScore PAWN_CONNECTED                = M(    8,    8);
-EvalScore KNIGHT_OUTPOST                = M(   22,   19);
-EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -4,   -1);
+EvalScore KNIGHT_OUTPOST                = M(   22,   18);
+EvalScore KNIGHT_DISTANCE_ENEMY_KING    = M(   -5,   -1);
 EvalScore ROOK_OPEN_FILE                = M(   23,   -1);
 EvalScore ROOK_HALF_OPEN_FILE           = M(    1,   -9);
-EvalScore ROOK_KING_LINE                = M(    8,    6);
-EvalScore BISHOP_DOUBLED                = M(   13,   74);
-EvalScore BISHOP_FIANCHETTO             = M(   23,   29);
+EvalScore ROOK_KING_LINE                = M(   -1,    6);
+EvalScore BISHOP_DOUBLED                = M(   13,   73);
+EvalScore BISHOP_FIANCHETTO             = M(   23,   28);
 EvalScore BISHOP_STUNTED                = M(   -6,  -10);
 EvalScore BISHOP_PIECE_SAME_SQUARE_E    = M(    3,    3);
-EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(  -20,  -12);
-EvalScore KING_CLOSE_OPPONENT           = M(  -13,   14);
-EvalScore KING_PAWN_SHIELD              = M(   26,    8);
+EvalScore QUEEN_DISTANCE_ENEMY_KING     = M(  -22,  -13);
+EvalScore KING_CLOSE_OPPONENT           = M(  -22,   15);
+EvalScore KING_PAWN_SHIELD              = M(   26,    3);
 EvalScore CASTLING_RIGHTS               = M(   16,    1);
 EvalScore MINOR_BEHIND_PAWN             = M(    5,   19);
-EvalScore SAFE_QUEEN_CHECK              = M(    5,   27);
-EvalScore SAFE_ROOK_CHECK               = M(   11,    4);
+EvalScore SAFE_QUEEN_CHECK              = M(    6,   26);
+EvalScore SAFE_ROOK_CHECK               = M(   14,    4);
 EvalScore SAFE_BISHOP_CHECK             = M(    5,    4);
 EvalScore SAFE_KNIGHT_CHECK             = M(   11,    4);
-EvalScore PAWN_ATTACK_MINOR             = M(   38,   65);
+EvalScore PAWN_ATTACK_MINOR             = M(   38,   64);
 EvalScore PAWN_ATTACK_ROOK              = M(   39,   26);
-EvalScore PAWN_ATTACK_QUEEN             = M(   30,   28);
+EvalScore PAWN_ATTACK_QUEEN             = M(   29,   27);
 EvalScore MINOR_ATTACK_ROOK             = M(   33,   25);
-EvalScore MINOR_ATTACK_QUEEN            = M(   24,   37);
-EvalScore ROOK_ATTACK_QUEEN             = M(   31,   16);
+EvalScore MINOR_ATTACK_QUEEN            = M(   24,   36);
+EvalScore ROOK_ATTACK_QUEEN             = M(   31,   15);
 
 EvalScore mobilityKnight[9] = {
-    M(  -76,   12), M(  -66,   57), M(  -61,   83), M(  -57,   97), M(  -53,  107),
-    M(  -49,  116), M(  -43,  117), M(  -34,  112), M(  -21,   96), };
+        M(  -74,    8), M(  -64,   52), M(  -59,   78), M(  -55,   93), M(  -51,  102),
+        M(  -47,  111), M(  -41,  113), M(  -33,  107), M(  -20,   92), };
 
 EvalScore mobilityBishop[14] = {
-    M(  -21,  -10), M(  -12,   46), M(   -5,   73), M(   -1,   89), M(    3,  102),
-    M(    6,  112), M(    7,  119), M(    6,  123), M(    7,  126), M(   10,  124),
-    M(   16,  119), M(   31,  111), M(   40,  120), M(   63,   91), };
+        M(  -22,   -9), M(  -12,   47), M(   -5,   74), M(   -2,   90), M(    2,  102),
+        M(    6,  113), M(    6,  120), M(    5,  123), M(    7,  126), M(   10,  125), 
+        M(   16,  120), M(   31,  111), M(   42,  120), M(   64,   92), };
 
 EvalScore mobilityRook[15] = {
-    M(  -76,   79), M(  -70,  116), M(  -67,  148), M(  -66,  172), M(  -65,  186),
-    M(  -60,  193), M(  -54,  199), M(  -47,  202), M(  -43,  207), M(  -38,  213),
-    M(  -34,  217), M(  -30,  220), M(  -20,  218), M(    9,  200), M(   63,  169), };
+        M(  -78,   77), M(  -72,  113), M(  -70,  145), M(  -69,  169), M(  -68,  182),
+        M(  -62,  189), M(  -57,  195), M(  -50,  198), M(  -45,  203), M(  -41,  209),
+        M(  -37,  213), M(  -33,  217), M(  -23,  215), M(    6,  196), M(   60,  166), };
 
 EvalScore mobilityQueen[28] = {
-    M( -195,  141), M( -179,  143), M( -167,  243), M( -164,  309), M( -162,  344),
-    M( -161,  368), M( -160,  389), M( -158,  402), M( -157,  413), M( -154,  419),
-    M( -152,  424), M( -150,  427), M( -149,  429), M( -148,  432), M( -148,  434),
-    M( -149,  434), M( -149,  433), M( -149,  431), M( -147,  427), M( -139,  417),
-    M( -131,  404), M( -128,  395), M( -131,  387), M( -114,  371), M( -174,  396),
-    M(  -57,  310), M(  -89,  355), M( -197,  446), };
+        M( -195,  140), M( -179,  142), M( -168,  242), M( -164,  307), M( -162,  343),
+        M( -162,  366), M( -161,  387), M( -159,  400), M( -158,  410), M( -155,  416),
+        M( -153,  422), M( -151,  425), M( -150,  426), M( -149,  430), M( -149,  432),
+        M( -150,  432), M( -149,  430), M( -149,  429), M( -148,  425), M( -140,  415), 
+        M( -132,  402), M( -128,  393), M( -132,  385), M( -115,  369), M( -174,  393),
+        M(  -59,  308), M(  -91,  354), M( -194,  441), };
 
 EvalScore hangingEval[5] = {
-    M(   -3,   -1), M(   -3,   -1), M(   -5,   -6), M(   -4,   -4), M(   -3,   -6), };
+        M(   -3,   -1), M(   -4,   -1), M(   -5,   -6), M(   -4,   -4), M(   -3,   -7), };
 
 EvalScore pinnedEval[15] = {
-    M(    3,   -3), M(   -6,    8), M(   -6,   51), M(  -18,  -54), M(  -14,  -15),
-    M(  -17,   47), M(   -2,   -9), M(  -20,  -14), M(  -13,   35), M(  -10,  -10),
-    M(    8,  -10), M(  -13,   39), M(   12,  -19), M(   -4,  -31), M(  -16,   53), };
+        M(    3,   -3), M(   -2,    9), M(   -5,   49), M(  -18,  -53), M(  -10,  -13),
+        M(  -16,   45), M(   -1,   -8), M(  -15,  -13), M(  -12,   32), M(  -11,   -9),
+        M(   14,  -10), M(  -12,   38), M(   11,  -20), M(   -1,  -30), M(  -15,   52), };
 
 EvalScore passer_rank_n[N_RANKS] = {
-    M(    0,    0), M(  -13,    5), M(  -22,   19), M(  -15,   55),
-    M(   11,   92), M(   31,  152), M(   10,   61), M(    0,    0), };
+        M(    0,    0), M(  -13,    5), M(  -22,   19), M(  -16,   55),
+        M(   11,   91), M(   29,  151), M(    7,   60), M(    0,    0), };
 
 EvalScore candidate_passer[N_RANKS] = {
-    M(    0,    0), M(  -21,    6), M(   -6,   13), M(   -3,   23),
-    M(    3,   71), M(    4,   65), M(    0,    0), M(    0,    0), };
+        M(    0,    0), M(  -21,    6), M(   -6,   13), M(   -3,   23), 
+        M(    3,   70), M(    4,   65), M(    0,    0), M(    0,    0), };
 
 EvalScore bishop_pawn_same_color_table_o[9] = {
-    M(  -49,   39), M(  -55,   41), M(  -54,   28),
-    M(  -56,   19), M(  -58,   10), M(  -62,   -1),
-    M(  -64,  -17), M(  -63,  -31), M(  -70,  -69), };
+        M(  -50,   38), M(  -56,   40), M(  -55,   28),
+        M(  -57,   18), M(  -60,    9), M(  -63,   -2),
+        M(  -65,  -17), M(  -64,  -31), M(  -71,  -68), };
 
 EvalScore bishop_pawn_same_color_table_e[9] = {
-    M(  -38,   30), M(  -55,   42), M(  -59,   35),
-    M(  -63,   30), M(  -66,   22), M(  -69,   11),
-    M(  -70,   -3), M(  -68,  -13), M(  -76,  -21), };
+        M(  -39,   28), M(  -56,   39), M(  -60,   33),
+        M(  -65,   28), M(  -68,   21), M(  -71,   10),
+        M(  -71,   -4), M(  -70,  -14), M(  -78,  -20), };
 
-int kingSafetyAttackWeights[N_PIECE_TYPES]{0, 22, 12, 46, 58, 0, };
+int kingSafetyAttackWeights[N_PIECE_TYPES]{0, 32, 10, 61, 36, 0, };
 
-int kingSafetyAttackScale[N_FILES]{0, 0, 36, 66, 91, 105, 1453, 99, };
+int kingSafetyAttackScale[N_FILES]{0, 0, 64, 96, 112, 120, 124, 128, };
 
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
@@ -611,9 +611,8 @@ EvalScore Evaluator::computePieces(Board* b){
         
         // king safety
         if(evalData.kingZone[!color] &  attacks){
-            evalData.ksAttackValue[!color] += kingSafetyAttackWeights[pieceType] *
-                                              bitCount(evalData.kingZone[!color] &  attacks);
-            evalData.ksAttackCount[!color] += 1;
+            evalData.ksAttackValue[!color] += kingSafetyAttackWeights[pieceType];
+            evalData.ksAttackCount[!color]++;
         }
         
         k = lsbReset(k);
@@ -662,12 +661,10 @@ EvalScore Evaluator::computeKings(Board* b) {
 }
 
 template<Color color>
-EvalScore Evaluator::computeKingSafety(Board* b){
-
-    int danger = evalData.ksAttackValue[color] * kingSafetyAttackScale[evalData.ksAttackCount[color]] / 100;
-
-    EvalScore ev = M(-danger, 0);
-    return ev;
+EvalScore Evaluator::computeKingSafety(Board* b) {
+    int danger = evalData.ksAttackValue[color] * kingSafetyAttackScale[evalData.ksAttackCount[color]] / 128;
+    
+    return M(-danger, 0);
 }
 /**
  * evaluates the board.
