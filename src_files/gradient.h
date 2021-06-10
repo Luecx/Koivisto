@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 16
+#define N_THREAD 8
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -490,41 +490,37 @@ struct KingSafetyData {
     }
 
     void evaluate(float& midgame, float& endgame, ThreadData* td) {
-
         for (Color c : {WHITE, BLACK}) {
-
             float attackValue = 0;
             for (int i = 0; i < 6; i++) {
                 attackValue += td->w_king_safety_attack_weight[i].midgame.value * attackValues[c][i];
             }
+            
+            danger[c] = attackValue * attackCount[c];
 
-            danger[c] =
-                attackValue * kingSafetyAttackScale[attackCount[c]] / 128.0;
-
-            float midgameChange = -danger[c];
-            float endgameChange = 0;
+            float mg = -danger[c] * std::fmax(danger[c], 0) / 1024;
+            float eg = -std::fmax(danger[c], 0) / 32;
 
             if (c == WHITE) {
-                midgame += midgameChange;
-                endgame += endgameChange;
+                midgame += mg;
+                endgame += eg;
             } else {
-                midgame -= midgameChange;
-                endgame -= endgameChange;
+                midgame -= mg;
+                endgame -= eg;
             }
         }
     }
 
     void gradient(float& mg_grad, float& eg_grad, ThreadData* td) {
         for (Color c : {WHITE, BLACK}) {
-            float danger_grad = -1 * mg_grad;
-
-            if (c == BLACK)
-                danger_grad = -danger_grad;
+            float danger_grad = c == WHITE ? -mg_grad : mg_grad;
                     
             // compute gradients for attack weights
             for (PieceType pt = 0; pt < 6; pt++) {
                 td->w_king_safety_attack_weight[pt].midgame.gradient +=
-                  danger_grad * attackValues[c][pt] * kingSafetyAttackScale[attackCount[c]] / 128.0;
+                  (danger_grad / 512) * (std::fmax(danger[c], 0) * attackValues[c][pt]);
+                td->w_king_safety_attack_weight[pt].midgame.gradient +=
+                  (danger_grad / 32) * ((danger[c] > 0) * attackValues[c][pt]);
             }
         }
     }
