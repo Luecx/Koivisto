@@ -23,29 +23,35 @@
 #include "Board.h"
 #include "psqt.h"
 
-extern EvalScore bishop_pawn_same_color_table_o[9];
-extern EvalScore bishop_pawn_same_color_table_e[9];
+extern EvalScore  bishop_pawn_same_color_table_o[9];
+extern EvalScore  bishop_pawn_same_color_table_e[9];
+extern EvalScore* evfeatures                    [];
+extern EvalScore  hangingEval                   [5];
+extern EvalScore  pinnedEval                    [15];
+extern EvalScore* mobilities                    [N_PIECE_TYPES];
+extern int        mobEntryCount                 [N_PIECE_TYPES];
+extern int        kingSafetyAttackWeights       [N_PIECE_TYPES];
+extern int        kingSafetyAttackScale         [N_FILES];
+extern float      phaseValues                   [N_PIECE_TYPES];
+extern EvalScore  passer_rank_n                 [N_RANKS];
+extern EvalScore  candidate_passer              [N_RANKS];
 
-extern EvalScore* evfeatures[];
-extern EvalScore  hangingEval[5];
-extern EvalScore  pinnedEval[15];
-extern EvalScore* mobilities[N_PIECE_TYPES];
-extern int        mobEntryCount[N_PIECE_TYPES];
-extern float phaseValues[N_PIECE_TYPES];
-extern EvalScore kingSafetyTable[100];
-extern EvalScore passer_rank_n[N_RANKS];
-extern EvalScore candidate_passer[N_RANKS];
-
+extern int KING_SAFETY_QUEEN_CHECK;
+extern int KING_SAFETY_ROOK_CHECK;
+extern int KING_SAFETY_BISHOP_CHECK;
+extern int KING_SAFETY_KNIGHT_CHECK;
+extern int KING_SAFETY_WEAK_SQUARES;
+extern int KING_SAFETY_NO_ENEMY_QUEEN;
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
-void addToKingSafety    (U64 attacks, U64 kingZone, int& pieceCount, int& valueOfAttacks, int factor);
 
 struct EvalData{
     
     U64 attacks         [N_COLORS][N_PIECE_TYPES]{};
     U64 kingZone        [N_COLORS]{};
     U64 allAttacks      [N_COLORS]{};
+    U64 twoAttacks      [N_COLORS]{};
     U64 semiOpen        [N_COLORS]{};
     U64 pawnEastAttacks [N_COLORS]{};
     U64 pawnWestAttacks [N_COLORS]{};
@@ -57,6 +63,7 @@ struct EvalData{
     EvalScore threats   [N_COLORS]{};
     
     int ksAttackValue   [N_COLORS]{};
+    int ksAttackCount   [N_COLORS]{};
 };
 
 class Evaluator {
@@ -80,6 +87,9 @@ class Evaluator {
     
     template<Color color>
     EvalScore computeKings(Board* b);
+    
+    template<Color color>
+    EvalScore computeKingSafety(Board* b);
 
     bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
 
