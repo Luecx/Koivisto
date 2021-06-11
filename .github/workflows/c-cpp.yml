@@ -13,10 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: make
-      working-directory: ./src_files/
-      run: 
-        make EXE=../bin/Koivisto
-    - name: run bench
-      working-directory: ./bin/
-      run: ./Koivisto bench
+#     - name: make
+#       working-directory: ./src_files/
+#       run: 
+#         make EXE=../bin/Koivisto
+#     - name: run bench
+#       working-directory: ./bin/
+#       run: ./Koivisto bench
+    - name: get bench from commit message
+      run:
+        echo ${{ github.event.head_commit.message }}
+        echo ${{ github.event.commits[0].message }}
