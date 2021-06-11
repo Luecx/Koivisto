@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 8
+#define N_THREAD 16
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -186,7 +186,6 @@ struct ThreadData {
     Weight w_king_safety_weak_squares;
     Weight w_king_safety_queen_check;
     Weight w_king_safety_rook_check;
-    Weight w_king_safety_bishop_check;
     Weight w_king_safety_knight_check;
     Weight w_king_safety_no_e_queen;
     Weight w_hanging[5] {};
@@ -450,7 +449,6 @@ struct KingSafetyData {
     int8_t noEnemyQueen[N_COLORS] {};
     int8_t safeQueenChecks[N_COLORS] {};
     int8_t safeRookChecks[N_COLORS] {};
-    int8_t safeBishopChecks[N_COLORS] {};
     int8_t safeKnightChecks[N_COLORS] {};
     float danger[N_COLORS]{};
 
@@ -506,8 +504,6 @@ struct KingSafetyData {
                 & ev->attacks[!color][QUEEN] & ~b->getTeamOccupiedBB(!color);
             U64 rookChecks = lookUpRookAttack(ev->kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB(color, QUEEN))
                 & ev->attacks[!color][ROOK] & ~b->getTeamOccupiedBB(!color);
-            U64 bishopChecks = lookUpBishopAttack(ev->kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB(color, QUEEN))
-                & ev->attacks[!color][BISHOP] & ~b->getTeamOccupiedBB(!color);
             U64 knightChecks = KNIGHT_ATTACKS[ev->kingSquare[color]]
                 & ev->attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
 
@@ -515,7 +511,6 @@ struct KingSafetyData {
             noEnemyQueen[color] = !b->getPieceBB(!color, QUEEN);
             safeQueenChecks[color] = bitCount(queenChecks & vulnerable);
             safeRookChecks[color] = bitCount(rookChecks & vulnerable);
-            safeBishopChecks[color] = bitCount(bishopChecks & vulnerable);
             safeKnightChecks[color] = bitCount(knightChecks & vulnerable);
         }
     }
@@ -532,7 +527,6 @@ struct KingSafetyData {
                         + (td->w_king_safety_no_e_queen.midgame.value * noEnemyQueen[c])
                         + (td->w_king_safety_queen_check.midgame.value * safeQueenChecks[c])
                         + (td->w_king_safety_rook_check.midgame.value * safeRookChecks[c])
-                        + (td->w_king_safety_bishop_check.midgame.value * safeBishopChecks[c])
                         + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c]);
 
             float mg = -danger[c] * std::fmax(danger[c], 0) / 1024;
@@ -574,11 +568,6 @@ struct KingSafetyData {
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * safeRookChecks[c]);
             td->w_king_safety_rook_check.midgame.gradient +=
                 (danger_grad / 32) * ((danger[c] > 0) * safeRookChecks[c]);
-
-            td->w_king_safety_bishop_check.midgame.gradient +=
-                (danger_grad / 512) * (std::fmax(danger[c], 0) * safeBishopChecks[c]);
-            td->w_king_safety_bishop_check.midgame.gradient +=
-                (danger_grad / 32) * ((danger[c] > 0) * safeBishopChecks[c]);
 
             td->w_king_safety_knight_check.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * safeKnightChecks[c]);
@@ -1424,7 +1413,6 @@ void                    load_weights() {
         threadData[t].w_king_safety_no_e_queen = {KING_SAFETY_NO_ENEMY_QUEEN, 0};
         threadData[t].w_king_safety_queen_check = {KING_SAFETY_QUEEN_CHECK, 0};
         threadData[t].w_king_safety_rook_check = {KING_SAFETY_ROOK_CHECK, 0};
-        threadData[t].w_king_safety_bishop_check = {KING_SAFETY_BISHOP_CHECK, 0};
         threadData[t].w_king_safety_knight_check = {KING_SAFETY_KNIGHT_CHECK, 0};
     }
 }
@@ -1488,7 +1476,6 @@ void merge_gradients() {
         threadData[t].w_king_safety_no_e_queen.merge(threadData[0].w_king_safety_no_e_queen);
         threadData[t].w_king_safety_queen_check.merge(threadData[0].w_king_safety_queen_check);
         threadData[t].w_king_safety_rook_check.merge(threadData[0].w_king_safety_rook_check);
-        threadData[t].w_king_safety_bishop_check.merge(threadData[0].w_king_safety_bishop_check);
         threadData[t].w_king_safety_knight_check.merge(threadData[0].w_king_safety_knight_check);
     }
 }
@@ -1551,7 +1538,6 @@ void share_weights() {
         threadData[t].w_king_safety_no_e_queen.set(threadData[0].w_king_safety_no_e_queen);
         threadData[t].w_king_safety_queen_check.set(threadData[0].w_king_safety_queen_check);
         threadData[t].w_king_safety_rook_check.set(threadData[0].w_king_safety_rook_check);
-        threadData[t].w_king_safety_bishop_check.set(threadData[0].w_king_safety_bishop_check);
         threadData[t].w_king_safety_knight_check.set(threadData[0].w_king_safety_knight_check);
     }
 }
@@ -1614,7 +1600,6 @@ void adjust_weights(float eta) {
     threadData[0].w_king_safety_no_e_queen.update(eta);
     threadData[0].w_king_safety_queen_check.update(eta);
     threadData[0].w_king_safety_rook_check.update(eta);
-    threadData[0].w_king_safety_bishop_check.update(eta);
     threadData[0].w_king_safety_knight_check.update(eta);
 
     share_weights();
@@ -1892,9 +1877,6 @@ void display_params() {
 
     std::cout << "int KING_SAFETY_ROOK_CHECK = ";
     std::cout << round(threadData[0].w_king_safety_rook_check.midgame.value) << ";\n" << std::endl;
-
-    std::cout << "int KING_SAFETY_BISHOP_CHECK = ";
-    std::cout << round(threadData[0].w_king_safety_bishop_check.midgame.value) << ";\n" << std::endl;
 
     std::cout << "int KING_SAFETY_KNIGHT_CHECK = ";
     std::cout << round(threadData[0].w_king_safety_knight_check.midgame.value) << ";\n" << std::endl;
