@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ Luecx-patch-1 ]
   pull_request:
-    branches: [ master ]
+    branches: [ Luecx-patch-1 ]
 
 jobs:
   build:
