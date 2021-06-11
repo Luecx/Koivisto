@@ -17,7 +17,7 @@ jobs:
         make EXE=../bin/Koivisto
     - name: run bench
       working-directory: ./bin/
-      run: ./Koivisto bench
+      run: ./Koivisto bench > bench.txt
     - name: get bench from commit message
       run: |
         commit="${{ github.event.head_commit.message }}"
@@ -27,8 +27,6 @@ jobs:
           line=$(grep -i bench: message.txt)
           bench=$(echo $line | sed 's/[^0-9]*//g')
           exBen=$(grep -i OVERALL: bench.txt | awk -F'[^0-9]+' '{ print $2 }')
-          echo $bench
-          echo $exBen
           if [[ $exBen == $bench ]]; then
             echo "benches do match"
           else
