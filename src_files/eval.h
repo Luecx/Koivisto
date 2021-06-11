@@ -42,6 +42,7 @@ extern int KING_SAFETY_BISHOP_CHECK;
 extern int KING_SAFETY_KNIGHT_CHECK;
 extern int KING_SAFETY_WEAK_SQUARES;
 extern int KING_SAFETY_NO_ENEMY_QUEEN;
+extern int KING_SAFETY_KNIGHT_DEFENDER;
 
 bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
 bool hasMatingMaterial  (Board* b, bool side);
