@@ -187,6 +187,7 @@ struct ThreadData {
     Weight w_king_safety_rook_check;
     Weight w_king_safety_knight_check;
     Weight w_king_safety_no_e_queen;
+    Weight w_king_safety_unsafe_check;
     Weight w_hanging[5] {};
 };
 
@@ -449,6 +450,7 @@ struct KingSafetyData {
     int8_t safeQueenChecks[N_COLORS] {};
     int8_t safeRookChecks[N_COLORS] {};
     int8_t safeKnightChecks[N_COLORS] {};
+    int8_t unsafeChecks[N_COLORS] {};
     float danger[N_COLORS]{};
 
     void   init(Board* b, EvalData* ev) {
@@ -503,6 +505,8 @@ struct KingSafetyData {
                 & ev->attacks[!color][QUEEN] & ~b->getTeamOccupiedBB(!color);
             U64 rookChecks = lookUpRookAttack(ev->kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB(color, QUEEN))
                 & ev->attacks[!color][ROOK] & ~b->getTeamOccupiedBB(!color);
+            U64 bishopChecks = lookUpBishopAttack(ev->kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB(color, QUEEN))
+                & ev->attacks[!color][BISHOP] & ~b->getTeamOccupiedBB(!color);
             U64 knightChecks = KNIGHT_ATTACKS[ev->kingSquare[color]]
                 & ev->attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
 
@@ -511,6 +515,7 @@ struct KingSafetyData {
             safeQueenChecks[color] = bitCount(queenChecks & vulnerable);
             safeRookChecks[color] = bitCount(rookChecks & vulnerable);
             safeKnightChecks[color] = bitCount(knightChecks & vulnerable);
+            unsafeChecks[color] = bitCount((rookChecks | bishopChecks | knightChecks) & ~vulnerable);
         }
     }
 
@@ -526,7 +531,8 @@ struct KingSafetyData {
                         + (td->w_king_safety_no_e_queen.midgame.value * noEnemyQueen[c])
                         + (td->w_king_safety_queen_check.midgame.value * safeQueenChecks[c])
                         + (td->w_king_safety_rook_check.midgame.value * safeRookChecks[c])
-                        + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c]);
+                        + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c])
+                        + (td->w_king_safety_unsafe_check.midgame.value * unsafeChecks[c]);
 
             float mg = -danger[c] * std::fmax(danger[c], 0) / 1024;
             float eg = -std::fmax(danger[c], 0) / 32;
@@ -572,6 +578,11 @@ struct KingSafetyData {
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * safeKnightChecks[c]);
             td->w_king_safety_knight_check.midgame.gradient +=
                 (danger_grad / 32) * ((danger[c] > 0) * safeKnightChecks[c]);
+
+            td->w_king_safety_unsafe_check.midgame.gradient +=
+                (danger_grad / 512) * (std::fmax(danger[c], 0) * unsafeChecks[c]);
+            td->w_king_safety_unsafe_check.midgame.gradient +=
+                (danger_grad / 32) * ((danger[c] > 0) * unsafeChecks[c]);
 
             td->w_king_safety_no_e_queen.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * noEnemyQueen[c]);
@@ -1410,6 +1421,7 @@ void                    load_weights() {
         threadData[t].w_king_safety_queen_check = {KING_SAFETY_QUEEN_CHECK, 0};
         threadData[t].w_king_safety_rook_check = {KING_SAFETY_ROOK_CHECK, 0};
         threadData[t].w_king_safety_knight_check = {KING_SAFETY_KNIGHT_CHECK, 0};
+        threadData[t].w_king_safety_unsafe_check = {KING_SAFETY_UNSAFE_CHECK, 0};
     }
 }
 
@@ -1469,6 +1481,7 @@ void merge_gradients() {
         threadData[t].w_king_safety_queen_check.merge(threadData[0].w_king_safety_queen_check);
         threadData[t].w_king_safety_rook_check.merge(threadData[0].w_king_safety_rook_check);
         threadData[t].w_king_safety_knight_check.merge(threadData[0].w_king_safety_knight_check);
+        threadData[t].w_king_safety_unsafe_check.merge(threadData[0].w_king_safety_unsafe_check);
     }
 }
 
@@ -1527,6 +1540,7 @@ void share_weights() {
         threadData[t].w_king_safety_queen_check.set(threadData[0].w_king_safety_queen_check);
         threadData[t].w_king_safety_rook_check.set(threadData[0].w_king_safety_rook_check);
         threadData[t].w_king_safety_knight_check.set(threadData[0].w_king_safety_knight_check);
+        threadData[t].w_king_safety_unsafe_check.set(threadData[0].w_king_safety_unsafe_check);
     }
 }
 
@@ -1586,6 +1600,7 @@ void adjust_weights(float eta) {
     threadData[0].w_king_safety_queen_check.update(eta);
     threadData[0].w_king_safety_rook_check.update(eta);
     threadData[0].w_king_safety_knight_check.update(eta);
+    threadData[0].w_king_safety_unsafe_check.update(eta);
 
     share_weights();
 }
@@ -1865,6 +1880,9 @@ void display_params() {
 
     std::cout << "int KING_SAFETY_KNIGHT_CHECK = ";
     std::cout << round(threadData[0].w_king_safety_knight_check.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int KING_SAFETY_UNSAFE_CHECK = ";
+    std::cout << round(threadData[0].w_king_safety_unsafe_check.midgame.value) << ";\n" << std::endl;
 
     std::cout << "int kingSafetyAttackWeights[N_PIECE_TYPES]{";
     for (PieceType pt = 0; pt < 6; pt++) {
