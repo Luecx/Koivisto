@@ -23,9 +23,20 @@ jobs:
     - name: get bench from commit message
       run: |
         commit="${{ github.event.head_commit.description }}"
-        if [[ $commit == *"Bench:" || $commit == *"bench:"]]
-        then
-          echo "Found bench"
+        if [[ $commit == *"Bench:"* || $commit == *"bench:"* ]]; then
+          printf "$commit" > message.txt
+          line=$(grep -i bench: message.txt)
+          bench=$(echo $line | sed 's/[^0-9]*//g')
+          exBen=$(grep -i OVERALL: bench.txt | awk -F'[^0-9]+' '{ print $2 }')
+          echo $bench
+          echo $exBen
+          if [[ $exBen == $bench ]]; then
+            echo "benches do match"
+          else
+            echo "benches do not match"
+            exit 64
+          fi
         else
           echo "Did not find bench"
+        exit 64
         fi
