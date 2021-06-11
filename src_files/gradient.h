@@ -182,7 +182,6 @@ struct ThreadData {
     Weight w_candidate[8] {};
     Weight w_pinned[15] {};
     Weight w_king_safety_attack_weight[6] {};
-    Weight w_king_safety_attack_scale[8] {};
     Weight w_king_safety_weak_squares;
     Weight w_king_safety_queen_check;
     Weight w_king_safety_rook_check;
@@ -1404,9 +1403,6 @@ void                    load_weights() {
             if (i < 6) {
                 threadData[t].w_king_safety_attack_weight[i] = {kingSafetyAttackWeights[i], 0};
             }
-            if (i < 8) {
-                threadData[t].w_king_safety_attack_scale[i] = {kingSafetyAttackScale[i], 0};
-            }
         }
 
         threadData[t].w_king_safety_weak_squares = {KING_SAFETY_WEAK_SQUARES, 0};
@@ -1466,10 +1462,6 @@ void merge_gradients() {
                 threadData[t].w_king_safety_attack_weight[i].merge(
                     threadData[0].w_king_safety_attack_weight[i]);
             }
-            if (i < 8) {
-                threadData[t].w_king_safety_attack_scale[i].merge(
-                    threadData[0].w_king_safety_attack_scale[i]);
-            }
         }
 
         threadData[t].w_king_safety_weak_squares.merge(threadData[0].w_king_safety_weak_squares);
@@ -1527,10 +1519,6 @@ void share_weights() {
             if (i < 6) {
                 threadData[t].w_king_safety_attack_weight[i].set(
                     threadData[0].w_king_safety_attack_weight[i]);
-            }
-            if (i < 6) {
-                threadData[t].w_king_safety_attack_scale[i].set(
-                    threadData[0].w_king_safety_attack_scale[i]);
             }
         }
 
@@ -1590,9 +1578,6 @@ void adjust_weights(float eta) {
         }
         if (i < 6) {
             threadData[0].w_king_safety_attack_weight[i].update(eta);
-        }
-        if (i < 8) {
-            threadData[0].w_king_safety_attack_scale[i].update(eta);
         }
     }
 
@@ -1884,11 +1869,6 @@ void display_params() {
     std::cout << "int kingSafetyAttackWeights[N_PIECE_TYPES]{";
     for (PieceType pt = 0; pt < 6; pt++) {
         std::cout << round(threadData[0].w_king_safety_attack_weight[pt].midgame.value) << ", ";
-    }
-    std::cout << "};\n" << std::endl;
-    std::cout << "int kingSafetyAttackScale[N_FILES]{";
-    for (int pt = 0; pt < 8; pt++) {
-        std::cout << round(threadData[0].w_king_safety_attack_scale[pt].midgame.value) << ", ";
     }
     std::cout << "};\n" << std::endl;
     // --------------------------------- piece_square_table ---------------------------------

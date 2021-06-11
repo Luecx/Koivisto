@@ -119,8 +119,6 @@ int KING_SAFETY_KNIGHT_CHECK = 135;
 
 int kingSafetyAttackWeights[N_PIECE_TYPES]{0, 25, 12, 27, 14, 0, };
 
-int kingSafetyAttackScale[N_FILES]{0, 0, 64, 96, 112, 120, 124, 128, };
-
 EvalScore* evfeatures[] {
     &SIDE_TO_MOVE,
     &PAWN_STRUCTURE,
@@ -666,6 +664,7 @@ EvalScore Evaluator::computeKingSafety(Board* b) {
     U64 knightChecks = KNIGHT_ATTACKS[evalData.kingSquare[color]]
         & evalData.attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
 
+    // Bishop checks weren't worth anything in Koivisto (tuned negative and gained when removed)
     int safeQueenChecks = bitCount(queenChecks & vulnerable);
     int safeRookChecks = bitCount(rookChecks & vulnerable);
     int safeKnightChecks = bitCount(knightChecks & vulnerable);
