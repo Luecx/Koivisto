@@ -25,6 +25,6 @@ threadScaling.png
 
 ThreadScalingScript.py
 
-bin/
+bin/Koivisto*
 
 *.json
