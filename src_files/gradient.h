@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 16
+#define N_THREAD 32
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -182,6 +182,7 @@ struct ThreadData {
     Weight w_candidate[8] {};
     Weight w_pinned[15] {};
     Weight w_king_safety_attack_weight[6] {};
+    Weight w_king_safety_file_status[4] {};
     Weight w_king_safety_weak_squares;
     Weight w_king_safety_queen_check;
     Weight w_king_safety_rook_check;
@@ -442,7 +443,8 @@ struct Pst225Data {
 struct KingSafetyData {
     // we only need to store one index for the white and black king
 
-    int8_t attackValues[N_COLORS][N_PIECE_TYPES];
+    int8_t attackValues[N_COLORS][N_PIECE_TYPES] {};
+    int8_t fileStatus[N_COLORS][4] {};
     int8_t attackCount[N_COLORS] {};
     int8_t weakSqs[N_COLORS] {};
     int8_t noEnemyQueen[N_COLORS] {};
@@ -506,11 +508,15 @@ struct KingSafetyData {
             U64 knightChecks = KNIGHT_ATTACKS[ev->kingSquare[color]]
                 & ev->attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
 
+            int f1 = !(ev->semiOpen[color] & b->getPieceBB(color, KING));
+            int f2 = !(ev->semiOpen[!color] & b->getPieceBB(color, KING));
+
             weakSqs[color] = bitCount(ev->kingZone[color] & weak);
             noEnemyQueen[color] = !b->getPieceBB(!color, QUEEN);
             safeQueenChecks[color] = bitCount(queenChecks & vulnerable);
             safeRookChecks[color] = bitCount(rookChecks & vulnerable);
             safeKnightChecks[color] = bitCount(knightChecks & vulnerable);
+            fileStatus[color][(f1 << 1) + f2]++;
         }
     }
 
@@ -527,6 +533,9 @@ struct KingSafetyData {
                         + (td->w_king_safety_queen_check.midgame.value * safeQueenChecks[c])
                         + (td->w_king_safety_rook_check.midgame.value * safeRookChecks[c])
                         + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c]);
+
+            for (int i = 0; i < 4; i++)
+                danger[c] += td->w_king_safety_file_status[i].midgame.value * fileStatus[c][i];
 
             float mg = -danger[c] * std::fmax(danger[c], 0) / 1024;
             float eg = -std::fmax(danger[c], 0) / 32;
@@ -577,6 +586,13 @@ struct KingSafetyData {
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * noEnemyQueen[c]);
             td->w_king_safety_no_e_queen.midgame.gradient +=
                 (danger_grad / 32) * ((danger[c] > 0) * noEnemyQueen[c]);
+
+            for (int i = 0; i < 4; i++) {
+                td->w_king_safety_file_status[i].midgame.gradient +=
+                    (danger_grad / 512) * (std::fmax(danger[c], 0) * fileStatus[c][i]);
+                td->w_king_safety_file_status[i].midgame.gradient +=
+                    (danger_grad / 32) * ((danger[c] > 0) * fileStatus[c][i]);
+            }
         }
     }
 };
@@ -1400,6 +1416,9 @@ void                    load_weights() {
             if (i < 5) {
                 threadData[t].w_hanging[i].set(hangingEval[i]);
             }
+            if (i < 4) {
+                threadData[t].w_king_safety_file_status[i] = {kingSafetyFileStatus[i], 0};
+            }
             if (i < 6) {
                 threadData[t].w_king_safety_attack_weight[i] = {kingSafetyAttackWeights[i], 0};
             }
@@ -1462,6 +1481,10 @@ void merge_gradients() {
                 threadData[t].w_king_safety_attack_weight[i].merge(
                     threadData[0].w_king_safety_attack_weight[i]);
             }
+            if (i < 4) {
+                threadData[t].w_king_safety_file_status[i].merge(
+                    threadData[0].w_king_safety_file_status[i]);
+            }
         }
 
         threadData[t].w_king_safety_weak_squares.merge(threadData[0].w_king_safety_weak_squares);
@@ -1519,6 +1542,10 @@ void share_weights() {
             if (i < 6) {
                 threadData[t].w_king_safety_attack_weight[i].set(
                     threadData[0].w_king_safety_attack_weight[i]);
+            }
+            if (i < 4) {
+                threadData[t].w_king_safety_file_status[i].set(
+                    threadData[0].w_king_safety_file_status[i]);
             }
         }
 
@@ -1578,6 +1605,9 @@ void adjust_weights(float eta) {
         }
         if (i < 6) {
             threadData[0].w_king_safety_attack_weight[i].update(eta);
+        }
+        if (i < 4) {
+            threadData[0].w_king_safety_file_status[i].update(eta);
         }
     }
 
@@ -1865,6 +1895,12 @@ void display_params() {
 
     std::cout << "int KING_SAFETY_KNIGHT_CHECK = ";
     std::cout << round(threadData[0].w_king_safety_knight_check.midgame.value) << ";\n" << std::endl;
+
+    std::cout << "int kingSafetyFileStatus[4]{";
+    for (int i = 0; i < 4; i++) {
+        std::cout << round(threadData[0].w_king_safety_file_status[i].midgame.value) << ", ";
+    }
+    std::cout << "};\n" << std::endl;
 
     std::cout << "int kingSafetyAttackWeights[N_PIECE_TYPES]{";
     for (PieceType pt = 0; pt < 6; pt++) {

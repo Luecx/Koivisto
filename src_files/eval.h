@@ -30,12 +30,12 @@ extern EvalScore  hangingEval                   [5];
 extern EvalScore  pinnedEval                    [15];
 extern EvalScore* mobilities                    [N_PIECE_TYPES];
 extern int        mobEntryCount                 [N_PIECE_TYPES];
-extern int        kingSafetyAttackWeights       [N_PIECE_TYPES];
-extern int        kingSafetyAttackScale         [N_FILES];
 extern float      phaseValues                   [N_PIECE_TYPES];
 extern EvalScore  passer_rank_n                 [N_RANKS];
 extern EvalScore  candidate_passer              [N_RANKS];
 
+extern int kingSafetyFileStatus[4];
+extern int kingSafetyAttackWeights[N_PIECE_TYPES];
 extern int KING_SAFETY_QUEEN_CHECK;
 extern int KING_SAFETY_ROOK_CHECK;
 extern int KING_SAFETY_BISHOP_CHECK;
