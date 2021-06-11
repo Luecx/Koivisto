@@ -22,7 +22,7 @@ jobs:
 #       run: ./Koivisto bench
     - name: get bench from commit message
       run: |
-        commit = ${{ github.event.head_commit.message }}
+        commit = "${{ github.event.head_commit.description }}"
         if [[ $commit == *"Bench:" || $commit == *"bench:"]]
         then
           echo "Found bench"
