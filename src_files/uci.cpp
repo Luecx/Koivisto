@@ -501,7 +501,7 @@ void uci::quit() {
     delete board;
     board = nullptr;
 
-    bb::cleanUp();
+    bb:cleanUp();
     search_cleanUp();
 }
 
