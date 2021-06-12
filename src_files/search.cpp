@@ -1033,6 +1033,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
+                alpha = highestScore;
             }
         }
         
