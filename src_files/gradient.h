@@ -30,7 +30,7 @@
  * If it is a new array, ask Finn first
  *
  */
-// #define TUNING
+//#define TUNING
 #ifdef TUNING
 
 #include "Board.h"
@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 32
+#define N_THREAD 24
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -483,12 +483,18 @@ struct KingSafetyData {
                                                                    & ~b->getPieceBB(c, ROOK));
                             break;
                     }
-
-                    if (ev->kingZone[!c] & attacks) {
+    
+                    if(ev->expandedkingZone[!c] &  attacks){
+    
                         attackValues[!c][p]++;
+                        
+                        if(ev->kingZone[!c] &  attacks){
+                            attackValues[!c][p]++;
+                        }
+    
                         attackCount[!c]++;
                     }
-
+                    
                     k = lsbReset(k);
                 }
             }

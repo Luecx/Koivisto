@@ -50,6 +50,7 @@ struct EvalData{
     
     U64 attacks         [N_COLORS][N_PIECE_TYPES]{};
     U64 kingZone        [N_COLORS]{};
+    U64 expandedkingZone[N_COLORS]{};
     U64 allAttacks      [N_COLORS]{};
     U64 twoAttacks      [N_COLORS]{};
     U64 semiOpen        [N_COLORS]{};
