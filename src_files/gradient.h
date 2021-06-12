@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 32
+#define N_THREAD 16
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -452,6 +452,7 @@ struct KingSafetyData {
     int8_t safeRookChecks[N_COLORS] {};
     int8_t safeKnightChecks[N_COLORS] {};
     float danger[N_COLORS]{};
+    int8_t shelterScore[N_COLORS]{};
 
     void   init(Board* b, EvalData* ev) {
 
@@ -495,6 +496,21 @@ struct KingSafetyData {
         }
 
         for (Color color: {WHITE, BLACK}) {
+            U64 shelter = b->getPieceBB(color, PAWN) & ~ev->attacks[!color][PAWN] & 
+                (color == WHITE ? shiftNorth(fillNorth(ev->kingZone[color])) : shiftSouth(fillSouth(ev->kingZone[color])));
+            int kingfile = std::clamp((int) fileIndex(ev->kingSquare[color]), 1, 6);
+
+            int shelterS = -54;
+            for (int f = kingfile - 1; f <= kingfile + 1; f++) {
+                U64 pawnCover = FILES_BB[f] & shelter;
+                int r = (color == WHITE ?
+                    (pawnCover ? 7 - rankIndex(bitscanForward(pawnCover)) : 0) :
+                    (pawnCover ? rankIndex(bitscanReverse(pawnCover)) : 0));
+
+                shelterS -= (-36 + r * r);
+            }
+            shelterScore[color] = shelterS;
+
             U64 weak = ev->allAttacks[!color] & ~ev->twoAttacks[color] &
                 (~ev->allAttacks[color] | ev->attacks[color][QUEEN] | ev->attacks[color][KING]);
             U64 vulnerable = (~ev->allAttacks[color] | (weak & ev->twoAttacks[!color])) 
@@ -532,7 +548,8 @@ struct KingSafetyData {
                         + (td->w_king_safety_no_e_queen.midgame.value * noEnemyQueen[c])
                         + (td->w_king_safety_queen_check.midgame.value * safeQueenChecks[c])
                         + (td->w_king_safety_rook_check.midgame.value * safeRookChecks[c])
-                        + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c]);
+                        + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c])
+                        + (shelterScore[c]);
 
             for (int i = 0; i < 4; i++)
                 danger[c] += td->w_king_safety_file_status[i].midgame.value * fileStatus[c][i];
