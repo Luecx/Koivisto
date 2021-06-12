@@ -187,7 +187,7 @@ struct ThreadData {
     Weight w_king_safety_rook_check;
     Weight w_king_safety_knight_check;
     Weight w_king_safety_no_e_queen;
-    Weight w_king_safety_shelter_rank[2][N_RANKS]{};
+    Weight w_king_safety_shelter_rank[4][N_RANKS]{};
     Weight w_hanging[5] {};
 };
 
@@ -452,7 +452,7 @@ struct KingSafetyData {
     int8_t safeKnightChecks[N_COLORS] {};
     float danger[N_COLORS]{};
     int8_t rankSquareSum[N_COLORS]{};
-    int8_t shelterRanks[N_COLORS][2][N_RANKS]{};
+    int8_t shelterRanks[N_COLORS][4][N_RANKS]{};
 
     void   init(Board* b, EvalData* ev) {
 
@@ -506,7 +506,7 @@ struct KingSafetyData {
                     (pawnCover ? 7 - rankIndex(bitscanForward(pawnCover)) : 0) :
                     (pawnCover ? rankIndex(bitscanReverse(pawnCover)) : 0));
 
-                shelterRanks[color][f == kingfile][r]++;
+                shelterRanks[color][f < 4 ? f : 7 - f][r]++;
             }
 
             U64 weak = ev->allAttacks[!color] & ~ev->twoAttacks[color] &
@@ -544,7 +544,7 @@ struct KingSafetyData {
                         + (td->w_king_safety_rook_check.midgame.value * safeRookChecks[c])
                         + (td->w_king_safety_knight_check.midgame.value * safeKnightChecks[c]);
 
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 4; i++) {
                 for (int r = 0; r < N_RANKS; r++) {
                     danger[c] += td->w_king_safety_shelter_rank[i][r].midgame.value
                         * shelterRanks[c][i][r];
@@ -601,7 +601,7 @@ struct KingSafetyData {
             td->w_king_safety_no_e_queen.midgame.gradient +=
                 (danger_grad / 32) * ((danger[c] > 0) * noEnemyQueen[c]);
 
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 4; i++) {
                 for (int r = 0; r < N_RANKS; r++) {
                     td->w_king_safety_shelter_rank[i][r].midgame.gradient +=
                         (danger_grad / 512) * (std::fmax(danger[c], 0) * shelterRanks[c][i][r]);
@@ -1443,7 +1443,7 @@ void                    load_weights() {
         threadData[t].w_king_safety_rook_check = {KING_SAFETY_ROOK_CHECK, 0};
         threadData[t].w_king_safety_knight_check = {KING_SAFETY_KNIGHT_CHECK, 0};
 
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             for (int r = 0; r < N_RANKS; r++) {
                 threadData[t].w_king_safety_shelter_rank[i][r] = {kingSafetyShelterRank[i][r], 0};
             }
@@ -1508,7 +1508,7 @@ void merge_gradients() {
         threadData[t].w_king_safety_rook_check.merge(threadData[0].w_king_safety_rook_check);
         threadData[t].w_king_safety_knight_check.merge(threadData[0].w_king_safety_knight_check);
     
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             for (int r = 0; r < N_RANKS; r++) {
                 threadData[t].w_king_safety_shelter_rank[i][r].merge(threadData[0].w_king_safety_shelter_rank[i][r]);
             }
@@ -1572,7 +1572,7 @@ void share_weights() {
         threadData[t].w_king_safety_rook_check.set(threadData[0].w_king_safety_rook_check);
         threadData[t].w_king_safety_knight_check.set(threadData[0].w_king_safety_knight_check);
             
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             for (int r = 0; r < N_RANKS; r++) {
                 threadData[t].w_king_safety_shelter_rank[i][r].set(threadData[0].w_king_safety_shelter_rank[i][r]);
             }
@@ -1637,7 +1637,7 @@ void adjust_weights(float eta) {
     threadData[0].w_king_safety_rook_check.update(eta);
     threadData[0].w_king_safety_knight_check.update(eta);
         
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 4; i++) {
         for (int r = 0; r < N_RANKS; r++) {
             threadData[0].w_king_safety_shelter_rank[i][r].update(eta);
         }
@@ -1923,8 +1923,8 @@ void display_params() {
     std::cout << "int KING_SAFETY_KNIGHT_CHECK = ";
     std::cout << round(threadData[0].w_king_safety_knight_check.midgame.value) << ";\n" << std::endl;
 
-    std::cout << "int kingSafetyShelterRank[2][N_RANKS] {" << std::endl;
-    for (int i = 0; i < 2; i++) {
+    std::cout << "int kingSafetyShelterRank[4][N_RANKS] {" << std::endl;
+    for (int i = 0; i < 4; i++) {
         std::cout << "\t";
         for (int r = 0; r < N_RANKS; r++) {
             std::cout << round(threadData[0].w_king_safety_shelter_rank[i][r].midgame.value) << ", ";
