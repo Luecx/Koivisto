@@ -36,7 +36,7 @@ extern EvalScore  candidate_passer              [N_RANKS];
 
 extern int kingSafetyFileStatus[4];
 extern int kingSafetyAttackWeights[N_PIECE_TYPES];
-extern int kingSafetyShelterRank[2][N_RANKS];
+extern int kingSafetyShelterRank[4][N_RANKS];
 extern int KING_SAFETY_QUEEN_CHECK;
 extern int KING_SAFETY_ROOK_CHECK;
 extern int KING_SAFETY_BISHOP_CHECK;
