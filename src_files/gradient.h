@@ -553,45 +553,46 @@ struct KingSafetyData {
     void gradient(float& mg_grad, float& eg_grad, ThreadData* td) {
         for (Color c : {WHITE, BLACK}) {
             float danger_grad = c == WHITE ? -mg_grad : mg_grad;
+            float danger_grad_e = c == WHITE ? -eg_grad : eg_grad;
                     
             // compute gradients for attack weights
             for (PieceType pt = 0; pt < 6; pt++) {
                 td->w_king_safety_attack_weight[pt].midgame.gradient +=
                   (danger_grad / 512) * (std::fmax(danger[c], 0) * attackValues[c][pt]);
                 td->w_king_safety_attack_weight[pt].midgame.gradient +=
-                  (danger_grad / 32) * ((danger[c] > 0) * attackValues[c][pt]);
+                  (danger_grad_e / 32) * ((danger[c] > 0) * attackValues[c][pt]);
             }
 
             td->w_king_safety_weak_squares.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * weakSqs[c]);
             td->w_king_safety_weak_squares.midgame.gradient +=
-                (danger_grad / 32) * ((danger[c] > 0) * weakSqs[c]);
+                (danger_grad_e / 32) * ((danger[c] > 0) * weakSqs[c]);
 
             td->w_king_safety_queen_check.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * safeQueenChecks[c]);
             td->w_king_safety_queen_check.midgame.gradient +=
-                (danger_grad / 32) * ((danger[c] > 0) * safeQueenChecks[c]);
+                (danger_grad_e / 32) * ((danger[c] > 0) * safeQueenChecks[c]);
 
             td->w_king_safety_rook_check.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * safeRookChecks[c]);
             td->w_king_safety_rook_check.midgame.gradient +=
-                (danger_grad / 32) * ((danger[c] > 0) * safeRookChecks[c]);
+                (danger_grad_e / 32) * ((danger[c] > 0) * safeRookChecks[c]);
 
             td->w_king_safety_knight_check.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * safeKnightChecks[c]);
             td->w_king_safety_knight_check.midgame.gradient +=
-                (danger_grad / 32) * ((danger[c] > 0) * safeKnightChecks[c]);
+                (danger_grad_e / 32) * ((danger[c] > 0) * safeKnightChecks[c]);
 
             td->w_king_safety_no_e_queen.midgame.gradient +=
                 (danger_grad / 512) * (std::fmax(danger[c], 0) * noEnemyQueen[c]);
             td->w_king_safety_no_e_queen.midgame.gradient +=
-                (danger_grad / 32) * ((danger[c] > 0) * noEnemyQueen[c]);
+                (danger_grad_e / 32) * ((danger[c] > 0) * noEnemyQueen[c]);
 
             for (int i = 0; i < 4; i++) {
                 td->w_king_safety_file_status[i].midgame.gradient +=
                     (danger_grad / 512) * (std::fmax(danger[c], 0) * fileStatus[c][i]);
                 td->w_king_safety_file_status[i].midgame.gradient +=
-                    (danger_grad / 32) * ((danger[c] > 0) * fileStatus[c][i]);
+                    (danger_grad_e / 32) * ((danger[c] > 0) * fileStatus[c][i]);
             }
         }
     }
