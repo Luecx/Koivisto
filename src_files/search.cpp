@@ -860,6 +860,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             return matingValue;
     }
     
+    hashMove = (ply == 0 ? sd->bestMove : hashMove);
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
     MoveOrderer moveOrderer {mv};
