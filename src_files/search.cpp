@@ -18,7 +18,7 @@
  ****************************************************************************************************/
 
 #include "search.h"
-
+#include "polyglot.h"
 #include "UCIAssert.h"
 #include "History.h"
 #include "TimeManager.h"
@@ -503,6 +503,13 @@ Move bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) 
         Move dtzMove = getDTZMove(b);
         if (dtzMove != 0)
             return dtzMove;
+
+        if (PolyGlot::book.enabled)
+        {
+            Move bookmove = PolyGlot::book.probe(*b);
+            if (bookmove)
+                return bookmove;
+        }
         
         // make sure that the given depth isnt too large
         if (maxDepth > MAX_PLY)
