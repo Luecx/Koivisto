@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "uci.h"
+#include "polyglot.h"
 #include "search.h"
 #include "UCIAssert.h"
 
@@ -111,6 +112,8 @@ void uci::uci() {
     std::cout << "id author K. Kahre, F. Eggers, E. Bruno" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
     std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
+    std::cout << "option name OwnBook type check default false" << std::endl;
+    std::cout << "option name BookPath type string" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
 
     std::cout << "uciok" << std::endl;
@@ -370,6 +373,10 @@ void uci::set_option(std::string& name, std::string& value) {
             count = MAX_THREADS;
         
         search_setThreads(count);
+    } else if (name == "OwnBook") {
+        PolyGlot::book.enabled = (value == "true");
+    } else if (name == "BookPath") {
+        PolyGlot::book.open(value);
     }
 }
 
