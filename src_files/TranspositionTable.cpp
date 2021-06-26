@@ -143,7 +143,7 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
         //  This idea of replacement can be found in many strong engines (SF and Ethereal), however they use a static margin. 
         //  Martin (author of Cheng) tested and validated a variable margin.
 
-        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == zobrist && enP->depth < depth * 2)) {
+        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth * 2) || (enP->zobrist == zobrist && enP->depth <= depth * 2)) {
             enP->set(zobrist, score, move, type, depth);
             enP->setAge(m_currentAge);
             return true;
