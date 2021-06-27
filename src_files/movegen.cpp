@@ -24,6 +24,7 @@
 enum MoveGenConfig{
     GENERATE_ALL,
     GENERATE_NON_QUIET,
+    GENERATE_NON_QUIET_AND_KING,
 };
 
 template<Color c, MoveTypes t, MoveGenConfig m>
@@ -62,7 +63,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
         }
         
-    }else if constexpr (m == GENERATE_NON_QUIET){
+    }else {
         // scoring when only non quiet moves are generated
         MoveScore mvvLVA = 100 * (getCapturedPieceType(move)) - 10 * (getMovingPieceType(move))
                            + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
@@ -123,7 +124,7 @@ void generatePawnMoves(
         attacks = lsbReset(attacks);
     }
     
-    if constexpr (m != GENERATE_NON_QUIET){
+    if constexpr (m == GENERATE_ALL){
         U64 pawnPushes = pawnsCenter & ~relative_rank_8_bb;
         attacks = pawnPushes;
         while (attacks) {
@@ -161,7 +162,7 @@ void generatePawnMoves(
             target = bitscanForward(attacks);
             mv->add(genMove(target - forward, target, QUEEN_PROMOTION, movingPiece));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION,  m>(b, mv, hashMove, sd, ply);
-            if constexpr (m != GENERATE_NON_QUIET) {
+            if constexpr (m == GENERATE_ALL) {
                 mv->add(genMove(target - forward, target, ROOK_PROMOTION, movingPiece));
                 if constexpr (score) scoreMove<c, ROOK_PROMOTION,   m>(b, mv, hashMove, sd, ply);
                 mv->add(genMove(target - forward, target, BISHOP_PROMOTION, movingPiece));
@@ -177,7 +178,7 @@ void generatePawnMoves(
             target = bitscanForward(attacks);
             mv->add(genMove(target - left, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
-            if constexpr (m != GENERATE_NON_QUIET) {
+            if constexpr (m == GENERATE_ALL) {
                 mv->add(genMove(target - left, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
                 if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
                 mv->add(genMove(target - left, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
@@ -193,7 +194,7 @@ void generatePawnMoves(
             target = bitscanForward(attacks);
             mv->add(genMove(target - right, target, QUEEN_PROMOTION_CAPTURE , movingPiece, b->getPiece(target)));
             if constexpr (score) scoreMove<c, QUEEN_PROMOTION_CAPTURE,  m>(b, mv, hashMove, sd, ply);
-            if constexpr (m != GENERATE_NON_QUIET) {
+            if constexpr (m == GENERATE_ALL) {
                 mv->add(genMove(target - right, target, ROOK_PROMOTION_CAPTURE  , movingPiece, b->getPiece(target)));
                 if constexpr (score) scoreMove<c, ROOK_PROMOTION_CAPTURE,   m>(b, mv, hashMove, sd, ply);
                 mv->add(genMove(target - right, target, BISHOP_PROMOTION_CAPTURE, movingPiece, b->getPiece(target)));
@@ -268,7 +269,7 @@ void generatePieceMoves(
                 if(b->getPiece(target) != -1){
                     mv->add(genMove(square, target, CAPTURE, movingPiece, b->getPiece(target)));
                     if constexpr (score) scoreMove<c, CAPTURE, m>(b, mv, hashMove, sd, ply);
-                }else if constexpr (m != GENERATE_NON_QUIET){
+                }else if constexpr (m == GENERATE_ALL){
                     mv->add(genMove(square, target, QUIET, movingPiece));
                     if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
                 }
@@ -322,7 +323,7 @@ void generateKingMoves(
         }
     
     
-        if constexpr (m != GENERATE_NON_QUIET) {
+        if constexpr (m == GENERATE_ALL) {
             if constexpr (c == WHITE) {
                 if (b->getCastlingRights(WHITE_QUEENSIDE_CASTLING) && b->getPiece(A1) == WHITE_ROOK
                     && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
@@ -382,10 +383,11 @@ void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth 
     UCI_ASSERT(sd);
     generate<GENERATE_ALL, true>(b, mv, hashMove, sd, ply);
 }
-void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply, bool inCheck) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
-    generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
+    if (inCheck) generate<GENERATE_NON_QUIET_AND_KING, true>(b, mv, hashMove, sd, ply);
+    else generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
 }
 void generatePerftMoves(Board* b, MoveList* mv) {
     UCI_ASSERT(b);

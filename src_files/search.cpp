@@ -1192,7 +1192,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     MoveList* mv = sd->moves[ply];
     
     // create a moveorderer to sort the moves during the search
-    generateNonQuietMoves(b, mv);
+    generateNonQuietMoves(b, mv, 0, sd, 0, inCheck);
     MoveOrderer moveOrderer {mv};
     
     // keping track of the best move for the transpositions
