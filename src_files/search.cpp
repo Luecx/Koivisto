@@ -816,13 +816,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // **********************************************************************************************************
     
     Score betaCut = beta + FUTILITY_MARGIN;
-    if (!inCheck && !pv && depth > 4 && !skipMove && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
+    if (!inCheck && !pv && depth > 4 && !skipMove && !(hashMove && en.depth >= depth - 3 && en.score < betaCut) && !(isCapture(b->getPreviousMove()) && lmrFactor!=nullptr)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
             // get the current move
             Move m = moveOrderer.next(0);
-            
+
             if (!b->isLegal(m))
                 continue;
             
