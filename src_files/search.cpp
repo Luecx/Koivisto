@@ -871,7 +871,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     if (depth >= 8 && !skipMove && hashMove && ply > 0 && !inCheck
         && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
         && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth < depth - 3) {
-        score = -pvSearch(b, -alpha - 1, -alpha, depth - 3 * ONE_PLY, ply + ONE_PLY, td,
+        score = -pvSearch(b, -alpha - 1, -alpha, depth - 3 * ONE_PLY, ply, td,
             0, behindNMP);    // re-search
     }
     
