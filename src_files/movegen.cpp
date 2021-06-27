@@ -32,6 +32,10 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
     Move move = mv->getMove(mv->getSize()-1);
     int  idx  = mv->getSize()-1;
     
+    static const int piece_values[6] = {
+        90,463, 474,577,1359,0,
+    };
+    
     constexpr bool  isCapture   = t & CAPTURE_MASK;
     constexpr bool  isPromotion = t & PROMOTION_MASK;
     
@@ -47,7 +51,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
         if constexpr (isCapture){
             Score     SEE    = board->staticExchangeEvaluation(move);
-            MoveScore mvvLVA = MgScore(piece_values[(getCapturedPieceType(move))]);
+            MoveScore mvvLVA = piece_values[(getCapturedPieceType(move))];
             if (SEE >= 0) {
                 mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {

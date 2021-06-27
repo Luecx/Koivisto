@@ -37,22 +37,18 @@ add_executable(Koivisto
         src_files/syzygy/tbconfig.h
         src_files/syzygy/tbprobe.c
         src_files/syzygy/tbchess.c
-        src_files/psqt.cpp
-        src_files/psqt.h
         src_files/gradient.h
         src_files/movegen.h
-        src_files/movegen.cpp
-        src_files/material.h
-        src_files/material.cpp)
+        src_files/movegen.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMINOR_VERSION=73")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAJOR_VERSION=4")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 set(CMAKE_EXE_LINKER_FLAGS " -static")
 
 target_link_libraries(Koivisto -static-libgcc -static-libstdc++)

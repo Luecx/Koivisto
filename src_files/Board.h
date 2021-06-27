@@ -22,7 +22,6 @@
 #include "Bitboard.h"
 #include "Move.h"
 #include "Util.h"
-#include "material.h"
 #include "vector"
 
 #include <ostream>
@@ -65,13 +64,13 @@ struct BoardStatus {
     BoardStatus(const BoardStatus& a)
         : zobrist(a.zobrist), enPassantTarget(a.enPassantTarget), castlingRights(a.castlingRights),
           fiftyMoveCounter(a.fiftyMoveCounter), repetitionCounter(a.repetitionCounter), moveCounter(a.moveCounter),
-          move(a.move), material(a.material) {}
+          move(a.move){}
     
     BoardStatus(U64 p_zobrist, U64 p_enPassantTarget, U64 p_metaInformation, U64 p_fiftyMoveCounter,
-                U64 p_repetitionCounter, U64 p_moveCounter, Move p_move, Material p_material)
+                U64 p_repetitionCounter, U64 p_moveCounter, Move p_move)
         : zobrist(p_zobrist), enPassantTarget(p_enPassantTarget), castlingRights(p_metaInformation),
           fiftyMoveCounter(p_fiftyMoveCounter), repetitionCounter(p_repetitionCounter), moveCounter(p_moveCounter),
-          move(p_move), material(p_material){}
+          move(p_move){}
     
     U64  zobrist{};
     U64  enPassantTarget{};
@@ -80,7 +79,6 @@ struct BoardStatus {
     U64  repetitionCounter{};
     U64  moveCounter{};
     Move move{};
-    Material material{};
     
     bool operator==(const BoardStatus& rhs) const {
         return  zobrist == rhs.zobrist &&
@@ -89,8 +87,7 @@ struct BoardStatus {
                 fiftyMoveCounter == rhs.fiftyMoveCounter &&
                 repetitionCounter == rhs.repetitionCounter &&
                 moveCounter == rhs.moveCounter &&
-                move == rhs.move &&
-                material == rhs.material;
+                move == rhs.move;
     }
     
     bool operator!=(const BoardStatus& rhs) const { return !(rhs == *this); }
@@ -104,7 +101,7 @@ struct BoardStatus {
     
     inline BoardStatus copy() {
         BoardStatus b {zobrist, enPassantTarget, castlingRights, fiftyMoveCounter, repetitionCounter, moveCounter,
-                       move, material};
+                       move};
         return b;
     }
 };
