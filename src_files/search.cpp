@@ -793,6 +793,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (depth <= 7 && MgScore(sd->evaluator.evalData.threats[!b->getActivePlayer()]) < 43 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
+        if (depth == 1 && staticEval > beta && sd->evaluator.evalData.threats[b->getActivePlayer()] && !sd->evaluator.evalData.threats[!b->getActivePlayer()])
+            return beta;
         // **********************************************************************************************************
         // futlity pruning:
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
