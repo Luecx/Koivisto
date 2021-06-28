@@ -662,6 +662,8 @@ EvalScore Evaluator::computeKingSafety(Board* b) {
         & evalData.attacks[!color][QUEEN] & ~b->getTeamOccupiedBB(!color);
     U64 rookChecks = lookUpRookAttack(evalData.kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB<color>(QUEEN))
         & evalData.attacks[!color][ROOK] & ~b->getTeamOccupiedBB(!color);
+    U64 bishopChecks = lookUpBishopAttack(evalData.kingSquare[color], b->getOccupiedBB() ^ b->getPieceBB<color>(QUEEN))
+        & evalData.attacks[!color][BISHOP] & ~b->getTeamOccupiedBB(!color);
     U64 knightChecks = KNIGHT_ATTACKS[evalData.kingSquare[color]]
         & evalData.attacks[!color][KNIGHT] & ~b->getTeamOccupiedBB(!color);
 
@@ -669,6 +671,7 @@ EvalScore Evaluator::computeKingSafety(Board* b) {
     int safeQueenChecks = bitCount(queenChecks & vulnerable);
     int safeRookChecks = bitCount(rookChecks & vulnerable);
     int safeKnightChecks = bitCount(knightChecks & vulnerable);
+    evalData.safeChecks[!color] = (queenChecks | rookChecks | knightChecks | bishopChecks) & ~evalData.allAttacks[color];
 
     int noEnemyQueen = !b->getPieceBB(!color, QUEEN);
 

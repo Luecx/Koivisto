@@ -61,7 +61,8 @@ struct EvalData{
     Square kingSquare   [N_COLORS]{};
     
     EvalScore threats   [N_COLORS]{};
-    
+    int safeChecks      [N_COLORS]{};
+
     int ksAttackValue   [N_COLORS]{};
     int ksAttackCount   [N_COLORS]{};
 };
