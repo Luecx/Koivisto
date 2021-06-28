@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#define N_THREAD 32
+#define N_THREAD 24
 namespace tuning {
 
 inline double sigmoid(double s, double K) { return (double) 1 / (1 + exp(-K * s / 400)); }
@@ -197,9 +197,11 @@ struct MetaData {
     // it can happen that the final evaluation is reduced by a given scalar
 
     float evalReduction       = 1;
+    float egReduction         = 1;
     float phase               = 0;
     float matingMaterialWhite = false;
     float matingMaterialBlack = false;
+    uint8_t pawnCount[2];
 
     void  init(Board* b, EvalData* ev) {
         phase =
@@ -217,18 +219,22 @@ struct MetaData {
             phase = 1;
         if (phase < 0)
             phase = 0;
+        
+        pawnCount[WHITE] = bitCount(b->getPieceBB<WHITE>(PAWN));
+        pawnCount[BLACK] = bitCount(b->getPieceBB<BLACK>(PAWN));
 
         matingMaterialWhite = hasMatingMaterial(b, WHITE);
         matingMaterialBlack = hasMatingMaterial(b, BLACK);
     }
 
-    float evaluate(float& mg, float& eg, ThreadData* td, int pawnCount[2]) {
-
-        eg = eg
-             * (120
-                - (8 - pawnCount[eg > 0 ? WHITE : BLACK]) * (8 - pawnCount[eg > 0 ? WHITE : BLACK]))
-             / 100;
-
+    float evaluate(float& mg, float& eg, ThreadData* td) {
+    
+        egReduction = (120
+                         - (8 - pawnCount[eg > 0 ? WHITE : BLACK]) * (8 - pawnCount[eg > 0 ? WHITE : BLACK]))
+                      / 100.0;
+        
+        eg *= egReduction;
+        
         float res = (int) (phase * eg) + (int) ((1 - phase) * mg);
 
         if (res > 0 ? !matingMaterialWhite : !matingMaterialBlack)
@@ -241,7 +247,7 @@ struct MetaData {
     }
     void gradient(float& mg_grad, float& eg_grad, float loss_grad, ThreadData* pData) {
         mg_grad = loss_grad * (1 - phase) * evalReduction;
-        eg_grad = loss_grad * (phase) *evalReduction;
+        eg_grad = loss_grad * (phase) *evalReduction * egReduction;
     }
 };
 
@@ -1285,8 +1291,6 @@ struct PosEvalData {
     Pst225Data          pst225 {};
     MetaData            meta {};
 
-    int                 pawnCount[N_COLORS];
-
     void                init(Board* b, EvalData* ev) {
         features.init(b, ev);
         mobility.init(b, ev);
@@ -1298,8 +1302,6 @@ struct PosEvalData {
         pst64.init(b, ev);
         pst225.init(b, ev);
         meta.init(b, ev);
-        pawnCount[WHITE] = bitCount(b->getPieceBB(WHITE, PAWN));
-        pawnCount[BLACK] = bitCount(b->getPieceBB(BLACK, PAWN));
     }
 
     double evaluate(int threadID = 0) {
@@ -1316,7 +1318,7 @@ struct PosEvalData {
         pst64.evaluate(midgame, endgame, &threadData[threadID]);
         pst225.evaluate(midgame, endgame, &threadData[threadID]);
 
-        float res = meta.evaluate(midgame, endgame, &threadData[threadID], pawnCount);
+        float res = meta.evaluate(midgame, endgame, &threadData[threadID]);
 
         return res;
     }
@@ -1621,7 +1623,8 @@ void adjust_weights(float eta) {
 }
 void load_positions(const std::string& path, int count, int start = 0) {
 
-    positions.reserve(positions.size() + count);
+//    positions.reserve(positions.size() + count);
+    positions.reserve(54000000);
     fstream newfile;
     newfile.open(path, ios::in);
     Evaluator evaluator {};
