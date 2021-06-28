@@ -770,6 +770,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
     
+    if (inCheck && ply > 0 && depth <= 2 && -sd->eval[!b->getActivePlayer()][ply - 1] < alpha - 50 && !b->isUnderAttack(getSquareTo(b->getPreviousMove()), b->getActivePlayer()))
+        return alpha;
     
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -793,8 +795,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (depth <= 7 && MgScore(sd->evaluator.evalData.threats[!b->getActivePlayer()]) < 43 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
+        // Some Koivisto pruning thing, call it threat pruning or whatever.
         if (depth == 1 && staticEval > beta && sd->evaluator.evalData.threats[b->getActivePlayer()] && !sd->evaluator.evalData.threats[!b->getActivePlayer()])
             return beta;
+
         // **********************************************************************************************************
         // null move pruning:
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
