@@ -770,7 +770,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
     
-    if (inCheck && ply > 0 && depth <= 2 && -sd->eval[!b->getActivePlayer()][ply - 1] < alpha - 50 && !b->isUnderAttack(getSquareTo(b->getPreviousMove()), b->getActivePlayer()))
+    if (inCheck && ply > 0 && depth == 1 && -sd->eval[!b->getActivePlayer()][ply - 1] < alpha && !b->isUnderAttack(getSquareTo(b->getPreviousMove()), b->getActivePlayer()))
         return alpha;
     
     if (!skipMove && !inCheck && !pv) {
