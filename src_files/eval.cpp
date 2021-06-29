@@ -175,9 +175,6 @@ float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };
 
-constexpr int lazyEvalAlphaBound = 803;
-constexpr int lazyEvalBetaBound  = 392;
-
 EvalScore* mobilities[N_PIECE_TYPES] {nullptr, mobilityKnight, mobilityBishop, mobilityRook, mobilityQueen, nullptr};
 
 /**
@@ -690,7 +687,7 @@ EvalScore Evaluator::computeKingSafety(Board* b) {
  * @param b
  * @return
  */
-bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
+bb::Score Evaluator::evaluate(Board* b) {
     UCI_ASSERT(b);
 
     Score res = 0;
@@ -716,13 +713,8 @@ bb::Score Evaluator::evaluate(Board* b, Score alpha, Score beta) {
     res += (int) ((float) MgScore(materialScore) * (1 - phase));
     res += (int) ((float) EgScore(materialScore) * (phase));
     
-    Score lazyScore = res * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    if(lazyScore < alpha - lazyEvalAlphaBound){
+    if (abs(res) > 1024)
         return res;
-    }
-    if(lazyScore > beta + lazyEvalBetaBound){
-        return res;
-    }
     
     Square whiteKingSquare = bitscanForward(b->getPieceBB()[WHITE_KING]);
     Square blackKingSquare = bitscanForward(b->getPieceBB()[BLACK_KING]);

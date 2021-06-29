@@ -694,7 +694,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
         staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -1166,7 +1166,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         stand_pat = bestScore = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
     } else {
         stand_pat = bestScore =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
     
     //we can also use the perft_tt entry to adjust the evaluation.

@@ -91,7 +91,7 @@ class Evaluator {
     template<Color color>
     EvalScore computeKingSafety(Board* b);
 
-    bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
+    bb::Score evaluate(Board* b);
 
     bb::Score evaluateTempo(Board* b);
     
