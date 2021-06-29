@@ -150,6 +150,14 @@ struct Evaluator {
         // apply relu to the summation first
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
             act[i] = _mm256_srli_epi16(_mm256_max_epi16(sum[i], reluBias), 0);
+
+//            print_256i_epi16(act[i]);
+//            for(int h = 0; h < 16; h++){
+//                int t =  _mm256_extract_epi16(act[i], h);
+//                std::cout << t << std::endl;
+////                std::cout << (int16_t) _mm256_extract_epi16(act[i], h) << std::endl;
+//            }
+            
         }
         
         // do the sum for the output neurons
@@ -168,10 +176,12 @@ struct Evaluator {
             vsum = _mm_add_epi32(vsum, _mm_srli_si128(vsum, 4));
             int32_t sum = _mm_cvtsi128_si32(vsum);
             
-            output[o] = sum;
+            output[o] = sum + hidden_bias[o];
         }
         
-        return output[0] / 32;
+        
+        
+        return output[0] * 100 / 128 / 1024;
     }
 };
 }    // namespace nn

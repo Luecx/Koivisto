@@ -27,7 +27,7 @@ int16_t nn::inputBias    [HIDDEN_SIZE];
 int16_t nn::hiddenBias   [OUTPUT_SIZE];
 
 void    nn::init() {
-    FILE *f = fopen("fcNet4.net", "rb");
+    FILE *f = fopen("debug.net", "rb");
     
     // figure out how many entries we will store
     uint64_t count =
@@ -60,9 +60,9 @@ void    nn::init() {
     
     for(int o = 0; o < OUTPUT_SIZE; o++){
         for(int i = 0; i < HIDDEN_SIZE; i++){
-            hiddenWeights[o][i] = round(tempHiddenWeights[o][i] * 32);
+            hiddenWeights[o][i] = round(tempHiddenWeights[o][i] * 1024);
         }
-        hiddenBias[o] = round(tempHiddenBias[o] * 32);
+        hiddenBias[o] = round(tempHiddenBias[o] * 1024);
     }
 
     fclose(f);
