@@ -696,6 +696,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval =
             inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
     }
+
+    if (!inCheck && ply > 0 && depth == 1 && staticEval > beta + 50 && sd->evaluator.evalData.safeChecks[b->getActivePlayer()] && MgScore(sd->evaluator.evalData.threats[!b->getActivePlayer()]) < 43)
+        return beta;
+
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
@@ -769,10 +773,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
-    
-    
-    if (!inCheck && ply > 0 && depth <= 2 && staticEval > beta + 50 && sd->evaluator.evalData.safeChecks[b->getActivePlayer()])
-        return beta;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
