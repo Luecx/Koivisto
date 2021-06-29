@@ -902,7 +902,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             Depth moveDepth = std::max(1, depth-lmrReductions[depth][legalMoves]);
             
             if (quiet) {
-                quiets++;
                 // **************************************************************************************************
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this move
@@ -1047,7 +1046,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // undo the move
         b->undoMove();
-        
+        quiets++;
         // if we got a new best score for this node, update the highest score and keep track of the best move
         if (score > highestScore) {
             highestScore = score;
