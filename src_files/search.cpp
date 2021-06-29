@@ -922,7 +922,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 + quiet*15 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -7*moveDepth*moveDepth : -100 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -MgScore(piece_values[QUEEN])*moveDepth*moveDepth*moveDepth/512 : -100 * moveDepth))
                 continue;
         }
         
