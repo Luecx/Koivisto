@@ -42,7 +42,7 @@ int lmrReductions[256][256];
 ThreadData tds[MAX_THREADS]{};
 
 int RAZOR_MARGIN     = 198;
-int FUTILITY_MARGIN  = 92;
+int FUTILITY_MARGIN  = 85;
 int SE_MARGIN_STATIC = 0;
 int LMR_DIV          = 215;
 
