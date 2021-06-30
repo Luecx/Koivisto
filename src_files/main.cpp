@@ -53,7 +53,9 @@ using namespace tuning;
 
     load_positions("../resources/other/E12.33-1M-D12-Resolved.book", 10000000);
     load_positions("../resources/other/E12.41-1M-D12-Resolved.book", 10000000);
+    load_positions("../resources/other/E12.52-1M-D12-Resolved.book", 10000000);
     load_positions("../resources/other/E12.46FRC-1250k-D12-1s-Resolved.book", 10000000);
+    load_positions("../resources/other/E13.04-Filtered.fens", 14000000);
     double K = compute_K(2.48617, 100, 1e-6);
     for(int i = 0; i < 10; i++){
         train(50, K, 0.001 * sqrt(positions.size()));

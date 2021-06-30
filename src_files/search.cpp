@@ -783,11 +783,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // **********************************************************************************************************
         if (depth <= 7 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
-
+     
         // **********************************************************************************************************
-        // futlity pruning:
-        // if the evaluation from a very shallow search after doing nothing is still above beta, we
-        // assume that we are currently above beta as well and stop the search early.
+        // null move pruning:
+        // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
+        // currently above beta as well and stop the search early.
         // **********************************************************************************************************
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && !hasOnlyPawns(b, b->getActivePlayer()))) {
             b->move_null();
@@ -917,8 +917,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+            if (moveDepth <= 5 + quiet*3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -40*moveDepth : -100 * moveDepth))
                 continue;
         }
 
