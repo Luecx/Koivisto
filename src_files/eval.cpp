@@ -21,6 +21,8 @@
 #include "Board.h"
 
 #include "UCIAssert.h"
+#define INCBIN_STYLE INCBIN_STYLE_CAMEL
+#include "incbin/incbin.h"
 
 alignas(32) int16_t nn::inputWeights [INPUT_SIZE ][HIDDEN_SIZE];
 alignas(32) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
@@ -28,43 +30,48 @@ alignas(32) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(32) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
 
+INCBIN(Eval, EVALFILE);
+
 void nn::init() {
     
-    FILE*    f = fopen(EVALFILE, "rb");
-
+    auto data = reinterpret_cast<const float*>(gEvalData+8);
     // figure out how many entries we will store
     uint64_t count =
-        +INPUT_SIZE * HIDDEN_SIZE + HIDDEN_SIZE + HIDDEN_SIZE * OUTPUT_SIZE + OUTPUT_SIZE;
+        + INPUT_SIZE * HIDDEN_SIZE
+        + HIDDEN_SIZE
+        + HIDDEN_SIZE * OUTPUT_SIZE
+        + OUTPUT_SIZE;
 
-    uint64_t fileCount = 0;
-    fread(&fileCount, sizeof(uint64_t), 1, f);
-    UCI_ASSERT((count) == fileCount);
+    uint64_t fileCount = *reinterpret_cast<const uint64_t*>(gEvalData);
+    UCI_ASSERT((count * 4 + 8) == gEvalSize);
+    UCI_ASSERT( count          == fileCount);
 
-    float tempInputWeights[INPUT_SIZE][HIDDEN_SIZE];
-    float tempHiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
-    float tempInputBias[HIDDEN_SIZE];
-    float tempHiddenBias[OUTPUT_SIZE];
-
-    fread(tempInputWeights, sizeof(float), INPUT_SIZE * HIDDEN_SIZE, f);
-    fread(tempInputBias, sizeof(float), HIDDEN_SIZE, f);
-    fread(tempHiddenWeights, sizeof(float), HIDDEN_SIZE * OUTPUT_SIZE, f);
-    fread(tempHiddenBias, sizeof(float), OUTPUT_SIZE, f);
-
-    for (int o = 0; o < HIDDEN_SIZE; o++) {
-        for (int i = 0; i < INPUT_SIZE; i++) {
-            inputWeights[i][o] = round(tempInputWeights[i][o] * 16);
+    int memoryIndex = 0;
+    
+    // read weights
+    for (int i = 0; i < INPUT_SIZE; i++) {
+        for (int o = 0; o < HIDDEN_SIZE; o++) {
+            inputWeights[i][o] = round(data[memoryIndex++] * 16);
         }
-        inputBias[o] = round(tempInputBias[o] * 16);
+    }
+    
+    // read bias
+    for (int o = 0; o < HIDDEN_SIZE; o++) {
+        inputBias[o] = round(data[memoryIndex++] * 16);
     }
 
+    // read weights
     for (int o = 0; o < OUTPUT_SIZE; o++) {
         for (int i = 0; i < HIDDEN_SIZE; i++) {
-            hiddenWeights[o][i] = round(tempHiddenWeights[o][i] * 1024);
+            hiddenWeights[o][i] = round(data[memoryIndex++]  * 1024);
         }
-        hiddenBias[o] = round(tempHiddenBias[o] * 1024 * 16);
+    }
+    
+    // read bias
+    for (int o = 0; o < OUTPUT_SIZE; o++) {
+        hiddenBias[o] = round(data[memoryIndex++] * 1024 * 16);
     }
 
-    fclose(f);
 }
 int  nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square) {
     constexpr int pieceTypeFactor  = 64;
@@ -72,6 +79,7 @@ int  nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Squ
 
     return square + pieceType * pieceTypeFactor + pieceColor * pieceColorFactor;
 }
+
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor,
                                      bb::Square square) {
@@ -94,6 +102,7 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceCol
         }
     }
 }
+
 void nn::Evaluator::reset(Board* board) {
     std::memset(inputMap, 0, sizeof(bool) * INPUT_SIZE);
     std::memcpy(summation, inputBias, sizeof(int16_t) * HIDDEN_SIZE);
@@ -111,6 +120,7 @@ void nn::Evaluator::reset(Board* board) {
         }
     }
 }
+
 int  nn::Evaluator::evaluate(Board* board) {
     if (board != nullptr) {
         reset(board);

@@ -39,9 +39,10 @@ add_executable(Koivisto
         src_files/syzygy/tbchess.c
         src_files/gradient.h
         src_files/movegen.h
-        src_files/movegen.cpp)
+        src_files/movegen.cpp
+        src_files/incbin/incbin.h)
 
-add_definitions(-DEVALFILE=\"debug.net\")
+add_definitions(-DEVALFILE=\"../src_files/default.net\")
 add_definitions(-DMINOR_VERSION=79)
 add_definitions(-DMAJOR_VERSION=4)
 
