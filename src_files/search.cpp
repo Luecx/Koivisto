@@ -773,19 +773,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
-        // razoring:
-        // if a qsearch on the current position is below beta, we can fail soft. Note that this is only used during
-        // within pv nodes which means that alpha = beta - 1.
-        // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply, td);
-            if (score < beta)
-            {
-                return score;
-            } else if (depth == 1)
-                return beta;
-        }
-        // **********************************************************************************************************
         // futlity pruning:
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
