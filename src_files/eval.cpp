@@ -83,6 +83,7 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceCol
     
     if (inputMap[idx] == value)
         return;
+    inputMap[idx] = value;
     
     auto wgt = (__m256i*) (inputWeights[idx]);
     auto sum = (__m256i*) (summation);

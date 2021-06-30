@@ -534,7 +534,6 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
 
     // the thread id starts at 0 for the first thread
     ThreadData* td = &tds[threadId];
-    td->searchData->evaluator = nn::Evaluator{};
     // start the basic search on all threads
     Depth       d  = 1;
     Score       s  = 0;
@@ -689,7 +688,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // the eval and simply adjust the tempo-bonus.
 
     staticEval = inCheck ? -MAX_MATE_SCORE + ply
-                         : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+                         : b->evaluate() * ((b->getActivePlayer() == WHITE) ? 1 : -1);
 
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -1006,7 +1005,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = depth - 2;
             }
         }
-
+        
         // doing the move
         b->move(m);
 
@@ -1050,7 +1049,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // undo the move
         b->undoMove();
-
+      
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
@@ -1173,7 +1172,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
 
     stand_pat       = bestScore =
         inCheck ? -MAX_MATE_SCORE + ply
-                      : sd->evaluator.evaluate(b) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+                      : b->evaluate() * ((b->getActivePlayer() == WHITE) ? 1 : -1);
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {

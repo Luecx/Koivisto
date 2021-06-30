@@ -36,6 +36,8 @@ using namespace move;
 int main(int argc, char *argv[]) {
 
 #ifndef TUNING
+
+
     if (argc == 1) {
         uci::mainloop(false);
     } else if (argc > 1 && strcmp(argv[1], "bench") == 0) {

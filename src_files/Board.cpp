@@ -316,7 +316,7 @@ void Board::setPiece(Square sq, Piece piece) {
     
     // update the evaluator
     evaluator.setPieceOnSquare<true>(getPieceType(piece), getPieceColor(piece), sq);
-    
+
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(piece, sq);
@@ -378,7 +378,7 @@ void Board::replacePiece(Square sq, Piece piece) {
     // update the evaluator
     evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq);
     evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq);
-    
+
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
 }
@@ -1190,4 +1190,8 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
         pinner = lsbReset(pinner);
     }
     return pinned;
+}
+
+Score Board::evaluate(){
+    return this->evaluator.evaluate();
 }
