@@ -22,6 +22,7 @@
 #include "Bitboard.h"
 #include "Move.h"
 #include "Util.h"
+#include "eval.h"
 #include "vector"
 
 #include <ostream>
@@ -122,6 +123,9 @@ class Board {
 #ifdef SEE_CACHE_SIZE
     struct seeCacheEntry seeCache[SEE_CACHE_SIZE] {};
 #endif
+    
+    // store an evaluator which can be efficiently updated
+    nn::Evaluator evaluator{};
     
     // we also store the piece for each square.
     Piece m_pieceBoard[N_SQUARES];

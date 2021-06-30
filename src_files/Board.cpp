@@ -142,6 +142,7 @@ Board::Board(std::string fen) {
         }
     }
     
+    this->evaluator.reset(this);
     // note that we do not read information about move counts. This is usually not required for playing games.
 }
 
@@ -178,6 +179,7 @@ Board::Board(Board* board) {
         m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
     }
     
+    this->evaluator.reset(this);
 }
 
 /**
@@ -312,6 +314,9 @@ void Board::setPiece(Square sq, Piece piece) {
     m_teamOccupiedBB[piece / 8] |= sqBB;
     m_occupiedBB |= sqBB;
     
+    // update the evaluator
+    evaluator.setPieceOnSquare<true>(getPieceType(piece), getPieceColor(piece), sq);
+    
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(piece, sq);
@@ -341,6 +346,9 @@ void Board::unsetPiece(Square sq) {
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(p, sq);
     
+    // update the evaluator
+    evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq);
+    
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
 }
@@ -366,6 +374,10 @@ void Board::replacePiece(Square sq, Piece piece) {
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
+    
+    // update the evaluator
+    evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq);
+    evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq);
     
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
