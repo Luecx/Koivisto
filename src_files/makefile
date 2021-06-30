@@ -1,12 +1,13 @@
-CC      = g++
-SRC     = *.cpp syzygy/tbprobe.c
-LIBS    = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-FOLDER  = bin/
-ROOT    = ../
-NAME    = Koivisto
-MINOR   = 80
-MAJOR   = 4
-EXE     = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
+CC       = g++
+SRC      = *.cpp syzygy/tbprobe.c
+LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+FOLDER   = bin/
+ROOT     = ../
+NAME     = Koivisto
+MINOR    = 80
+MAJOR    = 4
+EVALFILE = no-default
+EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 ifeq ($(OS),Windows_NT)
     PREFIX := windows
     SUFFIX := .exe
@@ -15,7 +16,7 @@ else
     SUFFIX := 
 endif
 
-WFLAGS = -std=c++17 -Wall -Wextra -Wshadow
+WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
 CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
