@@ -681,25 +681,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     SearchData* sd            = td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
-    Score       originalAlpha = alpha;
-    Score       highestScore  = -MAX_MATE_SCORE;
-    Score       score         = -MAX_MATE_SCORE;
-    Move        bestMove      = 0;
     Move        hashMove      = 0;
-    Score       staticEval;
-    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
-    // simply adjust the tempo-bonus.
-    if (b->getPreviousMove() == 0 && ply != 0) {
-        // reuse static evaluation from previous ply in case of nullmove
-        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
-    } else {
-        staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    }
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-    
+
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as the current
@@ -710,13 +693,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     
     if (en.zobrist == zobrist && !skipMove) {
         hashMove = en.move;
-        
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type == ALL_NODE && staticEval > en.score)) {
-            
-            staticEval = en.score;
-        }
         
         
         // We treat child nodes of null moves differently. The reason a null move
@@ -738,6 +714,35 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
     }
     
+    Score       originalAlpha = alpha;
+    Score       highestScore  = -MAX_MATE_SCORE;
+    Score       score         = -MAX_MATE_SCORE;
+    Move        bestMove      = 0;
+    Score       staticEval;
+
+    // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
+    // simply adjust the tempo-bonus.
+    if (b->getPreviousMove() == 0 && ply != 0) {
+        // reuse static evaluation from previous ply in case of nullmove
+        staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+    } else {
+        staticEval =
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
+    
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+
+    if (en.zobrist == zobrist) {      
+        // adjusting eval
+        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+            || (en.type == ALL_NODE && staticEval > en.score)) {
+                
+            staticEval = en.score;
+        }
+    }
+
     // **************************************************************************************************************
     // tablebase probing:
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort the moves
