@@ -44,7 +44,7 @@ ThreadData tds[MAX_THREADS]{};
 int RAZOR_MARGIN     = 198;
 int FUTILITY_MARGIN  = 92;
 int SE_MARGIN_STATIC = 0;
-int LMR_DIV          = 195;
+int LMR_DIV          = 235;
 
 void initLMR() {
     int d, m;
