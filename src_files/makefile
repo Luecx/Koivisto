@@ -4,10 +4,10 @@ LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
 ROOT     = ../
 NAME     = Koivisto
-MINOR    = 80
-MAJOR    = 4
 EVALFILE = default.net
 EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
+MINOR    = 80
+MAJOR    = 4
 ifeq ($(OS),Windows_NT)
     PREFIX := windows
     SUFFIX := .exe
