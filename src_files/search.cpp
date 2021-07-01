@@ -1031,8 +1031,15 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0, behindNMP);
         } else {
+            if (ply == 0 && lmr) {
+                sd->reduce = true;
+                sd->sideToReduce = sd->sideToReduce = !b->getActivePlayer();
+            }
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, behindNMP, &lmr);
             if (pv) sd->reduce = true;
+            if (ply == 0) {
+                sd->sideToReduce = sd->sideToReduce = b->getActivePlayer();
+            }
             if (ply == 0) {
                 if (lmr && score > alpha) {
                     for (int i = lmr - 1; i > 0; i--) {
