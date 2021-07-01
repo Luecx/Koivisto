@@ -687,15 +687,24 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
+    Score       ownThreats    = 0;
+    Score       enemyThreats  = 0;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse the eval and
     // simply adjust the tempo-bonus.
     if (b->getPreviousMove() == 0 && ply != 0) {
         // reuse static evaluation from previous ply in case of nullmove
         staticEval = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+        ownThreats    =  sd->evaluator.evalData.threats[b->getActivePlayer()];
+        enemyThreats  =  sd->evaluator.evalData.threats[!b->getActivePlayer()];
     } else {
-        staticEval =
-            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        if (inCheck) staticEval = -MAX_MATE_SCORE + ply;
+        else {
+            staticEval    = sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+            ownThreats    =  sd->evaluator.evalData.threats[b->getActivePlayer()];
+            enemyThreats  =  sd->evaluator.evalData.threats[!b->getActivePlayer()];
+        }
     }
+
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
@@ -790,17 +799,17 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if the static evaluation is already above beta with a specific margin, assume that the we will definetly be
         // above beta and stop the search here and fail soft
         // **********************************************************************************************************
-        if (depth <= 7 && MgScore(sd->evaluator.evalData.threats[!b->getActivePlayer()]) < 43 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
+        if (depth <= 7 && MgScore(enemyThreats) < 43 && staticEval >= beta + depth * FUTILITY_MARGIN && staticEval < MIN_MATE_SCORE)
             return staticEval;
         
-        if (depth == 1 && staticEval > beta && sd->evaluator.evalData.threats[b->getActivePlayer()] && !sd->evaluator.evalData.threats[!b->getActivePlayer()])
+        if (depth == 1 && staticEval > beta && ownThreats && !enemyThreats)
             return beta;
         // **********************************************************************************************************
         // null move pruning:
         // if the evaluation from a very shallow search after doing nothing is still above beta, we assume that we are
         // currently above beta as well and stop the search early.
         // **********************************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && sd->evaluator.evalData.threats[!b->getActivePlayer()] > 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
+        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0) && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score = -pvSearch(b, -beta, 1 - beta, depth - (depth / 4 + 3) * ONE_PLY - (staticEval-beta<300 ? (staticEval-beta)/FUTILITY_MARGIN : 3), ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
@@ -818,7 +827,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // **********************************************************************************************************
     
     Score betaCut = beta + FUTILITY_MARGIN;
-    if (!inCheck && !pv && depth > 4 && !skipMove && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
+    if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
