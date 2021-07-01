@@ -737,11 +737,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 if (en.score >= beta) {
-                    return en.score;
+                    return std::max(en.score, beta);
                 }
             } else if (en.type == ALL_NODE) {
                 if (en.score <= alpha) {
-                    return en.score;
+                    return std::min(en.score, alpha);
                 }
             }
         }
@@ -1004,7 +1004,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions.
         if (lmr) {
-            lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
+            lmr = lmr - (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) + ply == 0 ? (td->nodes % 10 * 30) - 135: 0) / 150; 
             lmr += !isImproving;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer())) lmr--;
