@@ -1031,6 +1031,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0, behindNMP);
         } else {
+            if (pv && !lmr) sd->reduce = true;
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY, td, 0, behindNMP, &lmr);
             if (pv) sd->reduce = true;
             if (ply == 0) {
