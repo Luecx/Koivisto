@@ -218,7 +218,7 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "eval") {
         nn::Evaluator evaluator{};
         evaluator.reset(board);
-        std::cout << "eval=" << evaluator.evaluate() << std::endl;
+        std::cout << "eval=" << evaluator.evaluate(board->getActivePlayer()) << std::endl;
     }
 }
 

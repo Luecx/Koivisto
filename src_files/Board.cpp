@@ -1193,5 +1193,5 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
 }
 
 Score Board::evaluate(){
-    return this->evaluator.evaluate();
+    return this->evaluator.evaluate(this->getActivePlayer()) * (this->getActivePlayer() == WHITE ? 1:-1);
 }

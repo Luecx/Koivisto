@@ -51,61 +51,73 @@ void nn::init() {
     // read weights
     for (int i = 0; i < INPUT_SIZE; i++) {
         for (int o = 0; o < HIDDEN_SIZE; o++) {
-            inputWeights[i][o] = round(data[memoryIndex++] * 16);
+            inputWeights[i][o] = round(data[memoryIndex++] * 128);
         }
     }
     
     // read bias
     for (int o = 0; o < HIDDEN_SIZE; o++) {
-        inputBias[o] = round(data[memoryIndex++] * 16);
+        inputBias[o] = round(data[memoryIndex++] * 128);
     }
 
     // read weights
     for (int o = 0; o < OUTPUT_SIZE; o++) {
         for (int i = 0; i < HIDDEN_SIZE; i++) {
-            hiddenWeights[o][i] = round(data[memoryIndex++]  * 1024);
+            hiddenWeights[o][i] = round(data[memoryIndex++]  * 128);
         }
     }
     
     // read bias
     for (int o = 0; o < OUTPUT_SIZE; o++) {
-        hiddenBias[o] = round(data[memoryIndex++] * 1024 * 16);
+        hiddenBias[o] = round(data[memoryIndex++] * 128 * 128);
     }
 
 }
-int  nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square) {
+int  nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color activeSide) {
     constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
 
-    return square + pieceType * pieceTypeFactor + pieceColor * pieceColorFactor;
+    Square relativeSquare = activeSide == WHITE ? square: mirrorSquare(square);
+    
+    return relativeSquare
+           + pieceType * pieceTypeFactor
+           + (pieceColor == activeSide) * pieceColorFactor;
 }
 
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor,
                                      bb::Square square) {
-    int idx = index(pieceType, pieceColor, square);
-
-    if (inputMap[idx] == value)
+    int idxW = index(pieceType, pieceColor, square, WHITE);
+    int idxB = index(pieceType, pieceColor, square, BLACK);
+    
+    int idx[N_COLORS]{idxW, idxB};
+    
+    if (inputMap[idxW] == value)
         return;
-    inputMap[idx] = value;
-
-    auto wgt      = (__m256i*) (inputWeights[idx]);
-    auto sum      = (__m256i*) (summation);
-
-    if constexpr (value) {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-            sum[i] = _mm256_add_epi16(sum[i], wgt[i]);
-        }
-    } else {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-            sum[i] = _mm256_sub_epi16(sum[i], wgt[i]);
+    inputMap[idxW] = value;
+    
+    for(Color c:{WHITE, BLACK}){
+        auto wgt      = (__m256i*) (inputWeights[idx[c]]);
+        auto sum      = (__m256i*) (summation[c]);
+    
+        if constexpr (value) {
+            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+                sum[i] = _mm256_add_epi16(sum[i], wgt[i]);
+            }
+        } else {
+            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+                sum[i] = _mm256_sub_epi16(sum[i], wgt[i]);
+            }
         }
     }
+    
+    
 }
 
 void nn::Evaluator::reset(Board* board) {
     std::memset(inputMap, 0, sizeof(bool) * INPUT_SIZE);
-    std::memcpy(summation, inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(summation[WHITE], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(summation[BLACK], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
 
     for (Color c : {WHITE, BLACK}) {
         for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING}) {
@@ -121,19 +133,20 @@ void nn::Evaluator::reset(Board* board) {
     }
 }
 
-int  nn::Evaluator::evaluate(Board* board) {
+int  nn::Evaluator::evaluate(Color activeColor, Board* board) {
     if (board != nullptr) {
         reset(board);
     }
 
     constexpr __m256i reluBias {};
 
-    __m256i*          sum = (__m256i*) (summation);
+    __m256i*          sum = (__m256i*) (summation[activeColor]);
     __m256i*          act = (__m256i*) (activation);
 
     // apply relu to the summation first
     for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
         act[i] = _mm256_max_epi16(sum[i], reluBias);
+    
     }
 
     // do the sum for the output neurons
@@ -143,6 +156,24 @@ int  nn::Evaluator::evaluate(Board* board) {
 
         __m256i res {};
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+    
+//            std::cout << _mm256_extract_epi16(wgt[i], 0) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 1) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 2) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 3) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 4) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 5) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 6) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 7) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 8) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 9) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 10) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 11) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 12) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 13) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 14) << std::endl;
+//            std::cout << _mm256_extract_epi16(wgt[i], 15) << std::endl;
+            
             res = _mm256_add_epi32(res, _mm256_madd_epi16(act[i], wgt[i]));
         }
 
@@ -156,7 +187,7 @@ int  nn::Evaluator::evaluate(Board* board) {
         output[o]    = sum + hiddenBias[0];
     }
 
-    return output[0] / 16 / 1024;
+    return output[0] / 128 / 128;
 }
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,
