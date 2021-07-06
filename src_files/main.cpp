@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
         
         Board b{fen};
         Score staticEval = evaluator.evaluate(&b);
-        Score qSearchEval = qSearch(&b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, &td);
+        Score qSearchEval = qSearch(&b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, &td, b.isInCheck(b.getActivePlayer()));
         
         if(staticEval == qSearchEval){
             counter ++;

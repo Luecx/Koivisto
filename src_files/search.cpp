@@ -1208,9 +1208,14 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // simply adjust the tempo-bonus.
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
-    
-    stand_pat = bestScore = sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-    
+        if (b->getPreviousMove() == 0 && ply != 0) {
+        // reuse static evaluation from previous ply incase of nullmove
+        stand_pat = bestScore = -sd->eval[1 - b->getActivePlayer()][ply - 1] + sd->evaluator.evaluateTempo(b) * 2;
+    } else {
+        stand_pat = bestScore =
+            inCheck ? -MAX_MATE_SCORE + ply : sd->evaluator.evaluate(b, alpha, beta) * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+    }
+        
     
     if (bestScore >= beta)
         return beta;
