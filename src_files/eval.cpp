@@ -29,6 +29,8 @@ alignas(32) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
 alignas(32) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(32) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
+#define INPUT_WEIGHT_MULTIPLIER (16)
+#define HIDDEN_WEIGHT_MULTIPLIER (1024)
 
 INCBIN(Eval, EVALFILE);
 
@@ -51,25 +53,30 @@ void nn::init() {
     // read weights
     for (int i = 0; i < INPUT_SIZE; i++) {
         for (int o = 0; o < HIDDEN_SIZE; o++) {
-            inputWeights[i][o] = round(data[memoryIndex++] * 16);
+            inputWeights[i][o] = round(data[memoryIndex++]
+                                       * INPUT_WEIGHT_MULTIPLIER);
         }
     }
     
     // read bias
     for (int o = 0; o < HIDDEN_SIZE; o++) {
-        inputBias[o] = round(data[memoryIndex++] * 16);
+        inputBias[o] = round(data[memoryIndex++]
+                             * INPUT_WEIGHT_MULTIPLIER);
     }
 
     // read weights
     for (int o = 0; o < OUTPUT_SIZE; o++) {
         for (int i = 0; i < HIDDEN_SIZE; i++) {
-            hiddenWeights[o][i] = round(data[memoryIndex++]  * 1024);
+            hiddenWeights[o][i] = round(data[memoryIndex++]
+                                        * HIDDEN_WEIGHT_MULTIPLIER);
         }
     }
     
     // read bias
     for (int o = 0; o < OUTPUT_SIZE; o++) {
-        hiddenBias[o] = round(data[memoryIndex++] * 1024 * 16);
+        hiddenBias[o] = round(data[memoryIndex++]
+                              * HIDDEN_WEIGHT_MULTIPLIER
+                              * INPUT_WEIGHT_MULTIPLIER);
     }
 
 }
