@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     Evaluator evaluator{};
     
     ThreadData td{};
-    SearchData* sd = new SearchData;
+    SearchData* sd = new SearchData();
     td.searchData = sd;
     sd->evaluator = evaluator;
     
@@ -61,8 +61,9 @@ int main(int argc, char *argv[]) {
         std::string fen = line.substr(0, line.find('['));
         
         Board b{fen};
-        Score staticEval = evaluator.evaluate(&b);
+        Score staticEval  = evaluator.evaluate(&b) * (b.getActivePlayer() == WHITE ? 1:-1);
         Score qSearchEval = qSearch(&b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, &td, b.isInCheck(b.getActivePlayer()));
+        
         
         if(staticEval == qSearchEval){
             counter ++;
@@ -73,11 +74,10 @@ int main(int argc, char *argv[]) {
         }else{
             faulty ++;
         }
-        
-        // process pair (a,b)
     }
-    
+    std::cout << counter << "   " << faulty << std::endl;
     myfile.close();
+    infile.close();
     exit(-1);
 
 
