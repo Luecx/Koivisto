@@ -22,11 +22,12 @@
 #include "Move.h"
 #include "MoveOrderer.h"
 #include "Verification.h"
-#include "uci.h"
-
-#include <iomanip>
 #include "gradient.h"
 #include "movegen.h"
+#include "uci.h"
+
+#include <fstream>
+#include <iomanip>
 
 using namespace std;
 using namespace bb;
@@ -34,6 +35,51 @@ using namespace move;
 
 
 int main(int argc, char *argv[]) {
+    
+    
+    bb::init();
+    search_init(16);
+    psqt_init();
+    
+    std::ifstream infile(std::string{argv[1]});
+    
+    std::ofstream myfile;
+    myfile.open (std::string{argv[2]});
+    
+    Evaluator evaluator{};
+    
+    ThreadData td{};
+    SearchData* sd = new SearchData;
+    td.searchData = sd;
+    sd->evaluator = evaluator;
+    
+    std::string line;
+    int counter = 0;
+    int faulty  = 0;
+    while (std::getline(infile, line))
+    {
+        std::string fen = line.substr(0, line.find('['));
+        
+        Board b{fen};
+        Score staticEval = evaluator.evaluate(&b);
+        Score qSearchEval = qSearch(&b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, &td);
+        
+        if(staticEval == qSearchEval){
+            counter ++;
+            if(counter % 100000 == 0){
+                std::cout << counter << "   " << faulty << std::endl;
+            }
+            myfile << line << "\n";
+        }else{
+            faulty ++;
+        }
+        
+        // process pair (a,b)
+    }
+    
+    myfile.close();
+    exit(-1);
+
 
 #ifndef TUNING
     if (argc == 1) {
