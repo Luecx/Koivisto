@@ -1099,7 +1099,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
         
-        lmr = 1;
+        lmr = 0;
 
         // doing the move
         b->move(m);
