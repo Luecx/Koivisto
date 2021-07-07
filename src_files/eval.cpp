@@ -37,6 +37,8 @@ INCBIN(Eval, EVALFILE);
 void nn::init() {
     
     auto data = reinterpret_cast<const float*>(gEvalData+8);
+
+#ifdef DNDEBUG
     // figure out how many entries we will store
     uint64_t count =
         + INPUT_SIZE * HIDDEN_SIZE
@@ -47,7 +49,7 @@ void nn::init() {
     uint64_t fileCount = *reinterpret_cast<const uint64_t*>(gEvalData);
     UCI_ASSERT((count * 4 + 8) == gEvalSize);
     UCI_ASSERT( count          == fileCount);
-
+#endif
     int memoryIndex = 0;
     
     // read weights
@@ -158,9 +160,9 @@ int  nn::Evaluator::evaluate(Board* board) {
             _mm_add_epi32(_mm256_castsi256_si128(res), _mm256_extractf128_si256(res, 1));
         __m128i vsum = _mm_add_epi32(reduced_4, _mm_srli_si128(reduced_4, 8));
         vsum         = _mm_add_epi32(vsum, _mm_srli_si128(vsum, 4));
-        int32_t sum  = _mm_cvtsi128_si32(vsum);
+        int32_t sums = _mm_cvtsi128_si32(vsum);
 
-        output[o]    = sum + hiddenBias[0];
+        output[o]    = sums + hiddenBias[0];
     }
 
     return output[0] / 16 / 1024;

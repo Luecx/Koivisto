@@ -4,7 +4,7 @@ LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
 ROOT     = ../
 NAME     = Koivisto
-EVALFILE = default.net
+EVALFILE = $(ROOT)networks/default.net
 EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 MINOR    = 0
 MAJOR    = 5
@@ -45,3 +45,7 @@ release:
 
 tuning:
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(POPCNTFLAGS) $(OPENMPFLAGS) -DTUNING -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
+
+networks:
+	cd $(ROOT)
+	git submodule update --init
