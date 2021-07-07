@@ -19,6 +19,7 @@
 
 #include "search.h"
 
+#include "Bitboard.h"
 #include "History.h"
 #include "TimeManager.h"
 #include "UCIAssert.h"
@@ -217,7 +218,58 @@ void search_cleanUp() {
         }
     }
 }
+void getThreats(Board *b, SearchData *sd, Depth ply) {
+    U64 occupied = b->getOccupiedBB();
 
+    U64 whitePawns = b->getPieceBB(WHITE , PAWN);
+    U64 blackPawns = b->getPieceBB(BLACK , PAWN);
+
+    U64 whitePawnAttacks = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
+    U64 blackPawnAttacks = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+
+    sd->threatCount[ply][WHITE] = bitCount(whitePawnAttacks & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP) | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] = bitCount(blackPawnAttacks & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP) | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+
+    U64 whiteMinorAttacks = 0;
+    U64 blackMinorAttacks = 0;
+    U64 k = b->getPieceBB(WHITE, KNIGHT);
+    while (k) {
+        whiteMinorAttacks |= KNIGHT_ATTACKS[bitscanForward(k)];
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, KNIGHT);
+    while (k) {
+        blackMinorAttacks |= KNIGHT_ATTACKS[bitscanForward(k)];
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(WHITE, BISHOP);
+    while (k) {
+        whiteMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, BISHOP);
+    while (k) {
+        blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    sd->threatCount[ply][WHITE] += bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] += bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+    
+    U64 whiteRookAttacks = 0;
+    U64 blackRookAttacks = 0;
+    k = b->getPieceBB(WHITE, ROOK);
+    while (k) {
+        whiteRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, ROOK);
+    while (k) {
+        blackRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
+}
 /**
  * extracts the pv for the given board using the transposition table.
  * It stores the moves recursively in the given list.
@@ -700,8 +752,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         staticEval = -MAX_MATE_SCORE + ply;
     else {
         staticEval = b->evaluate() * ((b->getActivePlayer() == WHITE) ? 1 : -1);
-//        ownThreats   = sd->evaluator.evalData.threats[b->getActivePlayer()];
-//        enemyThreats = sd->evaluator.evalData.threats[!b->getActivePlayer()];
+        getThreats(b, sd, ply);
+        ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
+        enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
     }
 
     // we check if the evaluation improves across plies.
@@ -796,7 +849,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // from eval to prevent pruning if the oponent has multiple threats.
         // **********************************************************************************************************
         if (depth <= 7
-//            && MgScore(enemyThreats) < 43
+            && enemyThreats < 2
             && staticEval >= beta + depth * FUTILITY_MARGIN
             && staticEval < MIN_MATE_SCORE)
             return staticEval;

@@ -6,8 +6,8 @@ ROOT     = ../
 NAME     = Koivisto
 EVALFILE = default.net
 EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
-MINOR    = 80
-MAJOR    = 4
+MINOR    = 0
+MAJOR    = 5
 ifeq ($(OS),Windows_NT)
     PREFIX := windows
     SUFFIX := .exe
