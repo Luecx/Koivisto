@@ -109,7 +109,7 @@ void uci::mainloop(bool bench) {
  */
 void uci::uci() {
     std::cout << "id name Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
-    std::cout << "id author K. Kahre, F. Eggers, E. Bruno" << std::endl;
+    std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
     std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
     std::cout << "option name OwnBook type check default false" << std::endl;
