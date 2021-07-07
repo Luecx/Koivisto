@@ -22,7 +22,6 @@
 
 #include "Bitboard.h"
 #include "Move.h"
-#include "eval.h"
 
 using namespace bb;
 using namespace move;
@@ -32,7 +31,6 @@ struct SearchData {
     Move       bestMove = 0;
 
     MoveList** moves;
-    Evaluator  evaluator {};
 
     // capture history table (side-from-to)
     int        captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};

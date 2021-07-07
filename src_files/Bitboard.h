@@ -28,7 +28,7 @@
 
 namespace bb {
 
-#define mirrorSquare(s) squareIndex(7 - rankIndex(s), fileIndex(s))
+#define mirrorSquare(s) (bb::squareIndex(7 - bb::rankIndex(s), bb::fileIndex(s)))
 
 typedef uint64_t U64;
 typedef int8_t   Square;

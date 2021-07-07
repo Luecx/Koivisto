@@ -75,7 +75,7 @@ void uci::mainloop(bool bench) {
 
     bb::init();
     search_init(16);
-    psqt_init();
+    nn::init();
 
     if (bench) {
         uci::bench();
@@ -216,7 +216,9 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "print") {
         std::cout << *board << std::endl;
     } else if (split.at(0) == "eval") {
-        printEvaluation(board);
+        nn::Evaluator evaluator{};
+        evaluator.reset(board);
+        std::cout << "eval=" << evaluator.evaluate() << std::endl;
     }
 }
 

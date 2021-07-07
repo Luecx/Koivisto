@@ -20,83 +20,55 @@
 #define KOIVISTO_EVAL_H
 
 #include "Bitboard.h"
-#include "Board.h"
-#include "psqt.h"
 
-extern EvalScore  bishop_pawn_same_color_table_o[9];
-extern EvalScore  bishop_pawn_same_color_table_e[9];
-extern EvalScore* evfeatures                    [];
-extern EvalScore  hangingEval                   [5];
-extern EvalScore  pinnedEval                    [15];
-extern EvalScore* mobilities                    [N_PIECE_TYPES];
-extern int        mobEntryCount                 [N_PIECE_TYPES];
-extern float      phaseValues                   [N_PIECE_TYPES];
-extern EvalScore  passer_rank_n                 [N_RANKS];
-extern EvalScore  candidate_passer              [N_RANKS];
+#include <cstdint>
+#include <cstring>
+#include <immintrin.h>
 
-extern int kingSafetyFileStatus[4];
-extern int kingSafetyAttackWeights[N_PIECE_TYPES];
-extern int KING_SAFETY_QUEEN_CHECK;
-extern int KING_SAFETY_ROOK_CHECK;
-extern int KING_SAFETY_BISHOP_CHECK;
-extern int KING_SAFETY_KNIGHT_CHECK;
-extern int KING_SAFETY_WEAK_SQUARES;
-extern int KING_SAFETY_NO_ENEMY_QUEEN;
 
-bool isOutpost          (Square s, Color c, U64 opponentPawns, U64 pawnCover);
-bool hasMatingMaterial  (Board* b, bool side);
+#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2)
+#define HIDDEN_SIZE    (512)
+#define OUTPUT_SIZE    (1)
 
-struct EvalData{
+#define BIT_ALIGNMENT  (256)
+#define BYTE_ALIGNMENT (BIT_ALIGNMENT / 8)
+#define ALIGNMENT      (BYTE_ALIGNMENT)
+
+#define STRIDE_16_BIT  (256 / 16)
+
+
+class Board;
+
+namespace nn {
+
+extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
+extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
+extern int16_t inputBias    [HIDDEN_SIZE];
+extern int32_t hiddenBias   [OUTPUT_SIZE];
+
+void init();
+
+struct Evaluator {
     
-    U64 attacks         [N_COLORS][N_PIECE_TYPES]{};
-    U64 kingZone        [N_COLORS]{};
-    U64 allAttacks      [N_COLORS]{};
-    U64 twoAttacks      [N_COLORS]{};
-    U64 semiOpen        [N_COLORS]{};
-    U64 pawnEastAttacks [N_COLORS]{};
-    U64 pawnWestAttacks [N_COLORS]{};
-    U64 mobilitySquares [N_COLORS]{};
-    U64 openFiles;
+    // inputs and outputs
+    bool inputMap[INPUT_SIZE] {};
     
-    Square kingSquare   [N_COLORS]{};
+    // summations
+    alignas(ALIGNMENT) int16_t summation [HIDDEN_SIZE]{};
     
-    EvalScore threats   [N_COLORS]{};
+    alignas(ALIGNMENT) int16_t activation[HIDDEN_SIZE] {};
+    alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE] {};
     
-    int ksAttackValue   [N_COLORS]{};
-    int ksAttackCount   [N_COLORS]{};
+    
+    int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square);
+
+    template<bool value>
+    void setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square);
+
+    void reset(Board* board);
+    
+    int evaluate(Board* board = nullptr);
 };
-
-class Evaluator {
-    public:
-
-    EvalData evalData;
-    float phase;
-    
-    template<Color color>
-    EvalScore computePinnedPieces(Board* b);
-
-    EvalScore computeHangingPieces(Board* b);
-    
-    template<Color color>
-    EvalScore computePassedPawns(Board* b);
-    
-    EvalScore computePawns(Board* b);
-    
-    template<Color color, PieceType pieceType>
-    EvalScore computePieces(Board* b);
-    
-    template<Color color>
-    EvalScore computeKings(Board* b);
-    
-    template<Color color>
-    EvalScore computeKingSafety(Board* b);
-
-    bb::Score evaluate(Board* b, Score alpha = -MAX_MATE_SCORE, Score beta = +MAX_MATE_SCORE);
-
-    bb::Score evaluateTempo(Board* b);
-    
-};
-
-void printEvaluation(Board* b);
+}    // namespace nn
 
 #endif    // KOIVISTO_EVAL_H

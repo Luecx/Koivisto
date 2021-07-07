@@ -52,7 +52,7 @@ Board::Board(std::string fen) {
     }
     
     // we need to push a default board status.
-    BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0, {}};
+    BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0};
     this->m_boardStatusHistory.push_back(boardStatus);
     
     // using some string utilties defined in Util.h, we split the fen into parts.
@@ -142,7 +142,7 @@ Board::Board(std::string fen) {
         }
     }
     
-    getBoardStatus()->material.reset(this);
+    this->evaluator.reset(this);
     // note that we do not read information about move counts. This is usually not required for playing games.
 }
 
@@ -179,7 +179,7 @@ Board::Board(Board* board) {
         m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
     }
     
-    getBoardStatus()->material.reset(this);
+    this->evaluator.reset(this);
 }
 
 /**
@@ -314,6 +314,9 @@ void Board::setPiece(Square sq, Piece piece) {
     m_teamOccupiedBB[piece / 8] |= sqBB;
     m_occupiedBB |= sqBB;
     
+    // update the evaluator
+    evaluator.setPieceOnSquare<true>(getPieceType(piece), getPieceColor(piece), sq);
+
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(piece, sq);
@@ -343,6 +346,9 @@ void Board::unsetPiece(Square sq) {
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= getHash(p, sq);
     
+    // update the evaluator
+    evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq);
+    
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
 }
@@ -369,6 +375,10 @@ void Board::replacePiece(Square sq, Piece piece) {
     BoardStatus* st = getBoardStatus();
     st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
     
+    // update the evaluator
+    evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq);
+    evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq);
+
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
 }
@@ -393,10 +403,8 @@ void Board::move(Move m) {
                                    + 1,    // increment fifty move counter. might be reset
                                    1ULL,       // set rep to 1 (no rep)
                                    previousStatus->moveCounter + getActivePlayer(),    // increment move counter
-                                   m,
-                                   previousStatus->material};
+                                   m};
     
-    Material material = previousStatus->material;
     
     Square   sqFrom = getSquareFrom(m);
     Square   sqTo   = getSquareTo(m);
@@ -447,36 +455,24 @@ void Board::move(Move m) {
             
             // setting m_piecesBB
             this->unsetPiece(sqFrom);
-            // update material
-            material.unsetPiece(pFrom, sqFrom);
-            material.setPiece(getPromotionPiece(m), sqTo);
             // do the "basic" move
             if (isCapture(m)) {
-                // update material
-                material.unsetPiece(getPiece(sqTo), sqTo);
                 this->replacePiece(sqTo, getPromotionPiece(m));
             } else {
                 this->setPiece(sqTo, getPromotionPiece(m));
             }
             
-            getBoardStatus()->material = material;
             return;
         } else if (mType == EN_PASSANT) {
             
             m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
             this->changeActivePlayer();
             
-            // make sure to capture the pawn
-            material.unsetPiece(!color, PAWN, sqTo - 8 * factor);
             unsetPiece(sqTo - 8 * factor);
             
-            // move the pawn
-            material.unsetPiece(pFrom, sqFrom);
-            material.setPiece(pFrom, sqTo);
             this->unsetPiece(sqFrom);
             this->setPiece(sqTo, pFrom);
             
-            getBoardStatus()->material = material;
             return;
         }
     } else if (getPieceType(pFrom) == KING) {
@@ -507,9 +503,6 @@ void Board::move(Move m) {
         // we need to compute the repetition count
         this->computeNewRepetition();
         
-        // completely recalculate material
-        material.reset(this);
-        getBoardStatus()->material = material;
         
         return;
         
@@ -537,12 +530,8 @@ void Board::move(Move m) {
     // doing the initial move
     this->unsetPiece(sqFrom);
     
-    // updating material
-    material.unsetPiece(pFrom, sqFrom);
-    material.setPiece(pFrom, sqTo);
     
     if (mType != EN_PASSANT && isCapture(m)) {
-        material.unsetPiece(getPiece(sqTo), sqTo);
         this->replacePiece(sqTo, pFrom);
     } else {
         this->setPiece(sqTo, pFrom);
@@ -551,7 +540,6 @@ void Board::move(Move m) {
     this->changeActivePlayer();
     this->computeNewRepetition();
     
-    getBoardStatus()->material = material;
     __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist & table->m_mask]);
 }
 
@@ -606,8 +594,7 @@ void Board::move_null() {
                                    previousStatus->fiftyMoveCounter + 1,
                                    1ULL,
                                    previousStatus->moveCounter + getActivePlayer(),
-                                   0ULL,
-                                   previousStatus->material};
+                                   0ULL};
     
     m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
     changeActivePlayer();
@@ -1203,4 +1190,8 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
         pinner = lsbReset(pinner);
     }
     return pinned;
+}
+
+Score Board::evaluate(){
+    return this->evaluator.evaluate();
 }
