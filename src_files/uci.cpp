@@ -83,7 +83,7 @@ void uci::mainloop(bool bench) {
         search_cleanUp();
         bb::cleanUp();
     } else {
-        std::cout << "Koivisto 64 " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers, E. Bruno"
+        std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
                   << std::endl;
 
         board = new Board();
