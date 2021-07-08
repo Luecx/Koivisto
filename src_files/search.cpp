@@ -854,13 +854,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && staticEval < MIN_MATE_SCORE)
             return staticEval;
 
-        // **********************************************************************************************************
-        // threat pruning:
-        // if the static evaluation is already above beta at depth 1 and we have strong threats, asume
-        // that we can atleast achieve beta
-        // **********************************************************************************************************
-        if (depth == 1 && staticEval > beta + 30 && ownThreats && !enemyThreats)
-            return beta;
 
         // **********************************************************************************************************
         // null move pruning:
