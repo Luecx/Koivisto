@@ -603,7 +603,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
         if (d < 6) {
             s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
-            Score window = 10;
+            Score window = 8;
             Score alpha  = s - window;
             Score beta   = s + window;
 
