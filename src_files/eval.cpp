@@ -30,7 +30,7 @@ alignas(32) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(32) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
 #define INPUT_WEIGHT_MULTIPLIER  (16)
-#define HIDDEN_WEIGHT_MULTIPLIER (1024)
+#define HIDDEN_WEIGHT_MULTIPLIER (128)
 
 INCBIN(Eval, EVALFILE);
 
@@ -165,7 +165,7 @@ int  nn::Evaluator::evaluate(Board* board) {
         output[o]    = sums + hiddenBias[0];
     }
 
-    return output[0] / 16 / 1024;
+    return output[0] / HIDDEN_WEIGHT_MULTIPLIER / INPUT_WEIGHT_MULTIPLIER;
 }
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,
