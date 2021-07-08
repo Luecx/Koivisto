@@ -29,8 +29,8 @@ alignas(32) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
 alignas(32) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(32) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (16)
-#define HIDDEN_WEIGHT_MULTIPLIER (1024)
+#define INPUT_WEIGHT_MULTIPLIER  (128)
+#define HIDDEN_WEIGHT_MULTIPLIER (128)
 
 INCBIN(Eval, EVALFILE);
 
@@ -82,39 +82,50 @@ void nn::init() {
     }
 
 }
-int  nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square) {
+int  nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color activePlayer) {
+    
     constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
 
-    return square + pieceType * pieceTypeFactor + pieceColor * pieceColorFactor;
+    const Square relativeSquare = activePlayer == WHITE ? square: mirrorSquare(square);
+    
+    return relativeSquare + pieceType * pieceTypeFactor + (pieceColor == activePlayer) * pieceColorFactor;
 }
 
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor,
                                      bb::Square square) {
-    int idx = index(pieceType, pieceColor, square);
+    int idxWhite = index(pieceType, pieceColor, square, WHITE);
 
-    if (inputMap[idx] == value)
+    if (inputMap[idxWhite] == value)
         return;
-    inputMap[idx] = value;
-
-    auto wgt      = (__m256i*) (inputWeights[idx]);
-    auto sum      = (__m256i*) (summation);
-
-    if constexpr (value) {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-            sum[i] = _mm256_add_epi16(sum[i], wgt[i]);
-        }
-    } else {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-            sum[i] = _mm256_sub_epi16(sum[i], wgt[i]);
+    inputMap[idxWhite] = value;
+    
+    int idxBlack = index(pieceType, pieceColor, square, BLACK);
+    int idx[N_COLORS]{idxWhite, idxBlack};
+    
+    for(Color c:{WHITE, BLACK}){
+        auto wgt      = (__m256i*) (inputWeights[idx[c]]);
+        auto sum      = (__m256i*) (summation[c]);
+        
+        
+        if constexpr (value) {
+            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+                sum[i] = _mm256_add_epi16(sum[i], wgt[i]);
+            }
+        } else {
+            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+                sum[i] = _mm256_sub_epi16(sum[i], wgt[i]);
+            }
         }
     }
 }
 
+
 void nn::Evaluator::reset(Board* board) {
     std::memset(inputMap, 0, sizeof(bool) * INPUT_SIZE);
-    std::memcpy(summation, inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(summation[WHITE], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(summation[BLACK], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
 
     for (Color c : {WHITE, BLACK}) {
         for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING}) {
@@ -130,16 +141,17 @@ void nn::Evaluator::reset(Board* board) {
     }
 }
 
-int  nn::Evaluator::evaluate(Board* board) {
+int  nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     if (board != nullptr) {
         reset(board);
     }
 
     constexpr __m256i reluBias {};
 
-    __m256i*          sum = (__m256i*) (summation);
+    __m256i*          sum = (__m256i*) (summation[activePlayer]);
     __m256i*          act = (__m256i*) (activation);
 
+    
     // apply relu to the summation first
     for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
         act[i] = _mm256_max_epi16(sum[i], reluBias);
@@ -165,7 +177,7 @@ int  nn::Evaluator::evaluate(Board* board) {
         output[o]    = sums + hiddenBias[0];
     }
 
-    return output[0] / 16 / 1024;
+    return output[0] / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
 }
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,

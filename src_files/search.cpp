@@ -751,7 +751,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     if (inCheck)
         staticEval = -MAX_MATE_SCORE + ply;
     else {
-        staticEval = b->evaluate() * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        staticEval = b->evaluate();
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
@@ -1278,7 +1278,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     Score bestScore = -MAX_MATE_SCORE;
 
     stand_pat       = bestScore =
-        inCheck ? -MAX_MATE_SCORE + ply : b->evaluate() * ((b->getActivePlayer() == WHITE) ? 1 : -1);
+        inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {

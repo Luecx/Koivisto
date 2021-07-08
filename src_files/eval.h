@@ -54,20 +54,19 @@ struct Evaluator {
     bool inputMap[INPUT_SIZE] {};
     
     // summations
-    alignas(ALIGNMENT) int16_t summation [HIDDEN_SIZE]{};
+    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
     
     alignas(ALIGNMENT) int16_t activation[HIDDEN_SIZE] {};
     alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE] {};
     
-    
-    int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square);
+    int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color activePlayer);
 
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square);
 
     void reset(Board* board);
     
-    int evaluate(Board* board = nullptr);
+    int evaluate(bb::Color activePlayer, Board* board = nullptr);
 };
 }    // namespace nn
 
