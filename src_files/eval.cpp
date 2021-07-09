@@ -29,8 +29,8 @@ alignas(32) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
 alignas(32) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(32) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (256)
-#define HIDDEN_WEIGHT_MULTIPLIER (256)
+#define INPUT_WEIGHT_MULTIPLIER  (512)
+#define HIDDEN_WEIGHT_MULTIPLIER (512)
 
 INCBIN(Eval, EVALFILE);
 
