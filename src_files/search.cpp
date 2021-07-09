@@ -1101,6 +1101,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
         }
 
+        if (quiet && depth - lmr - 1 <= 7 && (1+depth - lmr)*FUTILITY_MARGIN + sd->eval[b->getActivePlayer()][ply] < alpha)
+            continue;
+
         // doing the move
         b->move(m);
 
