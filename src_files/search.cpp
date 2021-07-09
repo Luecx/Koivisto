@@ -607,14 +607,16 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
             Score alpha  = s - window;
             Score beta   = s + window;
 
+            Depth sDepth = d; // Idea from Stockfish / Houdini.
             while (isTimeLeft()) {
-                s = pvSearch(&searchBoard, alpha, beta, d, 0, td, 0, 2);
+                s = pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
 
                 window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
                 if (s >= beta) {
                     beta += window;
+                    sDepth--;
                 } else if (s <= alpha) {
                     beta = (alpha + beta) / 2;
                     alpha -= window;
