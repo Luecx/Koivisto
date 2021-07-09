@@ -608,7 +608,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
             Score beta   = s + window;
 
             Depth sDepth = d; // Idea of reducing depth on fail high from Houdini. http://www.talkchess.com/forum3/viewtopic.php?t=45624.
-            while (isTimeLeft()) {
+            while (s >= beta ? rootTimeLeft() : isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
                 s = pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
                 window += window;
