@@ -1053,8 +1053,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
-        }
-
+        } else if (sameMove(m, hashMove) && isCapture(b->getPreviousMove()) && ply > 1 && getSquareTo(m) == getSquareTo(b->getPreviousMove())) 
+            extension = 1;
         // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at. The idea behind
@@ -1100,10 +1100,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr = depth - 2;
             }
         }
-
-        // Recapture extension
-        if (sameMove(m, hashMove) && isCapture(b->getPreviousMove()) && ply > 1 && getSquareTo(m) == getSquareTo(b->getPreviousMove())) 
-            extension = 1;
 
         // doing the move
         b->move(m);
