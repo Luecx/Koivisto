@@ -1134,6 +1134,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // fails/proves to be best.
             if (ply == 0) {
                 if (lmr && score > alpha) {
+                    // reduced search.
+                    score = -pvSearch(b, -beta, -beta+1, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
+                            td, 0, behindNMP, &lmr);
+                    if (score >= beta)
+                        alpha = beta; 
                     for (int i = lmr - 1; i > 0; i--) {
                         score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
                                           ply + ONE_PLY, td, 0, behindNMP);    // re-search
