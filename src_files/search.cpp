@@ -1038,7 +1038,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
-                    depth += *lmrFactor;
+                    extension = *lmrFactor;
                     *lmrFactor = 0;
                 }
                 extension++;
