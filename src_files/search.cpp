@@ -889,40 +889,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     MoveList* mv      = sd->moves[ply];
 
     // **********************************************************************************************************
-    // probcut was first implemented in StockFish by Gary Linscott. See
-    // https://www.chessprogramming.org/ProbCut. apart from only doing probcut when we have threats,
-    // this is based on other top engines.
-    // **********************************************************************************************************
-
-    Score     betaCut = beta + FUTILITY_MARGIN;
-    if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
-        && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
-        generateNonQuietMoves(b, mv, hashMove, sd, ply);
-        MoveOrderer moveOrderer {mv};
-        while (moveOrderer.hasNext()) {
-            // get the current move
-            Move m = moveOrderer.next(0);
-
-            if (!b->isLegal(m))
-                continue;
-
-            b->move(m);
-
-            Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
-
-            if (qScore >= betaCut)
-                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP);
-
-            b->undoMove();
-
-            if (qScore >= betaCut) {
-                table->put(zobrist, qScore, m, CUT_NODE, depth - 3);
-                return betaCut;
-            }
-        }
-    }
-
-    // **********************************************************************************************************
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
     // **********************************************************************************************************
@@ -975,7 +941,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
-
+        Score staticExchangeEval = -1;
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
             Depth moveDepth = std::max(1, depth - lmrReductions[depth][legalMoves]);
@@ -1007,20 +973,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             // if the depth we are going to search the move at is small enough and the static exchange
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
-                continue;
+            if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))) {
+                staticExchangeEval = b->staticExchangeEvaluation(m);
+                if (staticExchangeEval <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                    continue;
+            }
         }
 
         // dont search illegal moves
         if (!b->isLegal(m))
             continue;
-
-        // compute the static exchange evaluation if the move is a capture
-        Score staticExchangeEval = 0;
-        if (isCapture(m) && (getCapturedPieceType(m)) < (getMovingPieceType(m))) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
-        }
 
         // keep track of the depth we want to extend by
         int extension = 0;
@@ -1034,7 +996,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
-            betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
+            Score betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
@@ -1068,6 +1030,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (legalMoves == 0) {
                 sd->reduce = true;
             }
+        }
+
+        if (legalMoves > 0 && staticExchangeEval == -1) {
+            staticExchangeEval = b->staticExchangeEvaluation(m);
         }
 
         // compute the lmr based on the depth, the amount of legal moves etc.
@@ -1120,6 +1086,13 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (ply == 0 && lmr) {
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
+            }
+
+            if (staticExchangeEval < -1 && depth - lmr > 4) {
+                score = -pvSearch(b, -(alpha-FUTILITY_MARGIN) - 1, -(alpha-FUTILITY_MARGIN), depth - ONE_PLY - 4 + extension, ply + ONE_PLY,
+                                td, 0, behindNMP, &lmr);
+                if (score <= alpha + FUTILITY_MARGIN)
+                    score = alpha - 1;
             }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
