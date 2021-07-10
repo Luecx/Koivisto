@@ -997,7 +997,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // move.
                 // **************************************************************************************************
                 if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove())
-                    < std::min(200 - 30 * (depth * depth), 0)) {
+                    < std::min(200 - 30 * (depth * depth), 50)) {
                     continue;
                 }
             }
