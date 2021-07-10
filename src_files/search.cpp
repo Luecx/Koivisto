@@ -53,7 +53,7 @@ void                     initLMR() {
 
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1.75 + log(d) * log(m) * 100 / LMR_DIV;
 }
 
 int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
@@ -1087,9 +1087,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
-            lmr += !isImproving;
+            lmr -= isImproving;
             lmr -= pv;
-            lmr--;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
