@@ -1053,7 +1053,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
-        } else if (sameMove(m, hashMove) && isCapture(b->getPreviousMove()) && ply > 1 && getSquareTo(m) == getSquareTo(b->getPreviousMove())) 
+        } else if (pv && isCapture(b->getPreviousMove()) && ply > 1 && getSquareTo(m) == getSquareTo(b->getPreviousMove())) 
             extension = 1;
         // *********************************************************************************************************
         // kk reductions:
