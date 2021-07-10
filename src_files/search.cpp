@@ -1089,7 +1089,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
             lmr -= pv;
-            if (!pv && !inCheck) lmr += ((int)sd->eval[b->getActivePlayer()][ply] > 300);
+            if (!pv && !inCheck) lmr += ((int)sd->eval[b->getActivePlayer()][ply] > 450);
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
