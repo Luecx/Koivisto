@@ -958,6 +958,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
 
+    bool reCapHash = isCapture(b->getPreviousMove()) && getSquareTo(hashMove) == getSquareTo(b->getPreviousMove());
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
 
@@ -1088,6 +1090,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (lmr) {
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
+            lmr += reCapHash;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
