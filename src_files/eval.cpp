@@ -29,8 +29,8 @@ alignas(32) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
 alignas(32) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(32) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (128)
-#define HIDDEN_WEIGHT_MULTIPLIER (128)
+#define INPUT_WEIGHT_MULTIPLIER  (256)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 INCBIN(Eval, EVALFILE);
 
@@ -55,28 +55,33 @@ void nn::init() {
     // read weights
     for (int i = 0; i < INPUT_SIZE; i++) {
         for (int o = 0; o < HIDDEN_SIZE; o++) {
-            inputWeights[i][o] = round(data[memoryIndex++]
-                                       * INPUT_WEIGHT_MULTIPLIER);
+            float value = data[memoryIndex++];
+            UCI_ASSERT(std::abs(value) < ((1ull << 15) / INPUT_WEIGHT_MULTIPLIER));
+            inputWeights[i][o] = round(value * INPUT_WEIGHT_MULTIPLIER);
         }
     }
     
     // read bias
     for (int o = 0; o < HIDDEN_SIZE; o++) {
-        inputBias[o] = round(data[memoryIndex++]
-                             * INPUT_WEIGHT_MULTIPLIER);
+        float value = data[memoryIndex++];
+        UCI_ASSERT(std::abs(value) < ((1ull << 15) / INPUT_WEIGHT_MULTIPLIER));
+        inputBias[o] = round(value * INPUT_WEIGHT_MULTIPLIER);
     }
 
     // read weights
     for (int o = 0; o < OUTPUT_SIZE; o++) {
         for (int i = 0; i < HIDDEN_SIZE; i++) {
-            hiddenWeights[o][i] = round(data[memoryIndex++]
-                                        * HIDDEN_WEIGHT_MULTIPLIER);
+            float value = data[memoryIndex++];
+            UCI_ASSERT(std::abs(value) < ((1ull << 15) / HIDDEN_WEIGHT_MULTIPLIER));
+            hiddenWeights[o][i] = round(value * HIDDEN_WEIGHT_MULTIPLIER);
         }
     }
     
     // read bias
     for (int o = 0; o < OUTPUT_SIZE; o++) {
-        hiddenBias[o] = round(data[memoryIndex++]
+        float value = data[memoryIndex++];
+        UCI_ASSERT(std::abs(value) < ((1ull << 31) / HIDDEN_WEIGHT_MULTIPLIER / INPUT_WEIGHT_MULTIPLIER));
+        hiddenBias[o] = round(value
                               * HIDDEN_WEIGHT_MULTIPLIER
                               * INPUT_WEIGHT_MULTIPLIER);
     }
