@@ -1293,7 +1293,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     }
 
     if (bestScore >= beta)
-        return beta;
+        return bestScore;
     if (alpha < bestScore)
         alpha = bestScore;
 
