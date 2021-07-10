@@ -1160,15 +1160,21 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // undo the move
         b->undoMove();
 
+
+        // we consider this seperate to having a new best score for simplicity
+        if (score > alpha) {
+            if (ply == 0) sd->bestMove = m;
+            // increase alpha
+            alpha = score;
+        }
+        
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
-                // Store bestMove for bestMove
-                sd->bestMove = m;
-                alpha        = highestScore;
+            if (ply == 0) {
+                alpha = highestScore;
             }
         }
 
@@ -1186,12 +1192,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
             return highestScore;
-        }
-
-        // we consider this seperate to having a new best score for simplicity
-        if (score > alpha) {
-            // increase alpha
-            alpha = score;
         }
 
         // if this loop finished, we can increment the legal move counter by one which is important
