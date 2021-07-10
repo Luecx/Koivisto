@@ -979,7 +979,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
             Depth moveDepth = std::max(1, depth - lmrReductions[depth][legalMoves]);
-
+            Depth lmpDepth = inCheck ? depth : depth - (alpha - sd->eval[b->getActivePlayer()][ply])/FUTILITY_MARGIN;
+            if (lmpDepth > MAX_PLY || lmpDepth == 0)
+                lmpDepth = 1;
             if (quiet) {
                 quiets++;
                 // **************************************************************************************************
@@ -987,7 +989,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets > lmp[isImproving][lmpDepth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
