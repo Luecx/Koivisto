@@ -958,7 +958,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
 
-    bool reCapHash = isCapture(b->getPreviousMove()) && getSquareTo(hashMove) == getSquareTo(b->getPreviousMove());
+    bool reCapTried = false;
 
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
@@ -1090,7 +1090,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (lmr) {
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
             lmr += !isImproving;
-            lmr += reCapHash;
+            lmr += reCapTried;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
@@ -1200,6 +1200,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
+        if (isCapture(b->getPreviousMove()) && getSquareTo(m) == getSquareTo(b->getPreviousMove()))
+            reCapTried = true;;
     }
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
