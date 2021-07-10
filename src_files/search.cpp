@@ -1023,8 +1023,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
 
         // keep track of the depth we want to extend by
-        int extension = 0;
-
+        int extension = isCastle(m);
         // *********************************************************************************************************
         // singular extensions
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
