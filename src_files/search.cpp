@@ -1089,7 +1089,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             }
 
             if (staticExchangeEval < -1 && depth - lmr > 4) {
-                score = -pvSearch(b, -(alpha-FUTILITY_MARGIN) - 1, -(alpha-FUTILITY_MARGIN), depth - ONE_PLY - 4 + extension, ply + ONE_PLY,
+                score = -pvSearch(b, -(alpha-FUTILITY_MARGIN) - 1, -(alpha-FUTILITY_MARGIN), depth - lmr - ONE_PLY - 3 + extension, ply + ONE_PLY,
                                 td, 0, behindNMP, &lmr);
                 if (score <= alpha + FUTILITY_MARGIN)
                     score = alpha - 1;
