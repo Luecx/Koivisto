@@ -1102,7 +1102,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         }
 
         // Recapture extension
-        if (sameMove(m, hashMove) && isCapture(b->getPreviousMove()) && ply > 1 && getSquareTo(m) == getSquareTo(b->getPreviousMove())) 
+        if (pv && sameMove(m, hashMove) && isCapture(b->getPreviousMove()) && ply > 1 && getSquareTo(m) == getSquareTo(b->getPreviousMove())) 
             extension = 1;
 
         // doing the move
