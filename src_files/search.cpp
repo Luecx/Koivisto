@@ -1109,8 +1109,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
-        mv->scoreMove(moveOrderer.counter - 1, depth);
-
+        mv->scoreMove(moveOrderer.counter - 1, depth);  
+        score = alpha;
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
@@ -1121,9 +1121,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
             }
-            // reduced search.
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
-                              td, 0, behindNMP, &lmr);
+
+            if (depth - lmr > 3) {
+                score = -pvSearch(b, -(alpha-FUTILITY_MARGIN) - 1, -(alpha-FUTILITY_MARGIN), depth - lmr - ONE_PLY - 1 + extension, ply + ONE_PLY,
+                                td, 0, behindNMP, &lmr);
+                if (score <= (alpha-FUTILITY_MARGIN)) score = alpha - 1;
+            }
+            if (score >= alpha) 
+                // reduced search.
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
+                                td, 0, behindNMP, &lmr);
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
