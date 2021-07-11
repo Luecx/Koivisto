@@ -56,7 +56,7 @@ void                     initLMR() {
             lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
 }
 
-int lmp[2][8] = {{0, 2, 3, 4, 6, 8, 13, 18}, {0, 3, 4, 6, 8, 12, 20, 30}};
+int lmp[2][8] = {{0, 2, 3, 5, 8, 11, 17, 23}, {0, 3, 4, 7, 10, 15, 24, 35}};
 
 /**
  * =================================================================================
@@ -987,7 +987,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // **************************************************************************************************
-                if (depth <= 7 && legalMoves >= lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
