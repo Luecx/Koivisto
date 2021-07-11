@@ -1053,6 +1053,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
+        } else if (depth < 8 && legalMoves == 0) {
+            extension = !isImproving && sd->eval[b->getActivePlayer()][ply] > alpha;
         }
 
         // *********************************************************************************************************
