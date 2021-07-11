@@ -18,10 +18,10 @@
  ****************************************************************************************************/
 #include "History.h"
 
-#define MAX_HISTORY_SCORE 512;
+#define MAX_HISTORY_SCORE 234
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
-    if (depth > 20)
+    if (depth > 13)
         return;
     Move  m2;
 
