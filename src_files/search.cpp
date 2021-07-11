@@ -973,7 +973,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
-        bool isPromotion = move::isPromotion(m);
+        bool isPromotion = (isPromotion && (getPromotionPieceType(m) == QUEEN));
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
