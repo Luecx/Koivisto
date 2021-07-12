@@ -746,22 +746,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Score       staticEval;
     Score       ownThreats   = 0;
     Score       enemyThreats = 0;
-    // the idea for the static evaluation is that if the last move has been a null move, we can reuse
-    // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
-    // has actually been evaluated.
-    
-    if (inCheck)
-        staticEval = -MAX_MATE_SCORE + ply;
-    else {
-        staticEval = b->evaluate();
-        getThreats(b, sd, ply);
-        ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
-        enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
-    }
 
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
 
     // **************************************************************************************************************
     // transposition table probing:
@@ -773,13 +758,6 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
     if (en.zobrist == zobrist && !skipMove) {
         hashMove = en.move;
-
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type == ALL_NODE && staticEval > en.score)) {
-
-            staticEval = en.score;
-        }
 
         // We treat child nodes of null moves differently. The reason a null move
         // search has to be searched to great depth is to make sure that we dont
@@ -797,6 +775,33 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     return en.score;
                 }
             }
+        }
+    }
+
+
+    // the idea for the static evaluation is that if the last move has been a null move, we can reuse
+    // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
+    // has actually been evaluated.
+    
+    if (inCheck)
+        staticEval = -MAX_MATE_SCORE + ply;
+    else {
+        staticEval = b->evaluate();
+        getThreats(b, sd, ply);
+        ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
+        enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
+    }
+
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+
+
+    if (en.zobrist == zobrist) {
+        // adjusting eval
+        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+            || (en.type == ALL_NODE && staticEval > en.score)) {
+            staticEval = en.score;
         }
     }
 
