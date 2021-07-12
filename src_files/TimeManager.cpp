@@ -154,7 +154,7 @@ bool TimeManager::rootTimeLeft(int score) {
         return false;
 
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*50/std::max(score, 50))
+    if (elapsed >= timeToUse*50/std::max(score, 40))
         return false;
 
     return true;
