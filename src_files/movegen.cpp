@@ -63,7 +63,11 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
         } else{
-            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+            if (ply != 0) {
+                mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+            } else {
+                mv->scoreMove(idx, 15000 + sd->spentEffort[getSquareFrom(move)][getSquareTo(move)]*1000/(1+sd->spentEffort[getSquareFrom(sd->bestMove)][getSquareTo(sd->bestMove)]));
+            }
         }
         
     }else if constexpr (m == GENERATE_NON_QUIET){
