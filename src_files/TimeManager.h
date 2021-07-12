@@ -73,7 +73,7 @@ class TimeManager {
      * checks if time at the root is left
      * @return
      */
-    bool rootTimeLeft();
+    bool rootTimeLeft(int score);
     
     /**
      * returns the timemode
