@@ -48,7 +48,7 @@ TimeManager::TimeManager(int moveTime) :
  */
 TimeManager::TimeManager() : 
     mode(DEPTH), 
-    timeToUse(1 << 30),
+    timeToUse(1 << 29),
     nodesToUse(-1),
     upperTimeBound(1 << 30),
     forceStop() {
@@ -146,7 +146,7 @@ bool TimeManager::isTimeLeft() {
  * iterations. It ensures that the search will mostly finish its iteration.
  * @return
  */
-bool TimeManager::rootTimeLeft() {
+bool TimeManager::rootTimeLeft(int score) {
     int elapsed = elapsedTime();
 
     // stop the search if requested
@@ -154,7 +154,7 @@ bool TimeManager::rootTimeLeft() {
         return false;
 
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse)
+    if (elapsed >= timeToUse*50/std::max(score, 50))
         return false;
 
     return true;

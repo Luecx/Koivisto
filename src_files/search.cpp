@@ -162,7 +162,7 @@ bool isTimeLeft() { return search_timeManager->isTimeLeft(); }
  * checks if there is root time left and the iterative deepening should continue.
  * @return
  */
-bool rootTimeLeft() { return search_timeManager->rootTimeLeft(); }
+bool rootTimeLeft(int score) { return search_timeManager->rootTimeLeft(score); }
 
 /**
  * used to change the hash size
@@ -605,8 +605,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
         } else {
             Score window = 10;
             Score alpha  = s - window;
-            Score beta   = s + window;
-
+            Score beta   = s + window; 
             Depth sDepth = d; // Idea of reducing depth on fail high from Houdini. http://www.talkchess.com/forum3/viewtopic.php?t=45624.
             while (isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
@@ -625,13 +624,14 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
                 }
             }
         }
+        int timeManScore = td->searchData->spentEffort[getSquareFrom(td->searchData->bestMove)][getSquareTo(td->searchData->bestMove)] * 100 / td->nodes;
 
         if (threadId == 0) {
             printInfoString(&printBoard, d, s);
         }
 
         // if the search finished due to timeout, we also need to stop here
-        if (!rootTimeLeft())
+        if (!rootTimeLeft(timeManScore))
             break;
     }
 
@@ -1016,6 +1016,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (!b->isLegal(m))
             continue;
 
+        if (ply == 0 && depth == 1) {
+            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
+        }
+
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 0;
         if (isCapture(m) && (getCapturedPieceType(m)) < (getMovingPieceType(m))) {
@@ -1069,6 +1073,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 sd->reduce = true;
             }
         }
+        
+        U64 nodeCount = td->nodes;
 
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
@@ -1159,6 +1165,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // undo the move
         b->undoMove();
+
+        if (ply == 0) {
+            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
+        }
 
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
