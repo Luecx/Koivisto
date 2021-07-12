@@ -598,6 +598,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
     Board       searchBoard {b};
     Board       printBoard {b};
     td->dropOut = false;
+    int timeManScore = 50;
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
@@ -607,7 +608,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
             Score alpha  = s - window;
             Score beta   = s + window; 
             Depth sDepth = d; // Idea of reducing depth on fail high from Houdini. http://www.talkchess.com/forum3/viewtopic.php?t=45624.
-            while (isTimeLeft()) {
+            while (d - sDepth < 2 ? isTimeLeft() : rootTimeLeft(timeManScore)) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
                 s = pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
                 window += window;
@@ -624,7 +625,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
                 }
             }
         }
-        int timeManScore = td->searchData->spentEffort[getSquareFrom(td->searchData->bestMove)][getSquareTo(td->searchData->bestMove)] * 100 / td->nodes;
+        timeManScore = td->searchData->spentEffort[getSquareFrom(td->searchData->bestMove)][getSquareTo(td->searchData->bestMove)] * 100 / td->nodes;
 
         if (threadId == 0) {
             printInfoString(&printBoard, d, s);
