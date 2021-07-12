@@ -284,10 +284,10 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
 
     if (depth <= 0)
         return;
-
+    
     U64   zob = b->zobrist();
     Entry en  = table->get(zob);
-    if (en.zobrist == zob && en.type == PV_NODE) {
+    if (en.zobrist == (uint32_t)(TT_MASK_32 & zob) && en.type == PV_NODE) {
 
         // extract the move from the table
         Move     mov = en.move;
@@ -771,7 +771,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // **************************************************************************************************************
     Entry en          = table->get(zobrist);
 
-    if (en.zobrist == zobrist && !skipMove) {
+    if (en.zobrist == (uint32_t)(TT_MASK_32 & zobrist) && !skipMove) {
         hashMove = en.move;
 
         // adjusting eval
@@ -916,7 +916,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(zobrist, qScore, m, CUT_NODE, depth - 3);
+                table->put(zobrist, qScore, m, CUT_NODE, depth - 3, staticEval);
                 return betaCut;
             }
         }
@@ -1035,7 +1035,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
         if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && en.zobrist == (uint32_t)(TT_MASK_32 & zobrist) && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
@@ -1186,7 +1186,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                table->put(zobrist, score, m, CUT_NODE, depth, staticEval);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -1232,9 +1232,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, PV_NODE, depth, staticEval);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth, staticEval);
         }
     }
 
@@ -1263,14 +1263,15 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     U64         zobrist    = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
-
+    Score stand_pat        = 0;
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as
     // the current position. As we have no information about the depth, we will allways use the
     // perft_tt entry.
     // **************************************************************************************************************
-    if (en.zobrist == zobrist) {
+    if (en.zobrist == (uint32_t)(TT_MASK_32 & zobrist)) {
+        stand_pat = en.eval;
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -1286,14 +1287,13 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
 
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse
     // the eval and simply adjust the tempo-bonus.
-    Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
 
-    stand_pat       = bestScore =
-        inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+    stand_pat       = bestScore = stand_pat == 0 ? 
+        (inCheck ? -MAX_MATE_SCORE + ply : b->evaluate()) : stand_pat;
 
     // we can also use the perft_tt entry to adjust the evaluation.
-    if (en.zobrist == zobrist) {
+    if (en.zobrist == (uint32_t)(TT_MASK_32 & zobrist)) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type == ALL_NODE && stand_pat > en.score)) {
@@ -1361,7 +1361,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent, bestScore);
                 return score;
             }
             if (score > alpha) {
@@ -1373,7 +1373,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
 
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+        table->put(zobrist, bestScore, bestMove, ttNodeType, 0, bestScore);
     return bestScore;
 
     //    return 0;
