@@ -134,7 +134,7 @@ bool TimeManager::isTimeLeft() {
     
     int elapsed = elapsedTime();
 
-    // if we are above the maximum allowed time, stop
+    // if we are above the maximum allowed time, stope  
     if (elapsed >= upperTimeBound)
         return false;
 
@@ -154,7 +154,7 @@ bool TimeManager::rootTimeLeft(int score) {
         return false;
 
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*50/std::max(score, 40))
+    if (elapsed >= timeToUse*50/std::max(score, 30))
         return false;
 
     return true;
