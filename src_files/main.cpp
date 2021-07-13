@@ -25,7 +25,6 @@
 #include "uci.h"
 
 #include <iomanip>
-#include "gradient.h"
 #include "movegen.h"
 
 using namespace std;

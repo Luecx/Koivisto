@@ -23,44 +23,39 @@
 
 using namespace std;
 
-MoveList**          perft_mvlist_buffer;
-TranspositionTable* perft_tt;
+MoveList**          moveListBuffer;
+TranspositionTable* transpositionTable;
 
 /**
  * called at the start of the program
  * @param hash
  */
-void perft_init(bool hash) {
+void perft::init(bool hash) {
     if (hash)
-        perft_tt = new TranspositionTable(512);
+        transpositionTable = new TranspositionTable(512);
 
-    perft_mvlist_buffer = new MoveList*[100];
+    moveListBuffer = new MoveList*[100];
 
     for (int i = 0; i < 100; i++) {
-        perft_mvlist_buffer[i] = new MoveList();
+        moveListBuffer[i] = new MoveList();
     }
 }
 
 /**
  * called at the end of the program.
  */
-void perft_cleanUp() {
+void perft::cleanUp() {
 
-    if (perft_tt != nullptr)
-        delete perft_tt;
+    if (transpositionTable != nullptr)
+        delete transpositionTable;
 
     for (int i = 0; i < 100; i++) {
-        delete perft_mvlist_buffer[i];
+        delete moveListBuffer[i];
     }
 
-    delete[] perft_mvlist_buffer;
+    delete[] moveListBuffer;
 }
 
-/**
- * does nothing yet.
- * Supposed to print an overview of the previous perft call.
- */
-void perft_res() {}
 
 /**
  * runs a performance test on the given board to the specified depth.
@@ -73,18 +68,18 @@ void perft_res() {}
  * @param ply internally for the ply
  * @return
  */
-U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
+U64 perft::perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     UCI_ASSERT(b);
 
     U64 zob = ZERO;
     if (hash) {
 
         if (ply == 0) {
-            perft_tt->clear();
+            transpositionTable->clear();
         }
 
         zob      = b->zobrist();
-        Entry en = perft_tt->get(zob);
+        Entry en = transpositionTable->get(zob);
         if (en.depth == depth && en.zobrist == zob) {
             return en.move;
         }
@@ -97,14 +92,14 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         return 1;
 
     
-//    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
-    generatePerftMoves(b, perft_mvlist_buffer[depth]);
+//    b->getPseudoLegalMoves(moveListBuffer[depth]);
+    generatePerftMoves(b, moveListBuffer[depth]);
     
     //    generations ++;
 
-    for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
+    for (i = 0; i < moveListBuffer[depth]->getSize(); i++) {
 
-        Move m = perft_mvlist_buffer[depth]->getMove(i);
+        Move m = moveListBuffer[depth]->getMove(i);
         //        checks ++;
 
         if (!b->isLegal(m)) {
@@ -129,7 +124,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     }
 
     if (hash) {
-        perft_tt->put(zob, 0, nodes, 0, depth);
+        transpositionTable->put(zob, 0, nodes, 0, depth);
     }
 
     return nodes;

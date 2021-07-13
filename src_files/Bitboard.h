@@ -902,7 +902,7 @@ inline int chebyshevDistance(Square sq1, Square sq2) {
  * @return
  */
 inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) {
-    return std::max(std::abs(r2 - r1), std::abs(f2 - f1));
+    return std::abs(r2 - r1) + std::abs(f2 - f1);
 }
 
 /**

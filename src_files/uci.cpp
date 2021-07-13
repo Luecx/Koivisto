@@ -61,7 +61,7 @@ std::string getValue(std::vector<std::string>& vec, std::string key) {
  * @param p_timeManager
  */
 void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
-    Move m = bestMove(board, maxDepth, p_timeManager);
+    Move m = search::bestMove(board, maxDepth, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
 }
 
@@ -74,13 +74,13 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
 void uci::mainloop(bool bench) {
 
     bb::init();
-    search_init(16);
+    search::init(16);
     nn::init();
 
     if (bench) {
         uci::bench();
-
-        search_cleanUp();
+    
+        search::cleanUp();
         bb::cleanUp();
     } else {
         std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
@@ -134,8 +134,8 @@ void uci::processCommand(std::string str) {
     splitString(str, split, ' ');
 
     if (split.at(0) == "ucinewgame") {
-        search_clearHash();
-        search_clearHistory();
+        search::clearHash();
+        search::clearHistory();
     }
     if (split.at(0) == "uci") {
         uci::uci();
@@ -183,17 +183,17 @@ void uci::processCommand(std::string str) {
         uci::debug(getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
         if (str.find("FUTILITY_MARGIN") != string::npos) {
-            FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
+            search::FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
         }
         if (str.find("RAZOR_MARGIN") != string::npos) {
-            RAZOR_MARGIN = stoi(getValue(split, "RAZOR_MARGIN"));
+            search::RAZOR_MARGIN = stoi(getValue(split, "RAZOR_MARGIN"));
         }
         if (str.find("SE_MARGIN_STATIC") != string::npos) {
-            SE_MARGIN_STATIC = stoi(getValue(split, "SE_MARGIN_STATIC"));
+            search::SE_MARGIN_STATIC = stoi(getValue(split, "SE_MARGIN_STATIC"));
         }
         if (str.find("LMR_DIV") != string::npos) {
-            LMR_DIV = stoi(getValue(split, "LMR_DIV"));
-            initLMR();
+            search::LMR_DIV = stoi(getValue(split, "LMR_DIV"));
+            search::initLMR();
         }
     } else if (split.at(0) == "position") {
 
@@ -232,15 +232,15 @@ void uci::processCommand(std::string str) {
  */
 void uci::go_perft(int depth, bool hash) {
 
-    perft_init(hash);
+    perft::init(hash);
 
     startMeasure();
-    auto nodes = perft(board, depth, true, true, hash);
+    auto nodes = perft::perft(board, depth, true, true, hash);
     auto time  = stopMeasure();
 
     std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000 << std::endl;
-
-    perft_cleanUp();
+    
+    perft::cleanUp();
 }
 
 /**
@@ -330,7 +330,7 @@ void uci::go_mate(int depth) {
  * stops the current search. This will usually print a last info string and the best move.
  */
 void uci::stop() {
-    search_stop();
+    search::stop();
     if (searchThread.joinable()) {
         searchThread.join();
     }
@@ -347,7 +347,7 @@ void uci::stop() {
  */
 void uci::set_option(std::string& name, std::string& value) {
     if (name == "Hash") {
-        search_setHashSize(stoi(value));
+        search::setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
         if (value.empty())
             return;
@@ -361,7 +361,7 @@ void uci::set_option(std::string& name, std::string& value) {
         /*
          * only use TB if loading was successful
          */
-        search_useTB(TB_LARGEST > 0);
+        search::useTB(TB_LARGEST > 0);
     } else if (name == "Threads") {
         int count           = stoi(value);
         int processor_count = (int) std::thread::hardware_concurrency();
@@ -373,8 +373,8 @@ void uci::set_option(std::string& name, std::string& value) {
             count = 1;
         if (count > MAX_THREADS)
             count = MAX_THREADS;
-        
-        search_setThreads(count);
+    
+        search::setThreads(count);
     } else if (name == "OwnBook") {
         PolyGlot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
@@ -511,7 +511,7 @@ void uci::quit() {
     board = nullptr;
 
     bb::cleanUp();
-    search_cleanUp();
+    search::cleanUp();
 }
 
 /**
@@ -526,15 +526,15 @@ void uci::bench() {
 
     int nodes = 0;
     int time  = 0;
-
-    search_disable_infoStrings();
+    
+    search::disable_infoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
 
         Board b(Benchmarks[i]);
 
         TimeManager manager;
-        bestMove(&b, 13, &manager, 0);
-        SearchOverview overview = search_overview();
+        search::bestMove(&b, 13, &manager, 0);
+        search::SearchOverview overview = search::overview();
 
         nodes += overview.nodes;
         time += overview.time;
@@ -543,12 +543,12 @@ void uci::bench() {
                toString(overview.move).c_str(), (int) overview.nodes,
                (int) (1000.0f * overview.nodes / (overview.time + 1)));
         std::cout << std::endl;
-
-        search_clearHash();
-        search_clearHistory();
+    
+        search::clearHash();
+        search::clearHistory();
     }
     printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
-    search_enable_infoStrings();
+    search::enable_infoStrings();
 
 }

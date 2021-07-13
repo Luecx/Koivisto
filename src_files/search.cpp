@@ -29,26 +29,26 @@
 
 #include <thread>
 
-TranspositionTable*      table = nullptr;
+TranspositionTable*      search::table       = nullptr;
+int                      search::threadCount = 1;
 TimeManager*             search_timeManager;
 std::vector<std::thread> runningThreads;
-int                      threadCount = 1;
-bool                     useTB       = false;
-bool                     printInfo   = true;
+bool                     useTableBase = false;
+bool                     printInfo    = true;
 
-SearchOverview           overview;
+search::SearchOverview   searchOverview;
 
 int                      lmrReductions[256][256];
 
 // data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
 ThreadData               tds[MAX_THREADS] {};
 
-int                      RAZOR_MARGIN     = 198;
-int                      FUTILITY_MARGIN  = 81;
-int                      SE_MARGIN_STATIC = 0;
-int                      LMR_DIV          = 215;
+int                      search::RAZOR_MARGIN     = 198;
+int                      search::FUTILITY_MARGIN  = 81;
+int                      search::SE_MARGIN_STATIC = 0;
+int                      search::LMR_DIV          = 215;
 
-void                     initLMR() {
+void                     search::initLMR() {
     int d, m;
 
     for (d = 0; d < 256; d++)
@@ -71,7 +71,7 @@ int lmp[2][8] = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
  */
 U64 totalNodes() {
     U64 tn = 0;
-    for (int i = 0; i < threadCount; i++) {
+    for (int i = 0; i < search::threadCount; i++) {
         tn += tds[i].nodes;
     }
     return tn;
@@ -83,7 +83,7 @@ U64 totalNodes() {
  */
 int selDepth() {
     int maxSd = 0;
-    for (int i = 0; i < threadCount; i++) {
+    for (int i = 0; i < search::threadCount; i++) {
         maxSd = tds[i].seldepth > maxSd ? tds[i].seldepth : maxSd;
     }
     return maxSd;
@@ -95,7 +95,7 @@ int selDepth() {
  */
 int tbHits() {
     int th = 0;
-    for (int i = 0; i < threadCount; i++) {
+    for (int i = 0; i < search::threadCount; i++) {
         th += tds[i].tbhits;
     }
     return th;
@@ -104,22 +104,22 @@ int tbHits() {
 /**
  * enables uci info-string printing. This is usually enabled but might be disabled for fen-generation.
  */
-void search_enable_infoStrings() { printInfo = true; }
+void search::enable_infoStrings() { printInfo = true; }
 
 /**
  * enables uci info-string printing. This is usually enabled but might be disabled for fen-generation.
  */
-void search_disable_infoStrings() { printInfo = false; }
+void search::disable_infoStrings() { printInfo = false; }
 
 /**
  * clears the hash of the transposition table which is used for searches.
  */
-void search_clearHash() { table->clear(); }
+void search::clearHash() { search::table->clear(); }
 
 /**
  * clears the history table of all the active threads
  */
-void search_clearHistory() {
+void search::clearHistory() {
     for (int i = 0; i < threadCount; i++) {
         if (tds[i].searchData != nullptr) {
             delete tds[i].searchData;
@@ -131,12 +131,12 @@ void search_clearHistory() {
 /**
  * enables/disables tb probing during search
  */
-void search_useTB(bool val) { useTB = val; }
+void search::useTB(bool val) { useTableBase = val; }
 
 /**
  * stops the search
  */
-void search_stop() {
+void search::stop() {
     if (search_timeManager)
         search_timeManager->stopSearch();
 }
@@ -168,9 +168,9 @@ bool rootTimeLeft(int score) { return search_timeManager->rootTimeLeft(score); }
  * used to change the hash size
  * @param hashSize
  */
-void search_setHashSize(int hashSize) { table->setSize(hashSize); }
+void search::setHashSize(int hashSize) { search::table->setSize(hashSize); }
 
-void search_setThreads(int threads) {
+void search::setThreads(int threads) {
     int processor_count = (int) std::thread::hardware_concurrency();
     if (processor_count == 0)
         processor_count = MAX_THREADS;
@@ -192,11 +192,11 @@ void search_setThreads(int threads) {
 /**
  * called at the start of the program
  */
-void search_init(int hashSize) {
-    if (table != nullptr)
-        delete table;
-    table = new TranspositionTable(hashSize);
-    initLMR();
+void search::init(int hashSize) {
+    if (search::table != nullptr)
+        delete search::table;
+    search::table = new TranspositionTable(hashSize);
+    search::initLMR();
 
     for (int i = 0; i < MAX_THREADS; i++) {
         tds[i].threadID = i;
@@ -207,9 +207,9 @@ void search_init(int hashSize) {
 /**
  * called at the exit of the program to cleanup and deallocate arrays.
  */
-void search_cleanUp() {
-    delete table;
-    table = nullptr;
+void search::cleanUp() {
+    delete search::table;
+    search::table = nullptr;
 
     for (int i = 0; i < MAX_THREADS; i++) {
         if (tds[i].searchData != nullptr) {
@@ -218,21 +218,27 @@ void search_cleanUp() {
         }
     }
 }
-void getThreats(Board *b, SearchData *sd, Depth ply) {
-    U64 occupied = b->getOccupiedBB();
+void getThreats(Board* b, SearchData* sd, Depth ply) {
+    U64 occupied         = b->getOccupiedBB();
 
-    U64 whitePawns = b->getPieceBB(WHITE , PAWN);
-    U64 blackPawns = b->getPieceBB(BLACK , PAWN);
+    U64 whitePawns       = b->getPieceBB(WHITE, PAWN);
+    U64 blackPawns       = b->getPieceBB(BLACK, PAWN);
 
     U64 whitePawnAttacks = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnAttacks = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
-    sd->threatCount[ply][WHITE] = bitCount(whitePawnAttacks & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP) | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] = bitCount(blackPawnAttacks & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP) | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+    sd->threatCount[ply][WHITE] =
+        bitCount(whitePawnAttacks
+                 & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)
+                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] =
+        bitCount(blackPawnAttacks
+                 & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP)
+                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
 
     U64 whiteMinorAttacks = 0;
     U64 blackMinorAttacks = 0;
-    U64 k = b->getPieceBB(WHITE, KNIGHT);
+    U64 k                 = b->getPieceBB(WHITE, KNIGHT);
     while (k) {
         whiteMinorAttacks |= KNIGHT_ATTACKS[bitscanForward(k)];
         k = lsbReset(k);
@@ -252,12 +258,14 @@ void getThreats(Board *b, SearchData *sd, Depth ply) {
         blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
-    sd->threatCount[ply][WHITE] += bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] += bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
-    
+    sd->threatCount[ply][WHITE] +=
+        bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] +=
+        bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+
     U64 whiteRookAttacks = 0;
     U64 blackRookAttacks = 0;
-    k = b->getPieceBB(WHITE, ROOK);
+    k                    = b->getPieceBB(WHITE, ROOK);
     while (k) {
         whiteRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
@@ -286,7 +294,7 @@ void extractPV(Board* b, MoveList* mvList, Depth depth) {
         return;
 
     U64   zob = b->zobrist();
-    Entry en  = table->get(zob);
+    Entry en  = search::table->get(zob);
     if (en.zobrist == zob && en.type == PV_NODE) {
 
         // extract the move from the table
@@ -360,7 +368,7 @@ void printInfoString(Board* b, Depth d, Score score) {
     }
 
     std::cout << " nodes " << nodes << " nps " << nps << " time " << search_timeManager->elapsedTime()
-              << " hashfull " << static_cast<int>(table->usage() * 1000);
+              << " hashfull " << static_cast<int>(search::table->usage() * 1000);
 
     MoveList em;
     em.clear();
@@ -507,7 +515,7 @@ Move getDTZMove(Board* board) {
                 std::cout <<
 
                     " nodes " << 1 << " nps " << 1 << " time " << search_timeManager->elapsedTime()
-                          << " hashfull " << static_cast<int>(table->usage() * 1000);
+                          << " hashfull " << static_cast<int>(search::table->usage() * 1000);
                 std::cout << std::endl;
 
                 return m;
@@ -521,7 +529,7 @@ Move getDTZMove(Board* board) {
 /**
  * returns an overview of the search which is internally used for various reasons.
  */
-SearchOverview search_overview() { return overview; }
+search::SearchOverview search::overview() { return searchOverview; }
 
 /**
  * =================================================================================
@@ -538,7 +546,7 @@ SearchOverview search_overview() { return overview; }
  * @param b
  * @return
  */
-Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
+Move search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
     UCI_ASSERT(b);
     UCI_ASSERT(timeManager);
 
@@ -566,10 +574,10 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
         search_timeManager = timeManager;
 
         // we need to reset the hash between searches
-        table->incrementAge();
+        search::table->incrementAge();
 
         // for each thread, we will generate a new search data object
-        for (int i = 0; i < threadCount; i++) {
+        for (int i = 0; i < search::threadCount; i++) {
             // reseting the thread data
             tds[i].threadID = i;
             tds[i].tbhits   = 0;
@@ -579,7 +587,7 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
 
         // we will call this function for the other threads which will skip this part and jump
         // straight to the part below
-        for (int n = 1; n < threadCount; n++) {
+        for (int n = 1; n < search::threadCount; n++) {
             runningThreads.emplace_back(bestMove, b, maxDepth, timeManager, n);
         }
     }
@@ -601,15 +609,16 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
-            s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
+            s = search::pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
             Score window = 10;
             Score alpha  = s - window;
-            Score beta   = s + window; 
-            Depth sDepth = d; // Idea of reducing depth on fail high from Houdini. http://www.talkchess.com/forum3/viewtopic.php?t=45624.
+            Score beta   = s + window;
+            Depth sDepth = d;    // Idea of reducing depth on fail high from Houdini.
+                                 // http://www.talkchess.com/forum3/viewtopic.php?t=45624.
             while (isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
-                s = pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
+                s      = search::pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
                 window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
@@ -624,7 +633,9 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
                 }
             }
         }
-        int timeManScore = td->searchData->spentEffort[getSquareFrom(td->searchData->bestMove)][getSquareTo(td->searchData->bestMove)] * 100 / td->nodes;
+        int timeManScore = td->searchData->spentEffort[getSquareFrom(td->searchData->bestMove)]
+                                                      [getSquareTo(td->searchData->bestMove)]
+                           * 100 / td->nodes;
 
         if (threadId == 0) {
             printInfoString(&printBoard, d, s);
@@ -646,14 +657,14 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
         runningThreads.clear();
 
         // retrieve the best move from the search
-        Move best      = td->searchData->bestMove;
+        Move best            = td->searchData->bestMove;
 
         // collect some information which can be used for benching
-        overview.nodes = totalNodes();
-        overview.depth = d;
-        overview.score = s;
-        overview.time  = timeManager->elapsedTime();
-        overview.move  = best;
+        searchOverview.nodes = totalNodes();
+        searchOverview.depth = d;
+        searchOverview.score = s;
+        searchOverview.time  = timeManager->elapsedTime();
+        searchOverview.move  = best;
 
         // return the best move if its the main thread
         return best;
@@ -671,8 +682,8 @@ Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int 
  * @param ply
  * @return
  */
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td,
-               Move skipMove, int behindNMP, Depth* lmrFactor) {
+Score search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td,
+                       Move skipMove, int behindNMP, Depth* lmrFactor) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -730,7 +741,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (inCheck) {
             depth++;
         } else {
-            return qSearch(b, alpha, beta, ply, td);
+            return search::qSearch(b, alpha, beta, ply, td);
         }
     }
 
@@ -749,7 +760,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse
     // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
     // has actually been evaluated.
-    
+
     if (inCheck)
         staticEval = -MAX_MATE_SCORE + ply;
     else {
@@ -769,7 +780,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // the current position. First, we adjust the static evaluation and second, we might be able to
     // return the tablebase score if the depth of that entry is larger than our current depth.
     // **************************************************************************************************************
-    Entry en          = table->get(zobrist);
+    Entry en          = search::table->get(zobrist);
 
     if (en.zobrist == zobrist && !skipMove) {
         hashMove = en.move;
@@ -805,7 +816,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort
     // the moves
     // **************************************************************************************************************
-    if (useTB && ply > 0) {
+    if (useTableBase && ply > 0) {
         Score res = getWDL(b);
 
         // MAX_MATE_SCORE is used for no result
@@ -837,8 +848,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // razoring:
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply, td);
+        if (depth <= 3 && staticEval + search::RAZOR_MARGIN < beta) {
+            score = search::qSearch(b, alpha, beta, ply, td);
             if (score < beta) {
                 return score;
             } else if (depth == 1)
@@ -850,9 +861,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // will definetly be above beta and stop the search here and fail soft. Also reuse information
         // from eval to prevent pruning if the oponent has multiple threats.
         // **********************************************************************************************************
-        if (depth <= 7
-            && enemyThreats < 2
-            && staticEval >= beta + depth * FUTILITY_MARGIN
+        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + depth * search::FUTILITY_MARGIN
             && staticEval < MIN_MATE_SCORE)
             return staticEval;
 
@@ -873,11 +882,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            score =
-                -pvSearch(b, -beta, 1 - beta,
-                          depth - (depth / 4 + 3) * ONE_PLY
-                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
-                          ply + ONE_PLY, td, 0, !b->getActivePlayer());
+            score = -search::pvSearch(
+                b, -beta, 1 - beta,
+                depth - (depth / 4 + 3) * ONE_PLY
+                    - (staticEval - beta < 300 ? (staticEval - beta) / search::FUTILITY_MARGIN : 3),
+                ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
                 return score;
@@ -886,7 +895,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     }
 
     // we reuse movelists for memory reasons.
-    MoveList* mv      = sd->moves[ply];
+    MoveList* mv      = &sd->moves[ply];
 
     // **********************************************************************************************************
     // probcut was first implemented in StockFish by Gary Linscott. See
@@ -894,7 +903,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // this is based on other top engines.
     // **********************************************************************************************************
 
-    Score     betaCut = beta + FUTILITY_MARGIN;
+    Score     betaCut = beta + search::FUTILITY_MARGIN;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
@@ -908,15 +917,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
             b->move(m);
 
-            Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
+            Score qScore = -search::qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
             if (qScore >= betaCut)
-                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP);
+                qScore = -search::pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0,
+                                           behindNMP);
 
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(zobrist, qScore, m, CUT_NODE, depth - 3);
+                search::table->put(zobrist, qScore, m, CUT_NODE, depth - 3);
                 return betaCut;
             }
         }
@@ -1038,8 +1048,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
-            betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
+            betaCut = en.score - search::SE_MARGIN_STATIC - depth * 2;
+            score   = search::pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -1049,7 +1059,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
+                score = search::pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
                 if (score >= beta)
                     return score;
             }
@@ -1073,16 +1083,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 sd->reduce = true;
             }
         }
-        
-        U64 nodeCount = td->nodes;
+
+        U64   nodeCount = td->nodes;
 
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
-        Depth lmr = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr       = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
-                        ? 0
-                        : lmrReductions[depth][legalMoves];
+                              ? 0
+                              : lmrReductions[depth][legalMoves];
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
@@ -1119,8 +1129,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
-                              behindNMP);
+            score = -search::pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
+                                      td, 0, behindNMP);
         } else {
             // kk reduction logic.
             if (ply == 0 && lmr) {
@@ -1141,8 +1151,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
             if (ply == 0) {
                 if (lmr && score > alpha) {
                     for (int i = lmr - 1; i > 0; i--) {
-                        score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
-                                          ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                        score =
+                            -search::pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
+                                              ply + ONE_PLY, td, 0, behindNMP);    // re-search
                         if (score <= alpha)
                             break;
                     }
@@ -1150,16 +1161,16 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 // if the move passes all null window searches, search with the full aspiration
                 // window.
                 if (score > alpha && score < beta)
-                    score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
+                    score = -search::pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension,
+                                              ply + ONE_PLY, td, 0, behindNMP);    // re-search
             } else {
                 // if not at root use standard logic
                 if (lmr && score > alpha)
-                    score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
-                                      ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                    score = -search::pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
+                                              ply + ONE_PLY, td, 0, behindNMP);    // re-search
                 if (score > alpha && score < beta)
-                    score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
+                    score = -search::pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension,
+                                              ply + ONE_PLY, td, 0, behindNMP);    // re-search
             }
         }
 
@@ -1185,8 +1196,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         // beta -cutoff
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
-                // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                // put the beta cutoff into the transpositionTable
+                search::table->put(zobrist, score, m, CUT_NODE, depth);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -1232,9 +1243,9 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            search::table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            search::table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
         }
     }
 
@@ -1250,7 +1261,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
  * @param ply
  * @return
  */
-Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+Score search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -1261,14 +1272,14 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // extract information like search data (history tables), zobrist etc
     SearchData* sd         = td->searchData;
     U64         zobrist    = b->zobrist();
-    Entry       en         = table->get(b->zobrist());
+    Entry       en         = search::table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
 
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as
     // the current position. As we have no information about the depth, we will allways use the
-    // perft_tt entry.
+    // transpositionTable entry.
     // **************************************************************************************************************
     if (en.zobrist == zobrist) {
         if (en.type == PV_NODE) {
@@ -1289,10 +1300,9 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
 
-    stand_pat       = bestScore =
-        inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+    stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
 
-    // we can also use the perft_tt entry to adjust the evaluation.
+    // we can also use the transpositionTable entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
@@ -1314,7 +1324,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
     // moves that give check are not considered non-quiet in
     // getNonQuietMoves() although they are not quiet.
     //
-    MoveList* mv = sd->moves[ply];
+    MoveList* mv = &sd->moves[ply];
 
     // create a moveorderer to sort the moves during the search
     generateNonQuietMoves(b, mv);
@@ -1361,7 +1371,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                search::table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
                 return score;
             }
             if (score > alpha) {
@@ -1373,7 +1383,7 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
 
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+        search::table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
     return bestScore;
 
     //    return 0;
