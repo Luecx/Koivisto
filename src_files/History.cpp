@@ -43,7 +43,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                 history[side][getSqToSqFromCombination(m)] +=
                     (+ scalar
                     - scalar * history[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE) * 200 / (maxDepth*maxDepth+5*maxDepth);
+                          / MAX_HISTORY_SCORE) * 300 / (maxDepth*maxDepth+5*maxDepth);
                 cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                     + scalar
                     - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
@@ -61,7 +61,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
             history[side][getSqToSqFromCombination(m2)] +=
                 (- scalar
                 - scalar * history[side][getSqToSqFromCombination(m2)]
-                      / MAX_HISTORY_SCORE) * 200 / (maxDepth*maxDepth+5*maxDepth);
+                      / MAX_HISTORY_SCORE) * 300 / (maxDepth*maxDepth+5*maxDepth);
             cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                 - scalar
                 - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
