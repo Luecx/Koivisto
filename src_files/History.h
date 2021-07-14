@@ -29,7 +29,7 @@ using namespace move;
 struct SearchData {
 
     Move       bestMove = 0;
-
+    int        maxDepth = 1;
     MoveList** moves;
     // Effort spent
     int        spentEffort[64][64]                                                 = {0};
