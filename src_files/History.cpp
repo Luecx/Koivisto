@@ -74,8 +74,8 @@ int SearchData::getHistories(Move m, Color side, Move previous) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
-        return cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + history[side][getSqToSqFromCombination(m)];
+        return (3*cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+               + history[side][getSqToSqFromCombination(m)]) / 2;
     }
 }
 
