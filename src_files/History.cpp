@@ -18,7 +18,7 @@
  ****************************************************************************************************/
 #include "History.h"
 
-#define MAX_HISTORY_SCORE 512;
+#define MAX_HISTORY_SCORE 512
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
     if (depth > 20)
@@ -41,9 +41,9 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                           / MAX_HISTORY_SCORE;
             } else {
                 history[side][getSqToSqFromCombination(m)] +=
-                    + scalar
+                    (+ scalar
                     - scalar * history[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE;
+                          / MAX_HISTORY_SCORE) / 2;
                 cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                     + scalar
                     - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
@@ -54,9 +54,9 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
             return;
         } else if (isCapture(m2)) {
             captureHistory[side][getSqToSqFromCombination(m2)] +=
-                - scalar
+                (- scalar
                 - scalar * captureHistory[side][getSqToSqFromCombination(m2)]
-                      / MAX_HISTORY_SCORE;
+                      / MAX_HISTORY_SCORE) / 2;
         } else if (!isCapture(m)) {
             history[side][getSqToSqFromCombination(m2)] +=
                 - scalar
