@@ -958,6 +958,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
 
+    bool hasRs = false;
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
 
@@ -1099,6 +1101,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            lmr -= hasRs;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -1153,6 +1156,8 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
                                       td, 0, behindNMP);    // re-search
             } else {
+                if (score > alpha)
+                    hasRs = true;
                 // if not at root use standard logic
                 if (lmr && score > alpha)
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
