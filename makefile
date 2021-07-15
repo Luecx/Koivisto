@@ -47,7 +47,7 @@ tuning: updateNetwork
 
 updateNetwork:
 ifeq ($(EVALFILE),$(ROOT)networks/default.net)
-	git -C .. submodule update --init
+	git -C . submodule update --init
 endif
 
 
