@@ -1302,8 +1302,10 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
         }
     }
 
-    if (bestScore >= beta)
+    if (bestScore >= beta) {
+        sd->eval[0][ply] = 1;
         return bestScore;
+    }
     if (alpha < bestScore)
         alpha = bestScore;
 
@@ -1322,6 +1324,8 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
+
+    sd->eval[0][ply+1] = 0;
 
     for (int i = 0; i < mv->getSize(); i++) {
 
@@ -1369,6 +1373,10 @@ Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool
                 alpha      = score;
             }
         }
+
+        if (sd->eval[0][ply+1] == 1)
+            break;
+
     }
 
     // store the current position inside the transposition table
