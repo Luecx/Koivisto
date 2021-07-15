@@ -1,5 +1,5 @@
 CC       = g++
-SRC      = *.cpp syzygy/tbprobe.c
+SRC      = src_files/*.cpp src_files/syzygy/tbprobe.c
 LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
 ROOT     = ./
