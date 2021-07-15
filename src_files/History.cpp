@@ -20,9 +20,11 @@
 
 #define MAX_HISTORY_SCORE 512
 
+int history_values[16] = {3, 4, 6, 9, 12, 17, 24, 34, 48, 67, 95, 133, 186, 261, 365, 512,};
+
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
-    if (depth > 20)
-        return;
+    if (depth > 15)
+        depth = 15;
     Move  m2;
 
     Color color = getMovingPieceColor(m);
@@ -31,7 +33,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         m2         = mv->getMove(i);
 
         int score  = mv->getScore(i);
-        int scalar = score * score + 5 * score;
+        int scalar = history_values[depth];
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
@@ -41,9 +43,9 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                           / MAX_HISTORY_SCORE;
             } else {
                 history[side][getSqToSqFromCombination(m)] +=
-                    (+ scalar
+                    + scalar
                     - scalar * history[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE) * 256 / (depthF);
+                          / MAX_HISTORY_SCORE;
                 cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                     + scalar
                     - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
@@ -59,9 +61,9 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                       / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
             history[side][getSqToSqFromCombination(m2)] +=
-                (- scalar
+                - scalar
                 - scalar * history[side][getSqToSqFromCombination(m2)]
-                      / MAX_HISTORY_SCORE) * 256 / (depthF);
+                      / MAX_HISTORY_SCORE;
             cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
                 - scalar
                 - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
