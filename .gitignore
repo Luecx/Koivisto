@@ -1,32 +1,15 @@
+*
 
-.idea/
+!src_files/*
+!networks/*
 
-resources/
+!bin/.gitkeep
 
-cmake-build-debug/
+!.gitignore
+!.gitmodules
+!*.md
 
-cmake-build-release/
+!.clang-format
+!CMakeLists.txt
+!makefile
 
-CMakeFiles/
-
-out/
-
-Koivisto.exe
-
-callgrind.out.106985
-
-Koivisto
-
-src_files/.vscode/
-
-src_files/main.cpp
-
-threadScaling.png
-
-ThreadScalingScript.py
-
-bin/
-
-bin/!.gitignore
-
-*.json
