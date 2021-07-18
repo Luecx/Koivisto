@@ -743,8 +743,8 @@ Score Board::staticExchangeEvaluation(Move m) {
         
         gain[d] = see_piece_vals[getPieceType(capturingPiece)] - gain[d - 1];
         
-        if (-gain[d - 1] < 0 && gain[d] < 0)
-            break;    // pruning does not influence the result
+        //if (-gain[d - 1] < 0 && gain[d] < 0)
+        //   break;    // pruning does not influence the result
         
         attadef ^= fromSet;    // reset bit in set to traverse
         occ ^= fromSet;
