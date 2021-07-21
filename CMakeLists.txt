@@ -37,14 +37,13 @@ add_executable(Koivisto
         src_files/syzygy/tbconfig.h
         src_files/syzygy/tbprobe.c
         src_files/syzygy/tbchess.c
-        src_files/gradient.h
         src_files/movegen.h
         src_files/movegen.cpp
         src_files/incbin/incbin.h)
 
 add_definitions(-DEVALFILE=\"../networks/default.net\")
-add_definitions(-DMINOR_VERSION=14)
-add_definitions(-DMAJOR_VERSION=5)
+add_definitions(-DMINOR_VERSION=0)
+add_definitions(-DMAJOR_VERSION=6)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
