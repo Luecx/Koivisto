@@ -758,8 +758,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         if (ply > 0 && b->getPreviousMove() != 0) {
-            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) 
-                sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
+            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
+                int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
+                sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = std::max(sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())], improvement);
+            }
         }
     }
 
@@ -997,7 +999,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 }
 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && depth == 1 && std::max(sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)], 15)* 2 + staticEval < alpha) 
+                if (!inCheck && moveDepth == 1 && std::max(sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)], 15) + staticEval < alpha) 
                     continue;
 
                 // **************************************************************************************************
