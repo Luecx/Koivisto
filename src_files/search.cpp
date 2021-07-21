@@ -997,7 +997,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                 }
 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && std::max(sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)], 15)* 2 + staticEval < alpha) 
+                if (!inCheck && depth == 1 && std::max(sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)], 15)* 2 + staticEval < alpha) 
                     continue;
 
                 // **************************************************************************************************
