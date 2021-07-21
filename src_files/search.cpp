@@ -757,6 +757,10 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
+        if (ply > 0 && b->getPreviousMove() != 0) {
+            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) 
+                sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
+        }
     }
 
     // we check if the evaluation improves across plies.
@@ -991,6 +995,11 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
                     moveOrderer.skip = true;
                     continue;
                 }
+
+                // prune quiet moves that are unlikely to improve alpha
+                if (std::max(sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)], 15)* 2 + staticEval < alpha) 
+                    continue;
+
                 // **************************************************************************************************
                 // history pruning:
                 // if the history score for a move is really bad at low depth, dont consider this
