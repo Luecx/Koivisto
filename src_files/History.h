@@ -33,6 +33,8 @@ struct SearchData {
     MoveList** moves;
     // Effort spent
     int        spentEffort[64][64]                                                 = {0};
+    // EvalImprovement
+    int        maxImprovement[64][64]                                              = {15};
     // capture history table (side-from-to)
     int        captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // history table (side-from-to)
