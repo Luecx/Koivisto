@@ -708,7 +708,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
-            lmr += sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]/20;
+            lmr -= sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]/20;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
