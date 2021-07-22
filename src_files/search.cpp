@@ -711,6 +711,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
+            lmr+=enemyThreats;
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
