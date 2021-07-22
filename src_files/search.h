@@ -35,14 +35,8 @@
 #include <stdint.h>
 #include <string>
 #include <tgmath.h>
+#include <thread>
 
-extern int threadCount;
-
-extern int RAZOR_MARGIN;
-extern int FUTILITY_MARGIN;
-extern int SE_MARGIN_STATIC;
-extern int LMR_DIV;
-extern TranspositionTable* table;
 #define MAX_THREADS 256
 
 /**
@@ -56,21 +50,61 @@ struct SearchOverview {
     Move  move;
 };
 
-void           search_stop();
-void           search_setHashSize(int hashSize);
-void           search_setThreads(int threads);
-void           search_clearHash();
-void           search_clearHistory();
-void           search_useTB(bool val);
-void           search_init(int hashSize);    // used to create arrays, movelists etc
-void           initLMR();                    // init lmr array. Used when clop tuning etc.
-void           search_cleanUp();             // used to clean up the memory
-SearchOverview search_overview();            // used to get information about the latest search
-void           search_enable_infoStrings();
-void           search_disable_infoStrings();
+class Search {
+    int                      threadCount = 1;
+    TranspositionTable*      table;
+    SearchOverview           searchOverview;
 
-Move  bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId = 0);
-Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd, Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
-Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
+    TimeManager*             timeManager;
+    std::vector<std::thread> runningThreads;
+    bool                     useTB     = false;
+    bool                     printInfo = true;
+
+    ThreadData*              tds[MAX_THREADS] {};
+
+    public:
+//    Search(int hashsize = 16);
+//    virtual ~Search();
+    
+    void init(int hashsize);
+    void cleanUp();
+    private:
+
+    U64  totalNodes();
+    int  selDepth();
+    U64  tbHits();
+
+    bool isTimeLeft();
+    bool rootTimeLeft(int score);
+
+    public:
+    SearchOverview overview();
+    void           enableInfoStrings();
+    void           disableInfoStrings();
+
+    void           useTableBase(bool val);
+    void           clearHistory();
+    void           clearHash();
+    void           setThreads(int threads);
+    void           setHashSize(int hashSize);
+    void           stop();
+
+    void           printInfoString(Board* b, Depth d, Score score);
+    void           extractPV(Board* b, MoveList* mvList, Depth depth);
+    
+    Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId=0);
+    Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
+                            Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
+    Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
+    Score           probeWDL(Board* board);
+    Move            probeDTZ(Board* board);
+};
+
+extern int                 RAZOR_MARGIN;
+extern int                 FUTILITY_MARGIN;
+extern int                 SE_MARGIN_STATIC;
+extern int                 LMR_DIV;
+
+void initLMR();
 
 #endif    // KOIVISTO_SEARCH_H
