@@ -50,7 +50,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         // scoring for moves when all moves are generated
         
         if constexpr (isCapture){
-            Score     SEE    = board->staticExchangeEvaluation(move);
+            Score     SEE    = (getCapturedPieceType(m)) < (getMovingPieceType(m)) ? board->staticExchangeEvaluation(move) : 0;
             MoveScore mvvLVA = piece_values[(getCapturedPieceType(move))];
             if (SEE >= 0) {
                 mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
