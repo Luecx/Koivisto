@@ -36,7 +36,7 @@ int  FUTILITY_MARGIN  = 81;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 215;
 
-int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
+int  lmp[2][10]        = {{0, 2, 3, 5, 8, 12, 17, 23, 30, 38}, {0, 3, 6, 9, 12, 18, 28, 40, 50, 60}};
 
 /**
  * =================================================================================
@@ -591,7 +591,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (depth <= 9 && quiets > lmp[isImproving][depth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
