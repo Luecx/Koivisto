@@ -30,7 +30,7 @@ struct SearchData {
 
     Move       bestMove = 0;
 
-    MoveList moves[MAX_INTERNAL_PLY]{};
+    MoveList** moves;
     // Effort spent
     int        spentEffort[64][64]                                                 = {0};
     // capture history table (side-from-to)
@@ -47,6 +47,10 @@ struct SearchData {
     Score eval[N_COLORS][MAX_INTERNAL_PLY] = {0};
     bool  sideToReduce;
     bool  reduce;
+
+    SearchData();
+
+    virtual ~SearchData();
 
     void updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
@@ -70,11 +74,12 @@ struct ThreadData {
     int         seldepth   = 0;
     int         tbhits     = 0;
     bool        dropOut    = false;
-    SearchData  searchData{};
+    SearchData* searchData = nullptr;
+    char        padding[1024 * 128];
 
     ThreadData();
 
     ThreadData(int threadId);
-} __attribute__((aligned(4096)));
+};
 
 #endif    // KOIVISTO_HISTORY_H

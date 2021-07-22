@@ -29,14 +29,34 @@
 
 #include <thread>
 
-int  lmrReductions[256][256];
+TranspositionTable*      table = nullptr;
+TimeManager*             search_timeManager;
+std::vector<std::thread> runningThreads;
+int                      threadCount = 1;
+bool                     useTB       = false;
+bool                     printInfo   = true;
 
-int  RAZOR_MARGIN     = 198;
-int  FUTILITY_MARGIN  = 81;
-int  SE_MARGIN_STATIC = 0;
-int  LMR_DIV          = 215;
+SearchOverview           overview;
 
-int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
+int                      lmrReductions[256][256];
+
+// data about each thread. this contains nodes, depth etc as well as a pointer to the history tables
+ThreadData               tds[MAX_THREADS] {};
+
+int                      RAZOR_MARGIN     = 198;
+int                      FUTILITY_MARGIN  = 81;
+int                      SE_MARGIN_STATIC = 0;
+int                      LMR_DIV          = 215;
+
+void                     initLMR() {
+    int d, m;
+
+    for (d = 0; d < 256; d++)
+        for (m = 0; m < 256; m++)
+            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+}
+
+int lmp[2][8] = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
 /**
  * =================================================================================
@@ -44,6 +64,82 @@ int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 4
  *                             H E L P E R S
  * =================================================================================
  */
+
+/**
+ * returns the total amount of searched nodes across all threads
+ * @return
+ */
+U64 totalNodes() {
+    U64 tn = 0;
+    for (int i = 0; i < threadCount; i++) {
+        tn += tds[i].nodes;
+    }
+    return tn;
+}
+
+/**
+ * returns the maximum selective depth across all threads
+ * @return
+ */
+int selDepth() {
+    int maxSd = 0;
+    for (int i = 0; i < threadCount; i++) {
+        maxSd = tds[i].seldepth > maxSd ? tds[i].seldepth : maxSd;
+    }
+    return maxSd;
+}
+
+/**
+ * returns the amount of tablebase hits across all threads
+ * @return
+ */
+int tbHits() {
+    int th = 0;
+    for (int i = 0; i < threadCount; i++) {
+        th += tds[i].tbhits;
+    }
+    return th;
+}
+
+/**
+ * enables uci info-string printing. This is usually enabled but might be disabled for fen-generation.
+ */
+void search_enable_infoStrings() { printInfo = true; }
+
+/**
+ * enables uci info-string printing. This is usually enabled but might be disabled for fen-generation.
+ */
+void search_disable_infoStrings() { printInfo = false; }
+
+/**
+ * clears the hash of the transposition table which is used for searches.
+ */
+void search_clearHash() { table->clear(); }
+
+/**
+ * clears the history table of all the active threads
+ */
+void search_clearHistory() {
+    for (int i = 0; i < threadCount; i++) {
+        if (tds[i].searchData != nullptr) {
+            delete tds[i].searchData;
+        }
+        tds[i].searchData = new SearchData();
+    }
+}
+
+/**
+ * enables/disables tb probing during search
+ */
+void search_useTB(bool val) { useTB = val; }
+
+/**
+ * stops the search
+ */
+void search_stop() {
+    if (search_timeManager)
+        search_timeManager->stopSearch();
+}
 
 /**
  * checks if given side has only pawns left
@@ -56,27 +152,87 @@ bool hasOnlyPawns(Board* board, Color color) {
            == ((board->getPieceBB()[PAWN + color * 8] | board->getPieceBB()[KING + color * 8]));
 }
 
-void getThreats(Board* b, SearchData* sd, Depth ply) {
-    U64 occupied         = b->getOccupiedBB();
+/**
+ * checks if there is time left and the search should continue.
+ * @return
+ */
+bool isTimeLeft() { return search_timeManager->isTimeLeft(); }
 
-    U64 whitePawns       = b->getPieceBB(WHITE, PAWN);
-    U64 blackPawns       = b->getPieceBB(BLACK, PAWN);
+/**
+ * checks if there is root time left and the iterative deepening should continue.
+ * @return
+ */
+bool rootTimeLeft(int score) { return search_timeManager->rootTimeLeft(score); }
+
+/**
+ * used to change the hash size
+ * @param hashSize
+ */
+void search_setHashSize(int hashSize) { table->setSize(hashSize); }
+
+void search_setThreads(int threads) {
+    int processor_count = (int) std::thread::hardware_concurrency();
+    if (processor_count == 0)
+        processor_count = MAX_THREADS;
+    if (processor_count < threads)
+        threads = processor_count;
+    if (threads < 1)
+        threads = 1;
+    if (threads > MAX_THREADS)
+        threads = MAX_THREADS;
+    threadCount = threads;
+    for (int i = 0; i < threadCount; i++) {
+        if (tds[i].searchData != nullptr) {
+            delete tds[i].searchData;
+        }
+        tds[i].searchData = new SearchData();
+    }
+}
+
+/**
+ * called at the start of the program
+ */
+void search_init(int hashSize) {
+    if (table != nullptr)
+        delete table;
+    table = new TranspositionTable(hashSize);
+    initLMR();
+
+    for (int i = 0; i < MAX_THREADS; i++) {
+        tds[i].threadID = i;
+    }
+    tds[0].searchData = new SearchData();
+}
+
+/**
+ * called at the exit of the program to cleanup and deallocate arrays.
+ */
+void search_cleanUp() {
+    delete table;
+    table = nullptr;
+
+    for (int i = 0; i < MAX_THREADS; i++) {
+        if (tds[i].searchData != nullptr) {
+            delete tds[i].searchData;
+            tds[i].searchData = nullptr;
+        }
+    }
+}
+void getThreats(Board *b, SearchData *sd, Depth ply) {
+    U64 occupied = b->getOccupiedBB();
+
+    U64 whitePawns = b->getPieceBB(WHITE , PAWN);
+    U64 blackPawns = b->getPieceBB(BLACK , PAWN);
 
     U64 whitePawnAttacks = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnAttacks = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
-    sd->threatCount[ply][WHITE] =
-        bitCount(whitePawnAttacks
-                 & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)
-                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] =
-        bitCount(blackPawnAttacks
-                 & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP)
-                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+    sd->threatCount[ply][WHITE] = bitCount(whitePawnAttacks & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP) | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] = bitCount(blackPawnAttacks & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP) | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
 
     U64 whiteMinorAttacks = 0;
     U64 blackMinorAttacks = 0;
-    U64 k                 = b->getPieceBB(WHITE, KNIGHT);
+    U64 k = b->getPieceBB(WHITE, KNIGHT);
     while (k) {
         whiteMinorAttacks |= KNIGHT_ATTACKS[bitscanForward(k)];
         k = lsbReset(k);
@@ -96,14 +252,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
         blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
-    sd->threatCount[ply][WHITE] +=
-        bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] +=
-        bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
-
+    sd->threatCount[ply][WHITE] += bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] += bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+    
     U64 whiteRookAttacks = 0;
     U64 blackRookAttacks = 0;
-    k                    = b->getPieceBB(WHITE, ROOK);
+    k = b->getPieceBB(WHITE, ROOK);
     while (k) {
         whiteRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
@@ -116,14 +270,265 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
     sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
 }
+/**
+ * extracts the pv for the given board using the transposition table.
+ * It stores the moves recursively in the given list.
+ * It does not clear the list so this has to be done beforehand.
+ * to avoid infinite sequences, this search is limited by the depth
+ * @param b
+ * @param mvList
+ */
+void extractPV(Board* b, MoveList* mvList, Depth depth) {
+    UCI_ASSERT(b);
+    UCI_ASSERT(mvList);
 
-void initLMR() {
-    int d, m;
-    
-    for (d = 0; d < 256; d++)
-        for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+    if (depth <= 0)
+        return;
+
+    U64   zob = b->zobrist();
+    Entry en  = table->get(zob);
+    if (en.zobrist == zob && en.type == PV_NODE) {
+
+        // extract the move from the table
+        Move     mov = en.move;
+
+        // get a movelist which can be used to store all pseudo legal moves
+        MoveList mvStorage;
+        // extract pseudo legal moves
+        generatePerftMoves(b, &mvStorage);
+
+        bool moveContained = false;
+        // check if the move is actually valid for the position
+        for (int i = 0; i < mvStorage.getSize(); i++) {
+
+            Move stor = mvStorage.getMove(i);
+
+            if (sameMove(stor, mov)) {
+                moveContained = true;
+            }
+        }
+
+        // return if the move doesnt exist for this board
+        if (!moveContained)
+            return;
+
+        // check if its also legal
+        if (!b->isLegal(mov))
+            return;
+
+        mvList->add(mov);
+        b->move(en.move);
+
+        extractPV(b, mvList, depth - 1);
+        b->undoMove();
+    }
 }
+
+/**
+ * prints the info string displaying:
+ *  - score
+ *  - depth
+ *  - nodes
+ *  - hashfull
+ *  - principal variation
+ * @param b
+ * @param d
+ * @param score
+ */
+void printInfoString(Board* b, Depth d, Score score) {
+    UCI_ASSERT(b);
+
+    if (!printInfo)
+        return;
+
+    U64 nodes = totalNodes();
+
+    U64 nps =
+        static_cast<U64>(nodes * 1000) / static_cast<U64>(search_timeManager->elapsedTime() + 1);
+
+    std::cout << "info"
+              << " depth " << static_cast<int>(d) << " seldepth " << static_cast<int>(selDepth());
+
+    if (abs(score) > MIN_MATE_SCORE) {
+        std::cout << " score mate " << (MAX_MATE_SCORE - abs(score) + 1) / 2 * (score > 0 ? 1 : -1);
+    } else {
+        std::cout << " score cp " << score;
+    }
+
+    if (tbHits() != 0) {
+        std::cout << " tbhits " << tbHits();
+    }
+
+    std::cout << " nodes " << nodes << " nps " << nps << " time " << search_timeManager->elapsedTime()
+              << " hashfull " << static_cast<int>(table->usage() * 1000);
+
+    MoveList em;
+    em.clear();
+    extractPV(b, &em, selDepth());
+    std::cout << " pv";
+    for (int i = 0; i < em.getSize(); i++) {
+        std::cout << " " << toString(em.getMove(i));
+    }
+
+    std::cout << std::endl;
+}
+/**
+ * probes the wdl tables if tablebases can be used.
+ */
+Score getWDL(Board* board) {
+    UCI_ASSERT(board);
+
+    // we cannot prove the tables if there are too many pieces on the board
+    if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
+        return MAX_MATE_SCORE;
+
+    // use the given files to prove the tables using the information from the board.
+    unsigned res = tb_probe_wdl(board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
+                                board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
+                                board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
+                                board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
+                                board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
+                                board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
+                                board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN],
+                                board->getBoardStatus()->fiftyMoveCounter,
+                                board->getCastlingRights(0) | board->getCastlingRights(1)
+                                    | board->getCastlingRights(2) | board->getCastlingRights(3),
+                                board->getEnPassantSquare() != -1 ? board->getEnPassantSquare() : 0,
+                                board->getActivePlayer() == WHITE);
+
+    // if the result failed, we return the max_mate_score internally. This is not used within the
+    // search and will be catched later.
+    if (res == TB_RESULT_FAILED) {
+        return MAX_MATE_SCORE;
+    }
+    // we defined our own tablebase scores.
+    if (res == TB_LOSS) {
+        return -TB_WIN_SCORE;
+    }
+    if (res == TB_WIN) {
+        return TB_WIN_SCORE;
+    }
+    if (res == TB_BLESSED_LOSS) {
+        return -TB_CURSED_SCORE;
+    }
+    if (res == TB_CURSED_WIN) {
+        return TB_CURSED_SCORE;
+    }
+    if (res == TB_DRAW) {
+        return 0;
+    }
+    // if none of them above happened, act as if the result failed.
+    return MAX_MATE_SCORE;
+}
+
+/**
+ * probes the dtz table. If an entry is being found, it also displays the info string.
+ * The displayed depth is usually the distance to zero which is the distance until the 50-move rule is
+ * reset.
+ */
+Move getDTZMove(Board* board) {
+    UCI_ASSERT(board);
+
+    if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
+        return 0;
+
+    unsigned result =
+        tb_probe_root(board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
+                      board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
+                      board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
+                      board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
+                      board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
+                      board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
+                      board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN],
+                      board->getBoardStatus()->fiftyMoveCounter,
+                      board->getCastlingRights(0) | board->getCastlingRights(1)
+                          | board->getCastlingRights(2) | board->getCastlingRights(3),
+                      board->getEnPassantSquare() != -1 ? board->getEnPassantSquare() : 0,
+                      board->getActivePlayer() == WHITE, NULL);
+
+    // if the result failed for some reason or the game is over, dont do anything
+    if (result == TB_RESULT_FAILED || result == TB_RESULT_CHECKMATE || result == TB_RESULT_STALEMATE)
+        return 0;
+
+    // we need the wdl and the dtz values to get the score.
+    int   dtz = TB_GET_DTZ(result);
+    int   wdl = TB_GET_WDL(result);
+
+    Score s   = 0;
+
+    if (wdl == TB_LOSS) {
+        s = -TB_WIN_SCORE;
+    }
+    if (wdl == TB_WIN) {
+        s = TB_WIN_SCORE;
+    }
+    if (wdl == TB_BLESSED_LOSS) {
+        s = -TB_CURSED_SCORE;
+    }
+    if (wdl == TB_CURSED_WIN) {
+        s = TB_CURSED_SCORE;
+    }
+    if (wdl == TB_DRAW) {
+        s = 0;
+    }
+
+    // get the promotion piece if the target move is a promotion (this does not yet work the way it
+    // should)
+    Piece     promo  = 6 - TB_GET_PROMOTES(result);
+
+    // gets the square from and square to for the move which should be played
+    Square    sqFrom = TB_GET_FROM(result);
+    Square    sqTo   = TB_GET_TO(result);
+
+    // we generate all pseudo legal moves and check for equality between the moves to make sure the
+    // bits are correct.
+    MoveList* mv     = new MoveList();
+    generatePerftMoves(board, mv);
+
+    for (int i = 0; i < mv->getSize(); i++) {
+        // get the current move from the movelist
+        Move m = mv->getMove(i);
+
+        // check if its the same.
+        if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
+            if ((promo == 6 && !isPromotion(m))
+                || (isPromotion(m) && promo < 6 && getPromotionPieceType(m) == promo)) {
+
+                std::cout << "info"
+                             " depth "
+                          << static_cast<int>(dtz) << " seldepth " << static_cast<int>(selDepth());
+
+                std::cout << " score cp " << s;
+
+                if (tbHits() != 0) {
+                    std::cout << " tbhits " << 1;
+                }
+
+                std::cout <<
+
+                    " nodes " << 1 << " nps " << 1 << " time " << search_timeManager->elapsedTime()
+                          << " hashfull " << static_cast<int>(table->usage() * 1000);
+                std::cout << std::endl;
+
+                return m;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * returns an overview of the search which is internally used for various reasons.
+ */
+SearchOverview search_overview() { return overview; }
+
+/**
+ * =================================================================================
+ *                                M A I N
+ *                              S E A R C H
+ * =================================================================================
+ */
 
 /**
  * returns the best move for the given board.
@@ -133,7 +538,7 @@ void initLMR() {
  * @param b
  * @return
  */
-Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
+Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
     UCI_ASSERT(b);
     UCI_ASSERT(timeManager);
 
@@ -143,7 +548,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
 
         // if there is a dtz move available, do not start any threads or search at all. just do the
         // dtz move
-        Move dtzMove = this->probeDTZ(b);
+        Move dtzMove = getDTZMove(b);
         if (dtzMove != 0)
             return dtzMove;
 
@@ -158,29 +563,29 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
             maxDepth = MAX_PLY;
 
         // if no dtz move has been found, set the time manager so that the search can be stopped
-        this->timeManager = timeManager;
+        search_timeManager = timeManager;
 
         // we need to reset the hash between searches
-        this->table->incrementAge();
+        table->incrementAge();
 
         // for each thread, we will generate a new search data object
         for (int i = 0; i < threadCount; i++) {
             // reseting the thread data
-            this->tds[i]->threadID = i;
-            this->tds[i]->tbhits   = 0;
-            this->tds[i]->nodes    = 0;
-            this->tds[i]->seldepth = 0;
+            tds[i].threadID = i;
+            tds[i].tbhits   = 0;
+            tds[i].nodes    = 0;
+            tds[i].seldepth = 0;
         }
 
         // we will call this function for the other threads which will skip this part and jump
         // straight to the part below
         for (int n = 1; n < threadCount; n++) {
-            this->runningThreads.emplace_back(&Search::bestMove, this, b, maxDepth, timeManager, n);
+            runningThreads.emplace_back(bestMove, b, maxDepth, timeManager, n);
         }
     }
 
     // the thread id starts at 0 for the first thread
-    ThreadData* td = this->tds[threadId];
+    ThreadData* td = &tds[threadId];
     // start the basic search on all threads
     Depth       d  = 1;
     Score       s  = 0;
@@ -196,16 +601,15 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
-            s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
+            s = pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
             Score window = 10;
             Score alpha  = s - window;
-            Score beta   = s + window;
-            Depth sDepth = d;    // Idea of reducing depth on fail high from Houdini.
-                                 // http://www.talkchess.com/forum3/viewtopic.php?t=45624.
-            while (this->isTimeLeft()) {
+            Score beta   = s + window; 
+            Depth sDepth = d; // Idea of reducing depth on fail high from Houdini. http://www.talkchess.com/forum3/viewtopic.php?t=45624.
+            while (isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
-                s      = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
+                s = pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
                 window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
@@ -220,16 +624,14 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
                 }
             }
         }
-        int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
-                                                      [getSquareTo(td->searchData.bestMove)]
-                           * 100 / td->nodes;
+        int timeManScore = td->searchData->spentEffort[getSquareFrom(td->searchData->bestMove)][getSquareTo(td->searchData->bestMove)] * 100 / td->nodes;
 
         if (threadId == 0) {
-            this->printInfoString(&printBoard, d, s);
+            printInfoString(&printBoard, d, s);
         }
 
         // if the search finished due to timeout, we also need to stop here
-        if (!this->rootTimeLeft(timeManScore))
+        if (!rootTimeLeft(timeManScore))
             break;
     }
 
@@ -238,20 +640,20 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
 
         // tell all other threads if they are running to stop the search
         timeManager->stopSearch();
-        for (std::thread& th : this->runningThreads) {
+        for (std::thread& th : runningThreads) {
             th.join();
         }
-        this->runningThreads.clear();
+        runningThreads.clear();
 
         // retrieve the best move from the search
-        Move best                   = td->searchData.bestMove;
+        Move best      = td->searchData->bestMove;
 
         // collect some information which can be used for benching
-        this->searchOverview.nodes = this->totalNodes();
-        this->searchOverview.depth = d;
-        this->searchOverview.score = s;
-        this->searchOverview.time  = timeManager->elapsedTime();
-        this->searchOverview.move  = best;
+        overview.nodes = totalNodes();
+        overview.depth = d;
+        overview.score = s;
+        overview.time  = timeManager->elapsedTime();
+        overview.move  = best;
 
         // return the best move if its the main thread
         return best;
@@ -269,8 +671,8 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
  * @param ply
  * @return
  */
-Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td,
-                       Move skipMove, int behindNMP, Depth* lmrFactor) {
+Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td,
+               Move skipMove, int behindNMP, Depth* lmrFactor) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -280,12 +682,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     td->nodes++;
 
     // force a stop when enough nodes have been searched
-    if (timeManager->getNodeLimit() <= td->nodes) {
-        this->timeManager->stopSearch();
+    if (search_timeManager->getNodeLimit() <= td->nodes) {
+        search_timeManager->stopSearch();
     }
 
     // check if a stop is forced
-    if (timeManager->isForceStopped()) {
+    if (search_timeManager->isForceStopped()) {
         td->dropOut = true;
         return beta;
     }
@@ -333,7 +735,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // we extract a lot of information about various things.
-    SearchData* sd            = &td->searchData;
+    SearchData* sd            = td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
     Score       originalAlpha = alpha;
@@ -347,7 +749,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse
     // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
     // has actually been evaluated.
-
+    
     if (inCheck)
         staticEval = -MAX_MATE_SCORE + ply;
     else {
@@ -404,10 +806,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // the moves
     // **************************************************************************************************************
     if (useTB && ply > 0) {
-        Score res = this->probeWDL(b);
+        Score res = getWDL(b);
 
-        // TB_FAILED is used for no result
-        if (res != TB_FAILED) {
+        // MAX_MATE_SCORE is used for no result
+        if (res != MAX_MATE_SCORE) {
 
             td->tbhits++;
             // indicates a winning or losing position
@@ -448,7 +850,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // will definetly be above beta and stop the search here and fail soft. Also reuse information
         // from eval to prevent pruning if the oponent has multiple threats.
         // **********************************************************************************************************
-        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + depth * FUTILITY_MARGIN
+        if (depth <= 7
+            && enemyThreats < 2
+            && staticEval >= beta + depth * FUTILITY_MARGIN
             && staticEval < MIN_MATE_SCORE)
             return staticEval;
 
@@ -482,7 +886,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // we reuse movelists for memory reasons.
-    MoveList* mv      = &sd->moves[ply];
+    MoveList* mv      = sd->moves[ply];
 
     // **********************************************************************************************************
     // probcut was first implemented in StockFish by Gary Linscott. See
@@ -503,7 +907,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 continue;
 
             b->move(m);
-            __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
@@ -670,16 +1073,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->reduce = true;
             }
         }
-
-        U64   nodeCount = td->nodes;
+        
+        U64 nodeCount = td->nodes;
 
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
-        Depth lmr       = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
-                              ? 0
-                              : lmrReductions[depth][legalMoves];
+                        ? 0
+                        : lmrReductions[depth][legalMoves];
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
@@ -706,7 +1109,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // doing the move
         b->move(m);
-        __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
@@ -809,9 +1211,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
     // search at all.
-    if (timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1 && td->threadID == 0) {
+    if (search_timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1
+        && td->threadID == 0) {
         sd->bestMove = bestMove;
-        timeManager->stopSearch();
+        search_timeManager->stopSearch();
         return staticEval;
     }
 
@@ -847,7 +1250,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
  * @param ply
  * @return
  */
-Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+Score qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -856,7 +1259,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     td->nodes++;
 
     // extract information like search data (history tables), zobrist etc
-    SearchData* sd         = &td->searchData;
+    SearchData* sd         = td->searchData;
     U64         zobrist    = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
@@ -886,7 +1289,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
 
-    stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+    stand_pat       = bestScore =
+        inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
@@ -910,7 +1314,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // moves that give check are not considered non-quiet in
     // getNonQuietMoves() although they are not quiet.
     //
-    MoveList* mv = &sd->moves[ply];
+    MoveList* mv = sd->moves[ply];
 
     // create a moveorderer to sort the moves during the search
     generateNonQuietMoves(b, mv);
@@ -943,7 +1347,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             continue;
 
         b->move(m);
-        __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
@@ -974,314 +1377,4 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     return bestScore;
 
     //    return 0;
-}
-//Search::Search(int hashsize) { this->init(hashsize); }
-//Search::~Search() { this->cleanUp(); }
-void Search::init(int hashsize) {
-    if (table != nullptr)
-        delete table;
-    table = new TranspositionTable(hashsize);
-    initLMR();
-
-    tds[0] = new ThreadData();
-}
-void Search::cleanUp() {
-    delete table;
-    table = nullptr;
-
-    for (int i = 0; i < MAX_THREADS; i++) {
-        if (tds[i] != nullptr) {
-            delete tds[i];
-            tds[i] = nullptr;
-        }
-    }
-}
-U64 Search::totalNodes() {
-    U64 tn = 0;
-    for (int i = 0; i < threadCount; i++) {
-        tn += tds[i]->nodes;
-    }
-    return tn;
-}
-int Search::selDepth() {
-    int maxSd = 0;
-    for (int i = 0; i < threadCount; i++) {
-        maxSd = std::max(tds[i]->seldepth, maxSd);
-    }
-    return maxSd;
-}
-U64 Search::tbHits() {
-    int th = 0;
-    for (int i = 0; i < threadCount; i++) {
-        th += tds[i]->tbhits;
-    }
-    return th;
-}
-bool           Search::isTimeLeft() { return timeManager->isTimeLeft(); }
-bool           Search::rootTimeLeft(int score) { return timeManager->rootTimeLeft(score); }
-SearchOverview Search::overview() { return this->searchOverview; }
-void           Search::enableInfoStrings() { this->printInfo = true; }
-void           Search::disableInfoStrings() { this->printInfo = false; }
-void           Search::useTableBase(bool val) { this->useTB = val; }
-void           Search::clearHistory() {
-    for (int i = 0; i < threadCount; i++) {
-        if(this->tds[i] != nullptr)
-            this->tds[i]->searchData = SearchData{};
-    }
-}
-void Search::clearHash() { this->table->clear(); }
-void Search::setThreads(int threads) {
-    int processor_count = (int) std::thread::hardware_concurrency();
-    if (processor_count == 0)
-        processor_count = MAX_THREADS;
-    if (processor_count < threads)
-        threads = processor_count;
-    if (threads < 1)
-        threads = 1;
-    if (threads > MAX_THREADS)
-        threads = MAX_THREADS;
-    threadCount = threads;
-    for (int i = 0; i < threadCount; i++) {
-        if (tds[i] != nullptr){
-            delete tds[i];
-        }
-        tds[i] = new ThreadData(i);
-    }
-}
-void Search::setHashSize(int hashSize) {
-    if (table)
-        table->setSize(hashSize);
-}
-void Search::stop() {
-    if (timeManager)
-        timeManager->stopSearch();
-}
-void Search::printInfoString(Board* b, Depth d, Score score) {
-    UCI_ASSERT(b);
-
-    if (!printInfo)
-        return;
-
-    U64 nodes = totalNodes();
-
-    U64 nps   = static_cast<U64>(nodes * 1000) / static_cast<U64>(timeManager->elapsedTime() + 1);
-
-    std::cout << "info"
-              << " depth " << static_cast<int>(d) << " seldepth " << static_cast<int>(selDepth());
-
-    if (abs(score) > MIN_MATE_SCORE) {
-        std::cout << " score mate " << (MAX_MATE_SCORE - abs(score) + 1) / 2 * (score > 0 ? 1 : -1);
-    } else {
-        std::cout << " score cp " << score;
-    }
-
-    if (tbHits() != 0) {
-        std::cout << " tbhits " << tbHits();
-    }
-
-    std::cout << " nodes " << nodes << " nps " << nps << " time " << timeManager->elapsedTime()
-              << " hashfull " << static_cast<int>(table->usage() * 1000);
-
-    MoveList em;
-    em.clear();
-    extractPV(b, &em, selDepth());
-    std::cout << " pv";
-    for (int i = 0; i < em.getSize(); i++) {
-        std::cout << " " << toString(em.getMove(i));
-    }
-
-    std::cout << std::endl;
-}
-void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
-    UCI_ASSERT(b);
-    UCI_ASSERT(mvList);
-
-    if (depth <= 0)
-        return;
-
-    U64   zob = b->zobrist();
-    Entry en  = table->get(zob);
-    if (en.zobrist == zob && en.type == PV_NODE) {
-
-        // extract the move from the table
-        Move     mov = en.move;
-
-        // get a movelist which can be used to store all pseudo legal moves
-        MoveList mvStorage;
-        // extract pseudo legal moves
-        generatePerftMoves(b, &mvStorage);
-
-        bool moveContained = false;
-        // check if the move is actually valid for the position
-        for (int i = 0; i < mvStorage.getSize(); i++) {
-
-            Move stor = mvStorage.getMove(i);
-
-            if (sameMove(stor, mov)) {
-                moveContained = true;
-            }
-        }
-
-        // return if the move doesnt exist for this board
-        if (!moveContained)
-            return;
-
-        // check if its also legal
-        if (!b->isLegal(mov))
-            return;
-
-        mvList->add(mov);
-        b->move(en.move);
-
-        extractPV(b, mvList, depth - 1);
-        b->undoMove();
-    }
-}
-
-/**
- * probes the wdl tables if tablebases can be used.
- */
-Score Search::probeWDL(Board* board) {
-    UCI_ASSERT(board);
-
-    if (!useTB)
-        return MAX_MATE_SCORE;
-    // we cannot prove the tables if there are too many pieces on the board
-    if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
-        return MAX_MATE_SCORE;
-
-    // use the given files to prove the tables using the information from the board.
-    unsigned res = tb_probe_wdl(board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
-                                board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
-                                board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
-                                board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
-                                board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
-                                board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
-                                board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN],
-                                board->getBoardStatus()->fiftyMoveCounter,
-                                board->getCastlingRights(0) | board->getCastlingRights(1)
-                                    | board->getCastlingRights(2) | board->getCastlingRights(3),
-                                board->getEnPassantSquare() != -1 ? board->getEnPassantSquare() : 0,
-                                board->getActivePlayer() == WHITE);
-
-    // if the result failed, we return the max_mate_score internally. This is not used within the
-    // search and will be catched later.
-    if (res == TB_RESULT_FAILED) {
-        return TB_FAILED;
-    }
-    // we defined our own tablebase scores.
-    if (res == TB_LOSS) {
-        return -TB_WIN_SCORE;
-    }
-    if (res == TB_WIN) {
-        return TB_WIN_SCORE;
-    }
-    if (res == TB_BLESSED_LOSS) {
-        return -TB_CURSED_SCORE;
-    }
-    if (res == TB_CURSED_WIN) {
-        return TB_CURSED_SCORE;
-    }
-    if (res == TB_DRAW) {
-        return 0;
-    }
-    // if none of them above happened, act as if the result failed.
-    return TB_FAILED;
-}
-
-/**
- * probes the dtz table. If an entry is being found, it also displays the info string.
- * The displayed depth is usually the distance to zero which is the distance until the 50-move rule is
- * reset.
- */
-Move Search::probeDTZ(Board* board) {
-    UCI_ASSERT(board);
-
-    if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
-        return 0;
-
-    unsigned result =
-        tb_probe_root(board->getTeamOccupiedBB()[WHITE], board->getTeamOccupiedBB()[BLACK],
-                      board->getPieceBB()[WHITE_KING] | board->getPieceBB()[BLACK_KING],
-                      board->getPieceBB()[WHITE_QUEEN] | board->getPieceBB()[BLACK_QUEEN],
-                      board->getPieceBB()[WHITE_ROOK] | board->getPieceBB()[BLACK_ROOK],
-                      board->getPieceBB()[WHITE_BISHOP] | board->getPieceBB()[BLACK_BISHOP],
-                      board->getPieceBB()[WHITE_KNIGHT] | board->getPieceBB()[BLACK_KNIGHT],
-                      board->getPieceBB()[WHITE_PAWN] | board->getPieceBB()[BLACK_PAWN],
-                      board->getBoardStatus()->fiftyMoveCounter,
-                      board->getCastlingRights(0) | board->getCastlingRights(1)
-                          | board->getCastlingRights(2) | board->getCastlingRights(3),
-                      board->getEnPassantSquare() != -1 ? board->getEnPassantSquare() : 0,
-                      board->getActivePlayer() == WHITE, NULL);
-
-    // if the result failed for some reason or the game is over, dont do anything
-    if (result == TB_RESULT_FAILED || result == TB_RESULT_CHECKMATE || result == TB_RESULT_STALEMATE)
-        return 0;
-
-    // we need the wdl and the dtz values to get the score.
-    int   dtz = TB_GET_DTZ(result);
-    int   wdl = TB_GET_WDL(result);
-
-    Score s   = 0;
-
-    if (wdl == TB_LOSS) {
-        s = -TB_WIN_SCORE;
-    }
-    if (wdl == TB_WIN) {
-        s = TB_WIN_SCORE;
-    }
-    if (wdl == TB_BLESSED_LOSS) {
-        s = -TB_CURSED_SCORE;
-    }
-    if (wdl == TB_CURSED_WIN) {
-        s = TB_CURSED_SCORE;
-    }
-    if (wdl == TB_DRAW) {
-        s = 0;
-    }
-
-    // get the promotion piece if the target move is a promotion (this does not yet work the way it
-    // should)
-    Piece     promo  = 6 - TB_GET_PROMOTES(result);
-
-    // gets the square from and square to for the move which should be played
-    Square    sqFrom = TB_GET_FROM(result);
-    Square    sqTo   = TB_GET_TO(result);
-
-    // we generate all pseudo legal moves and check for equality between the moves to make sure the
-    // bits are correct.
-    MoveList* mv     = new MoveList();
-    generatePerftMoves(board, mv);
-
-    for (int i = 0; i < mv->getSize(); i++) {
-        // get the current move from the movelist
-        Move m = mv->getMove(i);
-
-        // check if its the same.
-        if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if ((promo == 6 && !isPromotion(m))
-                || (isPromotion(m) && promo < 6 && getPromotionPieceType(m) == promo)) {
-
-                std::cout << "info"
-                             " depth "
-                          << static_cast<int>(dtz) << " seldepth " << static_cast<int>(selDepth());
-
-                std::cout << " score cp " << s;
-
-                if (tbHits() != 0) {
-                    std::cout << " tbhits " << 1;
-                }
-
-                std::cout <<
-
-                    " nodes " << 1 << " nps " << 1 << " time " << timeManager->elapsedTime()
-                          << " hashfull " << static_cast<int>(table->usage() * 1000);
-                std::cout << std::endl;
-
-                return m;
-            }
-        }
-    }
-
-    return 0;
 }

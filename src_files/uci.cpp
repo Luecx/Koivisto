@@ -31,7 +31,6 @@
 
 TimeManager timeManager;
 Board*      board;
-Search*     searchObject;
 std::thread searchThread;
 
 /**
@@ -62,7 +61,7 @@ std::string getValue(std::vector<std::string>& vec, std::string key) {
  * @param p_timeManager
  */
 void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
-    Move m = searchObject->bestMove(board, maxDepth, p_timeManager);
+    Move m = bestMove(board, maxDepth, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
 }
 
@@ -75,15 +74,14 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
 void uci::mainloop(bool bench) {
 
     bb::init();
+    search_init(16);
     nn::init();
-    searchObject = new Search();
-    searchObject->init(16);
 
     if (bench) {
         uci::bench();
+
+        search_cleanUp();
         bb::cleanUp();
-        searchObject->cleanUp();
-        delete searchObject;
     } else {
         std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
                   << std::endl;
@@ -136,8 +134,8 @@ void uci::processCommand(std::string str) {
     splitString(str, split, ' ');
 
     if (split.at(0) == "ucinewgame") {
-        searchObject->clearHash();
-        searchObject->clearHistory();
+        search_clearHash();
+        search_clearHistory();
     }
     if (split.at(0) == "uci") {
         uci::uci();
@@ -332,7 +330,7 @@ void uci::go_mate(int depth) {
  * stops the current search. This will usually print a last info string and the best move.
  */
 void uci::stop() {
-    searchObject->stop();
+    search_stop();
     if (searchThread.joinable()) {
         searchThread.join();
     }
@@ -349,7 +347,7 @@ void uci::stop() {
  */
 void uci::set_option(std::string& name, std::string& value) {
     if (name == "Hash") {
-        searchObject->setHashSize(stoi(value));
+        search_setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
         if (value.empty())
             return;
@@ -363,10 +361,20 @@ void uci::set_option(std::string& name, std::string& value) {
         /*
          * only use TB if loading was successful
          */
-        searchObject->useTableBase(TB_LARGEST > 0);
+        search_useTB(TB_LARGEST > 0);
     } else if (name == "Threads") {
         int count           = stoi(value);
-        searchObject->setThreads(count);
+        int processor_count = (int) std::thread::hardware_concurrency();
+        if (processor_count == 0)
+            processor_count = MAX_THREADS;
+        if (processor_count < count)
+            count = processor_count;
+        if (count < 1)
+            count = 1;
+        if (count > MAX_THREADS)
+            count = MAX_THREADS;
+        
+        search_setThreads(count);
     } else if (name == "OwnBook") {
         PolyGlot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
@@ -503,6 +511,7 @@ void uci::quit() {
     board = nullptr;
 
     bb::cleanUp();
+    search_cleanUp();
 }
 
 /**
@@ -518,14 +527,14 @@ void uci::bench() {
     int nodes = 0;
     int time  = 0;
 
-    searchObject->disableInfoStrings();
+    search_disable_infoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
 
         Board b(Benchmarks[i]);
 
         TimeManager manager;
-        searchObject->bestMove(&b, 13, &manager, 0);
-        SearchOverview overview = searchObject->overview();
+        bestMove(&b, 13, &manager, 0);
+        SearchOverview overview = search_overview();
 
         nodes += overview.nodes;
         time += overview.time;
@@ -535,11 +544,11 @@ void uci::bench() {
                (int) (1000.0f * overview.nodes / (overview.time + 1)));
         std::cout << std::endl;
 
-        searchObject->clearHash();
-        searchObject->clearHistory();
+        search_clearHash();
+        search_clearHistory();
     }
     printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
-    searchObject->enableInfoStrings();
+    search_enable_infoStrings();
 
 }
