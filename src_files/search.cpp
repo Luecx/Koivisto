@@ -1003,7 +1003,7 @@ Score pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, Thread
 
 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && moveDepth <= 8 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * 80 - 50 + sd->eval[b->getActivePlayer()][ply] < alpha) 
+                if (!inCheck && moveDepth <= 8 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + sd->eval[b->getActivePlayer()][ply] < alpha) 
                     continue;
 
                 // **************************************************************************************************
