@@ -17,7 +17,7 @@ else
 endif
 
 WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
-CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
+CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native -DGENERATE
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
 DFLAGS = -O0 $(WFLAGS) -g
