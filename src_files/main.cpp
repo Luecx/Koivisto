@@ -23,7 +23,7 @@
 #include "MoveOrderer.h"
 #include "Verification.h"
 #include "uci.h"
-#include "game.hpp"
+#include "game.h"
 #include <iomanip>
 #include "movegen.h"
 
@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
 #ifdef GENERATOR
     bb::init();
     nn::init();
+    Game::init(argc, argv);
+
     Game game;
     game.run();
 #else

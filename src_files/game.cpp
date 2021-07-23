@@ -1,8 +1,8 @@
-#include "game.hpp"
+#include "uci.h"
+#include "game.h"
 #include "movegen.h"
 #include "search.h"
-
-// TODO: Insufficient material, tablebase adjudication
+#include "syzygy/tbprobe.h"
 
 static void generateLegalMoves(Board* board, MoveList* movelist)
 {
@@ -18,9 +18,49 @@ static void generateLegalMoves(Board* board, MoveList* movelist)
     }
 }
 
+std::string getCmdOption(char ** begin, char ** end, const std::string & option)
+{
+    auto itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return std::string(*itr);
+    }
+    return "";
+}
+
 static int whiteRelativeScore(Board* board, int score)
 {
     return board->getActivePlayer() == WHITE ? score : -score;
+}
+
+int Game::RandomOpeningMoveCount;
+int Game::AdjudicationWinScoreLimit;
+int Game::AdjudicationDrawScoreLimit;
+int Game::AdjudicationDrawCount;
+int Game::AdjudicationWinCount;
+int Game::EngineGameSearchDepth;
+int Game::GameHashSize;
+std::string Game::WDLPath;
+
+void Game::init(int argc, char** argv)
+{
+    std::vector<std::string> args(argv, argv + argc);
+
+    auto setParam = 
+    [&](std::string const& option, int def)
+    {
+        auto s = getValue(args, option);
+        return s.size() ? std::stoi(s) : def;
+    };
+
+    WDLPath                   = getValue(args, "-tbpath");
+    EngineGameSearchDepth     = setParam("-depth", 9);
+    GameHashSize              = setParam("-hash" , 32);
+    RandomOpeningMoveCount    = setParam("-bookdepth", 8);
+    AdjudicationDrawScoreLimit= setParam("-drawscore", 20);
+    AdjudicationDrawCount     = setParam("-drawply"  , 8);
+    AdjudicationWinScoreLimit = setParam("-winscore" , 1000);
+    AdjudicationWinCount      = setParam("-winply"   , 2);
 }
 
 Game::Game()
@@ -29,6 +69,9 @@ Game::Game()
     m_Searcher = {};
     m_Searcher.init(16);
     m_Searcher.disableInfoStrings();
+
+    if (WDLPath.size() && !tb_init(WDLPath.data()))
+        throw std::runtime_error("Couldn't open given TB path");
 }
 
 bool Game::isDrawn()
@@ -78,7 +121,7 @@ std::tuple<Move, int> Game::searchPosition()
 
 void Game::saveGame(std::string_view result)
 {
-    std::ofstream OutputBook(GameOutputBook);
+    std::ofstream OutputBook("generate_fens.txt");
 
     if (!OutputBook)
         throw std::runtime_error("Couldn't open output file for saving game");
@@ -126,6 +169,7 @@ void Game::run()
         }
         
         auto[move, score] = searchPosition();
+        int wdlScore = m_Searcher.probeWDL(&m_CurrentPosition);
 
         // If this is the first move out of the book, discard
         // the game if score is above margin
@@ -142,17 +186,15 @@ void Game::run()
         // Adjudicate game 
         if (drawScoreCounter >= AdjudicationDrawCount)
         {
-            std::cout << "Game ends by adjudication\n";
             result = "[0.5]";
             break;
         }        
 
-        if (winScoreCounter >= AdjudicationWinCount)
+        if (winScoreCounter >= AdjudicationWinCount || std::abs(wdlScore) >= TB_WIN_SCORE)
         {
             auto winningSide = whiteRelativeScore(&m_CurrentPosition, score) > 0 ? WHITE : BLACK;
             result = winningSide == WHITE ? "[1.0]"
                                           : "[0.0]";
-            std::cout << "Game ends by adjudication\n";
             break;
         }
 

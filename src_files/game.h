@@ -5,18 +5,21 @@
 #include <tuple>
 #include <fstream>
 
-constexpr int RandomOpeningMoveCount = 8;
-constexpr int AdjudicationWinScoreLimit = 1000;
-constexpr int AdjudicationDrawScoreLimit  = 40;
-constexpr int AdjudicationDrawCount  = 4;
-constexpr int AdjudicationWinCount   = 4;
-constexpr int EngineGameSearchDepth  = 9;
-constexpr int GameHashSize           = 32;
-constexpr const char* GameOutputBook = "generate_fens.txt";
 
 class Game
 {
 public:
+    static int RandomOpeningMoveCount;
+    static int AdjudicationWinScoreLimit;
+    static int AdjudicationDrawScoreLimit;
+    static int AdjudicationDrawCount;
+    static int AdjudicationWinCount;
+    static int EngineGameSearchDepth;
+    static int GameHashSize;
+    static std::string WDLPath;
+
+    static void init(int argc, char** argv);
+
     Game();
 
     bool positionIsFavourable(Move best);
