@@ -23,7 +23,6 @@
 #include "UCIAssert.h"
 
 #include "syzygy/tbprobe.h"
-#include "game.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -77,6 +76,8 @@ void uci::mainloop(bool bench) {
 
     bb::init();
     nn::init();
+    searchObject = {};
+    searchObject.init(16);
 
     if (bench) {
         uci::bench();
@@ -96,8 +97,6 @@ void uci::mainloop(bool bench) {
             if (line == "quit") {
                 exit(0);
             } else {
-                Game game;
-                game.run();
                 uci::processCommand(line);
             }
         }

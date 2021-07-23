@@ -23,7 +23,7 @@
 #include "MoveOrderer.h"
 #include "Verification.h"
 #include "uci.h"
-
+#include "game.hpp"
 #include <iomanip>
 #include "movegen.h"
 
@@ -34,6 +34,12 @@ using namespace move;
 
 int main(int argc, char *argv[]) {
 
+#ifdef GENERATOR
+    bb::init();
+    nn::init();
+    Game game;
+    game.run();
+#else
 #ifndef TUNING
 
 
@@ -60,6 +66,7 @@ using namespace tuning;
         train(50, K, 0.001 * sqrt(positions.size()));
         display_params();
     }
+#endif
 #endif
 
 

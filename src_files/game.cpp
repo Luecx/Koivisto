@@ -2,6 +2,8 @@
 #include "movegen.h"
 #include "search.h"
 
+// TODO: Insufficient material, tablebase adjudication
+
 static void generateLegalMoves(Board* board, MoveList* movelist)
 {
     MoveList pseudolegal;
@@ -82,7 +84,7 @@ void Game::saveGame(std::string_view result)
         throw std::runtime_error("Couldn't open output file for saving game");
     
     for(auto const& position : m_SavedFens)
-        OutputBook << position.first << result << position.second << '\n';
+        OutputBook << position.first << ' ' << result << ' ' << position.second << '\n';
 
     OutputBook.close();
 }
