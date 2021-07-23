@@ -53,8 +53,8 @@ void Game::init(int argc, char** argv)
     AdjudicationWinCount      = setParam("-winply"   , 2);
 }
 
-Game::Game()
-    : m_CurrentPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+Game::Game(std::ofstream& out)
+    : m_CurrentPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), m_OutputBook(out)
 {
     m_Searcher = {};
     m_Searcher.init(16);
@@ -123,15 +123,8 @@ std::tuple<Move, int> Game::searchPosition()
 
 void Game::saveGame(std::string_view result)
 {
-    std::ofstream OutputBook("generate_fens.txt", std::ios_base::app);
-
-    if (!OutputBook)
-        throw std::runtime_error("Couldn't open output file for saving game");
-    
     for(auto const& position : m_SavedFens)
-        OutputBook << position.first << ' ' << result << ' ' << position.second << '\n';
-
-    OutputBook.close();
+        m_OutputBook << position.first << ' ' << result << ' ' << position.second << '\n';
 }
 
 void Game::run()

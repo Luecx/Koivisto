@@ -24,6 +24,7 @@
 #include "Verification.h"
 #include "uci.h"
 #include "game.h"
+#include "genpool.h"
 #include <iomanip>
 #include "movegen.h"
 
@@ -38,18 +39,19 @@ int main(int argc, char *argv[]) {
     bb::init();
     nn::init();
     Game::init(argc, argv);
-    Game game;
+    std::srand(std::time(NULL));
 
-    auto start = std::chrono::high_resolution_clock::now();
-    for(int i = 0;i < 20;i++)
+    std::vector<std::string> args(argv, argv + argc);
+
+    auto getParam = 
+    [&](std::string const& option, int def)
     {
-        std::cout << "\rFinished game " << i;
-        game.reset();
-        game.run();
-    }
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::cout << '\n';
-    std::cout << "Time taken for 20 games: " << std::chrono::duration_cast<std::chrono::seconds>(stop - start).count() << '\n';
+        std::string val = getValue(args, option);
+        return val.size() ? std::stoi(val) : def;
+    };
+
+    GeneratorPool pool(getParam("-threads", 1));
+    pool.run(getParam("-games", 10));
 #else
 #ifndef TUNING
 

@@ -20,7 +20,7 @@ public:
 
     static void init(int argc, char** argv);
 
-    Game();
+    Game(std::ofstream&);
 
     bool positionIsFavourable(Move best);
     void run();
@@ -37,5 +37,6 @@ private:
     bool   m_UseTb      = false;
     Board  m_CurrentPosition;
     Search m_Searcher;
+    std::ofstream& m_OutputBook;
     std::vector<std::pair<std::string, int>> m_SavedFens;
 };
