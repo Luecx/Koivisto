@@ -38,17 +38,18 @@ int main(int argc, char *argv[]) {
     bb::init();
     nn::init();
     Game::init(argc, argv);
+    Game game;
 
     auto start = std::chrono::high_resolution_clock::now();
-    for(int i = 0;i < 50;i++)
+    for(int i = 0;i < 500;i++)
     {
         std::cout << "\rFinished game " << i;
-        Game game;
+        game.reset();
         game.run();
     }
     auto stop = std::chrono::high_resolution_clock::now();
     std::cout << '\n';
-    std::cout << "Time taken for 50 games: " << std::chrono::duration_cast<std::chrono::seconds>(stop - start).count() << '\n';
+    std::cout << "Time taken for 500 games: " << std::chrono::duration_cast<std::chrono::seconds>(stop - start).count() << '\n';
 #else
 #ifndef TUNING
 

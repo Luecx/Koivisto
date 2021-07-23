@@ -39,6 +39,8 @@ add_executable(Koivisto
         src_files/syzygy/tbchess.c
         src_files/movegen.h
         src_files/movegen.cpp
+        src_files/game.h
+        src_files/game.cpp
         src_files/incbin/incbin.h)
 
 add_definitions(-DEVALFILE=\"../networks/default.net\")

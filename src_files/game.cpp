@@ -99,6 +99,13 @@ bool Game::hasLegalLeft()
     return movelist.getSize() != 0;
 }
 
+void Game::reset()
+{
+    m_SavedFens.clear();
+    m_Searcher.clearHash();
+    m_Searcher.clearHistory();
+}
+
 void Game::savePosition(int score)
 {
     m_SavedFens.push_back({ m_CurrentPosition.fen(), score });

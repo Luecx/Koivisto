@@ -28,6 +28,7 @@ public:
     void savePosition(int score);
     bool hasLegalLeft();
     bool isDrawn();
+    void reset();
     void saveGame(std::string_view result);
     
     std::tuple<Move, int> searchPosition();
