@@ -75,7 +75,7 @@ bool Game::isDrawn()
 bool Game::positionIsFavourable(Move best)
 {
     return !isCapture(best) && !m_CurrentPosition.isInCheck(m_CurrentPosition.getActivePlayer());
-                            && && !m_currentPosition.givesCheck(best);
+                            && !m_currentPosition.givesCheck(best);
 }
 
 void Game::makeBookMove()
