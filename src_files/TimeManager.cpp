@@ -148,18 +148,22 @@ bool TimeManager::isTimeLeft() {
  */
 bool TimeManager::rootTimeLeft(int score) {
     int elapsed = elapsedTime();
-
+    
     // stop the search if requested
     if (forceStop)
         return false;
-
-    // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*50/std::max(score, 30))
+    
+    // dont use any correction if not in tournament mode
+    if (mode != TOURNAMENT && elapsed >= timeToUse){
         return false;
-
+    }
+    
+    // if we are above the maximum allowed time at root, stop
+    if (mode == TOURNAMENT && elapsed >= timeToUse * 50/std::max(score, 30))
+        return false;
+    
     return true;
 }
-
 /**
  * returns the move of the time manager.
  * Its either,
