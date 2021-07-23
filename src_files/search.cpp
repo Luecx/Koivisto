@@ -32,8 +32,8 @@
 int  lmrReductions[256][256];
 
 int  RAZOR_MARGIN               = 198;
-int  FUTILITY_MARGIN            = 81;
-int  FUTILITY_MARGIN_IMPROVING  = 60;
+int  FUTILITY_MARGIN            = 91;
+int  FUTILITY_MARGIN_IMPROVING  = 71;
 int  SE_MARGIN_STATIC           = 0;
 int  LMR_DIV                    = 215;
 
