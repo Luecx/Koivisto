@@ -75,6 +75,7 @@ bool Game::isDrawn()
 bool Game::positionIsFavourable(Move best)
 {
     return !isCapture(best) && !m_CurrentPosition.isInCheck(m_CurrentPosition.getActivePlayer());
+                            && && !m_currentPosition.givesCheck(best);
 }
 
 void Game::makeBookMove()
@@ -101,6 +102,8 @@ bool Game::hasLegalLeft()
 
 void Game::reset()
 {
+    m_CurrentPly = 0;
+    m_CurrentPosition = Board();
     m_SavedFens.clear();
     m_Searcher.clearHash();
     m_Searcher.clearHistory();
