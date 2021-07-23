@@ -32,8 +32,7 @@
 int  lmrReductions[256][256];
 
 int  RAZOR_MARGIN               = 198;
-int  FUTILITY_MARGIN            = 91;
-int  FUTILITY_MARGIN_IMPROVING  = 71;
+int  FUTILITY_MARGIN            = 81;
 int  SE_MARGIN_STATIC           = 0;
 int  LMR_DIV                    = 215;
 
@@ -456,7 +455,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // will definetly be above beta and stop the search here and fail soft. Also reuse information
         // from eval to prevent pruning if the oponent has multiple threats.
         // **********************************************************************************************************
-        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + (depth - isImproving) * (isImproving ? FUTILITY_MARGIN_IMPROVING : FUTILITY_MARGIN)
+        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + (depth - isImproving + enemyThreats) * FUTILITY_MARGIN
             && staticEval < MIN_MATE_SCORE)
             return staticEval;
 
