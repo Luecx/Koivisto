@@ -702,7 +702,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
             lmr = lmr - sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) / 150;
-            lmr += !isImproving;
+            lmr -= isImproving;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
