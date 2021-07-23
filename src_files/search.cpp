@@ -551,7 +551,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // create a moveorderer and assign the movelist to score the moves.
-    generateMoves(b, mv, hashMove, sd, ply);
+    generateMoves(b, mv, hashMove, sd, ply, depth);
     MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
