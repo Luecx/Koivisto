@@ -716,7 +716,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
         }
         // prune quiet moves that are unlikely to improve alpha
-        if (!inCheck && quiet && depth - lmr - 1 + extension <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + (quiet && depth - lmr - 1 + extension) * 80 + sd->eval[b->getActivePlayer()][ply] < alpha)
+        if (!inCheck && quiet && depth - lmr - 1 + extension <= 7 && 30 + (quiet && depth - lmr - 1 + extension) * 80 + sd->eval[b->getActivePlayer()][ply] < alpha)
             continue;
                 
         // doing the move
