@@ -464,7 +464,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the static evaluation is already above beta at depth 1 and we have strong threats, asume
         // that we can atleast achieve beta
         // **********************************************************************************************************
-        if (depth == 1 && staticEval > beta + 30 && ownThreats && !enemyThreats)
+        if (depth == 1 && staticEval > beta + 30 && !enemyThreats)
             return beta;
 
         // **********************************************************************************************************
