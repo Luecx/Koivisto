@@ -53,7 +53,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             Score     SEE    = board->staticExchangeEvaluation(move);
             MoveScore mvvLVA = piece_values[(getCapturedPieceType(move))];
             if (SEE >= 0) {
-                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                mv->scoreMove(idx, 100000 + 2*mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
                 mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             }
