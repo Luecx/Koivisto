@@ -33,6 +33,7 @@ public:
     std::tuple<Move, int> searchPosition();
 private:
     int    m_CurrentPly = 0;
+    bool   m_UseTb      = false;
     Board  m_CurrentPosition;
     Search m_Searcher;
     std::vector<std::pair<std::string, int>> m_SavedFens;

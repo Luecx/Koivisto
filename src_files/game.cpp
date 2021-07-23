@@ -60,6 +60,8 @@ Game::Game()
     m_Searcher.init(16);
     m_Searcher.disableInfoStrings();
 
+    m_UseTb = WDLPath.size();
+
     if (WDLPath.size() && !tb_init(WDLPath.data()))
         throw std::runtime_error("Couldn't open given TB path");
 }
@@ -111,7 +113,7 @@ std::tuple<Move, int> Game::searchPosition()
 
 void Game::saveGame(std::string_view result)
 {
-    std::ofstream OutputBook("generate_fens.txt");
+    std::ofstream OutputBook("generate_fens.txt", std::ios_base::app);
 
     if (!OutputBook)
         throw std::runtime_error("Couldn't open output file for saving game");
@@ -159,12 +161,15 @@ void Game::run()
         }
         
         auto[move, score] = searchPosition();
-        int wdlScore = m_Searcher.probeWDL(&m_CurrentPosition);
+
+        int wdlScore = m_UseTb ? m_Searcher.probeWDL(&m_CurrentPosition) : 0;
 
         // If this is the first move out of the book, discard
         // the game if score is above margin
         if (score >= AdjudicationWinScoreLimit && m_CurrentPly == RandomOpeningMoveCount)
+        {
             return;
+        }
 
         bool scoreIsDraw = std::abs(score) <= AdjudicationDrawScoreLimit;
         bool scoreIsWin  = std::abs(score) >= AdjudicationWinScoreLimit;
