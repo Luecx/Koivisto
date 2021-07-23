@@ -18,16 +18,6 @@ static void generateLegalMoves(Board* board, MoveList* movelist)
     }
 }
 
-std::string getCmdOption(char ** begin, char ** end, const std::string & option)
-{
-    auto itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
-        return std::string(*itr);
-    }
-    return "";
-}
-
 static int whiteRelativeScore(Board* board, int score)
 {
     return board->getActivePlayer() == WHITE ? score : -score;
