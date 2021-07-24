@@ -1000,7 +1000,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         alpha = bestScore;
 
     getThreatsQs(b, sd, ply);
-    if (!sd->threatCount[ply][b->getActivePlayer()] && sd->threatCount[ply][!b->getActivePlayer()])
+    if (alpha + 1 == beta && !sd->threatCount[ply][b->getActivePlayer()] && sd->threatCount[ply][!b->getActivePlayer()])
         return alpha;
 
     // extract all:
