@@ -35,7 +35,7 @@ using namespace move;
 
 int main(int argc, char *argv[]) {
 
-#if 1
+#ifdef GENERATOR
     bb::init();
     nn::init();
     Game::init(argc, argv);
@@ -81,8 +81,5 @@ using namespace tuning;
     }
 #endif
 #endif
-
-
-
     return 0;
 }
