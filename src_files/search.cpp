@@ -135,8 +135,8 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 whiteAttacks = whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks | whiteQueenAttacks;
     U64 blackAttacks = blackPawnAttacks | blackMinorAttacks | blackRookAttacks | blackQueenAttacks;
 
-    sd->threatCount[ply][WHITE] += (b->getPieceBB(BLACK, QUEEN) | b->getPieceBB(BLACK, ROOK) | b->getPieceBB(BLACK, BISHOP)| b->getPieceBB(BLACK, KNIGHT)) & whiteAttacks & ~blackAttacks;
-    sd->threatCount[ply][BLACK] += (b->getPieceBB(WHITE, QUEEN) | b->getPieceBB(WHITE, ROOK) | b->getPieceBB(WHITE, BISHOP)| b->getPieceBB(WHITE, KNIGHT)) & blackAttacks & ~whiteAttacks;
+    sd->threatCount[ply][WHITE] += bitCount((b->getPieceBB(BLACK, QUEEN) | b->getPieceBB(BLACK, ROOK) | b->getPieceBB(BLACK, BISHOP)| b->getPieceBB(BLACK, KNIGHT)) & whiteAttacks & ~blackAttacks);
+    sd->threatCount[ply][BLACK] += bitCount((b->getPieceBB(WHITE, QUEEN) | b->getPieceBB(WHITE, ROOK) | b->getPieceBB(WHITE, BISHOP)| b->getPieceBB(WHITE, KNIGHT)) & blackAttacks & ~whiteAttacks);
 
 }
 
