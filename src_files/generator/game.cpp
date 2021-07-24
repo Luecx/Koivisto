@@ -24,14 +24,14 @@ static int whiteRelativeScore(Board* board, int score)
     return board->getActivePlayer() == WHITE ? score : -score;
 }
 
-int Game::RandomOpeningMoveCount;
-int Game::AdjudicationWinScoreLimit;
-int Game::AdjudicationDrawScoreLimit;
-int Game::AdjudicationDrawCount;
-int Game::AdjudicationWinCount;
-int Game::EngineGameSearchDepth;
-int Game::GameHashSize;
-std::string Game::WDLPath;
+int Game::randomOpeningMoveCount;
+int Game::adjudicationWinScoreLimit;
+int Game::adjudicationDrawScoreLimit;
+int Game::ajudicationDrawCount;
+int Game::adjudicationWinCount;
+int Game::angineGameSearchDepth;
+int Game::gameHashSize;
+std::string Game::wdlPath;
 
 void Game::init(int argc, char** argv)
 {
@@ -44,42 +44,42 @@ void Game::init(int argc, char** argv)
         return s.size() ? std::stoi(s) : def;
     };
 
-    WDLPath                   = getValue(args, "-tbpath");
-    EngineGameSearchDepth     = setParam("-depth", 9);
-    GameHashSize              = setParam("-hash" , 32);
-    RandomOpeningMoveCount    = setParam("-bookdepth", 8);
-    AdjudicationDrawScoreLimit= setParam("-drawscore", 20);
-    AdjudicationDrawCount     = setParam("-drawply"  , 8);
-    AdjudicationWinScoreLimit = setParam("-winscore" , 1000);
-    AdjudicationWinCount      = setParam("-winply"   , 2);
+    wdlPath                   = getValue(args, "-tbpath");
+    angineGameSearchDepth     = setParam("-depth", 9);
+    gameHashSize              = setParam("-hash" , 32);
+    randomOpeningMoveCount    = setParam("-bookdepth", 8);
+    adjudicationDrawScoreLimit= setParam("-drawscore", 20);
+    ajudicationDrawCount     = setParam("-drawply"  , 8);
+    adjudicationWinScoreLimit = setParam("-winscore" , 1000);
+    adjudicationWinCount      = setParam("-winply"   , 2);
 
-    if (WDLPath != "")
+    if (wdlPath != "")
     {
-        const char* data = WDLPath.data();
+        const char* data = wdlPath.data();
         if (!tb_init(data))
             throw std::runtime_error("tb_init");
     }
 }
 
 Game::Game(std::ofstream& out)
-    : m_CurrentPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), m_OutputBook(out)
+    : m_currentPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), m_outputBook(out)
 {
-    m_Searcher = {};
-    m_Searcher.init(16);
-    m_Searcher.disableInfoStrings();
+    m_searcher = {};
+    m_searcher.init(16);
+    m_searcher.disableInfoStrings();
 
-    m_UseTb = WDLPath.size();
+    m_useTb = wdlPath.size();
 }
 
 bool Game::isDrawn()
 {
-    return m_CurrentPosition.getCurrent50MoveRuleCount() >= 25
-        || m_CurrentPosition.getCurrentRepetitionCount() >= 2;
+    return m_currentPosition.getCurrent50MoveRuleCount() >= 25
+        || m_currentPosition.getCurrentRepetitionCount() >= 2;
 }
 
-bool Game::positionIsFavourable(Move best)
+bool Game::positionIsFavourable(Move)
 {
-    return m_Searcher.qSearch(&m_CurrentPosition) == m_CurrentPosition.evaluate();
+    return m_searcher.qSearch(&m_currentPosition) == m_currentPosition.evaluate();
 }
 
 void Game::makeBookMove()
@@ -87,12 +87,12 @@ void Game::makeBookMove()
     MoveList movelist;
     movelist.clear();
 
-    generateLegalMoves(&m_CurrentPosition, &movelist);
+    generateLegalMoves(&m_currentPosition, &movelist);
 
     int moveIndex = rand() % movelist.getSize();
 
-    m_CurrentPosition.move(movelist.getMove(moveIndex));
-    m_CurrentPly++;
+    m_currentPosition.move(movelist.getMove(moveIndex));
+    m_currentPly++;
 }
 
 bool Game::hasLegalLeft() 
@@ -100,35 +100,35 @@ bool Game::hasLegalLeft()
     MoveList movelist;
     movelist.clear();
 
-    generateLegalMoves(&m_CurrentPosition, &movelist);
+    generateLegalMoves(&m_currentPosition, &movelist);
     return movelist.getSize() != 0;
 }
 
 void Game::reset()
 {
-    m_CurrentPly = 0;
-    m_CurrentPosition = Board();
-    m_SavedFens.clear();
-    m_Searcher.clearHash();
-    m_Searcher.clearHistory();
+    m_currentPly = 0;
+    m_currentPosition = Board();
+    m_savedFens.clear();
+    m_searcher.clearHash();
+    m_searcher.clearHistory();
 }
 
 void Game::savePosition(int score)
 {
-    m_SavedFens.push_back({ m_CurrentPosition.fen(), score });
+    m_savedFens.push_back({ m_currentPosition.fen(), score });
 }
 
 std::tuple<Move, int> Game::searchPosition()
 {
     auto tm = TimeManager();
-    Move best = m_Searcher.bestMove(&m_CurrentPosition, EngineGameSearchDepth, &tm);
-    return { best, m_Searcher.overview().score };
+    Move best = m_searcher.bestMove(&m_currentPosition, angineGameSearchDepth, &tm);
+    return { best, m_searcher.overview().score };
 }
 
 void Game::saveGame(std::string_view result)
 {
-    for(auto const& position : m_SavedFens)
-        m_OutputBook << position.first << ' ' << result << ' ' << position.second << '\n';
+    for(auto const& position : m_savedFens)
+        m_outputBook << position.first << ' ' << result << ' ' << position.second << '\n';
 }
 
 void Game::run()
@@ -140,7 +140,7 @@ void Game::run()
     while(true)
     {
         // Make first N random moves
-        if (m_CurrentPly < RandomOpeningMoveCount)
+        if (m_currentPly < randomOpeningMoveCount)
         {
             makeBookMove();
             continue;
@@ -156,9 +156,9 @@ void Game::run()
         // Check if game ends in stalemate / checkmate
         if (!hasLegalLeft())
         {
-            if (m_CurrentPosition.isInCheck(m_CurrentPosition.getActivePlayer()))
+            if (m_currentPosition.isInCheck(m_currentPosition.getActivePlayer()))
             {
-                result = m_CurrentPosition.getActivePlayer() == WHITE ? "[0.0]"
+                result = m_currentPosition.getActivePlayer() == WHITE ? "[0.0]"
                                                                       : "[1.0]";
             }
             else 
@@ -169,32 +169,32 @@ void Game::run()
         
         auto[move, score] = searchPosition();
 
-        int wdlScore = m_UseTb ? m_Searcher.probeWDL(&m_CurrentPosition) : 0;
+        int wdlScore = m_useTb ? m_searcher.probeWDL(&m_currentPosition) : 0;
 
         // If this is the first move out of the book, discard
         // the game if score is above margin
-        if (score >= AdjudicationWinScoreLimit && m_CurrentPly == RandomOpeningMoveCount)
+        if (score >= adjudicationWinScoreLimit && m_currentPly == randomOpeningMoveCount)
         {
             return;
         }
 
-        bool scoreIsDraw = std::abs(score) <= AdjudicationDrawScoreLimit;
-        bool scoreIsWin  = std::abs(score) >= AdjudicationWinScoreLimit;
+        bool scoreIsDraw = std::abs(score) <= adjudicationDrawScoreLimit;
+        bool scoreIsWin  = std::abs(score) >= adjudicationWinScoreLimit;
 
         // Update draw/win score counters 
         drawScoreCounter = scoreIsDraw ? drawScoreCounter + 1 : 0;
         winScoreCounter  = scoreIsWin  ? winScoreCounter  + 1 : 0;
 
         // Adjudicate game 
-        if (drawScoreCounter >= AdjudicationDrawCount)
+        if (drawScoreCounter >= ajudicationDrawCount)
         {
             result = "[0.5]";
             break;
         }        
 
-        if (winScoreCounter >= AdjudicationWinCount || std::abs(wdlScore) == TB_WIN_SCORE)
+        if (winScoreCounter >= adjudicationWinCount || std::abs(wdlScore) == TB_WIN_SCORE)
         {
-            auto winningSide = whiteRelativeScore(&m_CurrentPosition, score) > 0 ? WHITE : BLACK;
+            auto winningSide = whiteRelativeScore(&m_currentPosition, score) > 0 ? WHITE : BLACK;
             result = winningSide == WHITE ? "[1.0]"
                                           : "[0.0]";
             break;
@@ -203,8 +203,8 @@ void Game::run()
         if (positionIsFavourable(move))
             savePosition(score);
         
-        m_CurrentPosition.move(move);
-        m_CurrentPly++;
+        m_currentPosition.move(move);
+        m_currentPly++;
     }
     saveGame(result);
 }

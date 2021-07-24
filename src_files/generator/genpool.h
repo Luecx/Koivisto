@@ -13,8 +13,8 @@ public:
     void run(int nGames);
 
 private:
-    int m_NThreads;
-    std::vector<std::thread> m_Workers;
-    std::atomic_uint64_t m_TotalGamesRun = ATOMIC_VAR_INIT(0);
-    std::atomic_uint64_t m_TotalFens = ATOMIC_VAR_INIT(0);
+    int m_nThreads;
+    std::vector<std::thread> m_workers;
+    std::atomic_uint64_t m_totalGamesRun = ATOMIC_VAR_INIT(0);
+    std::atomic_uint64_t m_totalFens = ATOMIC_VAR_INIT(0);
 };
