@@ -935,7 +935,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         Move m = moveOrderer.next(0);
 
-        if (inCheck &&  getSquareTo(m) != getSquareTo(b->getPreviousMove()))
+        if (inCheck && getMovingPieceType(m) != KING && getSquareTo(m) != getSquareTo(b->getPreviousMove()))
             continue;
 
         // do not consider illegal moves
