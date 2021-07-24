@@ -115,6 +115,29 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     }
     sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
     sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
+    
+    U64 whiteQueenAttacks = 0;
+    U64 blackQueenAttacks = 0;
+    k                    = b->getPieceBB(WHITE, QUEEN);
+    while (k) {
+        whiteQueenAttacks |= lookUpRookAttack(bitscanForward(k), occupied) | lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, QUEEN);
+    while (k) {
+        blackQueenAttacks |= lookUpRookAttack(bitscanForward(k), occupied) | lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+
+    U64 whiteKingAttacks = KING_ATTACKS[bitscanForward(b->getPieceBB(WHITE, QUEEN))];
+    U64 blackKingAttacks = KING_ATTACKS[bitscanForward(b->getPieceBB(BLACK, QUEEN))];
+
+    U64 whiteAttacks = whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks | whiteQueenAttacks;
+    U64 blackAttacks = blackPawnAttacks | blackMinorAttacks | blackRookAttacks | blackQueenAttacks;
+
+    sd->threatCount[ply][WHITE] += (b->getPieceBB(BLACK, QUEEN) | b->getPieceBB(BLACK, ROOK) | b->getPieceBB(BLACK, BISHOP)| b->getPieceBB(BLACK, KNIGHT)) & whiteAttacks & ~blackAttacks;
+    sd->threatCount[ply][BLACK] += (b->getPieceBB(WHITE, QUEEN) | b->getPieceBB(WHITE, ROOK) | b->getPieceBB(WHITE, BISHOP)| b->getPieceBB(WHITE, KNIGHT)) & blackAttacks & ~whiteAttacks;
+
 }
 
 void initLMR() {
