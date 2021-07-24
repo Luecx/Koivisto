@@ -915,6 +915,10 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (alpha < bestScore)
         alpha = bestScore;
 
+    getThreats(b, sd, ply);
+    if (!sd->threatCount[ply][b->getActivePlayer()] && sd->threatCount[ply][!b->getActivePlayer()])
+        return alpha;
+
     // extract all:
     //- captures (including e.p.)
     //- promotions
