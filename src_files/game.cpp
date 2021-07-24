@@ -68,9 +68,6 @@ Game::Game(std::ofstream& out)
     m_Searcher.disableInfoStrings();
 
     m_UseTb = WDLPath.size();
-
-    if (WDLPath.size() && !tb_init(WDLPath.data()))
-        throw std::runtime_error("Couldn't open given TB path");
 }
 
 bool Game::isDrawn()
