@@ -9,11 +9,11 @@ EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
 MINOR    = 1
 MAJOR    = 6
 ifeq ($(OS),Windows_NT)
-    PREFIX := windows
-    SUFFIX := .exe
+	PREFIX := windows
+	SUFFIX := .exe
 else
-    PREFIX := linux
-    SUFFIX := 
+	PREFIX := linux
+	SUFFIX := 
 endif
 
 WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
@@ -35,14 +35,17 @@ openbench: updateNetwork
 native: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
-    
+	
 release: updateNetwork
-	mkdir -p $(ROOT)$(FOLDER)
+	mkdir -p $(ROOT)$(FOLDER)	
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-avx2$(SUFFIX)
 
 tuning: updateNetwork
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) $(OPENMPFLAGS) -DTUNING -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
 	
+generator: updateNetwork
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -DGENERATOR -o $(EXE)-x64-$(PREFIX)-generator$(SUFFIX)
+
 
 updateNetwork:
 ifeq ($(EVALFILE),$(ROOT)networks/default.net)
