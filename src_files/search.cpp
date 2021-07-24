@@ -951,7 +951,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
         if (!inCheck && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-            && b->staticExchangeEvaluation(m) < 0)
+            && b->staticExchangeEvaluation(m) < std::max(0, (alpha - stand_pat) / 2 - 20))
             continue;
 
         b->move(m);
