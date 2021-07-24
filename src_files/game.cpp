@@ -192,7 +192,7 @@ void Game::run()
             break;
         }        
 
-        if (winScoreCounter >= AdjudicationWinCount || std::abs(wdlScore) >= TB_WIN_SCORE)
+        if (winScoreCounter >= AdjudicationWinCount || std::abs(wdlScore) == TB_WIN_SCORE)
         {
             auto winningSide = whiteRelativeScore(&m_CurrentPosition, score) > 0 ? WHITE : BLACK;
             result = winningSide == WHITE ? "[1.0]"
