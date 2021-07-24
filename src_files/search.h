@@ -1,4 +1,3 @@
-
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
@@ -95,7 +94,7 @@ class Search {
     Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId=0);
     Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
                             Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
-    Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
+    Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false, bool useHash=true);
     Score           qSearch(Board* b);
     Score           probeWDL(Board* board);
     Move            probeDTZ(Board* board);

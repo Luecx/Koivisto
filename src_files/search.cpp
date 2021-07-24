@@ -859,7 +859,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
  * @param ply
  * @return
  */
-Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck, bool useHash) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -879,7 +879,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // the current position. As we have no information about the depth, we will allways use the
     // perft_tt entry.
     // **************************************************************************************************************
-    if (en.zobrist == zobrist) {
+    if (en.zobrist == zobrist && useHash) {
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -901,7 +901,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
 
     // we can also use the perft_tt entry to adjust the evaluation.
-    if (en.zobrist == zobrist) {
+    if (en.zobrist == zobrist && useHash) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type == ALL_NODE && stand_pat > en.score)) {
@@ -981,7 +981,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     }
 
     // store the current position inside the transposition table
-    if (bestMove)
+    if (bestMove && useHash)
         table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
     return bestScore;
 
@@ -989,7 +989,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 }
 
 Score Search::qSearch(Board* b){
-    return qSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, tds[0], b->isInCheck(b->getActivePlayer()));
+    return qSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, tds[0], b->isInCheck(b->getActivePlayer()), false);
 }
 
 //Search::Search(int hashsize) { this->init(hashsize); }
