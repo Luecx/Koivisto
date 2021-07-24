@@ -1,5 +1,5 @@
 CC       = g++
-SRC      = *.cpp syzygy/tbprobe.c
+SRC      = *.cpp syzygy/tbprobe.c generator/game.cpp generator/genpool.cpp
 LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
 ROOT     = ../

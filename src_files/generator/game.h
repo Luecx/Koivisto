@@ -1,7 +1,7 @@
 #pragma once 
-#include "Board.h"
-#include "Move.h"
-#include "search.h"
+#include "../Board.h"
+#include "../Move.h"
+#include "../search.h"
 #include <tuple>
 #include <fstream>
 

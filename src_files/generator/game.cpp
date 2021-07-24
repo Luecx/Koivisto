@@ -1,8 +1,9 @@
-#include "uci.h"
 #include "game.h"
-#include "movegen.h"
-#include "search.h"
-#include "syzygy/tbprobe.h"
+#include "../uci.h"
+#include "../movegen.h"
+#include "../search.h"
+#include "../syzygy/tbprobe.h"
+#include "../eval.h"
 
 static void generateLegalMoves(Board* board, MoveList* movelist)
 {
@@ -78,8 +79,7 @@ bool Game::isDrawn()
 
 bool Game::positionIsFavourable(Move best)
 {
-    return !isCapture(best) && !m_CurrentPosition.isInCheck(m_CurrentPosition.getActivePlayer())
-                            && !m_CurrentPosition.givesCheck(best);
+    return m_Searcher.qSearch(&m_CurrentPosition) == m_CurrentPosition.evaluate();
 }
 
 void Game::makeBookMove()

@@ -987,6 +987,11 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     //    return 0;
 }
+
+Score Search::qSearch(Board* b){
+    return qSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, tds[0], b->isInCheck(b->getActivePlayer()));
+}
+
 //Search::Search(int hashsize) { this->init(hashsize); }
 //Search::~Search() { this->cleanUp(); }
 void Search::init(int hashsize) {
@@ -1208,7 +1213,9 @@ Score Search::probeWDL(Board* board) {
  */
 Move Search::probeDTZ(Board* board) {
     UCI_ASSERT(board);
-
+    
+    if (!useTB)
+        return 0;
     if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
         return 0;
 

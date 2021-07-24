@@ -23,8 +23,8 @@
 #include "MoveOrderer.h"
 #include "Verification.h"
 #include "uci.h"
-#include "game.h"
-#include "genpool.h"
+#include "generator/game.h"
+#include "generator/genpool.h"
 #include <iomanip>
 #include "movegen.h"
 
