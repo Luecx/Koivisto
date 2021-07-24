@@ -31,6 +31,11 @@ public:
     void reset();
     void saveGame(std::string_view result);
     
+    std::uint64_t totalGenerated() 
+    {
+        return m_SavedFens.size();
+    }
+    
     std::tuple<Move, int> searchPosition();
 private:
     int    m_CurrentPly = 0;

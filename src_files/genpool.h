@@ -1,5 +1,8 @@
 #include <thread>
 #include <fstream>
+#include <atomic>
+#include <array>
+#include <vector>
 
 class GeneratorPool 
 {
@@ -11,4 +14,7 @@ public:
 
 private:
     int m_NThreads;
+    std::vector<std::thread> m_Workers;
+    std::atomic_uint64_t m_TotalGamesRun = ATOMIC_VAR_INIT(0);
+    std::atomic_uint64_t m_TotalFens = ATOMIC_VAR_INIT(0);
 };
