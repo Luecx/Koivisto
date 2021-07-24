@@ -1,3 +1,5 @@
+#ifdef GENERATOR
+#pragma once
 #include <thread>
 #include <fstream>
 #include <atomic>
@@ -18,3 +20,4 @@ private:
     std::atomic_uint64_t m_totalGamesRun = ATOMIC_VAR_INIT(0);
     std::atomic_uint64_t m_totalFens = ATOMIC_VAR_INIT(0);
 };
+#endif

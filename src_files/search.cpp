@@ -1214,8 +1214,11 @@ Score Search::probeWDL(Board* board) {
 Move Search::probeDTZ(Board* board) {
     UCI_ASSERT(board);
     
+#ifdef GENERATOR
     if (!useTB)
         return 0;
+#endif
+
     if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
         return 0;
 

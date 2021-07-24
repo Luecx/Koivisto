@@ -1,5 +1,5 @@
 CC       = g++
-SRC      = *.cpp syzygy/tbprobe.c generator/game.cpp generator/genpool.cpp
+SRC      = *.cpp syzygy/tbprobe.c 
 LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
 ROOT     = ../
@@ -41,7 +41,7 @@ release: updateNetwork
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-avx2$(SUFFIX)
 
 generator: updateNetwork
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -DGENERATOR -o $(EXE)-x64-$(PREFIX)-generator$(SUFFIX)
+	$(CC) $(CFLAGS) $(SRC) generator/game.cpp generator/genpool.cpp $(MAKROS) $(LIBS) $(AVX2FLAGS) -DGENERATOR -o $(EXE)-x64-$(PREFIX)-generator$(SUFFIX)
 
 
 updateNetwork:

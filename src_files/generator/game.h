@@ -1,3 +1,4 @@
+#ifdef GENERATOR
 #pragma once 
 #include "../Board.h"
 #include "../Move.h"
@@ -45,3 +46,4 @@ private:
     std::ofstream& m_outputBook;
     std::vector<std::pair<std::string, int>> m_savedFens;
 };
+#endif

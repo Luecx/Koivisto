@@ -1,3 +1,4 @@
+#ifdef GENERATOR
 #include "genpool.h"
 #include "game.h"
 #include <chrono>
@@ -55,3 +56,4 @@ void GeneratorPool::run(int nGames)
     
     std::cout << "\nFinished computation at " << std::ctime(&endTime) << '\n';
 }
+#endif

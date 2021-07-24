@@ -1,3 +1,4 @@
+#ifdef GENERATOR
 #include "game.h"
 #include "../uci.h"
 #include "../movegen.h"
@@ -208,3 +209,4 @@ void Game::run()
     }
     saveGame(result);
 }
+#endif
