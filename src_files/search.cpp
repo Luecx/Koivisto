@@ -464,7 +464,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the static evaluation is already above beta at depth 1 and we have strong threats, asume
         // that we can atleast achieve beta
         // **********************************************************************************************************
-        if (depth == 1 && staticEval > beta + 30 && ownThreats && !enemyThreats)
+        if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
             return beta;
 
         // **********************************************************************************************************
@@ -597,7 +597,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
                 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && moveDepth == 1 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                if (!inCheck && moveDepth < 3 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + sd->eval[b->getActivePlayer()][ply] < alpha)
                     continue;
                 
                 // **************************************************************************************************
@@ -630,8 +630,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // compute the static exchange evaluation if the move is a capture
-        Score staticExchangeEval = 0;
-        if (isCapture(m) && (getCapturedPieceType(m)) < (getMovingPieceType(m))) {
+        Score staticExchangeEval = 1;
+        if (isCapture(m) && (getCapturedPieceType(m)) <= (getMovingPieceType(m))) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
 
@@ -688,7 +688,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
-        Depth lmr       = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval >= 0)
+        Depth lmr       = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
                               : lmrReductions[depth][legalMoves];
