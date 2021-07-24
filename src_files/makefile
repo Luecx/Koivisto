@@ -40,9 +40,6 @@ release: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)	
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-avx2$(SUFFIX)
 
-tuning: updateNetwork
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) $(OPENMPFLAGS) -DTUNING -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
-	
 generator: updateNetwork
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -DGENERATOR -o $(EXE)-x64-$(PREFIX)-generator$(SUFFIX)
 
