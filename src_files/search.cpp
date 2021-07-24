@@ -117,6 +117,90 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
 }
 
+void getThreatsQs(Board* b, SearchData* sd, Depth ply) {
+    U64 occupied         = b->getOccupiedBB();
+
+    U64 whitePawns       = b->getPieceBB(WHITE, PAWN);
+    U64 blackPawns       = b->getPieceBB(BLACK, PAWN);
+
+    U64 whitePawnAttacks = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
+    U64 blackPawnAttacks = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
+
+    sd->threatCount[ply][WHITE] =
+        bitCount(whitePawnAttacks
+                 & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)
+                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] =
+        bitCount(blackPawnAttacks
+                 & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP)
+                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+
+    U64 whiteMinorAttacks = 0;
+    U64 blackMinorAttacks = 0;
+    U64 k                 = b->getPieceBB(WHITE, KNIGHT);
+    while (k) {
+        whiteMinorAttacks |= KNIGHT_ATTACKS[bitscanForward(k)];
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, KNIGHT);
+    while (k) {
+        blackMinorAttacks |= KNIGHT_ATTACKS[bitscanForward(k)];
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(WHITE, BISHOP);
+    while (k) {
+        whiteMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, BISHOP);
+    while (k) {
+        blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    sd->threatCount[ply][WHITE] +=
+        bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] +=
+        bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+
+    U64 whiteRookAttacks = 0;
+    U64 blackRookAttacks = 0;
+    k                    = b->getPieceBB(WHITE, ROOK);
+    while (k) {
+        whiteRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, ROOK);
+    while (k) {
+        blackRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
+    sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
+    
+    U64 whiteQueenAttacks = 0;
+    U64 blackQueenAttacks = 0;
+    k                    = b->getPieceBB(WHITE, QUEEN);
+    while (k) {
+        whiteQueenAttacks |= lookUpRookAttack(bitscanForward(k), occupied) | lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+    k = b->getPieceBB(BLACK, QUEEN);
+    while (k) {
+        blackQueenAttacks |= lookUpRookAttack(bitscanForward(k), occupied) | lookUpBishopAttack(bitscanForward(k), occupied);
+        k = lsbReset(k);
+    }
+
+    U64 whiteKingAttacks = KING_ATTACKS[bitscanForward(b->getPieceBB(WHITE, QUEEN))];
+    U64 blackKingAttacks = KING_ATTACKS[bitscanForward(b->getPieceBB(BLACK, QUEEN))];
+
+    U64 whiteAttacks = whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks | whiteQueenAttacks;
+    U64 blackAttacks = blackPawnAttacks | blackMinorAttacks | blackRookAttacks | blackQueenAttacks;
+
+    sd->threatCount[ply][WHITE] += bitCount((b->getPieceBB(BLACK, QUEEN) | b->getPieceBB(BLACK, ROOK) | b->getPieceBB(BLACK, BISHOP)| b->getPieceBB(BLACK, KNIGHT)) & whiteAttacks & ~blackAttacks);
+    sd->threatCount[ply][BLACK] += bitCount((b->getPieceBB(WHITE, QUEEN) | b->getPieceBB(WHITE, ROOK) | b->getPieceBB(WHITE, BISHOP)| b->getPieceBB(WHITE, KNIGHT)) & blackAttacks & ~whiteAttacks);
+
+}
+
 void initLMR() {
     int d, m;
     
@@ -915,7 +999,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (alpha < bestScore)
         alpha = bestScore;
 
-    getThreats(b, sd, ply);
+    getThreatsQs(b, sd, ply);
     if (!sd->threatCount[ply][b->getActivePlayer()] && sd->threatCount[ply][!b->getActivePlayer()])
         return alpha;
 
