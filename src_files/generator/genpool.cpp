@@ -47,7 +47,7 @@ void GeneratorPool::run(int nGames)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << "\rGenerating... [GAMES=" << m_totalGamesRun <<"] "
-                                  << "[FENS=" << m_totalFens << "]";
+                                  << "[FENS=" << m_totalFens << "]" << std::flush;
     }
 
     auto computationEnd = std::chrono::system_clock::now();
