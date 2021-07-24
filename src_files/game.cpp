@@ -51,6 +51,13 @@ void Game::init(int argc, char** argv)
     AdjudicationDrawCount     = setParam("-drawply"  , 8);
     AdjudicationWinScoreLimit = setParam("-winscore" , 1000);
     AdjudicationWinCount      = setParam("-winply"   , 2);
+
+    if (WDLPath != "")
+    {
+        const char* data = WDLPath.data();
+        if (!tb_init(data))
+            throw std::runtime_error("tb_init");
+    }
 }
 
 Game::Game(std::ofstream& out)
