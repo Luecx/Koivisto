@@ -52,7 +52,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         
             // we can return at this point because all moves searched are in front of this move
             return;
-        } else if (isCapture(m2)) {
+        } else if (isCapture(m2) && isCapture(m)) {
             captureHistory[side][getSqToSqFromCombination(m2)] +=
                 - scalar
                 - scalar * captureHistory[side][getSqToSqFromCombination(m2)]
