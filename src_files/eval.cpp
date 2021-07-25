@@ -48,7 +48,7 @@ void nn::init() {
 
     uint64_t fileCount = *reinterpret_cast<const uint64_t*>(gEvalData);
     UCI_ASSERT((count * 4 + 8) == gEvalSize);
-    UCI_ASSERT( count          == fileCount);
+    UCI_ASSERT( count          == fileCount); 
 #endif
     int memoryIndex = 0;
     
