@@ -443,7 +443,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply, td);
+            score = qSearch(b, alpha, beta, ply, td, false, false);
             if (score < beta) {
                 return score;
             } else if (depth == 1)
@@ -862,7 +862,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
  * @param ply
  * @return
  */
-Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck, bool needToEval) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -901,7 +901,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
 
-    stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+    stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : (needToEval ? b->evaluate() : alpha - 10);
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
@@ -962,7 +962,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
-        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent);
+        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent,  needToEval ? stand_pat + see_piece_vals[(getPieceType(getCapturedPiece(m)))] - 100 < beta : true);
 
         b->undoMove();
 
