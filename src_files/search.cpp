@@ -907,7 +907,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
-        stand_pat = bestScore = b->evaluate() + ownThreats * 10 - enemyThreats*10;
+        stand_pat = bestScore = b->evaluate() - enemyThreats*10;
     }
 
     // we can also use the perft_tt entry to adjust the evaluation.
