@@ -962,7 +962,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
-        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent,  needToEval ? stand_pat + see_piece_vals[(getPieceType(getCapturedPiece(m)))] - 150 < beta : true);
+        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent,  true);
 
         b->undoMove();
 
