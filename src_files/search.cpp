@@ -840,6 +840,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+    sd->updateHistories(bestMove, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+
     // we need to write the current score/position into the transposition table if and only if we
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
