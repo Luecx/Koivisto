@@ -898,10 +898,17 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse
     // the eval and simply adjust the tempo-bonus.
-    Score stand_pat;
-    Score bestScore = -MAX_MATE_SCORE;
+    Score stand_pat = -MAX_MATE_SCORE + ply;
+    Score bestScore = -MAX_MATE_SCORE + ply;
 
-    stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+    int ownThreats;
+    int enemyThreats;
+    if (!inCheck) {
+        getThreats(b, sd, ply);
+        ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
+        enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
+        stand_pat = bestScore = b->evaluate() + ownThreats * 10 - enemyThreats*10;
+    }
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
