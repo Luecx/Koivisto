@@ -143,9 +143,11 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
 
         // if there is a dtz move available, do not start any threads or search at all. just do the
         // dtz move
-        Move dtzMove = this->probeDTZ(b);
-        if (dtzMove != 0)
-            return dtzMove;
+        if(useTB){
+            Move dtzMove = this->probeDTZ(b);
+            if (dtzMove != 0)
+                return dtzMove;
+        }
 
         if (PolyGlot::book.enabled) {
             Move bookmove = PolyGlot::book.probe(*b);
@@ -1161,8 +1163,6 @@ void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
 Score Search::probeWDL(Board* board) {
     UCI_ASSERT(board);
 
-    if (!useTB)
-        return MAX_MATE_SCORE;
     // we cannot prove the tables if there are too many pieces on the board
     if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
         return MAX_MATE_SCORE;
@@ -1213,11 +1213,6 @@ Score Search::probeWDL(Board* board) {
  */
 Move Search::probeDTZ(Board* board) {
     UCI_ASSERT(board);
-    
-#ifdef GENERATOR
-    if (!useTB)
-        return 0;
-#endif
 
     if (bitCount(board->getOccupiedBB()) > (signed) TB_LARGEST)
         return 0;
@@ -1283,23 +1278,25 @@ Move Search::probeDTZ(Board* board) {
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
             if ((promo == 6 && !isPromotion(m))
                 || (isPromotion(m) && promo < 6 && getPromotionPieceType(m) == promo)) {
+                
+                if(printInfo) {
+                    std::cout << "info"
+                                 " depth "
+                              << static_cast<int>(dtz) << " seldepth "
+                              << static_cast<int>(selDepth());
 
-                std::cout << "info"
-                             " depth "
-                          << static_cast<int>(dtz) << " seldepth " << static_cast<int>(selDepth());
+                    std::cout << " score cp " << s;
 
-                std::cout << " score cp " << s;
+                    if (tbHits() != 0) {
+                        std::cout << " tbhits " << 1;
+                    }
 
-                if (tbHits() != 0) {
-                    std::cout << " tbhits " << 1;
+                    std::cout <<
+
+                        " nodes " << 1 << " nps " << 1 << " time " << timeManager->elapsedTime()
+                              << " hashfull " << static_cast<int>(table->usage() * 1000);
+                    std::cout << std::endl;
                 }
-
-                std::cout <<
-
-                    " nodes " << 1 << " nps " << 1 << " time " << timeManager->elapsedTime()
-                          << " hashfull " << static_cast<int>(table->usage() * 1000);
-                std::cout << std::endl;
-
                 return m;
             }
         }

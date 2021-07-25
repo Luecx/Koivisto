@@ -1,4 +1,4 @@
-#ifdef GENERATOR
+
 #include "game.h"
 
 #include "../eval.h"
@@ -7,6 +7,7 @@
 #include "../syzygy/tbprobe.h"
 #include "../uci.h"
 
+#ifdef GENERATOR
 static void generateLegalMoves(Board* board, MoveList* movelist) {
     MoveList pseudolegal;
     pseudolegal.clear();
@@ -47,7 +48,7 @@ void        Game::init(int argc, char** argv) {
     adjudicationDrawScoreLimit = setParam("-drawscore", 20);
     ajudicationDrawCount       = setParam("-drawply", 12);
     adjudicationWinScoreLimit  = setParam("-winscore", 1000);
-    adjudicationWinCount       = setParam("-winply", 2);
+    adjudicationWinCount       = setParam("-winply", 4);
 
     if (wdlPath != "") {
         const char* data = wdlPath.data();
@@ -63,7 +64,8 @@ Game::Game(std::ofstream& out)
     m_searcher.init(16);
     m_searcher.disableInfoStrings();
 
-    m_useTb = wdlPath.size();
+    m_useTb = !!wdlPath.size();
+    m_searcher.useTableBase(true);
 }
 
 bool Game::isDrawn() {
@@ -122,6 +124,7 @@ void Game::run() {
     int         winScoreCounter  = 0;
 
     while (true) {
+        
         // Make first N random moves
         if (m_currentPly < randomOpeningMoveCount) {
             makeBookMove();
@@ -143,18 +146,20 @@ void Game::run() {
 
             break;
         }
-
+        
         auto [move, score] = searchPosition();
-
-        int wdlScore       = m_useTb ? m_searcher.probeWDL(&m_currentPosition) : 0;
-
+    
         // If this is the first move out of the book, discard
         // the game if score is above margin
         if ((   score >= adjudicationWinScoreLimit
-             || m_currentPosition.getCurrentRepetitionCount() != 1)
+                || m_currentPosition.getCurrentRepetitionCount() != 1)
             && m_currentPly == randomOpeningMoveCount) {
             return;
         }
+        
+        // check if we want the position (e.g. if its quiet)
+        if (positionIsFavourable(move))
+            savePosition(whiteRelativeScore(&m_currentPosition, score));
 
         bool scoreIsDraw = std::abs(score) <= adjudicationDrawScoreLimit;
         bool scoreIsWin  = std::abs(score) >= adjudicationWinScoreLimit;
@@ -162,33 +167,34 @@ void Game::run() {
         // Update draw/win score counters
         drawScoreCounter = scoreIsDraw ? drawScoreCounter + 1 : 0;
         winScoreCounter  = scoreIsWin  ? winScoreCounter + 1 : 0;
-
+    
         // Adjudicate game
         if (drawScoreCounter >= ajudicationDrawCount) {
-            result = "[0.5]";
-            break;
-        }
-        
-        if (std::abs(wdlScore) <= TB_CURSED_SCORE) {
             result           = "[0.5]";
             break;
         }
-        
-        if (std::abs(wdlScore) == TB_WIN_SCORE) {
-            auto winningSide = whiteRelativeScore(&m_currentPosition, wdlScore) > 0 ? WHITE : BLACK;
-            result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
-            break;
-        }
-        
+
+//        int wdlScore       = m_useTb ? m_searcher.probeWDL(&m_currentPosition) : TB_FAILED;
+//        if (std::abs(wdlScore) <= TB_CURSED_SCORE) {
+//            result           = "[0.5]";
+//            break;
+//        }
+//
+//        // adjudicate win
+//        if (std::abs(wdlScore) == TB_WIN_SCORE) {
+//            auto winningSide = whiteRelativeScore(&m_currentPosition, wdlScore) > 0 ? WHITE : BLACK;
+//            result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
+//            break;
+//        }
+//
         if (winScoreCounter >= adjudicationWinCount) {
             auto winningSide = whiteRelativeScore(&m_currentPosition, score) > 0 ? WHITE : BLACK;
             result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
             break;
         }
-
-        if (positionIsFavourable(move))
-            savePosition(whiteRelativeScore(&m_currentPosition, score));
-
+        
+        
+        // apply the move
         m_currentPosition.move(move);
         m_currentPly++;
     }

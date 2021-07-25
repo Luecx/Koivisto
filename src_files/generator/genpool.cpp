@@ -1,8 +1,8 @@
-#ifdef GENERATOR
 #include "genpool.h"
 #include "game.h"
 #include <chrono>
 
+#ifdef GENERATOR
 GeneratorPool::GeneratorPool(int nThreads)
     : m_nThreads(nThreads)
 {}
