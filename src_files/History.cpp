@@ -21,8 +21,6 @@
 #define MAX_HISTORY_SCORE 512;
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
-    if (depth > 20)
-        return;
     Move  m2;
 
     Color color = getMovingPieceColor(m);
@@ -31,7 +29,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         m2         = mv->getMove(i);
 
         int score  = mv->getScore(i);
-        int scalar = score * score + 5 * score;
+        int scalar = std::min(score * score + 5 * score, 256);
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
