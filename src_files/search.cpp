@@ -890,7 +890,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 return en.score;
             }
         } else if (en.type == ALL_NODE) {
-            if (en.score <= alpha) {
+            if (en.score <= alpha-5) {
                 return en.score;
             }
         }
