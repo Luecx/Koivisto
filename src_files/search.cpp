@@ -903,16 +903,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
 
-    // we can also use the perft_tt entry to adjust the evaluation.
-    if (en.zobrist == zobrist) {
-        // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
-            || (en.type == ALL_NODE && stand_pat > en.score)) {
-
-            bestScore = en.score;
-        }
-    }
-
     if (bestScore >= beta)
         return bestScore;
     if (alpha < bestScore)
