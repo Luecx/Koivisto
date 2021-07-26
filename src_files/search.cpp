@@ -602,6 +602,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck && moveDepth < 3 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + sd->eval[b->getActivePlayer()][ply] < alpha)
                     continue;
                 
+                // prune quiet moves that are unlikely to improve alpha
+                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                    continue;
+
                 // **************************************************************************************************
                 // history pruning:
                 // if the history score for a move is really bad at low depth, dont consider this
@@ -668,8 +672,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
+        } else if (depth < 8) {
+            if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareFrom(hashMove) == getSquareTo(sd->killer[!b->getActivePlayer()][ply + 1][0]))
+                extension = 1;
         }
-
         // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at. The idea behind
