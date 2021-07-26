@@ -669,7 +669,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         } else if (depth < 8) {
             if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareFrom(hashMove) == getSquareTo(sd->killer[!b->getActivePlayer()][ply + 1][0]))
                 extension = 1;
-            if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareTo(hashMove) == getSquareTo(b->getPreviousMove()))
+            if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareTo(hashMove) == getSquareTo(b->getPreviousMove()) && sd->eval[b->getActivePlayer()][ply] < alpha)
                 extension = 1;
         }
         // *********************************************************************************************************
