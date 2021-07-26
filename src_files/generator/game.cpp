@@ -77,16 +77,19 @@ bool Game::positionIsFavourable(Move) {
     return m_searcher.qSearch(&m_currentPosition) == m_currentPosition.evaluate();
 }
 
-void Game::makeBookMove() {
+bool Game::makeBookMove() {
     MoveList movelist;
     movelist.clear();
 
     generateLegalMoves(&m_currentPosition, &movelist);
 
+    if (movelist.getSize() == 0) return false;
+
     int moveIndex = rand() % movelist.getSize();
 
     m_currentPosition.move(movelist.getMove(moveIndex));
     m_currentPly++;
+    return true;
 }
 
 bool Game::hasLegalLeft() {
@@ -127,7 +130,9 @@ void Game::run() {
         
         // Make first N random moves
         if (m_currentPly < randomOpeningMoveCount) {
-            makeBookMove();
+            if (!makeBookMove())
+                break;
+
             continue;
         }
 

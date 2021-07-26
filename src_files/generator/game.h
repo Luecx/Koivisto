@@ -25,7 +25,7 @@ public:
 
     bool positionIsFavourable(Move best);
     void run();
-    void makeBookMove();
+    bool makeBookMove();
     void savePosition(int score);
     bool hasLegalLeft();
     bool isDrawn();
