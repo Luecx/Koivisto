@@ -31,11 +31,10 @@ U64 bb::ALL_HASHES[N_PIECES][N_SQUARES] = {};
 U64 bb::IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
 U64 bb::PASSED_PAWN_MASK[N_COLORS][N_SQUARES];
 
-std::mt19937_64 rng;
+U64 bb::seed = 1293812938;
+
 
 void bb::init() {
-    
-    rng.seed(seed);
     
     generateZobristKeys();
     generateData();
@@ -51,17 +50,10 @@ void bb::cleanUp() {
 }
 
 U64 bb::randU64() {
-    U64 res {0};
-    
-    res ^= U64(rng()) << 0;
-    res ^= U64(rng()) << 10;
-    res ^= U64(rng()) << 20;
-    res ^= U64(rng()) << 30;
-    res ^= U64(rng()) << 40;
-    res ^= U64(rng()) << 50;
-    res ^= U64(rng()) << 60;
-    
-    return res;
+    seed ^= seed << 13;
+    seed ^= seed >> 7;
+    seed ^= seed << 17;
+    return seed;
 }
 
 U64 bb::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {

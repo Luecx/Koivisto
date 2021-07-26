@@ -60,7 +60,7 @@ typedef __m128i avx_register_type;
 
 INCBIN(Eval, EVALFILE);
 
-inline int32_t sumRegisterEpi32(avx_register_type& reg){
+inline int32_t sumRegisterEpi32(avx_register_type reg){
     // first summarize in case of avx512 registers into one 256 bit register
 #if defined(__AVX512F__)
     const __m256i reduced_8 =

@@ -16,9 +16,9 @@ else
     SUFFIX := 
 endif
 
-WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\" -p -pg -g3
 CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto
-RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
+RFLAGS = -O3 $(WFLAGS) -DNDEBUG -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
 DFLAGS = -O0 $(WFLAGS) -g
 
