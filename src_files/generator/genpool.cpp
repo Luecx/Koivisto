@@ -52,6 +52,8 @@ void GeneratorPool::run(int nGames)
                                   << "[FENS=" << m_totalFens << "]" << std::flush;
     }
 
+    for(auto& worker : m_workers) worker.join();
+
     auto computationEnd = std::chrono::system_clock::now();
     auto endTime = std::chrono::system_clock::to_time_t(computationEnd);
     
