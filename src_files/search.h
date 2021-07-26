@@ -39,6 +39,10 @@
 
 #define MAX_THREADS 256
 
+static const int piece_values[6] = {
+    90,463, 474,577,1359,0,
+};
+
 /**
  * used to store information about a search
  */
