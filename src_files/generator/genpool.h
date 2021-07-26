@@ -1,4 +1,3 @@
-
 #pragma once
 #include "game.h"
 
@@ -8,12 +7,11 @@
 #include <thread>
 #include <vector>
 
-#ifdef GENERATOR
 class GeneratorPool {
     public:
     GeneratorPool(int);
 
-    void runGames(std::string_view bookPath, int nGames);
+    void runGames(std::string_view bookPath, int nGames, unsigned int ID);
     void run(int nGames);
 
     private:
@@ -22,4 +20,3 @@ class GeneratorPool {
     std::atomic_uint64_t     m_totalGamesRun = ATOMIC_VAR_INIT(0);
     std::atomic_uint64_t     m_totalFens     = ATOMIC_VAR_INIT(0);
 };
-#endif

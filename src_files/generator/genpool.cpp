@@ -1,21 +1,21 @@
 #include "genpool.h"
 #include "game.h"
 #include <chrono>
+#include <random>
 
-#ifdef GENERATOR
 GeneratorPool::GeneratorPool(int nThreads)
     : m_nThreads(nThreads)
 {}
 
-void GeneratorPool::runGames(std::string_view bookPath, int nGames)
+void GeneratorPool::runGames(std::string_view bookPath, int nGames, unsigned int ID)
 {
-    std::srand(std::hash<std::thread::id>{}(std::this_thread::get_id()));
     std::ofstream outputBook(bookPath.data());
 
     if (!outputBook)
         throw std::invalid_argument("Couldn't open outputBook");
-    
-    Game game(outputBook);
+
+    std::mt19937 generator(ID);
+    Game game(outputBook, generator);
 
     for(int i = 0;i < nGames;i++)
     {
@@ -29,6 +29,7 @@ void GeneratorPool::runGames(std::string_view bookPath, int nGames)
 
 void GeneratorPool::run(int nGames)
 {
+    std::random_device rd;
     m_totalGamesRun = ATOMIC_VAR_INIT(0);
 
     auto computationBegin = std::chrono::system_clock::now();
@@ -41,7 +42,7 @@ void GeneratorPool::run(int nGames)
     for(int i = 0;i < m_nThreads;i++)
     {
         std::string bookName = "generated_" + std::to_string(i) + ".txt";
-        m_workers.emplace_back(&GeneratorPool::runGames, this, bookName, chunk);
+        m_workers.emplace_back(&GeneratorPool::runGames, this, bookName, chunk, rd());
     }
 
     while(m_totalGamesRun < (chunk * m_nThreads))
@@ -56,4 +57,3 @@ void GeneratorPool::run(int nGames)
     
     std::cout << "\nFinished computation at " << std::ctime(&endTime) << '\n';
 }
-#endif

@@ -1,13 +1,11 @@
 
 #include "game.h"
-
 #include "../eval.h"
 #include "../movegen.h"
 #include "../search.h"
 #include "../syzygy/tbprobe.h"
 #include "../uci.h"
 
-#ifdef GENERATOR
 static void generateLegalMoves(Board* board, MoveList* movelist) {
     MoveList pseudolegal;
     pseudolegal.clear();
@@ -57,9 +55,10 @@ void        Game::init(int argc, char** argv) {
     }
 }
 
-Game::Game(std::ofstream& out)
+Game::Game(std::ofstream& out, std::mt19937& generator)
     : m_currentPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
-      m_outputBook(out) {
+      m_outputBook(out),
+      m_randomGenerator(generator) {
     m_searcher = {};
     m_searcher.init(16);
     m_searcher.disableInfoStrings();
@@ -85,7 +84,9 @@ bool Game::makeBookMove() {
 
     if (movelist.getSize() == 0) return false;
 
-    int moveIndex = rand() % movelist.getSize();
+    std::uniform_int_distribution<> dist(0, movelist.getSize() - 1);
+
+    int moveIndex = dist(m_randomGenerator);
 
     m_currentPosition.move(movelist.getMove(moveIndex));
     m_currentPly++;
@@ -179,25 +180,11 @@ void Game::run() {
             break;
         }
 
-//        int wdlScore       = m_useTb ? m_searcher.probeWDL(&m_currentPosition) : TB_FAILED;
-//        if (std::abs(wdlScore) <= TB_CURSED_SCORE) {
-//            result           = "[0.5]";
-//            break;
-//        }
-//
-//        // adjudicate win
-//        if (std::abs(wdlScore) == TB_WIN_SCORE) {
-//            auto winningSide = whiteRelativeScore(&m_currentPosition, wdlScore) > 0 ? WHITE : BLACK;
-//            result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
-//            break;
-//        }
-//
         if (winScoreCounter >= adjudicationWinCount) {
             auto winningSide = whiteRelativeScore(&m_currentPosition, score) > 0 ? WHITE : BLACK;
             result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
             break;
         }
-        
         
         // apply the move
         m_currentPosition.move(move);
@@ -205,4 +192,3 @@ void Game::run() {
     }
     saveGame(result);
 }
-#endif

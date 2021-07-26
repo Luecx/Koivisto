@@ -1,11 +1,10 @@
-#ifdef GENERATOR
 #pragma once 
 #include "../Board.h"
 #include "../Move.h"
 #include "../search.h"
 #include <tuple>
 #include <fstream>
-
+#include <random>
 
 class Game
 {
@@ -21,7 +20,7 @@ public:
 
     static void init(int argc, char** argv);
 
-    Game(std::ofstream&);
+    Game(std::ofstream&, std::mt19937&);
 
     bool positionIsFavourable(Move best);
     void run();
@@ -45,5 +44,5 @@ private:
     Search m_searcher;
     std::ofstream& m_outputBook;
     std::vector<std::pair<std::string, int>> m_savedFens;
+    std::mt19937& m_randomGenerator;
 };
-#endif
