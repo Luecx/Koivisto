@@ -499,7 +499,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Score     betaCut = beta + FUTILITY_MARGIN;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
-        && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
+        && hashMove && en.type == CUT_NODE) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
