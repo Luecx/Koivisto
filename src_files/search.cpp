@@ -600,6 +600,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck && moveDepth < 3 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + sd->eval[b->getActivePlayer()][ply] < alpha)
                     continue;
                 
+                // prune quiet moves that are unlikely to improve alpha
+                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                    continue;
+
                 // **************************************************************************************************
                 // history pruning:
                 // if the history score for a move is really bad at low depth, dont consider this
