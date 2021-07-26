@@ -43,6 +43,8 @@ struct SearchData {
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
     Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
+        // kill table, +2 used to make sure we can always reset +2
+    Move     captureKiller[MAX_INTERNAL_PLY + 2]                                = {0};
     // threat data
     int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
     // eval history across plies

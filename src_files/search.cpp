@@ -436,6 +436,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    sd->captureKiller[ply + 2]                   = 0;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -808,8 +809,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
             // also set this move as a killer move into the history
-            if (!isCapture(m))
+            if (!isCapture(m)) {
                 sd->setKiller(m, ply, b->getActivePlayer());
+            } else {
+                sd->captureKiller[ply] = m;
+            }
 
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
