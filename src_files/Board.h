@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <string>
 
+#define EVAL_CACHE_SIZE (1024)
+
 using namespace bb;
 using namespace move;
 
@@ -39,7 +41,7 @@ using namespace move;
 
 // this struct contains information about the cached see entries.
 // this contains zobrist keys and the see-score.
-struct seeCacheEntry {
+struct cacheEntry {
     U64   key;
     Score score;
 };
@@ -116,12 +118,14 @@ class Board {
     U64 m_teamOccupiedBB[N_COLORS];
     // furthermore we keep track of all the squares occupied. mainly used for move generation.
     U64 m_occupiedBB;
-    
+#ifdef EVAL_CACHE_SIZE
+    struct cacheEntry evalCache[EVAL_CACHE_SIZE] {};
+#endif
     // for caching see entries, we allocate an array.
     // note that this might be very slow if a lot of board objects are requires (e.g. tuning).
     // thats when the cache should be disabled.
 #ifdef SEE_CACHE_SIZE
-    struct seeCacheEntry seeCache[SEE_CACHE_SIZE] {};
+    struct cacheEntry seeCache[SEE_CACHE_SIZE] {};
 #endif
     
     // store an evaluator which can be efficiently updated

@@ -1192,5 +1192,16 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
 }
 
 Score Board::evaluate(){
-    return this->evaluator.evaluate(this->getActivePlayer());
+#ifdef EVAL_CACHE_SIZE
+    U64 zob = zobrist();
+    if (evalCache[zob & (EVAL_CACHE_SIZE - 1)].key == zob) {
+        return evalCache[zob & (EVAL_CACHE_SIZE - 1)].score;
+    }
+#endif
+    Score s = this->evaluator.evaluate(this->getActivePlayer());
+#ifdef EVAL_CACHE_SIZE
+    evalCache[zob & (EVAL_CACHE_SIZE - 1)].score = s;
+    evalCache[zob & (EVAL_CACHE_SIZE - 1)].key   = zob;
+#endif
+    return s;
 }
