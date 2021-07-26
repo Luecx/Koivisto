@@ -39,7 +39,6 @@ int main(int argc, char *argv[]) {
     bb::init();
     nn::init();
     Game::init(argc, argv);
-    std::srand(std::time(NULL));
 
     std::vector<std::string> args(argv, argv + argc);
 
