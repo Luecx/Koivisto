@@ -949,7 +949,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             continue;
 
         // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
+        if (needToEval && +see_piece_vals[(getPieceType(getCapturedPiece(m)))]
                 - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
             > beta)
             return beta;
@@ -968,7 +968,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
-        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent,  needToEval ? stand_pat + see_piece_vals[(getPieceType(getCapturedPiece(m)))] - 150 < beta : true);
+        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent,  needToEval ? stand_pat + see_piece_vals[(getPieceType(getCapturedPiece(m)))] - 100 < beta : true);
 
         b->undoMove();
 
