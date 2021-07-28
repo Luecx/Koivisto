@@ -19,8 +19,6 @@
 
 #include "Bitboard.h"
 
-#include <random>
-
 using namespace bb;
 
 U64* bb::ROOK_ATTACKS  [N_SQUARES]{};
