@@ -16,6 +16,7 @@ public:
     static int adjudicationWinCount;
     static int angineGameSearchDepth;
     static int gameHashSize;
+    static bool useTbAdjudication;
     static std::string wdlPath;
 
     static void init(int argc, char** argv);

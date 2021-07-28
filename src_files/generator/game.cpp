@@ -30,6 +30,7 @@ int         Game::adjudicationWinCount;
 int         Game::angineGameSearchDepth;
 int         Game::gameHashSize;
 std::string Game::wdlPath;
+bool        Game::useTbAdjudication;
 
 void        Game::init(int argc, char** argv) {
     std::vector<std::string> args(argv, argv + argc);
@@ -47,6 +48,12 @@ void        Game::init(int argc, char** argv) {
     ajudicationDrawCount       = setParam("-drawply", 12);
     adjudicationWinScoreLimit  = setParam("-winscore", 1000);
     adjudicationWinCount       = setParam("-winply", 4);
+    useTbAdjudication          = false;
+    
+    std::string_view tbAdjudicateChoice = getValue(args, "-tbadjudicate");
+    
+    if (tbAdjudicateChoice.size())
+        useTbAdjudication = tbAdjudicateChoice == "true";
 
     if (wdlPath != "") {
         const char* data = wdlPath.data();
@@ -151,6 +158,20 @@ void Game::run() {
                 result = "[0.5]";
 
             break;
+        }
+
+        if (useTbAdjudication) {
+            int wdlScore       = m_useTb ? m_searcher.probeWDL(&m_currentPosition) : TB_FAILED;
+            if (std::abs(wdlScore) <= TB_CURSED_SCORE) {
+                result           = "[0.5]";
+                break;
+            }
+        
+            if (std::abs(wdlScore) == TB_WIN_SCORE) {
+                auto winningSide = whiteRelativeScore(&m_currentPosition, wdlScore) > 0 ? WHITE : BLACK;
+                result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
+                break;
+            }
         }
         
         auto [move, score] = searchPosition();
