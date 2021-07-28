@@ -58,6 +58,7 @@ enum Scores{
     TB_WIN_SCORE    = (Score)((1 << 13) - MAX_INTERNAL_PLY),
     MAX_MATE_SCORE  = (Score)((1 << 14) - 1),
     MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY),
+    TB_FAILED       = MAX_MATE_SCORE
 };
 
 enum Colors{
