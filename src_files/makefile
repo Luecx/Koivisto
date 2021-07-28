@@ -6,7 +6,7 @@ ROOT     = ../
 NAME     = Koivisto
 EVALFILE = $(ROOT)networks/default.net
 EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
-MINOR    = 8
+MINOR    = 9
 MAJOR    = 6
 ifeq ($(OS),Windows_NT)
     PREFIX := windows
@@ -16,9 +16,9 @@ else
     SUFFIX := 
 endif
 
-WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\" -p -pg -g3
-CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto
-RFLAGS = -O3 $(WFLAGS) -DNDEBUG -static
+WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
+RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
 DFLAGS = -O0 $(WFLAGS) -g
 
