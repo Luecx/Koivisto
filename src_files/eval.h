@@ -26,9 +26,10 @@
 #include <immintrin.h>
 
 
-#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2)
-#define HIDDEN_SIZE    (512)
-#define OUTPUT_SIZE    (1)
+#define INPUT_SIZE      (bb::N_PIECE_TYPES * bb::N_SQUARES * 2)
+#define HIDDEN1_SIZE    (256)
+#define HIDDEN2_SIZE    (16)
+#define OUTPUT_SIZE     (1)
 
 #if defined(__AVX512F__)
 #define BIT_ALIGNMENT  (512)
@@ -45,10 +46,13 @@ class Board;
 
 namespace nn {
 
-extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
-extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
-extern int16_t inputBias    [HIDDEN_SIZE];
-extern int32_t hiddenBias   [OUTPUT_SIZE];
+extern int16_t hidden1Weights[INPUT_SIZE][HIDDEN1_SIZE];
+extern int16_t hidden2Weights[HIDDEN2_SIZE][HIDDEN1_SIZE];
+extern int16_t outputWeights [OUTPUT_SIZE ][HIDDEN2_SIZE];
+
+extern int16_t hidden1Bias    [HIDDEN1_SIZE];
+extern int32_t hidden2Bias    [HIDDEN2_SIZE];
+extern int32_t outputBias     [OUTPUT_SIZE];
 
 void init();
 
@@ -58,10 +62,11 @@ struct Evaluator {
     bool inputMap[INPUT_SIZE] {};
     
     // summations
-    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
+    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN1_SIZE]{};
     
-    alignas(ALIGNMENT) int16_t activation[HIDDEN_SIZE] {};
-    alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE] {};
+    alignas(ALIGNMENT) int16_t hidden1Activation[HIDDEN1_SIZE] {};
+    alignas(ALIGNMENT) int16_t hidden2Activation[HIDDEN2_SIZE] {};
+    alignas(ALIGNMENT) int16_t output           [OUTPUT_SIZE ] {};
     
     int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color activePlayer);
 
