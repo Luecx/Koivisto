@@ -31,6 +31,8 @@ int         Game::angineGameSearchDepth;
 int         Game::gameHashSize;
 std::string Game::wdlPath;
 bool        Game::useTbAdjudication;
+bool        Game::useWinAdjudication;
+bool        Game::useDrawAdjudication;
 
 void        Game::init(int argc, char** argv) {
     std::vector<std::string> args(argv, argv + argc);
@@ -49,12 +51,29 @@ void        Game::init(int argc, char** argv) {
     adjudicationWinScoreLimit  = setParam("-winscore", 1000);
     adjudicationWinCount       = setParam("-winply", 4);
     useTbAdjudication          = false;
+    useDrawAdjudication        = false;
+    useWinAdjudication         = false;
+
     
     std::string_view tbAdjudicateChoice = getValue(args, "-tbadjudicate");
-    
     if (tbAdjudicateChoice.size())
         useTbAdjudication = tbAdjudicateChoice == "true";
 
+    std::string_view drawAdjudicateChoice = getValue(args, "-drawadjudicate");
+    if (drawAdjudicateChoice.size())
+        useDrawAdjudication = drawAdjudicateChoice == "true";
+
+    std::string_view winAdjudicateChoice = getValue(args, "-winadjudicate");
+    if (winAdjudicateChoice.size())
+        useWinAdjudication = winAdjudicateChoice == "true";
+
+    std::cout << std::boolalpha;
+
+    std::cout << "TB Adjudication: " << useTbAdjudication << '\n';
+    std::cout << "Win Adjudication: " << useWinAdjudication << '\n';
+    std::cout << "Draw Adjudication: " << useDrawAdjudication << '\n';
+        
+        
     if (wdlPath != "") {
         const char* data = wdlPath.data();
         if (!tb_init(data))
@@ -196,12 +215,12 @@ void Game::run() {
         winScoreCounter  = scoreIsWin  ? winScoreCounter + 1 : 0;
     
         // Adjudicate game
-        if (drawScoreCounter >= ajudicationDrawCount) {
+        if (useDrawAdjudication && drawScoreCounter >= ajudicationDrawCount) {
             result           = "[0.5]";
             break;
         }
 
-        if (winScoreCounter >= adjudicationWinCount) {
+        if (useWinAdjudication && winScoreCounter >= adjudicationWinCount) {
             auto winningSide = whiteRelativeScore(&m_currentPosition, score) > 0 ? WHITE : BLACK;
             result           = winningSide == WHITE ? "[1.0]" : "[0.0]";
             break;
