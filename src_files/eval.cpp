@@ -60,23 +60,23 @@ typedef __m128i avx_register_type;
 
 INCBIN(Eval, EVALFILE);
 
-inline int32_t sumRegisterEpi32(avx_register_type reg){
+inline int32_t sumRegisterEpi32(avx_register_type reg) {
     // first summarize in case of avx512 registers into one 256 bit register
 #if defined(__AVX512F__)
     const __m256i reduced_8 =
-            _mm256_add_epi32(_mm512_castsi512_si256(reg), _mm512_extracti32x8_epi32(reg, 1));
+        _mm256_add_epi32(_mm512_castsi512_si256(reg), _mm512_extracti32x8_epi32(reg, 1));
 #elif defined(__AVX2__) || defined(__AVX__)
     const __m256i reduced_8 = reg;
 #endif
-    
+
     // then summarize the 256 bit register into a 128 bit register
 #if defined(__AVX512F__) || defined(__AVX2__) || defined(__AVX__)
     const __m128i reduced_4 =
-                      _mm_add_epi32(_mm256_castsi256_si128(reduced_8), _mm256_extractf128_si256(reduced_8, 1));
+        _mm_add_epi32(_mm256_castsi256_si128(reduced_8), _mm256_extractf128_si256(reduced_8, 1));
 #elif defined(__SSE2__)
     const __m128i reduced_4 = reg;
 #endif
-    
+
     // summarize the 128 register using SSE instructions
     __m128i vsum = _mm_add_epi32(reduced_4, _mm_srli_si128(reduced_4, 8));
     vsum         = _mm_add_epi32(vsum, _mm_srli_si128(vsum, 4));
@@ -197,8 +197,8 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     }
 
     constexpr avx_register_type reluBias {};
-    avx_register_type*          sum = (avx_register_type*) (summation[activePlayer]);
-    avx_register_type*          act = (avx_register_type*) (activation);
+    auto                        sum = (avx_register_type*) (summation[activePlayer]);
+    auto                        act = (avx_register_type*) (activation);
 
     // apply relu to the summation first
     for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
