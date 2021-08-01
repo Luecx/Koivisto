@@ -776,6 +776,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (lmr && score > alpha)
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                       ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                if (lmr && score > alpha && !pv && hashMove && !extension)
+                    score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + ONE_PLY,
+                                      ply + ONE_PLY, td, 0, behindNMP);    // re-search
                 if (score > alpha && score < beta)
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
                                       td, 0, behindNMP);    // re-search
