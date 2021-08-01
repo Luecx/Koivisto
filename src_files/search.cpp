@@ -740,6 +740,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
+            if (score > alpha && hashMove && en.type == ALL_NODE)
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY + ONE_PLY, td, 0,
+                      behindNMP);
         } else {
             // kk reduction logic.
             if (ply == 0 && lmr) {
