@@ -49,7 +49,7 @@ struct SearchData {
     Score    eval[N_COLORS][MAX_INTERNAL_PLY]                                    = {0};
     bool     sideToReduce;
     bool     reduce;
-
+    bool     rootSide;
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
     int      getHistories(Move m, Color side, Move previous);

@@ -193,6 +193,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     Board       searchBoard {b};
     Board       printBoard {b};
     td->dropOut = false;
+    td->searchData.rootSide = b->getActivePlayer();
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
@@ -711,6 +712,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
+            lmr -= pv && sd->rootSide != b->getActivePlayer();
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
