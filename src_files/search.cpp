@@ -437,6 +437,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
+    bool failedNull = false;
+
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
         // razoring:
@@ -485,6 +487,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (score >= beta) {
                 return score;
             }
+            failedNull = true;
         }
     }
 
@@ -672,6 +675,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             m           = moveOrderer.next(0);
         } else if (depth < 8) {
             if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareFrom(hashMove) == getSquareTo(sd->killer[!b->getActivePlayer()][ply + 1][0]))
+                extension = 1;
+            if (legalMoves == 1 && hashMove && en.type == CUT_NODE && failedNull)
                 extension = 1;
         }
         // *********************************************************************************************************
