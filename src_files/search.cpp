@@ -671,7 +671,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             m           = moveOrderer.next(0);
         } else if (depth < 8) {
-            if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareFrom(hashMove) == getSquareTo(sd->killer[!b->getActivePlayer()][ply + 1][0]))
+            if (legalMoves == 0 && hashMove && en.type == CUT_NODE && getSquareFrom(hashMove) == getSquareTo(sd->killer[!b->getActivePlayer()][ply + 1][0]))
                 extension = 1;
         }
         // *********************************************************************************************************
