@@ -712,7 +712,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            lmr -= sd->rootSide != b->getActivePlayer();
+            if (sd->rootSide == b->getActivePlayer()) lmr += depth / 5;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
