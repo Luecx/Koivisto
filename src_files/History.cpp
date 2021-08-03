@@ -26,8 +26,6 @@ int combineHistory(int slowHistory, int fastHistory, Depth depth) {
 }
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
-    if (depth > 20)
-        return;
     Move  m2;
 
     Color color = getMovingPieceColor(m);
@@ -36,10 +34,10 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         m2         = mv->getMove(i);
 
         int score  = mv->getScore(i);
+        if (score > 18) score = 18;
         int scalar = score * score + 5 * score;
-        int fastScalar = score * 20;
-        int slowScalar  = score > 7 ? score * score : 0;
-
+        int fastScalar = (score * score + 5 * score)*(18-score)/18;
+        int slowScalar  = (score * score + 5 * score)*score/18;
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
                 captureHistory[side][getSqToSqFromCombination(m)] +=
