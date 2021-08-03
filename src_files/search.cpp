@@ -194,7 +194,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     Board       printBoard {b};
     td->dropOut = false;
     for (d = 1; d <= maxDepth; d++) {
-
+        td->searchData.maxDepth = d;
         if (d < 6) {
             s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {

@@ -20,9 +20,10 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-inline int combineHistory(int slowHistory, int fastHistory, Depth depth) {
-    int aDepth = depth > 15 ? 15 : depth;
-    return (slowHistory * aDepth + fastHistory * (15 - aDepth)) / 15;
+int combineHistory(int slowHistory, int fastHistory, Depth depth) {
+    return fastHistory;
+    //int aDepth = depth > 18 ? 18 : depth;
+    //return (slowHistory * aDepth + fastHistory * (18 - aDepth)) / 18;
 }
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
@@ -38,7 +39,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         int score       = mv->getScore(i);
         int scalar      = score * score + 5 * score;
         int fastScalar  = score * score + 5 * score;
-        int slowScalar  = score * score * score / 10;
+        int score2      = std::max(10 - (maxDepth - depth), 0);
+        int slowScalar  = score2*score2*5;
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
@@ -47,10 +49,10 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                     - scalar * captureHistory[side][getSqToSqFromCombination(m)]
                           / MAX_HISTORY_SCORE;
             } else {
-                slowHistory[side][getSqToSqFromCombination(m)] +=
+                /*slowHistory[side][getSqToSqFromCombination(m)] +=
                     + slowScalar
                     - slowScalar * slowHistory[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE;
+                          / MAX_HISTORY_SCORE;*/
                 fastHistory[side][getSqToSqFromCombination(m)] +=
                     + fastScalar
                     - fastScalar * fastHistory[side][getSqToSqFromCombination(m)]
@@ -69,10 +71,10 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                 - scalar * captureHistory[side][getSqToSqFromCombination(m2)]
                       / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
-                slowHistory[side][getSqToSqFromCombination(m)] +=
+                /*slowHistory[side][getSqToSqFromCombination(m)] +=
                     - slowScalar
                     - slowScalar * slowHistory[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE;
+                          / MAX_HISTORY_SCORE;*/
                 fastHistory[side][getSqToSqFromCombination(m)] +=
                     - fastScalar
                     - fastScalar * fastHistory[side][getSqToSqFromCombination(m)]
