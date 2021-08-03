@@ -44,7 +44,7 @@ struct SearchData {
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // history table (side-from-to)
     int      history[N_COLORS][N_SQUARES * N_SQUARES]                            = {0};
-    int      slowHistory[N_COLORS][N_SQUARES * N_SQUARES]                        = {0};
+    int64_t  slowHistory[N_COLORS][N_SQUARES * N_SQUARES][2]                     = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
