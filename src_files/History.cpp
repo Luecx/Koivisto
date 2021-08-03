@@ -37,7 +37,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
 
         int score  = mv->getScore(i);
         int scalar = score * score + 5 * score;
-        int slowScalar  = scalar / 4;
+        int fastScalar = score * 20;
+        int slowScalar  = score * score + 5 * score;
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
@@ -47,8 +48,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                           / MAX_HISTORY_SCORE;
             } else {
                 history[side][getSqToSqFromCombination(m)] +=
-                    + scalar
-                    - scalar * history[side][getSqToSqFromCombination(m)]
+                    + fastScalar
+                    - fastScalar * history[side][getSqToSqFromCombination(m)]
                           / MAX_HISTORY_SCORE;
                 slowHistory[side][getSqToSqFromCombination(m)] +=
                     + slowScalar
@@ -69,8 +70,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                       / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
             history[side][getSqToSqFromCombination(m2)] +=
-                - scalar
-                - scalar * history[side][getSqToSqFromCombination(m2)]
+                - fastScalar
+                - fastScalar * history[side][getSqToSqFromCombination(m2)]
                       / MAX_HISTORY_SCORE;
             slowHistory[side][getSqToSqFromCombination(m)] +=
                 - slowScalar
