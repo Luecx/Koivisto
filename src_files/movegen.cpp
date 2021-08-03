@@ -53,9 +53,9 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             Score     SEE    = board->staticExchangeEvaluation(move);
             MoveScore mvvLVA = piece_values[(getCapturedPieceType(move))];
             if (SEE >= 0) {
-                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove(), sd->ordDepth));
             } else {
-                mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove(), sd->ordDepth));
             }
         } else if constexpr (isPromotion){
             MoveScore mvvLVA = (getCapturedPieceType(move)) - (getMovingPieceType(move));
@@ -63,7 +63,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
         } else{
-            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove(), sd->ordDepth));
         }
         
     }else if constexpr (m == GENERATE_NON_QUIET){

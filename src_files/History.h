@@ -30,6 +30,8 @@ struct SearchData {
 
     Move     bestMove = 0;
 
+    Depth ordDepth    = 0;
+
     MoveList moves[MAX_INTERNAL_PLY] {};
     // Effort spent
     int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
@@ -38,7 +40,8 @@ struct SearchData {
     // capture history table (side-from-to)
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // history table (side-from-to)
-    int      history[N_COLORS][N_SQUARES * N_SQUARES]                            = {0};
+    int      fastHistory[N_COLORS][N_SQUARES * N_SQUARES]                        = {0};
+    int      slowHistory[N_COLORS][N_SQUARES * N_SQUARES]                        = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
@@ -52,7 +55,7 @@ struct SearchData {
 
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
-    int      getHistories(Move m, Color side, Move previous);
+    int      getHistories(Move m, Color side, Move previous, Depth depth);
 
     void     setKiller(Move move, Depth ply, Color color);
 

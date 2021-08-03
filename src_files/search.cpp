@@ -550,6 +550,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return matingValue;
     }
 
+    sd->ordDepth = depth;
+
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
     MoveOrderer moveOrderer {mv};
@@ -609,7 +611,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove())
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), depth)
                     < std::min(200 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -666,6 +668,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
+
+            sd->ordDepth = depth;
             generateMoves(b, mv, hashMove, sd, ply);
             moveOrderer = {mv};
 
@@ -704,7 +708,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), depth);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
