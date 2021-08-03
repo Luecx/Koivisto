@@ -37,8 +37,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
 
         int score  = mv->getScore(i);
         int scalar = score * score + 5 * score;
-        int score2      = std::max(10 - (maxDepth - depth), 0);
-        int slowScalar  = score2*score2*5;
+        int score2      = maxDepth - depth < 10;
+        int slowScalar  = score2 * 100;
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
