@@ -38,7 +38,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         int score  = mv->getScore(i);
         int scalar = score * score + 5 * score;
         int fastScalar = score * 20;
-        int slowScalar  = score * score + 5 * score;
+        int slowScalar  = score > 7 ? score * score : 0;
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
