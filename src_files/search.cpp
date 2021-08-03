@@ -670,9 +670,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
-        } else if (depth < 8) {
-            if (legalMoves == 1 && hashMove && en.type == CUT_NODE && getSquareFrom(hashMove) == getSquareTo(sd->killer[!b->getActivePlayer()][ply + 1][0]))
-                extension = 1;
         }
         // *********************************************************************************************************
         // kk reductions:
@@ -694,7 +691,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
-        Depth lmr       = (legalMoves < 2 || depth <= 2 || (isCapture(m) && staticExchangeEval > 0)
+        Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2 || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
                               : lmrReductions[depth][legalMoves];
@@ -748,7 +745,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
-                              td, 0, behindNMP, &lmr);
+                              td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
