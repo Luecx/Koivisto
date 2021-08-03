@@ -194,7 +194,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     Board       printBoard {b};
     td->dropOut = false;
     for (d = 1; d <= maxDepth; d++) {
-
+        td->searchData.maxDepth = d;
         if (d < 6) {
             s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
@@ -549,7 +549,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (beta <= matingValue)
             return matingValue;
     }
-
+    sd->ordDepth = depth;
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
     MoveOrderer moveOrderer {mv};
@@ -609,7 +609,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove())
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), depth)
                     < std::min(200 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -666,6 +666,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
+            sd->ordDepth = depth;
             generateMoves(b, mv, hashMove, sd, ply);
             moveOrderer = {mv};
 
@@ -704,7 +705,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), depth);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
