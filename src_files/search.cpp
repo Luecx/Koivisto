@@ -728,7 +728,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()) && legalMoves == 0)
+        if (extension == 0 && b->isInCheck(b->getActivePlayer()) && legalMoves != 0)
             extension = 1;
 
         mv->scoreMove(moveOrderer.counter - 1, depth);
