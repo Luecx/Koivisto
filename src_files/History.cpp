@@ -20,9 +20,8 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-int combineHistory(int slowHistory, int fastHistory, Depth depth) {
-    int aDepth = depth > 18 ? 18 : depth;
-    return (slowHistory * aDepth + fastHistory * (18 - aDepth)) / 18;
+int SearchData::combineHistory(Depth depth, bool side, Move m) {
+    return depth * 2 > maxDepth ? slowHistory[side][getSqToSqFromCombination(m)] : history[side][getSqToSqFromCombination(m)];
 }
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
@@ -36,8 +35,8 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         int score  = mv->getScore(i);
         if (score > 18) score = 18;
         int scalar = score * score + 5 * score;
-        int fastScalar = (score * score + 5 * score)*(18-score)/18;
-        int slowScalar  = (score * score + 5 * score)*score/18;
+        int fastScalar = score * score + 5 * score;
+        int slowScalar  = score * score * score / 12;
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
                 captureHistory[side][getSqToSqFromCombination(m)] +=
@@ -88,7 +87,7 @@ int SearchData::getHistories(Move m, Color side, Move previous, Depth depth) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
         return cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + combineHistory(slowHistory[side][getSqToSqFromCombination(m)], history[side][getSqToSqFromCombination(m)], depth);
+               + combineHistory(depth, side, m);
     }
 }
 

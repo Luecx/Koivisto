@@ -56,6 +56,7 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
 
+    int      combineHistory(Depth depth, bool side, Move m);
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
     int      getHistories(Move m, Color side, Move previous, Depth depth);
