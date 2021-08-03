@@ -21,7 +21,7 @@
 #define MAX_HISTORY_SCORE 512;
 
 int SearchData::combineHistory(Depth depth, bool side, Move m) {
-    return depth * 2 > maxDepth ? slowHistory[side][getSqToSqFromCombination(m)][0] * 512 / (1 + slowHistory[side][getSqToSqFromCombination(m)][1]) : history[side][getSqToSqFromCombination(m)];
+    return (depth * 2 > maxDepth && depth > 10) ? slowHistory[side][getSqToSqFromCombination(m)][0] * 512 / (1 + slowHistory[side][getSqToSqFromCombination(m)][1]) : history[side][getSqToSqFromCombination(m)];
 }
 
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
@@ -36,7 +36,7 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
         if (score > 18) score = 18;
         int scalar = score * score + 5 * score;
         int fastScalar = score * score + 5 * score;
-        int slowScalar  = score * score * score / 12;
+        int slowScalar  = score * score + 5 * score;
         if (!isCapture(m2)) slowHistory[side][getSqToSqFromCombination(m)][1] += score * score + 5 * score;
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
