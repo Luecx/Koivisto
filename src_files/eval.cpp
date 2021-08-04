@@ -85,52 +85,18 @@ inline int32_t sumRegisterEpi32(avx_register_type reg){
 }
 
 void nn::init() {
-
-    auto data = reinterpret_cast<const float*>(gEvalData + 8);
-
-#ifdef DNDEBUG
-    // figure out how many entries we will store
-    uint64_t count =
-        +INPUT_SIZE * HIDDEN_SIZE + HIDDEN_SIZE + HIDDEN_SIZE * OUTPUT_SIZE + OUTPUT_SIZE;
-
-    uint64_t fileCount = *reinterpret_cast<const uint64_t*>(gEvalData);
-    UCI_ASSERT((count * 4 + 8) == gEvalSize);
-    UCI_ASSERT(count == fileCount);
-#endif
+    
+    
     int memoryIndex = 0;
-
-    // read weights
-    for (int i = 0; i < INPUT_SIZE; i++) {
-        for (int o = 0; o < HIDDEN_SIZE; o++) {
-            float value = data[memoryIndex++];
-            UCI_ASSERT(std::abs(value) < ((1ull << 15) / INPUT_WEIGHT_MULTIPLIER));
-            inputWeights[i][o] = round(value * INPUT_WEIGHT_MULTIPLIER);
-        }
-    }
-
-    // read bias
-    for (int o = 0; o < HIDDEN_SIZE; o++) {
-        float value = data[memoryIndex++];
-        UCI_ASSERT(std::abs(value) < ((1ull << 15) / INPUT_WEIGHT_MULTIPLIER));
-        inputBias[o] = round(value * INPUT_WEIGHT_MULTIPLIER);
-    }
-
-    // read weights
-    for (int o = 0; o < OUTPUT_SIZE; o++) {
-        for (int i = 0; i < HIDDEN_SIZE; i++) {
-            float value = data[memoryIndex++];
-            UCI_ASSERT(std::abs(value) < ((1ull << 15) / HIDDEN_WEIGHT_MULTIPLIER));
-            hiddenWeights[o][i] = round(value * HIDDEN_WEIGHT_MULTIPLIER);
-        }
-    }
-
-    // read bias
-    for (int o = 0; o < OUTPUT_SIZE; o++) {
-        float value = data[memoryIndex++];
-        UCI_ASSERT(std::abs(value)
-                   < ((1ull << 31) / HIDDEN_WEIGHT_MULTIPLIER / INPUT_WEIGHT_MULTIPLIER));
-        hiddenBias[o] = round(value * HIDDEN_WEIGHT_MULTIPLIER * INPUT_WEIGHT_MULTIPLIER);
-    }
+    std::memcpy(inputWeights, &gEvalData[memoryIndex],  INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));
+    memoryIndex += INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t);
+    std::memcpy(inputBias   , &gEvalData[memoryIndex],               HIDDEN_SIZE * sizeof(int16_t));
+    memoryIndex +=              HIDDEN_SIZE * sizeof(int16_t);
+    
+    std::memcpy(hiddenWeights, &gEvalData[memoryIndex],  HIDDEN_SIZE * OUTPUT_SIZE * sizeof(int16_t));
+    memoryIndex += HIDDEN_SIZE * OUTPUT_SIZE * sizeof(int16_t);
+    std::memcpy(hiddenBias   , &gEvalData[memoryIndex],                OUTPUT_SIZE * sizeof(int32_t));
+    memoryIndex +=               OUTPUT_SIZE * sizeof(int32_t);
 }
 int nn::Evaluator::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square,
                          bb::Color activePlayer) {
