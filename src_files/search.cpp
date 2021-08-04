@@ -367,7 +367,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-    if (!b->getActivePlayer() == behindNMP) isImproving = false;
+    if (b->getActivePlayer() == behindNMP) isImproving = false;
     // **************************************************************************************************************
     // transposition table probing:
     // we probe the transposition table and check if there is an entry with the same zobrist key as
