@@ -348,6 +348,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
     // has actually been evaluated.
 
+    bool failedNull = false;
+
     if (inCheck)
         staticEval = -MAX_MATE_SCORE + ply;
     else {
@@ -485,6 +487,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (score >= beta) {
                 return score;
             }
+            failedNull = true;
         }
     }
 
@@ -648,7 +651,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
         if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
+            && en.zobrist == zobrist
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
@@ -670,7 +673,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
+        } else if (depth < 8){
+            if (failedNull && hashMove && en.type == CUT_NODE && legalMoves == 0)
+                extension = 1;
         }
+
         // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at. The idea behind
