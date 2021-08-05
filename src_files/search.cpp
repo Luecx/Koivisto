@@ -497,7 +497,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // this is based on other top engines.
     // **********************************************************************************************************
 
-    Score     betaCut = beta + 100;
+    Score     betaCut = beta + 110;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
