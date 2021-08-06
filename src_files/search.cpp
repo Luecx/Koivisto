@@ -398,7 +398,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     return en.score;
                 }
             } else if (en.type == ALL_NODE) {
-                if (en.score <= alpha) {
+                if (en.score <= alpha || !b->getActivePlayer() == behindNMP) {
                     return en.score;
                 }
             }
