@@ -357,16 +357,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         
         if (ply > 0 && b->getPreviousMove() != 0) {
-            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
-                int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
+            if (sd->eval[ply - 1] > -TB_WIN_SCORE) {
+                int improvement =  -staticEval - sd->eval[ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
             }
         }
     }
 
     // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+    sd->setHistoricEval(staticEval, ply);
+    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, ply);
 
     // **************************************************************************************************************
     // transposition table probing:
@@ -434,8 +434,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // reset killer of granchildren
-    sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
-    sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    sd->killer[ply + 2][0] = 0;
+    sd->killer[ply + 2][1] = 0;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -597,11 +597,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
                 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && moveDepth < 3 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                if (!inCheck && moveDepth < 3 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  30 + sd->eval[ply] < alpha)
                     continue;
                 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[ply] < alpha)
                     continue;
 
                 // **************************************************************************************************
@@ -609,7 +609,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove())
+                if (sd->getHistories(m, b->getPreviousMove())
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -704,11 +704,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+            int history = sd->getHistories(m, b->getPreviousMove());
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            if (sd->isKiller(m, ply, b->getActivePlayer()))
+            if (sd->isKiller(m, ply))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
@@ -806,10 +806,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
-                sd->setKiller(m, ply, b->getActivePlayer());
+                sd->setKiller(m, ply);
 
             // update history scores
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+            sd->updateHistories(m, depth, mv, b->getPreviousMove());
 
             return highestScore;
         }

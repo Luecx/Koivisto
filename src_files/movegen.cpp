@@ -53,17 +53,17 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             Score     SEE    = board->staticExchangeEvaluation(move);
             MoveScore mvvLVA = piece_values[(getCapturedPieceType(move))];
             if (SEE >= 0) {
-                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getPreviousMove()));
             } else {
-                mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+                mv->scoreMove(idx, 10000 + sd->getHistories(move, board->getPreviousMove()));
             }
         } else if constexpr (isPromotion){
             MoveScore mvvLVA = (getCapturedPieceType(move)) - (getMovingPieceType(move));
             mv->scoreMove(idx, 40000 + mvvLVA + getPromotionPiece(move));
-        } else if (sd->isKiller(move, ply, c)){
-            mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
+        } else if (sd->isKiller(move, ply)){
+            mv->scoreMove(idx, 30000 + sd->isKiller(move, ply));
         } else{
-            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
+            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getPreviousMove()));
         }
         
     }else if constexpr (m == GENERATE_NON_QUIET){

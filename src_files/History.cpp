@@ -20,7 +20,7 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
+void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Move previous) {
     if (depth > 20)
         return;
     Move  m2;
@@ -35,82 +35,82 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
 
         if (sameMove(m, m2)) {
             if (isCapture(m)) {
-                captureHistory[side][getSqToSqFromCombination(m)] +=
+                captureHistory[getSqToSqFromCombination(m)] +=
                     + scalar
-                    - scalar * captureHistory[side][getSqToSqFromCombination(m)]
+                    - scalar * captureHistory[getSqToSqFromCombination(m)]
                           / MAX_HISTORY_SCORE;
             } else {
-                history[side][getSqToSqFromCombination(m)] +=
+                history[getSqToSqFromCombination(m)] +=
                     + scalar
-                    - scalar * history[side][getSqToSqFromCombination(m)]
+                    - scalar * history[getSqToSqFromCombination(m)]
                           / MAX_HISTORY_SCORE;
-                cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
+                cmh[getPieceTypeSqToCombination(previous)][getPieceTypeSqToCombination(m2)] +=
                     + scalar
-                    - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
+                    - scalar * cmh[getPieceTypeSqToCombination(previous)][getPieceTypeSqToCombination(m2)]
                           / MAX_HISTORY_SCORE;
             }
         
             // we can return at this point because all moves searched are in front of this move
             return;
         } else if (isCapture(m2)) {
-            captureHistory[side][getSqToSqFromCombination(m2)] +=
+            captureHistory[getSqToSqFromCombination(m2)] +=
                 - scalar
-                - scalar * captureHistory[side][getSqToSqFromCombination(m2)]
+                - scalar * captureHistory[getSqToSqFromCombination(m2)]
                       / MAX_HISTORY_SCORE;
         } else if (!isCapture(m)) {
-            history[side][getSqToSqFromCombination(m2)] +=
+            history[getSqToSqFromCombination(m2)] +=
                 - scalar
-                - scalar * history[side][getSqToSqFromCombination(m2)]
+                - scalar * history[getSqToSqFromCombination(m2)]
                       / MAX_HISTORY_SCORE;
-            cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
+            cmh[getPieceTypeSqToCombination(previous)][getPieceTypeSqToCombination(m2)] +=
                 - scalar
-                - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
+                - scalar * cmh[getPieceTypeSqToCombination(previous)][getPieceTypeSqToCombination(m2)]
                       / MAX_HISTORY_SCORE;
         }
     }
 }
 
-int SearchData::getHistories(Move m, Color side, Move previous) {
+int SearchData::getHistories(Move m, Move previous) {
     if (isCapture(m)) {
-        return captureHistory[side][getSqToSqFromCombination(m)];
+        return captureHistory[getSqToSqFromCombination(m)];
     } else {
-        return cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + history[side][getSqToSqFromCombination(m)];
+        return cmh[getPieceTypeSqToCombination(previous)][getPieceTypeSqToCombination(m)]
+               + history[getSqToSqFromCombination(m)];
     }
 }
 
 /*
  * Set killer
  */
-void SearchData::setKiller(Move move, Depth ply, Color color) {
-    if (!sameMove(move, killer[color][ply][0])) {
-        killer[color][ply][1] = killer[color][ply][0];
-        killer[color][ply][0] = move;
+void SearchData::setKiller(Move move, Depth ply) {
+    if (!sameMove(move, killer[ply][0])) {
+        killer[ply][1] = killer[ply][0];
+        killer[ply][0] = move;
     }
 }
 
 /*
  * Is killer?
  */
-int SearchData::isKiller(Move move, Depth ply, Color color) {
-    if (sameMove(move, killer[color][ply][0]))
+int SearchData::isKiller(Move move, Depth ply) {
+    if (sameMove(move, killer[ply][0]))
         return 2;
-    return sameMove(move, killer[color][ply][1]);
+    return sameMove(move, killer[ply][1]);
 }
 
 /*
  * Set historic eval
  */
-void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
-    eval[color][ply] = ev;
+void SearchData::setHistoricEval(Score ev, Depth ply) {
+    eval[ply] = ev;
 }
 
 /*
  * Is improving
  */
-bool SearchData::isImproving(Score ev, Color color, Depth ply) {
+bool SearchData::isImproving(Score ev, Depth ply) {
     if (ply >= 2) {
-        return (ev > eval[color][ply - 2]);
+        return (ev > eval[ply - 2]);
     } else {
         return true;
     }
