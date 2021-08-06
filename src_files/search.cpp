@@ -819,7 +819,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // increase alpha
             alpha = score;
         }
-
+        if (legalMoves == 0 && hashMove && b->getActivePlayer() == behindNMP)
+            return highestScore;
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
