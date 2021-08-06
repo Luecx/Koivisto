@@ -196,7 +196,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
-            s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
+            s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2, 0);
         } else {
             Score window = 10;
             Score alpha  = s - window;
@@ -205,7 +205,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
                                  // http://www.talkchess.com/forum3/viewtopic.php?t=45624.
             while (this->isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
-                s      = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
+                s      = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2, 0);
                 window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
@@ -270,7 +270,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
  * @return
  */
 Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* td,
-                       Move skipMove, int behindNMP, Depth* lmrFactor) {
+                       Move skipMove, int behindNMP, int Conspiracy, Depth* lmrFactor) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -480,7 +480,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
-                          ply + ONE_PLY, td, 0, !b->getActivePlayer());
+                          ply + ONE_PLY, td, 0, !b->getActivePlayer(), 0);
             b->undoMove_null();
             if (score >= beta) {
                 return score;
@@ -515,7 +515,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
             if (qScore >= betaCut)
-                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP);
+                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP, 0);
 
             b->undoMove();
 
@@ -652,7 +652,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
+            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP, Conspiracy);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -662,7 +662,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
+                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP, Conspiracy);
                 if (score >= beta)
                     return score;
             }
@@ -699,7 +699,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
-            lmr++;
+            lmr += Conspiracy / 2 > 2 ? 2 : Conspiracy / 2;
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
@@ -736,7 +736,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
-                              behindNMP);
+                              behindNMP, Conspiracy + 1);
         } else {
             // kk reduction logic.
             if (ply == 0 && lmr) {
@@ -745,7 +745,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
-                              td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+                              td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, lmr ? Conspiracy + 1 : 1, &lmr);
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
@@ -758,7 +758,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (lmr && score > alpha) {
                     for (int i = lmr - 1; i > 0; i--) {
                         score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
-                                          ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                                          ply + ONE_PLY, td, 0, behindNMP, 0);    // re-search
                         if (score <= alpha)
                             break;
                     }
@@ -767,15 +767,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // window.
                 if (score > alpha && score < beta)
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
+                                      td, 0, behindNMP, 0);    // re-search
             } else {
                 // if not at root use standard logic
                 if (lmr && score > alpha)
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
-                                      ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                                      ply + ONE_PLY, td, 0, behindNMP, Conspiracy + 1);    // re-search
                 if (score > alpha && score < beta)
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
+                                      td, 0, behindNMP, 0);    // re-search
             }
         }
 
