@@ -393,12 +393,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth) {
             if (en.type == PV_NODE) {
                 return en.score;
-            } else if (en.type == CUT_NODE) {
+            } else if (en.type == CUT_NODE || !b->getActivePlayer() == behindNMP) {
                 if (en.score >= beta) {
                     return en.score;
                 }
-            } else if (en.type == ALL_NODE) {
-                if (en.score <= alpha || !b->getActivePlayer() == behindNMP) {
+            } else if (en.type == ALL_NODE || b->getActivePlayer() == behindNMP) {
+                if (en.score <= alpha) {
                     return en.score;
                 }
             }
