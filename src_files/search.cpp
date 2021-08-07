@@ -59,7 +59,8 @@ bool hasOnlyPawns(Board* board, Color color) {
 bool tactical(Board *b, Move m, Color stm) {
     Piece pieceType = getMovingPieceType(m);
     if (pieceType == PAWN)
-        return bitCount((stm == WHITE ? (shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m))) :
+        return  ((shiftEast(ONE << getSquareFrom(m)) | shiftWest(ONE << getSquareFrom(m))) & b->getPieceBB(stm, PAWN))
+                && bitCount((stm == WHITE ? (shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m))) :
                 (shiftSouthEast(ONE << getSquareTo(m)) | shiftSouthWest(ONE << getSquareTo(m)))
                 ) & b->getTeamOccupiedBB(1 - stm)) > 1;
     if (pieceType == KNIGHT)
