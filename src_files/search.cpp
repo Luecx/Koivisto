@@ -56,6 +56,17 @@ bool hasOnlyPawns(Board* board, Color color) {
            == ((board->getPieceBB()[PAWN + color * 8] | board->getPieceBB()[KING + color * 8]));
 }
 
+bool tactical(Board *b, Move m, Color stm) {
+    Piece pieceType = getMovingPieceType(m);
+    if (pieceType == PAWN)
+        return bitCount((stm == WHITE ? (shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m))) :
+                (shiftSouthEast(ONE << getSquareTo(m)) | shiftSouthWest(ONE << getSquareTo(m)))
+                ) & b->getTeamOccupiedBB(1 - stm)) > 1;
+    if (pieceType == KNIGHT)
+        return bitCount(KNIGHT_ATTACKS[getSquareTo(m)] & (b->getPieceBB(1 - stm, ROOK) | b->getPieceBB(1 - stm, QUEEN))) > 1;
+    return false;
+}
+
 void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 occupied         = b->getOccupiedBB();
 
@@ -574,11 +585,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
             continue;
-
+        /*if (ply == 0) 
+            std::cout << "TACTICS: " << toString(m) << " : " << tactical(b, m, b->getActivePlayer()) << std::endl;*/
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck && !tactical(b, m, b->getActivePlayer());
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
