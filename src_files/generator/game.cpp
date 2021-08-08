@@ -25,14 +25,15 @@ static int whiteRelativeScore(Board* board, int score) {
 int         Game::randomOpeningMoveCount;
 int         Game::adjudicationWinScoreLimit;
 int         Game::adjudicationDrawScoreLimit;
-int         Game::ajudicationDrawCount;
+int         Game::adjudicationDrawCount;
 int         Game::adjudicationWinCount;
-int         Game::angineGameSearchDepth;
+int         Game::engineGameSearchDepth;
 int         Game::gameHashSize;
 std::string Game::wdlPath;
 bool        Game::useTbAdjudication;
 bool        Game::useWinAdjudication;
 bool        Game::useDrawAdjudication;
+bool        Game::useTbSearch;
 
 void        Game::init(int argc, char** argv) {
     std::vector<std::string> args(argv, argv + argc);
@@ -43,42 +44,67 @@ void        Game::init(int argc, char** argv) {
     };
 
     wdlPath                    = getValue(args, "-tbpath");
-    angineGameSearchDepth      = setParam("-depth", 9);
+    engineGameSearchDepth      = setParam("-depth", 9);
     gameHashSize               = setParam("-hash", 4);
     randomOpeningMoveCount     = setParam("-bookdepth", 10);
     adjudicationDrawScoreLimit = setParam("-drawscore", 20);
-    ajudicationDrawCount       = setParam("-drawply", 12);
+    adjudicationDrawCount      = setParam("-drawply", 12);
     adjudicationWinScoreLimit  = setParam("-winscore", 1000);
     adjudicationWinCount       = setParam("-winply", 4);
     useTbAdjudication          = false;
     useDrawAdjudication        = false;
     useWinAdjudication         = false;
-
+    useTbSearch                = false;
     
-    std::string_view tbAdjudicateChoice = getValue(args, "-tbadjudicate");
-    if (tbAdjudicateChoice.size())
-        useTbAdjudication = tbAdjudicateChoice == "true";
+    auto set_choice = 
+    [&](bool& choice, std::string_view option)
+    {
+        std::string_view value = getValue(args, option.data());
+        if (value.size())
+            choice = value == "true";
+    };  
 
-    std::string_view drawAdjudicateChoice = getValue(args, "-drawadjudicate");
-    if (drawAdjudicateChoice.size())
-        useDrawAdjudication = drawAdjudicateChoice == "true";
-
-    std::string_view winAdjudicateChoice = getValue(args, "-winadjudicate");
-    if (winAdjudicateChoice.size())
-        useWinAdjudication = winAdjudicateChoice == "true";
-
-    std::cout << std::boolalpha;
-
-    std::cout << "TB Adjudication: " << useTbAdjudication << '\n';
-    std::cout << "Win Adjudication: " << useWinAdjudication << '\n';
-    std::cout << "Draw Adjudication: " << useDrawAdjudication << '\n';
+    set_choice(useTbAdjudication, "-tbadjudicate");
+    set_choice(useDrawAdjudication, "-drawadjudicate");
+    set_choice(useWinAdjudication, "-winadjudicate");
+    set_choice(useTbSearch, "-searchusetb");
+    
+    if (wdlPath == "" && (useTbAdjudication || useTbSearch))
+    {
+        std::cerr << "TB path not given" << std::endl;
+        std::terminate();
+    }
         
-        
-    if (wdlPath != "") {
+    if (wdlPath != "") 
+    {
         const char* data = wdlPath.data();
         if (!tb_init(data))
             throw std::runtime_error("tb_init");
     }
+
+    std::cout << std::boolalpha;
+    std::cout << "TB Adjudication  : " << useTbAdjudication      << '\n';
+    std::cout << "Win Adjudication : " << useWinAdjudication     << '\n';
+    std::cout << "Draw Adjudication: " << useDrawAdjudication    << '\n';
+    std::cout << "Search use TB    : " << useTbSearch            << '\n';
+    std::cout << "TB Path          : " << wdlPath                << '\n';
+    std::cout << "Depth            : " << engineGameSearchDepth  << '\n';
+    std::cout << "Hash size        : " << gameHashSize           << '\n';
+    std::cout << "Book depth       : " << randomOpeningMoveCount << '\n';
+    
+    if (useWinAdjudication)
+    {
+        std::cout << "Win adjudication CP : " << adjudicationWinScoreLimit << '\n';
+        std::cout << "Win adjudication ply: " << adjudicationWinCount      << '\n';
+    }
+
+    if (useDrawAdjudication)
+    {
+        std::cout << "Draw adjudication CP : " << adjudicationDrawScoreLimit << '\n';
+        std::cout << "Draw adjudication ply: " << adjudicationDrawCount      << '\n';
+    }
+
+    std::cout << std::endl;
 }
 
 Game::Game(std::ofstream& out, std::mt19937& generator)
@@ -86,11 +112,11 @@ Game::Game(std::ofstream& out, std::mt19937& generator)
       m_outputBook(out),
       m_randomGenerator(generator) {
     m_searcher = {};
-    m_searcher.init(16);
+    m_searcher.init(gameHashSize);
     m_searcher.disableInfoStrings();
 
     m_useTb = !!wdlPath.size();
-    m_searcher.useTableBase(true);
+    m_searcher.useTableBase(useTbSearch);
 }
 
 bool Game::isDrawn() {
@@ -139,7 +165,7 @@ void Game::savePosition(int score) { m_savedFens.push_back({m_currentPosition.fe
 
 std::tuple<Move, int> Game::searchPosition() {
     auto tm   = TimeManager();
-    Move best = m_searcher.bestMove(&m_currentPosition, angineGameSearchDepth, &tm);
+    Move best = m_searcher.bestMove(&m_currentPosition, engineGameSearchDepth, &tm);
     return {best, m_searcher.overview().score};
 }
 
@@ -215,7 +241,7 @@ void Game::run() {
         winScoreCounter  = scoreIsWin  ? winScoreCounter + 1 : 0;
     
         // Adjudicate game
-        if (useDrawAdjudication && drawScoreCounter >= ajudicationDrawCount) {
+        if (useDrawAdjudication && drawScoreCounter >= adjudicationDrawCount) {
             result           = "[0.5]";
             break;
         }

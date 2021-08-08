@@ -12,13 +12,14 @@ public:
     static int randomOpeningMoveCount;
     static int adjudicationWinScoreLimit;
     static int adjudicationDrawScoreLimit;
-    static int ajudicationDrawCount;
+    static int adjudicationDrawCount;
     static int adjudicationWinCount;
-    static int angineGameSearchDepth;
+    static int engineGameSearchDepth;
     static int gameHashSize;
     static bool useTbAdjudication;
     static bool useDrawAdjudication;
     static bool useWinAdjudication;
+    static bool useTbSearch;
     static std::string wdlPath;
 
     static void init(int argc, char** argv);
