@@ -592,7 +592,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck && !tactical(b, m, b->getActivePlayer());
+        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
@@ -735,6 +735,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
+
+        if (depth == 1 && tactical(b, m, b->getActivePlayer())) extension = 1;
 
         // doing the move
         b->move(m);
