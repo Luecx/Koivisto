@@ -60,12 +60,12 @@ bool tactical(Board *b, Move m, Color stm) {
     Piece pieceType = getMovingPieceType(m);
     if (pieceType == PAWN)
         if (pieceType == PAWN)
-        return  ((shiftEast(ONE << getSquareFrom(m)) | shiftWest(ONE << getSquareFrom(m))) & b->getPieceBB(stm, PAWN))
+        return  (((shiftEast(ONE << getSquareFrom(m)) | shiftWest(ONE << getSquareFrom(m)))) & b->getPieceBB(stm, PAWN))
                 && bitCount((stm == WHITE ? (shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m))) :
                 (shiftSouthEast(ONE << getSquareTo(m)) | shiftSouthWest(ONE << getSquareTo(m)))
-                ) & (b->getTeamOccupiedBB(1 - stm) & ~b->getPieceBB(1 - stm, PAWN))) > 1;
+                ) & (b->getTeamOccupiedBB(1 - stm) & ~b->getPieceBB(1 - stm, PAWN))) > 0;
     if (pieceType == KNIGHT)
-        return bitCount(KNIGHT_ATTACKS[getSquareTo(m)] & (b->getPieceBB(1 - stm, ROOK) | b->getPieceBB(1 - stm, QUEEN))) > 1;
+        return bitCount(KNIGHT_ATTACKS[getSquareTo(m)] & (b->getPieceBB(1 - stm, ROOK) | b->getPieceBB(1 - stm, QUEEN))) > 0;
     return false;
 }
 
