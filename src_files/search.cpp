@@ -60,8 +60,7 @@ bool tactical(Board *b, Move m, Color stm) {
     Piece pieceType = getMovingPieceType(m);
     if (pieceType == PAWN)
         if (pieceType == PAWN)
-        return  (((shiftEast(ONE << getSquareFrom(m)) | shiftWest(ONE << getSquareFrom(m)))) & b->getPieceBB(stm, PAWN))
-                && bitCount((stm == WHITE ? (shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m))) :
+        return  bitCount((stm == WHITE ? (shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m))) :
                 (shiftSouthEast(ONE << getSquareTo(m)) | shiftSouthWest(ONE << getSquareTo(m)))
                 ) & (b->getTeamOccupiedBB(1 - stm) & ~b->getPieceBB(1 - stm, PAWN))) > 0;
     if (pieceType == KNIGHT)
@@ -592,7 +591,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck && !tactical(b, m, b->getActivePlayer());
+        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
@@ -720,6 +719,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (lmr) {
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
             lmr = lmr - history / 150;
+            lmr -= tactical(b, m, b->getActivePlayer());
             lmr += !isImproving;
             lmr -= pv;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
