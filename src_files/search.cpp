@@ -359,7 +359,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
-                sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
+                if (!isCapture(b->getPreviousMove())) {
+                    sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
+                } else {
+                    sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())] = improvement;
+                }
             }
         }
     }
@@ -940,6 +944,10 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     for (int i = 0; i < mv->getSize(); i++) {
 
         Move m = moveOrderer.next(0);
+
+        // prune quiet moves that are unlikely to improve alpha
+        if (sd->maxImprovement[getSquareTo(m)][getCapturedPiece(m)] + 50 + stand_pat < alpha)
+            continue;
 
         // do not consider illegal moves
         if (!b->isLegal(m))

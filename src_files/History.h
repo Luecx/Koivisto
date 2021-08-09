@@ -35,6 +35,8 @@ struct SearchData {
     int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
     // EvalImprovement
     int      maxImprovement[N_SQUARES][N_SQUARES]                                = {0};
+    // Cap evalImprovement
+    int      capMaxImprovement[N_SQUARES][N_PIECES]                              = {0};
     // capture history table (side-from-to)
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // history table (side-from-to)
