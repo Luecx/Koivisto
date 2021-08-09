@@ -362,7 +362,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!isCapture(b->getPreviousMove())) {
                     sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
                 } else {
-                    if ((td->nodes) & 100 == 13) {
+                    if ((td->nodes & 63) == 13) {
                         sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())] = improvement;
                     } else {
                         sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())] = std::max(sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())], improvement);
@@ -953,7 +953,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         Move m = moveOrderer.next(0);
 
         // prune capture moves that are unlikely to improve alpha
-        if (sd->capMaxImprovement[getSquareTo(m)][getCapturedPiece(m)] + 50 + stand_pat < alpha && sd->capMaxImprovement[getSquareTo(m)][getCapturedPiece(m)] > 0)
+        if (!inCheck && sd->capMaxImprovement[getSquareTo(m)][getCapturedPiece(m)] + 50 + stand_pat < alpha && sd->capMaxImprovement[getSquareTo(m)][getCapturedPiece(m)] > 0)
             continue;
 
         // do not consider illegal moves
