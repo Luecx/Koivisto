@@ -51,7 +51,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         
         if constexpr (isCapture){
             Score     SEE    = board->staticExchangeEvaluation(move);
-            MoveScore mvvLVA = piece_values[(getCapturedPieceType(move))];
+            MoveScore mvvLVA = sd->capMaxImprovement[getSquareTo(move)][getCapturedPiece(move)];
             if (SEE >= 0) {
                 mv->scoreMove(idx, 100000 + mvvLVA + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
             } else {
