@@ -945,8 +945,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         Move m = moveOrderer.next(0);
 
-        // prune quiet moves that are unlikely to improve alpha
-        if (sd->maxImprovement[getSquareTo(m)][getCapturedPiece(m)] + 50 + stand_pat < alpha)
+        // prune capture moves that are unlikely to improve alpha
+        if (sd->capMaxImprovement[getSquareTo(m)][getCapturedPiece(m)] + 50 + stand_pat < alpha)
             continue;
 
         // do not consider illegal moves
