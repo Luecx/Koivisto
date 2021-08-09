@@ -362,7 +362,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!isCapture(b->getPreviousMove())) {
                     sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
                 } else {
-                    sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())] = improvement;
+                    if ((td->nodes) & 100 == 13) {
+                        sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())] = improvement;
+                    } else {
+                        sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())] = std::max(sd->capMaxImprovement[getSquareTo(b->getPreviousMove())][getCapturedPiece(b->getPreviousMove())], improvement);
+                    }
                 }
             }
         }
@@ -574,6 +578,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (!m)
             break;
+
+        //if (ply == 0)
+            //std::cout << toString(m) << " . " << sd->capMaxImprovement[getSquareTo(m)][getCapturedPiece(m)] << std::endl;
 
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
