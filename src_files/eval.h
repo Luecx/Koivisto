@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>
+#include <vector>
 
 
 #define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2)
@@ -52,16 +53,25 @@ extern int32_t hiddenBias   [OUTPUT_SIZE];
 
 void init();
 
+struct Accumulator{
+    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
+};
+
 struct Evaluator {
     
-    // inputs and outputs
-    bool inputMap[INPUT_SIZE] {};
-    
     // summations
-    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
+    std::vector<Accumulator> history{};
     
     alignas(ALIGNMENT) int16_t activation[HIDDEN_SIZE] {};
     alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE] {};
+
+    Evaluator();
+    
+    void addNewAccumulation();
+    
+    void popAccumulation();
+    
+    void clearHistory();
     
     int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color activePlayer);
 
@@ -71,7 +81,7 @@ struct Evaluator {
     void reset(Board* board);
     
     int evaluate(bb::Color activePlayer, Board* board = nullptr);
-};
+} __attribute__((aligned(128)));
 }    // namespace nn
 
 #endif    // KOIVISTO_EVAL_H

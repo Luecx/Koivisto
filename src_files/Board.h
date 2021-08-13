@@ -142,12 +142,15 @@ class Board {
     void computeNewRepetition();
     
     // sets the piece on a given square. considers zobrist-key and all relevant fields.
+    template<bool updateNN=true>
     void setPiece(Square sq, Piece piece);
     
     // unsets the piece on a given square. considers zobrist-key and all relevant fields.
+    template<bool updateNN=true>
     void unsetPiece(Square sq);
     
     // replaces the piece on a given square. considers zobrist-key and all relevant fields.
+    template<bool updateNN=true>
     void replacePiece(Square sq, Piece piece);
     
     public:

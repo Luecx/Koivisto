@@ -29,7 +29,7 @@ alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
 alignas(ALIGNMENT) int16_t nn::inputBias[HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (128)
+#define INPUT_WEIGHT_MULTIPLIER  (32)
 #define HIDDEN_WEIGHT_MULTIPLIER (512)
 
 #if defined(__AVX512F__)
@@ -115,17 +115,13 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceCol
                                      bb::Square square) {
     int idxWhite = index(pieceType, pieceColor, square, WHITE);
 
-    if (inputMap[idxWhite] == value)
-        return;
-    inputMap[idxWhite] = value;
-
     int idxBlack       = index(pieceType, pieceColor, square, BLACK);
     int idx[N_COLORS] {idxWhite, idxBlack};
-
+    
     for (Color c : {WHITE, BLACK}) {
 
         auto wgt = (avx_register_type*) (inputWeights[idx[c]]);
-        auto sum = (avx_register_type*) (summation[c]);
+        auto sum = (avx_register_type*) (history.back().summation[c]);
         if constexpr (value) {
             for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
                 sum[i] = avx_add_epi16(sum[i], wgt[i]);
@@ -139,9 +135,8 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceCol
 }
 
 void nn::Evaluator::reset(Board* board) {
-    std::memset(inputMap, 0, sizeof(bool) * INPUT_SIZE);
-    std::memcpy(summation[WHITE], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
-    std::memcpy(summation[BLACK], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(history.back().summation[WHITE], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(history.back().summation[BLACK], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
 
     for (Color c : {WHITE, BLACK}) {
         for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING}) {
@@ -163,7 +158,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     }
 
     constexpr avx_register_type reluBias {};
-    avx_register_type*          sum = (avx_register_type*) (summation[activePlayer]);
+    avx_register_type*          sum = (avx_register_type*) (history.back().summation[activePlayer]);
     avx_register_type*          act = (avx_register_type*) (activation);
 
     // apply relu to the summation first
@@ -187,6 +182,20 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     }
 
     return output[0] / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
+}
+
+nn::Evaluator::Evaluator() {
+    this->history.push_back(Accumulator{});
+}
+void          nn::Evaluator::addNewAccumulation() {
+    this->history.emplace_back(this->history.back());
+}
+void          nn::Evaluator::popAccumulation() {
+    this->history.pop_back();
+}
+void nn::Evaluator::clearHistory() {
+    this->history.clear();
+    this->history.push_back(Accumulator{});
 }
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,
