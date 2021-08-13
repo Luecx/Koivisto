@@ -301,6 +301,7 @@ Piece Board::getPiece(Square sq) { return m_pieceBoard[sq]; }
  * @param sq
  * @param piece
  */
+template<bool updateNN>
 void Board::setPiece(Square sq, Piece piece) {
     
     // first we set the piece on the piece board
@@ -315,7 +316,9 @@ void Board::setPiece(Square sq, Piece piece) {
     m_occupiedBB |= sqBB;
     
     // update the evaluator
-    evaluator.setPieceOnSquare<true>(getPieceType(piece), getPieceColor(piece), sq);
+    if constexpr (updateNN) {
+        evaluator.setPieceOnSquare<true>(getPieceType(piece), getPieceColor(piece), sq);
+    }
 
     // also adjust the zobrist key
     BoardStatus* st = getBoardStatus();
@@ -327,6 +330,7 @@ void Board::setPiece(Square sq, Piece piece) {
  * Deals with zobrist-keys.
  * @param sq
  */
+template<bool updateNN>
 void Board::unsetPiece(Square sq) {
     UCI_ASSERT(0 <= sq && sq <= 63);
     
@@ -347,7 +351,9 @@ void Board::unsetPiece(Square sq) {
     st->zobrist ^= getHash(p, sq);
     
     // update the evaluator
-    evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq);
+    if constexpr (updateNN){
+        evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq);
+    }
     
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
@@ -359,6 +365,7 @@ void Board::unsetPiece(Square sq) {
  * @param sq
  * @param piece
  */
+template<bool updateNN>
 void Board::replacePiece(Square sq, Piece piece) {
     // we need to know first which piece will be replaced on the given square.
     Piece p = getPiece(sq);
@@ -376,8 +383,10 @@ void Board::replacePiece(Square sq, Piece piece) {
     st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
     
     // update the evaluator
-    evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq);
-    evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq);
+    if constexpr (updateNN){
+        evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq);
+        evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq);
+    }
 
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
@@ -405,6 +414,8 @@ void Board::move(Move m) {
                                    previousStatus->moveCounter + getActivePlayer(),    // increment move counter
                                    m};
     
+        
+    this->evaluator.addNewAccumulation();
     
     Square   sqFrom = getSquareFrom(m);
     Square   sqTo   = getSquareTo(m);
@@ -561,25 +572,26 @@ void Board::undoMove() {
     int      factor   = getActivePlayer() == 0 ? 1 : -1;
     
     if (mType == EN_PASSANT) {
-        setPiece(sqTo - 8 * factor, (1 - color) * 8);
+        setPiece<false>(sqTo - 8 * factor, (1 - color) * 8);
     }
     
     if (getPieceType(pFrom) == KING && isCastle(m)) {
         Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
         Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-        setPiece(rookSquare, ROOK + 8 * color);
-        unsetPiece(rookTarget);
+        setPiece  <false>(rookSquare, ROOK + 8 * color);
+        unsetPiece<false>(rookTarget);
     }
     
     if (mType != EN_PASSANT && isCap) {
-        replacePiece(sqTo, captured);
+        replacePiece<false>(sqTo, captured);
     } else {
-        unsetPiece(sqTo);
+        unsetPiece  <false>(sqTo);
     }
     
-    setPiece(sqFrom, pFrom);
+    setPiece<false>(sqFrom, pFrom);
     
     m_boardStatusHistory.pop_back();
+    this->evaluator.popAccumulation();
 }
 
 /**
