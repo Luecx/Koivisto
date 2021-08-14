@@ -515,7 +515,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
             if (qScore >= betaCut)
-                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP);
+                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, !b->getActivePlayer());
 
             b->undoMove();
 
@@ -652,7 +652,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
+            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, b->getActivePlayer());
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -662,7 +662,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
+                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, b->getActivePlayer());
                 if (score >= beta)
                     return score;
             }
@@ -679,10 +679,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // cutnode stuff has not gained in Koivisto, while this has.
         // *********************************************************************************************************
         if (pv) {
-            sd->sideToReduce = !b->getActivePlayer();
-            sd->reduce       = false;
+            sd->sideToReduce = b->getActivePlayer();
+            sd->reduce       = true;
             if (legalMoves == 0) {
-                sd->reduce = true;
+                sd->reduce = false;
             }
         }
 
@@ -738,11 +738,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
-            // kk reduction logic.
-            if (ply == 0 && lmr) {
-                sd->reduce       = true;
-                sd->sideToReduce = !b->getActivePlayer();
-            }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
@@ -763,6 +758,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                             break;
                     }
                 }
+                // kk reduction logic.
+                if (ply == 0) 
+                    sd->reduce       = false;
                 // if the move passes all null window searches, search with the full aspiration
                 // window.
                 if (score > alpha && score < beta)
