@@ -643,35 +643,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         int extension = 0;
 
         // *********************************************************************************************************
-        // singular extensions
-        // standard implementation apart from the fact that we cancel lmr of parent node in-case the
-        // node turns out to be singular. Also standard multi-cut.
-        // *********************************************************************************************************
-        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
-            && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
-
-            betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
-            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
-            if (score < betaCut) {
-                if (lmrFactor != nullptr) {
-                    depth += *lmrFactor;
-                    *lmrFactor = 0;
-                }
-                extension++;
-            } else if (score >= beta) {
-                return score;
-            } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
-                if (score >= beta)
-                    return score;
-            }
-            generateMoves(b, mv, hashMove, sd, ply);
-            moveOrderer = {mv};
-
-            m           = moveOrderer.next(0);
-        }
-        // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at. The idea behind
         // this is probably quite similar to the cutnode stuff found in stockfish, altough the
