@@ -210,6 +210,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
                 if (window > 500)
                     window = MIN_MATE_SCORE;
                 if (s >= beta) {
+                    td->searchData.raisingWindow = true;
                     beta += window;
                     sDepth--;
                 } else if (s <= alpha) {
@@ -683,6 +684,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->reduce       = false;
             if (legalMoves == 0) {
                 sd->reduce = true;
+            } else if (ply == 0) {
+                sd->raisingWindow = false;
             }
         }
 
@@ -708,6 +711,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
+            if (ply != 0 && ply % 2 == 0 && sd->raisingWindow) {
+                lmr++;
+            }
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
