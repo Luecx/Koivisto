@@ -613,6 +613,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
+                if (sd->doEmmanuelRefutationSearch && ply % 2 == 0 && sd->emmanuelRefutation > sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()))
+                    continue;
             }
 
             // ******************************************************************************************************
@@ -722,6 +724,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
+        if (ply == 0) {
+            if (lmr) {
+                sd->doEmmanuelRefutationSearch = true;
+                sd->emmanuelRefutation         = 0;
+            } else {
+                sd->doEmmanuelRefutationSearch = false;
+                sd->emmanuelRefutation         = -1024;
+            }
+        }
+
         // doing the move
         b->move(m);
         __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
@@ -755,6 +767,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // at root we research the reduced move with slowly increasing depth untill it
             // fails/proves to be best.
             if (ply == 0) {
+                sd->emmanuelRefutation = -1024;
                 if (lmr && score > alpha) {
                     for (int i = lmr - 1; i > 0; i--) {
                         score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
