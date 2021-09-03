@@ -613,7 +613,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
-                if (sd->doEmmanuelRefutationSearch && ply % 2 == 0 && sd->emmanuelRefutation > sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()))
+                if (sd->doEmmanuelRefutationSearch && ply % 2 == 1 && sd->emmanuelRefutation > sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()))
                     continue;
             }
 
