@@ -727,7 +727,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply == 0) {
             if (lmr) {
                 sd->doEmmanuelRefutationSearch = true;
-                sd->emmanuelRefutation         = 0;
+                sd->emmanuelRefutation         = -256;
             } else {
                 sd->doEmmanuelRefutationSearch = false;
                 sd->emmanuelRefutation         = -1024;
