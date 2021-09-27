@@ -444,7 +444,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = multiSee(b, sd);
-            if (score <= 0) 
+            if (score < RAZOR_MARGIN) 
                 return staticEval;
         }
         // **********************************************************************************************************
