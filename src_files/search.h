@@ -95,6 +95,7 @@ class Search {
     Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId=0);
     Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
                             Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
+    Score           multiSee(Board *b, SearchData *sd);
     Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
     Score           probeWDL(Board* board);
     Move            probeDTZ(Board* board);

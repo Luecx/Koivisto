@@ -443,11 +443,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
-            score = qSearch(b, alpha, beta, ply, td);
-            if (score < beta) {
-                return score;
-            } else if (depth == 1)
-                return beta;
+            score = multiSee(b, sd);
+            if (score <= 0) 
+                return staticEval;
         }
         // **********************************************************************************************************
         // static null move pruning:
@@ -854,6 +852,30 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     return highestScore;
+}
+
+Score Search::multiSee(Board *b, SearchData *sd) {
+    
+    MoveList* mv = &sd->moves[MAX_INTERNAL_PLY];
+
+    // create a moveorderer to sort the moves during the search
+    generateNonQuietMoves(b, mv);
+    MoveOrderer moveOrderer {mv};
+
+    // keping track of the best move for the transpositions
+    Score       maxStat  = 0;
+
+    for (int i = 0; i < mv->getSize(); i++) {
+
+        Move m = moveOrderer.next(0);
+
+        // do not consider illegal moves
+        if (!b->isLegal(m))
+            continue;
+        
+        maxStat = std::max(maxStat, b->staticExchangeEvaluation(m));
+    }
+    return maxStat;
 }
 
 /**
