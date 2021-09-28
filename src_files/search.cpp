@@ -199,7 +199,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
             s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
             Score window = 5;
-            Score alpha  = s;
+            Score alpha  = s - 1;
             Score beta   = s + 1;
             Depth sDepth = d;    // Idea of reducing depth on fail high from Houdini.
                                  // http://www.talkchess.com/forum3/viewtopic.php?t=45624.
