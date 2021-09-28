@@ -804,6 +804,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
+            sd->lastBestReply = m;
             // also set this move as a killer move into the history
             if (!isCapture(m))
                 sd->setKiller(m, ply, b->getActivePlayer());
