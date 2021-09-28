@@ -550,6 +550,44 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return matingValue;
     }
 
+    if (!pv && en.type == CUT_NODE && !inCheck && depth >= 10) {
+        // create a moveorderer and assign the movelist to score the moves.
+        generateMoves(b, mv, hashMove, sd, ply);
+        MoveOrderer moveOrderer {mv};
+
+        // speedup stuff for movepicking
+        Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
+        U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
+
+        uint64_t minNodeCountDiff = 0xFFFFFFFFFFFFFFFF;
+        Move bestNodes = 0;
+
+        // loop over all moves in the movelist
+        while (moveOrderer.hasNext()) {
+
+            // get the current move
+            Move m = moveOrderer.next(kingBB);
+
+            if (!m)
+                break;
+
+            if (!b->isLegal(m))
+                continue;
+            
+            uint64_t currentNodeCount = td->nodes;
+            score = -pvSearch(b, -alpha - 1, -alpha, depth / 2, ply + ONE_PLY,
+                    td, 0, behindNMP);
+            if (score > alpha && minNodeCountDiff > td->nodes - currentNodeCount) {
+                bestNodes = m;
+                minNodeCountDiff =  td->nodes - currentNodeCount;
+            }
+        }
+
+        if (bestNodes != 0)
+            hashMove = bestNodes;
+
+    }
+
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
     MoveOrderer moveOrderer {mv};
@@ -561,6 +599,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // speedup stuff for movepicking
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
+
+
 
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
