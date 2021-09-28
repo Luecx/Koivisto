@@ -562,8 +562,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         uint64_t minNodeCountDiff = 0xFFFFFFFFFFFFFFFF;
         Move bestNodes = 0;
 
+        int i = 0;
+
         // loop over all moves in the movelist
         while (moveOrderer.hasNext()) {
+
+            if (i > 5)
+                break;
 
             // get the current move
             Move m = moveOrderer.next(kingBB);
@@ -575,7 +580,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 continue;
             
             uint64_t currentNodeCount = td->nodes;
-            score = -pvSearch(b, -alpha - 1, -alpha, depth / 2, ply + ONE_PLY,
+            score = -pvSearch(b, -alpha - 1, -alpha, depth - 3, ply + ONE_PLY,
                     td, 0, behindNMP);
             if (score > alpha && minNodeCountDiff > td->nodes - currentNodeCount) {
                 bestNodes = m;
