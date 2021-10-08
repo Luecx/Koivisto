@@ -820,7 +820,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
-            if (sd->targetReached) return highestScore;
+            if (sd->targetReached || depth < 4) return highestScore;
         }
 
         // we consider this seperate to having a new best score for simplicity
