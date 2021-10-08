@@ -194,7 +194,11 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     Board       printBoard {b};
     td->dropOut = false;
     for (d = 1; d <= maxDepth; d++) {
-
+        if (d < 8) {
+            td->searchData.targetReached = false;
+        } else {
+            td->searchData.targetReached = true;
+        }
         if (d < 6) {
             s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
@@ -562,6 +566,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
 
+    U64 bestNodeCountMove = 0xFFFFFFFF;
+
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
 
@@ -782,8 +788,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // undo the move
         b->undoMove();
 
+        U64 nodeScore =  td->nodes - nodeCount;
+
         if (ply == 0) {
-            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
+            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += nodeScore;
         }
 
         // if we got a new best score for this node, update the highest score and keep track of the
@@ -800,7 +808,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // beta -cutoff
         if (score >= beta) {
-            if (!skipMove && !td->dropOut) {
+            if (!skipMove && !td->dropOut && (sd->targetReached == true || nodeScore < bestNodeCountMove)) {
+                bestNodeCountMove = nodeScore;
                 // put the beta cutoff into the perft_tt
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
@@ -811,7 +820,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
-            return highestScore;
+            if (sd->targetReached) return highestScore;
         }
 
         // we consider this seperate to having a new best score for simplicity
@@ -819,6 +828,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // increase alpha
             alpha = score;
         }
+
+        if (alpha >= beta) alpha = beta - 1;
 
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
