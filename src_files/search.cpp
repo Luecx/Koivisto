@@ -816,7 +816,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
-            if (sd->targetReached) return highestScore;//  && (en.type == CUT_NODE && !singular && depth > 7)) return highestScore;//(en.type == CUT_NODE || singular)) return highestScore;
+            if (sd->targetReached || !(en.type == CUT_NODE && !singular && depth > 7)) return highestScore;//(en.type == CUT_NODE || singular)) return highestScore;
         }
 
         // we consider this seperate to having a new best score for simplicity
