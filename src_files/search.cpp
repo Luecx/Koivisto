@@ -194,11 +194,6 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     Board       printBoard {b};
     td->dropOut = false;
     for (d = 1; d <= maxDepth; d++) {
-        if (d < 8) {
-            td->searchData.targetReached = false;
-        } else {
-            td->searchData.targetReached = true;
-        }
         if (d < 6) {
             s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
         } else {
@@ -296,7 +291,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock
     // too often for speed reasons so we only apply this when the depth is larger than 6.
-    if ((depth > 6 && !isTimeLeft())) {
+    if ((depth > 6 && !isTimeLeft(&td->searchData))) {
         td->dropOut = true;
         return beta;
     }
@@ -820,7 +815,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
-            if (sd->targetReached || depth < 4) return highestScore;
+            if (sd->targetReached) return highestScore;
         }
 
         // we consider this seperate to having a new best score for simplicity
@@ -1046,7 +1041,7 @@ U64 Search::tbHits() {
     }
     return th;
 }
-bool           Search::isTimeLeft() { return timeManager->isTimeLeft(); }
+bool           Search::isTimeLeft(SearchData* sd) { return timeManager->isTimeLeft(sd); }
 bool           Search::rootTimeLeft(int score) { return timeManager->rootTimeLeft(score); }
 SearchOverview Search::overview() { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
