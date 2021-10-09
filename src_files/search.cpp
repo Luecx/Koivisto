@@ -816,7 +816,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
-            if (sd->targetReached) return highestScore;//(en.type == CUT_NODE || singular)) return highestScore;
+            if (sd->targetReached) return highestScore;//  && (en.type == CUT_NODE && !singular && depth > 7)) return highestScore;//(en.type == CUT_NODE || singular)) return highestScore;
         }
 
         // we consider this seperate to having a new best score for simplicity
@@ -853,7 +853,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // we need to write the current score/position into the transposition table if and only if we
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
-        if (alpha > originalAlpha) {
+        if (alpha > originalAlpha && pv) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
             table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
