@@ -562,7 +562,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
 
     U64 bestNodeCountMove = 0xFFFFFFFF;
-
+    bool singular = false;
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
 
@@ -660,6 +660,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     *lmrFactor = 0;
                 }
                 extension++;
+                singular = true;
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
@@ -815,7 +816,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
 
-            if (sd->targetReached) return highestScore;
+            if (sd->targetReached) return highestScore;//(en.type == CUT_NODE || singular)) return highestScore;
         }
 
         // we consider this seperate to having a new best score for simplicity
