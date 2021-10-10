@@ -935,9 +935,14 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
 
-    for (int i = 0; i < mv->getSize(); i++) {
+    // loop over all moves in the movelist
+    while (moveOrderer.hasNext()) {
 
+        // get the current move
         Move m = moveOrderer.next(0);
+
+        if (!m)
+            break;
 
         // do not consider illegal moves
         if (!b->isLegal(m))
@@ -983,7 +988,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             }
         }
 
-        if (bestScore < -MIN_MATE_SCORE && i + 1 == mv->getSize() && (isCapture(m) || isPromotion(m))) 
+        if (bestScore < -MIN_MATE_SCORE && !moveOrderer.hasNext() && (isCapture(m) || isPromotion(m))) 
             generateKingMoveQs(b, mv, en.move, sd, ply);
     }
 
