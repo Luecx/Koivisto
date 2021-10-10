@@ -396,7 +396,7 @@ void generatePerftMoves(Board* b, MoveList* mv) {
     UCI_ASSERT(mv);
     generate<GENERATE_ALL, false>(b, mv);
 }
-void generateKingMoveQs(Board* b, MoveList* mv) {
+void generateKingMoveQs(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
     UCI_ASSERT(b)
     UCI_ASSERT(mv);
         
@@ -411,8 +411,13 @@ void generateKingMoveQs(Board* b, MoveList* mv) {
     
     Square s       = bitscanForward(kings);
     U64 attacks = KING_ATTACKS[s] & ~occupied;
-    Square target = bitscanForward(attacks);
-    if (b->getPiece(target) < 0) {
-        mv->add(genMove(s, target, QUIET, movingPiece));
+    while (attacks) {
+        Square target = bitscanForward(attacks);
+
+        Move m = genMove(s, target, QUIET, movingPiece);
+        mv->add(m);
+        mv->scoreMove(mv->getSize()-1, 20000 + sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()));
+
+        attacks = lsbReset(attacks);
     }
 }
