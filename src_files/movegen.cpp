@@ -410,7 +410,7 @@ void generateKingMoveQs(Board* b, MoveList* mv) {
     U64 kings      = b->getPieceBB(us, KING);
     
     Square s       = bitscanForward(kings);
-    U64 attacks = KING_ATTACKS[s] & ~friendly;
+    U64 attacks = KING_ATTACKS[s] & ~occupied;
     Square target = bitscanForward(attacks);
     if (b->getPiece(target) < 0) {
         mv->add(genMove(s, target, QUIET, movingPiece));
