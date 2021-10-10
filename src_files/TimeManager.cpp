@@ -21,6 +21,7 @@
 #include "TimeManager.h"
 #include "Board.h"
 #include "UCIAssert.h"
+#include "History.h"
 
 auto startTime =
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -125,7 +126,7 @@ void TimeManager::stopSearch() { forceStop = true; }
 /**
  * returns true if there is enough time left. This is used by the principal variation search.
  */
-bool TimeManager::isTimeLeft() {
+bool TimeManager::isTimeLeft(SearchData* sd) {
 
 
     // stop the search if requested
@@ -133,7 +134,15 @@ bool TimeManager::isTimeLeft() {
         return false;
     
     int elapsed = elapsedTime();
-
+    
+    if (sd != nullptr && mode == TOURNAMENT) {
+        if (elapsed * 10 < timeToUse) {
+           sd->targetReached = false;
+        } else {
+            sd->targetReached = true;
+        }
+    }
+    
     // if we are above the maximum allowed time, stope  
     if (elapsed >= upperTimeBound)
         return false;

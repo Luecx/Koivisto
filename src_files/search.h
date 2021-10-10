@@ -74,7 +74,7 @@ class Search {
     int  selDepth();
     U64  tbHits();
 
-    bool isTimeLeft();
+    bool isTimeLeft(SearchData* sd = nullptr);
     bool rootTimeLeft(int score);
 
     public:
