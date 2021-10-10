@@ -136,7 +136,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) {
     int elapsed = elapsedTime();
     
     if (sd != nullptr && mode == TOURNAMENT) {
-        if (elapsed * 10 < timeToUse) {
+        if (elapsed * 5 < timeToUse) {
            sd->targetReached = false;
         } else {
             sd->targetReached = true;
