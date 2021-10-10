@@ -983,7 +983,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             }
         }
 
-        if (i + 1 == mv->getSize() && (isCapture(m) || isPromotion(m))) 
+        if (bestScore == -MAX_MATE_SCORE && i + 1 == mv->getSize() && (isCapture(m) || isPromotion(m))) 
             generateKingMoveQs(b, mv, en.move, sd, ply);
     }
 
