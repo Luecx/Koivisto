@@ -22,6 +22,7 @@
 
 #include "Board.h"
 #include "Move.h"
+#include "History.h"
 
 using namespace move;
 using namespace bb;
@@ -67,7 +68,7 @@ class TimeManager {
      * returns true if the search should continue. false otherwise.
      * @return
      */
-    bool isTimeLeft();
+    bool isTimeLeft(SearchData* sd = nullptr);
     
     /**
      * checks if time at the root is left

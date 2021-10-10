@@ -292,7 +292,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock
     // too often for speed reasons so we only apply this when the depth is larger than 6.
-    if ((depth > 6 && !isTimeLeft())) {
+    if ((depth > 6 && !isTimeLeft(&td->searchData))) {
         td->dropOut = true;
         return beta;
     }
@@ -704,6 +704,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
+            if (!sd->targetReached) 
+                lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
@@ -1031,7 +1033,7 @@ U64 Search::tbHits() {
     }
     return th;
 }
-bool           Search::isTimeLeft() { return timeManager->isTimeLeft(); }
+bool           Search::isTimeLeft(SearchData* sd) { return timeManager->isTimeLeft(sd); }
 bool           Search::rootTimeLeft(int score) { return timeManager->rootTimeLeft(score); }
 SearchOverview Search::overview() { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
