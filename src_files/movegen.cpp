@@ -396,3 +396,23 @@ void generatePerftMoves(Board* b, MoveList* mv) {
     UCI_ASSERT(mv);
     generate<GENERATE_ALL, false>(b, mv);
 }
+void generateKingMoveQs(Board* b, MoveList* mv) {
+    UCI_ASSERT(b)
+    UCI_ASSERT(mv);
+        
+    Color us   =  b->getActivePlayer();
+    
+    Piece movingPiece = KING + us * 8;
+    
+    U64 occupied   = b->getOccupiedBB();
+    U64 friendly   = b->getTeamOccupiedBB(us);
+    
+    U64 kings      = b->getPieceBB(us, KING);
+    
+    Square s       = bitscanForward(kings);
+    U64 attacks = KING_ATTACKS[s] & ~friendly;
+    Square target = bitscanForward(attacks);
+    if (b->getPiece(target) < 0) {
+        mv->add(genMove(s, target, QUIET, movingPiece));
+    }
+}
