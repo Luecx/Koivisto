@@ -697,6 +697,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
+        if (legalMoves > 0 && depth > 2 && !sd->targetReached)
+            lmr++;
+
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
@@ -704,8 +707,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            if (!sd->targetReached) 
-                lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
