@@ -825,7 +825,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
     // search at all.
-    if (timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1 && td->threadID == 0) {
+    if (hashMove && en.type != ALL_NODE && timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1 && td->threadID == 0) {
         sd->bestMove = bestMove;
         timeManager->stopSearch();
         return staticEval;
