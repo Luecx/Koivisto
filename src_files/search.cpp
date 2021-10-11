@@ -789,7 +789,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
+            if (score > alpha && ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
                 alpha        = highestScore;
