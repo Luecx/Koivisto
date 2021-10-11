@@ -1217,5 +1217,5 @@ float Board::phase(){
 }
 
 Score Board::evaluate(){
-    return (1.4f + basePhase - phase()) * this->evaluator.evaluate(this->getActivePlayer());
+    return (1.6f + basePhase - phase()) * this->evaluator.evaluate(this->getActivePlayer());
 }
