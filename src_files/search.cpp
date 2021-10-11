@@ -193,6 +193,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     Board       searchBoard {b};
     Board       printBoard {b};
     td->dropOut = false;
+    b->basePhase = b->phase();
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {

@@ -123,7 +123,7 @@ class Board {
 #ifdef SEE_CACHE_SIZE
     struct seeCacheEntry seeCache[SEE_CACHE_SIZE] {};
 #endif
-    
+
     // store an evaluator which can be efficiently updated
     nn::Evaluator evaluator{};
     
@@ -154,6 +154,9 @@ class Board {
     void replacePiece(Square sq, Piece piece);
     
     public:
+
+    float basePhase;
+    
     // the default constructor uses a fen-representation of the board. if nothing is specified, the starting position
     // will be used
     Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -283,6 +286,8 @@ class Board {
     template<Color color>
     [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 8 + piece];}
     
+    float phase();
+
     Score evaluate();
 };
 
