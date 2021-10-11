@@ -1214,5 +1214,5 @@ Score Board::evaluate(){
          - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
          - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
          / 24.0f;
-    return (1.6f - phase) * this->evaluator.evaluate(this->getActivePlayer());
+    return (1.5f - phase) * this->evaluator.evaluate(this->getActivePlayer());
 }
