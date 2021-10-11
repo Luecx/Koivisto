@@ -655,12 +655,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     *lmrFactor = 0;
                 }
                 extension++;
-            } else if (score >= beta) {
-                return score;
-            } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
-                if (score >= beta)
-                    return score;
             }
             generateMoves(b, mv, hashMove, sd, ply);
             moveOrderer = {mv};
