@@ -336,7 +336,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     SearchData* sd            = &td->searchData;
     U64         zobrist       = b->zobrist();
     bool        pv            = (beta - alpha) != 1;
-    Score       originalAlpha = alpha;
     Score       highestScore  = -MAX_MATE_SCORE;
     Score       score         = -MAX_MATE_SCORE;
     Move        bestMove      = 0;
@@ -555,12 +554,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
-    int         legalMoves = 0;
-    int         quiets     = 0;
-
+    int         legalMoves      = 0;
+    int         quiets          = 0;
+    bool        raisedAlpha     = false;
     // speedup stuff for movepicking
-    Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
+    Square      kingSq          = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
+    U64         kingBB          = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
 
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
@@ -784,6 +783,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
+        // we consider this seperate to having a new best score for simplicity
+        if (score > alpha) {
+            // increase alpha
+            raisedAlpha = true;
+            alpha = score;
+        }
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
@@ -812,12 +817,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return highestScore;
         }
 
-        // we consider this seperate to having a new best score for simplicity
-        if (score > alpha) {
-            // increase alpha
-            alpha = score;
-        }
-
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
@@ -844,7 +843,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // we need to write the current score/position into the transposition table if and only if we
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
-        if (alpha > originalAlpha) {
+        if (raisedAlpha) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
             table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
