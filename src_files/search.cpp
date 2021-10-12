@@ -324,12 +324,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
     if (depth == 0 || depth > MAX_PLY) {
-        // Don't drop into qsearch if in check
-        if (inCheck) {
-            depth++;
-        } else {
-            return qSearch(b, alpha, beta, ply, td);
-        }
+        return qSearch(b, alpha, beta, ply, td, inCheck);
     }
 
     // we extract a lot of information about various things.
@@ -954,7 +949,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
-        if (!inCheck && isCapture(m) && (getCapturedPieceType(m)) < (getMovingPieceType(m))
+        if (!inCheck && (isCapture(m) || isPromotion(m)) && (getCapturedPieceType(m)) < (getMovingPieceType(m))
             && b->staticExchangeEvaluation(m) < 0)
             continue;
 
@@ -982,6 +977,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 alpha      = score;
             }
         }
+        if (!isCapture(m) && !isPromotion(m))
+            break;
     }
 
     // store the current position inside the transposition table
