@@ -1214,5 +1214,32 @@ Score Board::evaluate(){
          - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
          - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
          / 24.0f;
-    return (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
+
+    int mobilityDiff = 0;
+    
+    U64 whitePawnCover = shiftNorthEast(getPieceBB()[WHITE_PAWN]) | shiftNorthWest(getPieceBB()[WHITE_PAWN]);
+    U64 blackPawnCover = shiftSouthEast(getPieceBB()[BLACK_PAWN]) | shiftSouthWest(getPieceBB()[BLACK_PAWN]);
+    U64 mobilitySquaresWhite = ~getTeamOccupiedBB(WHITE) & ~(blackPawnCover);
+    U64 mobilitySquaresBlack = ~getTeamOccupiedBB(BLACK) & ~(whitePawnCover);
+
+    U64 k = getPieceBB()[WHITE_BISHOP];
+    U64 square;
+    U64 attacks;
+    U64 occupied = getOccupiedBB();
+    while (k) {
+        square  = bitscanForward(k);
+        attacks = lookUpBishopAttack(square, occupied);
+        mobilityDiff += bitCount(attacks & mobilitySquaresWhite) + 5;
+        k = lsbReset(k);
+    }
+
+    k = getPieceBB()[BLACK_BISHOP];
+    while (k) {
+        square  = bitscanForward(k);
+        attacks = lookUpBishopAttack(square, occupied);
+        mobilityDiff -= bitCount(attacks & mobilitySquaresBlack) - 5;
+        k = lsbReset(k);
+    }
+
+    return ((1.0f - phase) * (float)mobilityDiff * 0.01 * (getActivePlayer() == WHITE ? 1 : -1)) + (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
 }
