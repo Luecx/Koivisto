@@ -767,13 +767,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
                                       td, 0, behindNMP);    // re-search
             } else {
-                // if not at root use standard logic
-                if (lmr && score > alpha)
-                    score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
-                                      ply + ONE_PLY, td, 0, behindNMP);    // re-search
-                if (score > alpha && score < beta)
-                    score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
+                if (pv || behindNMP != b->getActivePlayer()) {
+                    // if not at root use standard logic
+                    if (lmr && score > alpha)
+                        score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
+                                        ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                    if (score > alpha && score < beta)
+                        score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
+                                        td, 0, behindNMP);    // re-search
+                }
             }
         }
 
