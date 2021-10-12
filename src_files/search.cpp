@@ -31,10 +31,15 @@
 
 int  lmrReductions[256][256];
 
-int  RAZOR_MARGIN     = 198;
-int  FUTILITY_MARGIN  = 81;
+float scale = 1.2;
+
+int  RAZOR_MARGIN     = 198 * scale;
+int  FUTILITY_MARGIN  = 81 * scale;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 215;
+int  PROBCUT_MARGIN   = 100 * scale;
+int  THREAT_MARGIN    = 30 * scale;
+int  DOUBLE_TEMPO     = 30 * scale;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
@@ -464,7 +469,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the static evaluation is already above beta at depth 1 and we have strong threats, asume
         // that we can atleast achieve beta
         // **********************************************************************************************************
-        if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
+        if (depth == 1 && staticEval > beta + (isImproving ? 0 : THREAT_MARGIN) && !enemyThreats)
             return beta;
 
         // **********************************************************************************************************
@@ -473,7 +478,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // assume that we could achieve beta, so we can return early. Don't do nmp when the oponent
         // has threats or the position or we don't have non-pawn material.
         // **********************************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
+        if (staticEval >= beta + (5 > depth ? DOUBLE_TEMPO : 0) && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score =
@@ -497,7 +502,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // this is based on other top engines.
     // **********************************************************************************************************
 
-    Score     betaCut = beta + 100;
+    Score     betaCut = beta + PROBCUT_MARGIN;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
