@@ -617,7 +617,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * depth))
                 continue;
         }
 
