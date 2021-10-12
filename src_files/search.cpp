@@ -681,7 +681,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         U64   nodeCount = td->nodes;
 
-        if (staticExchangeEval == 1) {
+        if (staticExchangeEval == 1 && !quiet) {
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
 
