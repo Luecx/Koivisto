@@ -25,7 +25,7 @@
 #include "Move.h"
 
 void generateMoves          (Board* b, MoveList* mv, Move hashMove = 0, SearchData* sd = nullptr, Depth ply = 0);
-void generateNonQuietMoves  (Board* b, MoveList* mv, Move hashMove = 0, SearchData* sd = nullptr, Depth ply = 0);
+void generateNonQuietMoves  (Board* b, MoveList* mv, Move hashMove = 0, SearchData* sd = nullptr, Depth ply = 0, bool inCheck = 0);
 void generatePerftMoves     (Board* b, MoveList* mv);
 
 

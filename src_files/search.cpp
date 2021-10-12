@@ -929,7 +929,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     MoveList* mv = &sd->moves[ply];
 
     // create a moveorderer to sort the moves during the search
-    generateNonQuietMoves(b, mv);
+    generateNonQuietMoves(b, mv, 0, sd, ply, inCheck);
     MoveOrderer moveOrderer {mv};
 
     // keping track of the best move for the transpositions
@@ -938,7 +938,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     for (int i = 0; i < mv->getSize(); i++) {
 
         Move m = moveOrderer.next(0);
-
+        
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
@@ -954,7 +954,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
-        if (!inCheck && (getCapturedPieceType(m)) < (getMovingPieceType(m))
+        if (!inCheck && isCapture(m) && (getCapturedPieceType(m)) < (getMovingPieceType(m))
             && b->staticExchangeEvaluation(m) < 0)
             continue;
 
