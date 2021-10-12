@@ -636,7 +636,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // keep track of the depth we want to extend by
-        int extension = 0;
+        int extension = !quiet;
 
         // *********************************************************************************************************
         // singular extensions

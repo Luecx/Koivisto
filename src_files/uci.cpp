@@ -523,7 +523,7 @@ void uci::bench() {
         Board b(Benchmarks[i]);
 
         TimeManager manager;
-        searchObject.bestMove(&b, 13, &manager, 0);
+        searchObject.bestMove(&b, 10, &manager, 0);
         SearchOverview overview = searchObject.overview();
 
         nodes += overview.nodes;
