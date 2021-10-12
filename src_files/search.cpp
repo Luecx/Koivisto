@@ -579,7 +579,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
-
+        Score staticExchangeEval = 1;
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
@@ -611,13 +611,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
             }
 
+            if (!isCapture(m) || (getCapturedPieceType(m)) <= (getMovingPieceType(m))) {
+                staticExchangeEval = b->staticExchangeEvaluation(m);
+            }
             // ******************************************************************************************************
             // static exchange evaluation pruning (see pruning):
             // if the depth we are going to search the move at is small enough and the static exchange
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && staticExchangeEval <= (quiet ? -40 * moveDepth : -100 * moveDepth))
                 continue;
         }
 
@@ -627,12 +630,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
-        }
-
-        // compute the static exchange evaluation if the move is a capture
-        Score staticExchangeEval = 1;
-        if (isCapture(m) && (getCapturedPieceType(m)) <= (getMovingPieceType(m))) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
         }
 
         // keep track of the depth we want to extend by
@@ -684,6 +681,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         U64   nodeCount = td->nodes;
 
+        if (staticExchangeEval == 1) {
+            staticExchangeEval = b->staticExchangeEvaluation(m);
+        }
+
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
@@ -726,7 +727,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && b->isInCheck(b->getActivePlayer()) && staticExchangeEval >= 0)
             extension = 1;
 
         mv->scoreMove(moveOrderer.counter - 1, depth);
