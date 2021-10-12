@@ -70,7 +70,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         // scoring when only non quiet moves are generated
         MoveScore mvvLVA = 100 * (getCapturedPieceType(move)) - 10 * (getMovingPieceType(move))
                            + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
-        mv->scoreMove(idx, 240 + mvvLVA);
+        mv->scoreMove(idx, 100000 + mvvLVA);
         
     }
 }
@@ -362,7 +362,7 @@ template<MoveGenConfig config, bool score> void generate(
     MoveList* mv,
     Move hashMove = 0,
     SearchData* sd = nullptr,
-    Depth ply = 0) {
+    Depth ply = 0, bool inCheck = 0) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     
@@ -370,12 +370,22 @@ template<MoveGenConfig config, bool score> void generate(
     
     if(b->getActivePlayer() == WHITE){
         generatePawnMoves <WHITE, config, score>(b, mv, hashMove, sd, ply);
+        if (inCheck || config == GENERATE_ALL)  {
+            generateKingMoves <WHITE, GENERATE_ALL, score>(b, mv, hashMove, sd, ply);
+        }
+        else {
+            generateKingMoves <WHITE, GENERATE_NON_QUIET, score>(b, mv, hashMove, sd, ply);
+        }
         generatePieceMoves<WHITE, config, score>(b, mv, hashMove, sd, ply);
-        generateKingMoves <WHITE, config, score>(b, mv, hashMove, sd, ply);
     }else{
         generatePawnMoves <BLACK, config, score>(b, mv, hashMove, sd, ply);
+        if (inCheck || config == GENERATE_ALL) {
+            generateKingMoves <BLACK, GENERATE_ALL, score>(b, mv, hashMove, sd, ply);
+        }
+        else {
+            generateKingMoves <BLACK, GENERATE_NON_QUIET, score>(b, mv, hashMove, sd, ply);
+        }
         generatePieceMoves<BLACK, config, score>(b, mv, hashMove, sd, ply);
-        generateKingMoves <BLACK, config, score>(b, mv, hashMove, sd, ply);
     }
     
 }
@@ -386,10 +396,10 @@ void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth 
     UCI_ASSERT(sd);
     generate<GENERATE_ALL, true>(b, mv, hashMove, sd, ply);
 }
-void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {
+void generateNonQuietMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply, bool inCheck) {
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
-    generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply);
+    generate<GENERATE_NON_QUIET, true>(b, mv, hashMove, sd, ply, inCheck);
 }
 void generatePerftMoves(Board* b, MoveList* mv) {
     UCI_ASSERT(b);
