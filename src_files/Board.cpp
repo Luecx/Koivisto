@@ -1229,7 +1229,7 @@ Score Board::evaluate(){
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
-        mobilityDiff += bitCount(attacks & mobilitySquaresWhite) + 5;
+        mobilityDiff += bitCount(attacks & mobilitySquaresWhite) + 4;
         k = lsbReset(k);
     }
 
@@ -1237,9 +1237,9 @@ Score Board::evaluate(){
     while (k) {
         square  = bitscanForward(k);
         attacks = lookUpBishopAttack(square, occupied);
-        mobilityDiff -= bitCount(attacks & mobilitySquaresBlack) - 5;
+        mobilityDiff -= bitCount(attacks & mobilitySquaresBlack) - 4;
         k = lsbReset(k);
     }
 
-    return ((1.0f - phase) * (float)mobilityDiff * 0.01 * (getActivePlayer() == WHITE ? 1 : -1)) + (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
+    return ((1.0f - phase) * (float)mobilityDiff * (getActivePlayer() == WHITE ? 1 : -1)) + (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
 }
