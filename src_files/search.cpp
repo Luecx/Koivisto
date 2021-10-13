@@ -771,7 +771,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // Inspired by https://github.com/official-stockfish/Stockfish/blob/c8459b18ba2d6ddc76d6db90d6eab346ed682e69/src/search.cpp#L1715
-        mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha) + (score < alpha -100) + (score > beta + 100));
+        mv->scoreMove(moveOrderer.counter - 1, depth + ((staticEval < alpha) || (score < alpha -100) || (score > beta + 100)));
 
         // undo the move
         b->undoMove();
