@@ -28,7 +28,7 @@
 
 
 #define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2)
-#define HIDDEN_SIZE    (512)
+#define HIDDEN_SIZE    (1024)
 #define OUTPUT_SIZE    (1)
 
 #if defined(__AVX512F__)
