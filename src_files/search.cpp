@@ -724,7 +724,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
-        mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha) - (staticEval > beta + 100));
+        mv->scoreMove(moveOrderer.counter - 1, depth);
 
         // principal variation search recursion.
         if (legalMoves == 0) {
@@ -801,8 +801,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!isCapture(m))
                 sd->setKiller(m, ply, b->getActivePlayer());
 
+            
             // update history scores
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+            sd->updateHistories(m, depth + (staticEval < alpha || score > beta + 100), mv, b->getActivePlayer(), b->getPreviousMove());
 
             return highestScore;
         }
