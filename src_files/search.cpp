@@ -738,7 +738,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
 
 
-            if (lmr && depth - lmr > 4 && b->getActivePlayer() == 1 - behindNMP) {
+            if (lmr && depth - lmr > 6 && b->getActivePlayer() == 1 - behindNMP) {
                 // reduced search.
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - 3 * ONE_PLY - lmr + extension, ply + ONE_PLY,
                                 td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
