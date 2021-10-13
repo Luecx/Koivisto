@@ -736,9 +736,20 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
             }
-            // reduced search.
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
-                              td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+
+
+            if (lmr && depth - lmr > 4 && b->getActivePlayer() == 1 - behindNMP) {
+                // reduced search.
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - 3 * ONE_PLY - lmr + extension, ply + ONE_PLY,
+                                td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+                if (score > alpha)
+                    score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
+                                td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+            } else {
+                // reduced search.
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
+                                td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+            }
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
