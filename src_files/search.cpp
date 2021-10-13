@@ -841,6 +841,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            sd->updateHistories(bestMove, depth, mv, b->getActivePlayer(), b->getPreviousMove());
         } else {
             table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
         }
