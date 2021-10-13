@@ -724,8 +724,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (extension == 0 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
-        mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
-
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
@@ -771,6 +769,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                       td, 0, behindNMP);    // re-search
             }
         }
+
+        // Inspired by https://github.com/official-stockfish/Stockfish/blob/c8459b18ba2d6ddc76d6db90d6eab346ed682e69/src/search.cpp#L1715
+        mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha) - (score < alpha -100) + (score > beta + 100));
 
         // undo the move
         b->undoMove();
