@@ -649,7 +649,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     depth += *lmrFactor;
                     *lmrFactor = 0;
                 }
-                extension++;
+                extension += 1 + quiet;
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
