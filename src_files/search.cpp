@@ -38,6 +38,8 @@ int  LMR_DIV          = 215;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
+int logs[256];
+
 /**
  * =================================================================================
  *                              S E A R C H
@@ -120,9 +122,15 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
 void initLMR() {
     int d, m;
     
-    for (d = 0; d < 256; d++)
+    for (d = 0; d < 256; d++) {
         for (m = 0; m < 256; m++)
             lmrReductions[d][m] = 1.5f + log(d) * log(m) * 100 / LMR_DIV;
+        logs[d] = 10.0f * log(d);
+    }
+}
+
+int lmrf(int depth, int history) {
+    return 1 + logs[depth] * (512 - history) / 4096;
 }
 
 /**
@@ -574,10 +582,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
-
+        int history      = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
-            Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
+            Depth moveDepth = std::max(1, 1 + depth - lmrf(depth, history));
 
             if (quiet) {
                 quiets++;
@@ -600,8 +608,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove())
-                    < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                if (history < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
             }
@@ -685,7 +692,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2 || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
-                              : lmrReductions[depth][legalMoves];
+                              : lmrf(depth, history);
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
@@ -695,8 +702,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
-            lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
             if (!sd->targetReached) 
