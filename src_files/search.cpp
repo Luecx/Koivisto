@@ -949,8 +949,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
-        if (!inCheck && (isCapture(m) || isPromotion(m)) && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-            && b->staticExchangeEvaluation(m) < 0)
+        if (!inCheck && (isCapture(m) || isPromotion(m))
+            && b->staticExchangeEvaluation(m) < alpha - stand_pat)
             continue;
 
         b->move(m);
