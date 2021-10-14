@@ -125,12 +125,12 @@ void initLMR() {
     for (d = 0; d < 256; d++) {
         for (m = 0; m < 256; m++)
             lmrReductions[d][m] = 1.5f + log(d) * log(m) * 100 / LMR_DIV;
-        logs[d] = 10.0f * log(d);
+        logs[d] = 16.0f * log(d);
     }
 }
 
 int lmrf(int depth, int history) {
-    return 1 + logs[depth] * (512 - history) / 4096;
+    return 1 + logs[depth] * (512 - history) / 8192;
 }
 
 /**
