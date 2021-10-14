@@ -122,7 +122,7 @@ void initLMR() {
     
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1 + log(d) * log(m) * 100 / LMR_DIV;
 }
 
 /**
