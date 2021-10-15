@@ -663,7 +663,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             m           = moveOrderer.next(0);
         }
 
-        if (hashMove && quiet && en.type == CUT_NODE && history < 0 && sameMove(m, hashMove))
+        if (hashMove && depth < 8 && en.type == CUT_NODE && history < 0 && sameMove(m, hashMove))
             extension = 1;
 
         // *********************************************************************************************************
