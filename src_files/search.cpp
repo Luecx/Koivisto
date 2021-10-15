@@ -800,6 +800,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // also set this move as a killer move into the history
             if (!isCapture(m))
                 sd->setKiller(m, ply, b->getActivePlayer());
+            
+            // set the countermove
+            if (b->getPreviousMove()!=0 && !isCapture(m))
+                sd->setCounter(b->getPreviousMove(), m, b->getActivePlayer());
+
 
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());

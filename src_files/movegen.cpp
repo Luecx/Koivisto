@@ -62,6 +62,8 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             mv->scoreMove(idx, 40000 + mvvLVA + getPromotionPiece(move));
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
+        } else if (sd->isCounter(board->getPreviousMove(), m, board->getActivePlayer())) {
+            mv->scoreMove(idx, 25000);
         } else{
             mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove()));
         }

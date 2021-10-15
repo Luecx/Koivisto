@@ -99,6 +99,21 @@ int SearchData::isKiller(Move move, Depth ply, Color color) {
 }
 
 /*
+ * Set counter
+ */
+
+void SearchData::setCounter(Move previous, Move move, Color color) { 
+    counter[color][getSquareFrom(previous)][getSquareTo(previous)] = move; 
+}
+
+/*
+ * Is Counter?
+ */
+bool SearchData::isCounter(Move previous, Move move, Color color) { 
+    return sameMove(move, counter[color][getSquareFrom(previous)][getSquareTo(previous)]); 
+}
+
+/*
  * Set historic eval
  */
 void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {

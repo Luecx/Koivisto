@@ -43,6 +43,8 @@ struct SearchData {
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
     Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
+    // counter move
+    Move  counter[2][64][64]                                                     = {0};
     // threat data
     int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
     // eval history across plies
@@ -57,6 +59,11 @@ struct SearchData {
     void     setKiller(Move move, Depth ply, Color color);
 
     int      isKiller(Move move, Depth ply, Color color);
+
+
+    void     setCounter(Move previous, Move move, Color color);
+
+    bool     isCounter(Move previous, Move move, Color color); 
 
     void     setHistoricEval(Score eval, Color color, Depth ply);
 
