@@ -34,7 +34,7 @@ int  lmrReductions[256][256];
 int  RAZOR_MARGIN     = 198;
 int  FUTILITY_MARGIN  = 81;
 int  SE_MARGIN_STATIC = 0;
-int  LMR_DIV          = 215;
+int  LMR_DIV          = 180;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
