@@ -102,15 +102,15 @@ int SearchData::isKiller(Move move, Depth ply, Color color) {
  * Set counter
  */
 
-void SearchData::setCounter(Move previous, Move move, Color color) { 
-    counter[color][getSquareFrom(previous)][getSquareTo(previous)] = move; 
+void SearchData::setCounter(Move previous, Move move) { 
+    counter[getSquareFrom(previous)][getSquareTo(previous)] = move; 
 }
 
 /*
  * Is Counter?
  */
-bool SearchData::isCounter(Move previous, Move move, Color color) { 
-    return sameMove(move, counter[color][getSquareFrom(previous)][getSquareTo(previous)]); 
+bool SearchData::isCounter(Move previous, Move move) { 
+    return sameMove(move, counter[getSquareFrom(previous)][getSquareTo(previous)]); 
 }
 
 /*

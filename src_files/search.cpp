@@ -803,7 +803,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             
             // set the countermove
             if (b->getPreviousMove()!=0 && !isCapture(m))
-                sd->setCounter(b->getPreviousMove(), m, b->getActivePlayer());
+                sd->setCounter(b->getPreviousMove(), m);
 
 
             // update history scores
