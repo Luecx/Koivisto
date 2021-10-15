@@ -944,6 +944,9 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             > beta)
             return beta;
 
+        if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove()) < 0)
+            continue;
+
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very
