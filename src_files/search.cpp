@@ -705,10 +705,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            lmr -= 2*isCapture(m);
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
-            lmr -= 2*isCapture(m);
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
