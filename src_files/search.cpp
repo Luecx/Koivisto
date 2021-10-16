@@ -612,7 +612,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -80 * moveDepth : -200 * moveDepth))
                 continue;
         }
 
@@ -944,7 +944,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
         if (!inCheck && (isCapture(m) || isPromotion(m))
-            && b->staticExchangeEvaluation(m) * 3 < alpha - stand_pat - 200)
+            && b->staticExchangeEvaluation(m) < alpha - stand_pat - 200)
             continue;
 
         b->move(m);
