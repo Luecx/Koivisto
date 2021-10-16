@@ -938,15 +938,21 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (!b->isLegal(m))
             continue;
 
+        // if the move seems to be really good just return beta.
+        if (+see_piece_valsqs[(getPieceType(getCapturedPiece(m)))]
+                - see_piece_valsqs[getPieceType(getMovingPiece(m))] - 200 + stand_pat
+            > beta)
+            return beta;
+
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
-        if (!inCheck && (isCapture(m) || isPromotion(m))
-            && b->staticExchangeEvaluationQs(m) < max(alpha - stand_pat - 200, 0))
-            continue;
-
+        if (!inCheck && (isCapture(m) || isPromotion(m)) && (getCapturedPieceType(m)) < (getMovingPieceType(m))
+            && b->staticExchangeEvaluation(m) < 0)
+            continue; 
+            
         b->move(m);
         __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
