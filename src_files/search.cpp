@@ -944,7 +944,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
         if (!inCheck && (isCapture(m) || isPromotion(m))
-            && b->staticExchangeEvaluationQs(m) < alpha - stand_pat - 200)
+            && b->staticExchangeEvaluationQs(m) < max(alpha - stand_pat - 200, 0))
             continue;
 
         b->move(m);
