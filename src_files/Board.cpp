@@ -709,6 +709,83 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) {
  * @param m
  * @return
  */
+Score Board::staticExchangeEvaluationQs(Move m) {
+
+#ifdef SEE_CACHE_SIZE
+    U64 zob = zobrist();
+    if (seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key == (zob ^ m)) {
+        return seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score;
+    }
+#endif
+    
+    Square sqFrom         = getSquareFrom(m);
+    Square sqTo           = getSquareTo(m);
+    Piece  capturedPiece  = isCapture(m) ? getCapturedPiece(m) : -1;
+    Piece  capturingPiece = getMovingPiece(m);
+    
+    Color attacker = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
+    
+    Score gain[16], d = 0;
+    U64   fromSet = ONE << sqFrom;
+    U64   occ     = m_occupiedBB;
+    
+    U64 sqBB = ONE << sqTo;
+    U64 bishopsQueens, rooksQueens;
+    rooksQueens = bishopsQueens = m_piecesBB[WHITE_QUEEN] | m_piecesBB[BLACK_QUEEN];
+    rooksQueens |= m_piecesBB[WHITE_ROOK] | m_piecesBB[BLACK_ROOK];
+    bishopsQueens |= m_piecesBB[WHITE_BISHOP] | m_piecesBB[BLACK_BISHOP];
+    
+    U64 fixed = ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
+                | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN])
+                | (KNIGHT_ATTACKS[sqTo] & (m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT]))
+                | (KING_ATTACKS[sqTo] & (m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING]));
+    
+    // fixed is the attackset of attackers that cannot pin other m_piecesBB like
+    // pawns, kings, knights
+    
+    U64 attadef =
+            (fixed | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
+    
+    if (isCapture(m))
+        gain[d] = see_piece_valsqs[getPieceType(capturedPiece)];
+    else {
+        gain[d] = 0;
+    }
+    
+    do {
+        d++;
+        attacker = 1 - attacker;
+        
+        gain[d] = see_piece_valsqs[getPieceType(capturingPiece)] - gain[d - 1];
+        
+        if (-gain[d - 1] < 0 && gain[d] < 0)
+            break;    // pruning does not influence the result
+        
+        attadef ^= fromSet;    // reset bit in set to traverse
+        occ ^= fromSet;
+        attadef |=
+            occ & ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens));
+        fromSet = getLeastValuablePiece(attadef, attacker, capturingPiece);
+        
+    } while (fromSet);
+    
+    while (--d) {
+        gain[d - 1] = -(-gain[d - 1] > gain[d] ? -gain[d - 1] : gain[d]);
+    }
+
+#ifdef SEE_CACHE_SIZE
+    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score = gain[0];
+    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key   = zob ^ m;
+#endif
+    return gain[0];
+}
+
+/**
+ * returns the static exchange evaluation for the given move.
+ * this does not consider promotions during captures.
+ * @param m
+ * @return
+ */
 Score Board::staticExchangeEvaluation(Move m) {
 
 #ifdef SEE_CACHE_SIZE

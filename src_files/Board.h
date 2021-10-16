@@ -56,7 +56,7 @@ constexpr U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
 
 // static exchange evaluation piece values. we do not use the same values as for the evaluation.
 static constexpr Score see_piece_vals[] {100, 325, 325, 500, 1000, 10000};
-
+static constexpr Score see_piece_valsqs[] {176, 655, 842, 1436, 10000};
 // the board has an internal status object which keeps track of all information which are not represented by
 // the pieces on the board. we compute this when doing a move. when undoing a move, we simply pop the last board status
 // from a stack. this contains zobrist keys, en-passant information, castling rights etc.
@@ -208,7 +208,8 @@ class Board {
     
     // computes the static exchange evaluation for a given move. used the cache if defined.
     Score staticExchangeEvaluation(Move m);
-    
+    Score staticExchangeEvaluationQs(Move m);
+
     // returns a bitboard of all squares which attack a specific square. mainly used for see.
     U64 attacksTo(U64 occupied, Square sq);
     
