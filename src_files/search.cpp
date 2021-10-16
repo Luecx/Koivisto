@@ -695,6 +695,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
+            if (isCapture(m))
+                lmr = 0;
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
             lmr = lmr - history / 150;
             lmr += !isImproving;
@@ -705,7 +707,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
-            lmr -= 2*isCapture(m);
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
