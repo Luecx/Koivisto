@@ -661,7 +661,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             moveOrderer = {mv};
 
             m           = moveOrderer.next(0);
-        }
+        } else if (ply > 0 && pv && sameMove(hashMove, m) && getSquareTo(m) == getSquareTo(b->getPreviousMove()))
+            extension = 1;
+
+
         // *********************************************************************************************************
         // kk reductions:
         // we reduce more/less depending on which side we are currently looking at. The idea behind
