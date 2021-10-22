@@ -952,7 +952,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         Score see = (!inCheck && (isCapture(m) || isPromotion(m))) ? b->staticExchangeEvaluation(m) : 0;
         if (see < 0)
             continue;
-        if (see + stand_pat > beta + 100)
+        if (see + stand_pat > beta + 200)
             return beta;
         
 
