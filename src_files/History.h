@@ -50,6 +50,7 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                       = 1;
+    U64      repeatingPattern[MAX_INTERNAL_PLY]                                  = {0};
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous);
 
     int      getHistories(Move m, Color side, Move previous);

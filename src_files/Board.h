@@ -212,6 +212,10 @@ class Board {
     // returns a bitboard of all squares which attack a specific square. mainly used for see.
     U64 attacksTo(U64 occupied, Square sq);
     
+
+    // returns a bitboard of all the attacked or xrayed squares from a square by piece. Returns 0 for pawns.
+    U64 attacksFromSquare(Square square, Piece pieceType);
+
     // returns a bitboard of all attacked squares by a given color
     template<Color attacker>
     U64 getAttackedSquares();

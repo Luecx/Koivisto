@@ -21,6 +21,7 @@
 
 #include "UCIAssert.h"
 #include "search.h"
+#include "Bitboard.h"
 
 using namespace bb;
 
@@ -633,6 +634,28 @@ Move Board::getPreviousMove() {
         return 0;
     return m_boardStatusHistory.back().move;
 }
+
+/**
+ * returns a bitboard of all the attacked or xrayed squares from a square by piece. Returns 0 for pawns.
+ * @return
+ */
+U64 Board::attacksFromSquare(Square square, Piece pieceType) {
+    switch (pieceType) {
+        case PAWN:
+            return 0;
+        case KNIGHT:
+            return KNIGHT_ATTACKS[square];
+        case BISHOP:
+            return lookUpBishopAttack(square, 0);
+        case ROOK:
+            return lookUpRookAttack(square, 0);
+        case QUEEN:
+            return lookUpBishopAttack(square, 0);
+        case KING:
+            return KING_ATTACKS[square];
+    }
+}
+
 
 /**
  * returns a bitboard of all the attacked squares by the given color.

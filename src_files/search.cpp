@@ -431,6 +431,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    sd->repeatingPattern[ply]                    = 0;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -705,6 +706,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            if (ply > 1 && sd->repeatingPattern[ply] == (sd->repeatingPattern[ply] | (ONE << getSquareTo(m)) | (ONE << getSquareFrom(m))))
+                lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -714,6 +717,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
+
+        sd->repeatingPattern[ply] = (ONE << getSquareFrom(m)) | b->attacksFromSquare(getSquareTo(m), getMovingPieceType(m)); 
 
         // doing the move
         b->move(m);
