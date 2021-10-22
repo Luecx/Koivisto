@@ -910,7 +910,16 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     }
 
     if (bestScore >= beta)
-        return bestScore;
+        if (bestScore - 50 < beta) {
+            getThreats(b, sd, ply);
+            if (sd->threatCount[ply][b->getActivePlayer()] - sd->threatCount[ply][!b->getActivePlayer()] > 0) {
+                bestScore -= 50;
+            } else {
+                return beta;
+            }
+        } else {
+            return bestScore;
+        }
     if (alpha < bestScore)
         alpha = bestScore;
 
