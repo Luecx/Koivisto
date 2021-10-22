@@ -706,7 +706,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
-            if (ply > 1 && sd->repeatingPattern[ply] == (sd->repeatingPattern[ply] | (ONE << getSquareTo(m)) | (ONE << getSquareFrom(m))))
+            if (ply > 1 && sd->repeatingPattern[ply - 2] == (sd->repeatingPattern[ply - 2] | (ONE << getSquareTo(m)) | (ONE << getSquareFrom(m))))
                 lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
