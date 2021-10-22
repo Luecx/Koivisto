@@ -650,12 +650,11 @@ U64 Board::attacksFromSquare(Square square, Piece pieceType) {
         case ROOK:
             return lookUpRookAttack(square, 0);
         case QUEEN:
-            return lookUpBishopAttack(square, 0);
+            return lookUpRookAttack(square, 0) | lookUpBishopAttack(square, 0);
         case KING:
             return KING_ATTACKS[square];
     }
 }
-
 
 /**
  * returns a bitboard of all the attacked squares by the given color.
