@@ -82,9 +82,9 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move killer) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
-        return (killer != 0 ? kmh[getPieceTypeSqToCombination(killer)][side][getPieceTypeSqToCombination(m)] : 0)
-               + cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + history[side][getSqToSqFromCombination(m)];
+        return (2 * (killer != 0 ? kmh[getPieceTypeSqToCombination(killer)][side][getPieceTypeSqToCombination(m)] : 0)
+               + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+               + history[side][getSqToSqFromCombination(m)]) / 2;
     }
 }
 
