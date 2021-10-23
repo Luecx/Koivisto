@@ -471,6 +471,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
+            sd->playedMoves[ply] = 0;
             score =
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
@@ -505,6 +506,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 continue;
 
             b->move(m);
+            sd->playedMoves[ply] = m;
             __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
@@ -600,7 +602,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), sd->killer[!b->getActivePlayer()][ply + 1][0])
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0)
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -695,7 +697,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), sd->killer[!b->getActivePlayer()][ply + 1][0]);
+            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -717,6 +719,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // doing the move
         b->move(m);
+
+        sd->playedMoves[ply] = m;
+
         __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
@@ -802,7 +807,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove(), sd->killer[!b->getActivePlayer()][ply + 1][0]);
+            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
 
             return highestScore;
         }
@@ -1045,7 +1050,7 @@ void           Search::clearHistory() {
             memset(&this->tds[i]->searchData.history[0][0], 0, 2*4096*4);
             memset(&this->tds[i]->searchData.captureHistory[0][0], 0, 2*4096*4);
             memset(&this->tds[i]->searchData.cmh[0][0][0], 0, 384*2*384*4);
-            memset(&this->tds[i]->searchData.kmh[0][0][0], 0, 384*2*384*4);
+            memset(&this->tds[i]->searchData.fmh[0][0][0], 0, 384*2*384*4);
             memset(&this->tds[i]->searchData.killer[0][0][0], 0, 2*257*2*4);
             memset(&this->tds[i]->searchData.maxImprovement[0][0], 0, 64*64*4); 
         }
