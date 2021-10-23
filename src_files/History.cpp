@@ -20,7 +20,7 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous) {
+void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move killer) {
     if (depth > 20)
         return;
     Move  m2;
@@ -48,6 +48,10 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                     + scalar
                     - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
                           / MAX_HISTORY_SCORE;
+                kmh[getPieceTypeSqToCombination(killer)][color][getPieceTypeSqToCombination(m2)] +=
+                    + scalar
+                    - scalar * kmh[getPieceTypeSqToCombination(killer)][color][getPieceTypeSqToCombination(m2)]
+                          / MAX_HISTORY_SCORE;
             }
         
             // we can return at this point because all moves searched are in front of this move
@@ -66,15 +70,20 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
                 - scalar
                 - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
                       / MAX_HISTORY_SCORE;
+            kmh[getPieceTypeSqToCombination(killer)][color][getPieceTypeSqToCombination(m2)] +=
+                - scalar
+                - scalar * kmh[getPieceTypeSqToCombination(killer)][color][getPieceTypeSqToCombination(m2)]
+                      / MAX_HISTORY_SCORE;
         }
     }
 }
 
-int SearchData::getHistories(Move m, Color side, Move previous) {
+int SearchData::getHistories(Move m, Color side, Move previous, Move killer) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
-        return cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+        return (killer != 0 ? kmh[getPieceTypeSqToCombination(killer)][side][getPieceTypeSqToCombination(m)] : 0)
+               + cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
                + history[side][getSqToSqFromCombination(m)];
     }
 }

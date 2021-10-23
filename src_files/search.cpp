@@ -600,7 +600,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove())
+                if (sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), sd->killer[!b->getActivePlayer()][ply + 1][0])
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -695,7 +695,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove());
+            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), sd->killer[!b->getActivePlayer()][ply + 1][0]);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -802,7 +802,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove());
+            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove(), sd->killer[!b->getActivePlayer()][ply + 1][0]);
 
             return highestScore;
         }
