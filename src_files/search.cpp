@@ -310,7 +310,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         //   Weiss now also has a similar implementation to Koi, but its unclear if it is better than
         //   standard either.
 
-        return 8 - (td->nodes & MASK<4>);
+        return (beta - alpha) != 1 ? 0 : 8 - (td->nodes & MASK<4>);
     }
 
     // beside keeping track of the nodes, we need to keep track of the selective depth for this
