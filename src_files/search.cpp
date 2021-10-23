@@ -1041,8 +1041,14 @@ void           Search::disableInfoStrings() { this->printInfo = false; }
 void           Search::useTableBase(bool val) { this->useTB = val; }
 void           Search::clearHistory() {
     for (int i = 0; i < threadCount; i++) {
-        if(this->tds[i] != nullptr)
-            this->tds[i]->searchData = SearchData{};
+        if(this->tds[i] != nullptr) {
+            memset(&this->tds[i]->searchData.history[0][0], 0, 2*4096*4);
+            memset(&this->tds[i]->searchData.captureHistory[0][0], 0, 2*4096*4);
+            memset(&this->tds[i]->searchData.cmh[0][0][0], 0, 384*2*384*4);
+            memset(&this->tds[i]->searchData.kmh[0][0][0], 0, 384*2*384*4);
+            memset(&this->tds[i]->searchData.killer[0][0][0], 0, 2*257*2*4);
+            memset(&this->tds[i]->searchData.maxImprovement[0][0], 0, 64*64*4); 
+        }
     }
 }
 void Search::clearHash() { this->table->clear(); }
