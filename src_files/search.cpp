@@ -611,9 +611,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // if the depth we are going to search the move at is small enough and the static exchange
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
-            if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
-                continue;
+            if (moveDepth <= 5 + quiet * 3)
+            {
+                Score see =  b->staticExchangeEvaluation(m);
+                if (see <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                    continue;
+                if (depth == 1 && !inCheck && see + sd->eval[b->getActivePlayer()][ply] > beta + 200)
+                    return beta;
+            }    
         }
 
         // dont search illegal moves
@@ -937,12 +942,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
-
-        // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
-            > beta)
-            return beta;
 
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
