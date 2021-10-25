@@ -161,9 +161,9 @@ bool TimeManager::rootTimeLeft(int score) {
     // stop the search if requested
     if (forceStop)
         return false;
-        
+
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*50/std::max(score+(score*score*score)/10000 - 20, 30))
+    if (elapsed >= timeToUse*50/std::max(score + (score > 80 ? (score - 80) * 10 : 0), 30))
         return false;
 
     return true;
