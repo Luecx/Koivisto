@@ -573,6 +573,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(m, skipMove))
             continue;
 
+        // if the move seems to be really good just return beta.
+        if (isCapture(m) && depth == 1 && !enemyThreats && !inCheck &&
+            +see_piece_vals[(getPieceType(getCapturedPiece(m)))]
+            - see_piece_vals[getPieceType(getMovingPiece(m))] - 200 + sd->eval[b->getActivePlayer()][ply]
+            > beta)
+            return beta;
+
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
@@ -943,12 +950,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
-
-        // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
-            > beta)
-            return beta;
 
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
