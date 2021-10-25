@@ -576,7 +576,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the move seems to be really good just return beta.
         if (isCapture(m) && depth == 1 && !enemyThreats && !inCheck &&
             +see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-            - see_piece_vals[getPieceType(getMovingPiece(m))] - 200 + sd->eval[b->getActivePlayer()][ply]
+            - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + sd->eval[b->getActivePlayer()][ply]
             > beta)
             return beta;
 
