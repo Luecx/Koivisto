@@ -115,6 +115,17 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     }
     sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
     sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
+
+    if (b->getPieceBB(WHITE, QUEEN))
+        whiteMinorAttacks |= lookUpBishopAttack(bitscanForward(b->getPieceBB(WHITE, QUEEN)), occupied) | lookUpRookAttack(bitscanForward(b->getPieceBB(WHITE, QUEEN)), occupied);
+    if (b->getPieceBB(BLACK, QUEEN))
+        blackMinorAttacks |= lookUpBishopAttack(bitscanForward(b->getPieceBB(BLACK, QUEEN)), occupied) | lookUpRookAttack(bitscanForward(b->getPieceBB(BLACK, QUEEN)), occupied);
+
+    U64 wAttack = whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks | KING_ATTACKS[bitscanForward(b->getPieceBB(WHITE, KING))];
+    U64 bAttack = blackPawnAttacks | blackMinorAttacks | blackRookAttacks | KING_ATTACKS[bitscanForward(b->getPieceBB(BLACK, KING))];
+
+    sd->threatCount[ply][WHITE] += bitCount(b->getTeamOccupiedBB(BLACK) & wAttack & ~bAttack);
+    sd->threatCount[ply][BLACK] += bitCount(b->getTeamOccupiedBB(WHITE) & bAttack & ~wAttack);
 }
 
 void initLMR() {
