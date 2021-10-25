@@ -620,8 +620,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // dont search illegal moves
-        if (!b->isLegal(m))
+        if (!b->isLegal(m)) {
+            quiets -= quiet;
             continue;
+        }
 
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
