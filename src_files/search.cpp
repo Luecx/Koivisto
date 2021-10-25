@@ -589,7 +589,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                if (!inCheck && depth <= 7 && quiets > lmp[isImproving][depth]) {
                     moveOrderer.skip = true;
                     continue;
                 }
