@@ -1208,11 +1208,5 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
 }
 
 Score Board::evaluate(){
-    float phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(getPieceBB()[WHITE_PAWN] | getPieceBB()[BLACK_PAWN])
-         - phaseValues[1] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
-         - phaseValues[2] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
-         - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
-         - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
-         / 24.0f;
-    return (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
+    return this->evaluator.evaluate(this->getActivePlayer());
 }
