@@ -351,6 +351,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         
+        if (depth == 1 && ownThreats && !enemyThreats && staticEval >= beta)
+            return beta;
+
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
@@ -945,12 +948,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
-
-        // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
-            > beta)
-            return beta;
 
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
