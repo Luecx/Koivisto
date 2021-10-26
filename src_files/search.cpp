@@ -710,6 +710,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            if (getMovingPieceType(m) == PAWN && (b->getActivePlayer() == WHITE ? getSquareTo(m) > H5 : getSquareTo(m) < A4))
+                lmr--;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
