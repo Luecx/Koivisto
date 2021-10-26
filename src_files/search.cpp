@@ -583,6 +583,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 
             if (quiet) {
+
+                if (legalMoves == 1 && depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
+                    moveOrderer.skip = true;
+                    quiets+=10;
+                }
                 quiets++;
                 // **************************************************************************************************
                 // late move pruning:
