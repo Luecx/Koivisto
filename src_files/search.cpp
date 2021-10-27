@@ -809,6 +809,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!isCapture(m))
                 sd->setKiller(m, ply, b->getActivePlayer());
 
+            mv->scoreMove(moveOrderer.counter - 1, depth + ((staticEval < alpha) || (!isCapture(m) && score - staticEval > 100)));
+
             // update history scores
             sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
 
