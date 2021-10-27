@@ -578,8 +578,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // check if the move gives check and/or its promoting
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion;
-        bool givesCheck  = (quiet && history < 0 && quiets >= lmp[isImproving][std::min((int)depth, 7)]) ? b->givesCheck(m) : 0;
-        quiet |= givesCheck;
+        quiet = quiet & !(quiet ? b->givesCheck(m) : 0);
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
