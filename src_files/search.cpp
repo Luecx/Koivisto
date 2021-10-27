@@ -501,7 +501,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         MoveOrderer moveOrderer {mv};
         while (moveOrderer.hasNext()) {
             // get the current move
-            Move m = moveOrderer.next(0);
+            Move m = moveOrderer.next();
 
             if (!b->isLegal(m))
                 continue;
@@ -556,15 +556,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     int         legalMoves = 0;
     int         quiets     = 0;
 
-    // speedup stuff for movepicking
-    Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
-
     // loop over all moves in the movelist
     while (moveOrderer.hasNext()) {
 
         // get the current move
-        Move m = moveOrderer.next(kingBB);
+        Move m = moveOrderer.next();
 
         if (!m)
             break;
@@ -576,7 +572,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        bool quiet       = !isCapture(m) && !isPromotion;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
@@ -665,7 +661,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             generateMoves(b, mv, hashMove, sd, ply);
             moveOrderer = {mv};
 
-            m           = moveOrderer.next(0);
+            m           = moveOrderer.next();
         }
         // *********************************************************************************************************
         // kk reductions:
@@ -940,7 +936,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     for (int i = 0; i < mv->getSize(); i++) {
 
-        Move m = moveOrderer.next(0);
+        Move m = moveOrderer.next();
         
         // do not consider illegal moves
         if (!b->isLegal(m))

@@ -32,11 +32,11 @@ MoveOrderer::~MoveOrderer() {}
 
 bool MoveOrderer::hasNext() { return counter < moves->getSize(); }
 
-move::Move MoveOrderer::next(U64 kingBB) {
+move::Move MoveOrderer::next() {
     if (skip) {    
         for (int i = counter; i < moves->getSize(); i++) {
             moves->scoreMove(i, 0);
-            if (isCapture(moves->getMove(i)) || (kingBB & (ONE << getSquareTo(moves->getMove(i))))) {
+            if (isCapture(moves->getMove(i))) {
                 counter = i+1;
                 return moves->getMove(i);
             }
