@@ -84,7 +84,7 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move followup) {
     } else {
         return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
                + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * history[side][getSqToSqFromCombination(m)]) / 3 - 128;
+               + 2 * history[side][getSqToSqFromCombination(m)]) / 3;
     }
 }
 

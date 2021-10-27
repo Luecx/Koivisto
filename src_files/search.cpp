@@ -810,9 +810,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
-            
+
             // update history scores
-            sd->updateHistories(m, depth + staticEval , mv, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
+            sd->updateHistories(m, depth + (staticEval < alpha), mv, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
 
             return highestScore;
         }
