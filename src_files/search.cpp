@@ -775,8 +775,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     sd->increaseHistory(m, depth - lmr, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                       ply + ONE_PLY, td, 0, behindNMP);    // re-search
-                } else if (lmr)
-                    sd->decreaseHistory(m, depth - lmr, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
+                }
                 if (score > alpha && score < beta)
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
                                       td, 0, behindNMP);    // re-search
