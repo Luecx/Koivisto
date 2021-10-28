@@ -720,7 +720,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
-        if (depth > 4 && isCapture(b->getPreviousMove()) && getSquareTo(m) == getSquareTo(b->getPreviousMove()))
+        if (depth > 4 && getMovingPieceType(b->getPreviousMove()) != PAWN && isCapture(b->getPreviousMove()) && getSquareTo(m) == getSquareTo(b->getPreviousMove()))
             extension = 1;
 
         // doing the move
