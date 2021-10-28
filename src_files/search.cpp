@@ -450,7 +450,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // will definetly be above beta and stop the search here and fail soft. Also reuse information
         // from eval to prevent pruning if the oponent has multiple threats.
         // **********************************************************************************************************
-        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
+        if (depth <= 7 && !(hashMove && en.type == ALL_NODE) && enemyThreats < 2 && staticEval >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
             && staticEval < MIN_MATE_SCORE)
             return staticEval;
 
