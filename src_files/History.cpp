@@ -78,6 +78,52 @@ void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, 
     }
 }
 
+void SearchData::increaseHistory(Move m, Depth depth, Color side, Move previous, Move followup) {
+    int scalar = depth * depth + 5 * depth;
+    if (isCapture(m)) {
+        captureHistory[side][getSqToSqFromCombination(m)] +=
+            + scalar
+            - scalar * captureHistory[side][getSqToSqFromCombination(m)]
+                / MAX_HISTORY_SCORE;
+    } else {
+        history[side][getSqToSqFromCombination(m)] +=
+            + scalar
+            - scalar * history[side][getSqToSqFromCombination(m)]
+                / MAX_HISTORY_SCORE;
+        cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)] +=
+            + scalar
+            - scalar * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+                / MAX_HISTORY_SCORE;
+        fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] +=
+            + scalar
+            - scalar * fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)]
+                / MAX_HISTORY_SCORE;
+    }
+}
+
+void SearchData::decreaseHistory(Move m, Depth depth, Color side, Move previous, Move followup) {
+    int scalar = depth * depth + 5 * depth;
+    if (isCapture(m)) {
+        captureHistory[side][getSqToSqFromCombination(m)] +=
+            - scalar
+            - scalar * captureHistory[side][getSqToSqFromCombination(m)]
+                / MAX_HISTORY_SCORE;
+    } else {
+        history[side][getSqToSqFromCombination(m)] +=
+            - scalar
+            - scalar * history[side][getSqToSqFromCombination(m)]
+                / MAX_HISTORY_SCORE;
+        cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)] +=
+            - scalar
+            - scalar * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+                / MAX_HISTORY_SCORE;
+        fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] +=
+            - scalar
+            - scalar * fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)]
+                / MAX_HISTORY_SCORE;
+    }
+}
+
 int SearchData::getHistories(Move m, Color side, Move previous, Move followup) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];

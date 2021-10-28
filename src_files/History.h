@@ -56,6 +56,10 @@ struct SearchData {
     bool     targetReached                                                       = 1;
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup);
 
+    void     increaseHistory(Move m, Depth depth, Color side, Move previous, Move followup);
+
+    void     decreaseHistory(Move m, Depth depth, Color side, Move previous, Move followup);
+
     int      getHistories(Move m, Color side, Move previous, Move followup);
 
     void     setKiller(Move move, Depth ply, Color color);

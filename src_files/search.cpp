@@ -771,9 +771,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                       td, 0, behindNMP);    // re-search
             } else {
                 // if not at root use standard logic
-                if (lmr && score > alpha)
+                if (lmr && score > alpha) {
+                    sd->increaseHistory(m, depth - lmr, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                       ply + ONE_PLY, td, 0, behindNMP);    // re-search
+                }
                 if (score > alpha && score < beta)
                     score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
                                       td, 0, behindNMP);    // re-search
