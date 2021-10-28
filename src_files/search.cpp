@@ -727,11 +727,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
-        // adjust the extension policy for checks. we could use the givesCheck value but it has not
-        // been validated to work 100%
-        if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
-            extension = 1;
-
         mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
 
         // principal variation search recursion.
