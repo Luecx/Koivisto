@@ -13,7 +13,7 @@ Koivisto is a strong chess engine written primarily by Kim Kåhre and Finn Egger
 - Threads (up to 256)
 
 ### Acknowledgements
-All the Koivisto contributors, [kz04px](https://github.com/kz04px), [Eugenio Bruno](https://github.com/Eugenio-Bruno), [Jay Honnold](https://github.com/jhonnold), [Daniel Dugovic](https://github.com/ddugovic). Additionally we have recieved invaluable help and advice from [Andrew Grant](https://github.com/AndyGrant/Ethereal) and [theo77186](https://github.com/theo77186). We use [Fathom](https://github.com/jdart1/Fathom) for tablebase probing. [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) has been a very usefull resource.
+All the Koivisto contributors, [kz04px](https://github.com/kz04px), [Eugenio Bruno](https://github.com/Eugenio-Bruno), [Jay Honnold](https://github.com/jhonnold), [Daniel Dugovic](https://github.com/ddugovic), [Aryan Parekh](https://github.com/Aryan1508/Bit-Genie). Additionally we have recieved invaluable help and advice from [Andrew Grant](https://github.com/AndyGrant/Ethereal) and [theo77186](https://github.com/theo77186). We use [Fathom](https://github.com/jdart1/Fathom) for tablebase probing. [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) has been a very usefull resource.
 
 Additionaly, we have recieved support from:
 - [Noobpwnftw](https://github.com/noobpwnftw)
