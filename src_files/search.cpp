@@ -708,7 +708,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
-            lmr += depth > 7 && hashMove && 1 - b->getActivePlayer() == behindNMP && en.type == FORCED_ALL_NODE;
+            lmr += hashMove && !pv && en.type == FORCED_ALL_NODE;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
@@ -854,7 +854,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (alpha > originalAlpha) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
-            if ((td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+            if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(zobrist, highestScore, bestMove, FORCED_ALL_NODE, depth);
             } else {
                 table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
