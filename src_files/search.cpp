@@ -708,7 +708,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
-            lmr += hashMove && en.type == FORCED_ALL_NODE;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
@@ -733,6 +732,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
+            extension = 1;
+
+        if (legalMoves == 0 && hashMove && en.type == FORCED_ALL_NODE)
             extension = 1;
 
         mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
