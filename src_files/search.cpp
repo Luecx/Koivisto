@@ -708,7 +708,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
-            lmr += depth > 7 && hashMove && en.type == FORCED_ALL_NODE;
+            lmr += depth > 7 && hashMove && 1 - b->getActivePlayer() == behindNMP && en.type == FORCED_ALL_NODE;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
