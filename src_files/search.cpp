@@ -856,7 +856,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (alpha > originalAlpha) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
-            if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+            if (hashMove && en.type == CUT_NODE) {
+                table->put(zobrist, highestScore, en.move, FORMER_CUT_NODE, depth);
+            } else if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(zobrist, highestScore, bestMove, FORCED_ALL_NODE, depth);
             } else {
                 table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
