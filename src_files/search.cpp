@@ -821,6 +821,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return highestScore;
         }
 
+        if (!pv && highestScore == alpha && en.type & ALL_NODE && td->nodes - nodeCount > bestNodeCount) {
+            bestNodeCount = td->nodes - nodeCount;
+            bestMove = m;
+        }
+
         // we consider this seperate to having a new best score for simplicity
         if (score > alpha) {
             // increase alpha
