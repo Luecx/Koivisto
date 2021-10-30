@@ -375,7 +375,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         hashMove = en.move;
 
         // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+        if (!(en.type & 0x3) || (en.type == CUT_NODE && staticEval < en.score)
             || (en.type & ALL_NODE && staticEval > en.score)) {
 
             staticEval = en.score;
@@ -386,7 +386,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
         // we still do a normal search. Thus the standard of proof required is different.
         if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth) {
-            if (en.type == PV_NODE) {
+            if (!(en.type & 0x3)) {
                 return en.score;
             } else if (en.type == CUT_NODE) {
                 if (en.score >= beta) {
@@ -647,7 +647,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // *********************************************************************************************************
         if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
             && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
-            && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
+            && (en.type == CUT_NODE || !(en.type & 0x3)) && en.depth >= depth - 3) {
 
             betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
@@ -854,7 +854,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+                table->put(zobrist, highestScore, bestMove, FORCED_PV_NODE, depth);
+            } else {
+                table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
+            }
         } else {
             if (hashMove && en.type == CUT_NODE)
                 bestMove = en.move;
@@ -900,7 +904,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // perft_tt entry.
     // **************************************************************************************************************
     if (en.zobrist == zobrist) {
-        if (en.type == PV_NODE) {
+        if (!(en.type & 0x3)) {
             return en.score;
         } else if (en.type == CUT_NODE) {
             if (en.score >= beta) {
@@ -923,7 +927,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
         // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
+        if (!(en.type & 0x3) || (en.type == CUT_NODE && stand_pat < en.score)
             || (en.type & ALL_NODE && stand_pat > en.score)) {
 
             bestScore = en.score;
@@ -1144,7 +1148,7 @@ void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
 
     U64   zob = b->zobrist();
     Entry en  = table->get(zob);
-    if (en.zobrist == zob && en.type == PV_NODE) {
+    if (en.zobrist == zob && !(en.type & 0x3)) {
 
         // extract the move from the table
         Move     mov = en.move;
