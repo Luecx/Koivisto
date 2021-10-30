@@ -37,6 +37,8 @@ typedef uint8_t NodeAge;
 constexpr NodeType PV_NODE  = 0;
 constexpr NodeType CUT_NODE = 1;
 constexpr NodeType ALL_NODE = 2;
+constexpr NodeType FORCED_ALL_NODE = 3;
+constexpr NodeType FORMER_CUT_NODE = 6;
 
 struct Entry {
 

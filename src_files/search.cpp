@@ -376,7 +376,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type == ALL_NODE && staticEval > en.score)) {
+            || (en.type & ALL_NODE && staticEval > en.score)) {
 
             staticEval = en.score;
         }
@@ -392,7 +392,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (en.score >= beta) {
                     return en.score;
                 }
-            } else if (en.type == ALL_NODE) {
+            } else if (en.type & ALL_NODE) {
                 if (en.score <= alpha) {
                     return en.score;
                 }
@@ -553,8 +553,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
-    int         legalMoves = 0;
-    int         quiets     = 0;
+    int         legalMoves      = 0;
+    int         quiets          = 0;
+    U64         prevNodeCount   = td->nodes;
+    U64         bestNodeCount   = 0;
 
     // speedup stuff for movepicking
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
@@ -731,7 +733,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
-        if (extension == 0 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
+            extension = 1;
+
+        if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
         mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
@@ -799,6 +804,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->bestMove = m;
                 alpha        = highestScore;
             }
+            bestNodeCount = td->nodes - nodeCount;
         }
 
         // beta -cutoff
@@ -852,7 +858,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (alpha > originalAlpha) {
             table->put(zobrist, highestScore, bestMove, PV_NODE, depth);
         } else {
-            table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            if (hashMove && en.type == CUT_NODE)
+                bestMove = en.move;
+            
+            if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+                table->put(zobrist, highestScore, bestMove, FORCED_ALL_NODE, depth);
+            } else {
+                table->put(zobrist, highestScore, bestMove, ALL_NODE, depth);
+            }
         }
     }
 
@@ -895,7 +908,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             if (en.score >= beta) {
                 return en.score;
             }
-        } else if (en.type == ALL_NODE) {
+        } else if (en.type & ALL_NODE) {
             if (en.score <= alpha) {
                 return en.score;
             }
@@ -913,7 +926,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (en.zobrist == zobrist) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
-            || (en.type == ALL_NODE && stand_pat > en.score)) {
+            || (en.type & ALL_NODE && stand_pat > en.score)) {
 
             bestScore = en.score;
         }
