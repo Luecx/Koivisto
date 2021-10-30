@@ -470,7 +470,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // has threats or the position or we don't have non-pawn material.
         // **********************************************************************************************************
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
-            && !hasOnlyPawns(b, b->getActivePlayer())) {
+            && !b->getActivePlayer() != behindNMP && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             sd->playedMoves[ply] = 0;
             score =
