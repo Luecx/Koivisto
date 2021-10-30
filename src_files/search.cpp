@@ -1007,7 +1007,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(zobrist, bestScore, bestMove, ttNodeType, 0);
+        table->put(zobrist, bestScore, bestMove, ttNodeType, stand_pat < alpha - RAZOR_MARGIN);
     return bestScore;
 
     //    return 0;
