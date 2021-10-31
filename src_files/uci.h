@@ -37,7 +37,7 @@
 
 namespace uci{
 
-void mainloop(bool bench);
+void mainloop(int argc, char* argv[]);
 
 void processCommand(std::string str);
 

@@ -72,34 +72,34 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
  * and continues reading the lines until 'quit' is parsed which will shut down the engine and deallocate arrays.
  * @param bench
  */
-void uci::mainloop(bool bench) {
+void uci::mainloop(int argc, char* argv[]){
 
     bb::init();
     nn::init();
     searchObject = {};
     searchObject.init(16);
 
-    if (bench) {
-        uci::bench();
-        bb::cleanUp();
-        searchObject.cleanUp();
-    } else {
-        std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
-                  << std::endl;
 
-        board = new Board();
+    std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
+              << std::endl;
 
-        std::atexit(uci::quit);
-        std::string line;
+    board = new Board();
 
-        while (getline(cin, line)) {
+    std::atexit(uci::quit);
+    std::string line;
 
-            if (line == "quit") {
-                exit(0);
-            } else {
-                uci::processCommand(line);
-            }
+    // read given commands from shell
+    for(int i = 1; i < argc; i++){
+        processCommand(argv[i]);
+        // OB requires us to give an exit command once the bench command is given
+        if( strcmp(argv[i], "bench") == 0) {
+            processCommand("exit");
         }
+    }
+
+
+    while (getline(cin, line)) {
+        uci::processCommand(line);
     }
 }
 
@@ -220,6 +220,10 @@ void uci::processCommand(std::string str) {
         nn::Evaluator evaluator{};
         evaluator.reset(board);
         std::cout << "eval=" << evaluator.evaluate(board->getActivePlayer()) << std::endl;
+    } else if (split.at(0) == "bench"){
+        bench();
+    } else if (split.at(0) == "exit" || split.at(0) == "quit"){
+        exit(0);
     }
 }
 
@@ -502,6 +506,7 @@ void uci::quit() {
     board = nullptr;
 
     bb::cleanUp();
+    searchObject.cleanUp();
 }
 
 /**
@@ -540,5 +545,4 @@ void uci::bench() {
     printf("OVERALL: %39d nodes %8d nps\n", (int) nodes, (int) (1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
     searchObject.enableInfoStrings();
-
 }
