@@ -50,6 +50,7 @@ typedef int32_t EvalScore;
 enum Plies{
     ONE_PLY          = 1,
     MAX_PLY          = 128,
+    MAX_PVSEARCH_PLY = 235,
     MAX_INTERNAL_PLY = 255,
 };
 

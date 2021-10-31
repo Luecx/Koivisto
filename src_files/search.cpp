@@ -323,7 +323,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     bool inCheck = b->isInCheck(b->getActivePlayer());
 
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
-    if (depth == 0 || depth > MAX_PLY) {
+    if (depth == 0 || depth > MAX_PLY || ply > MAX_PVSEARCH_PLY) {
         return qSearch(b, alpha, beta, ply, td, inCheck);
     }
 
@@ -930,7 +930,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         }
     }
 
-    if (bestScore >= beta)
+    if (bestScore >= beta || ply >= MAX_INTERNAL_PLY)
         return bestScore;
     if (alpha < bestScore)
         alpha = bestScore;
@@ -1293,12 +1293,12 @@ Move Search::probeDTZ(Board* board) {
 
     // we generate all pseudo legal moves and check for equality between the moves to make sure the
     // bits are correct.
-    MoveList* mv     = new MoveList();
-    generatePerftMoves(board, mv);
+    MoveList mv {};
+    generatePerftMoves(board, &mv);
 
-    for (int i = 0; i < mv->getSize(); i++) {
+    for (int i = 0; i < mv.getSize(); i++) {
         // get the current move from the movelist
-        Move m = mv->getMove(i);
+        Move m = mv.getMove(i);
 
         // check if its the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
