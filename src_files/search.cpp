@@ -323,7 +323,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     bool inCheck = b->isInCheck(b->getActivePlayer());
 
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
-    if (depth == 0 || depth > MAX_PLY) {
+    if (depth == 0 || depth > MAX_PLY || ply > MAX_PLY) {
         return qSearch(b, alpha, beta, ply, td, inCheck);
     }
 
