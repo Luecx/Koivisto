@@ -705,7 +705,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
             lmr = lmr - history / 150;
             lmr += !isImproving;
-            lmr -= pv;
+            lmr -= pv || (hashMove && en.type == PV_NODE);
             if (!sd->targetReached) 
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
