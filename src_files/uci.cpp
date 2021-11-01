@@ -183,8 +183,8 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "debug") {
         uci::debug(getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
-        if (str.find("FUTILITY_MARGIN") != string::npos) {
-            FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
+        if (str.find("STNMP_MARGIN") != string::npos) {
+            STNMP_MARGIN = stoi(getValue(split, "STNMP_MARGIN"));
         }
         if (str.find("RAZOR_MARGIN") != string::npos) {
             RAZOR_MARGIN = stoi(getValue(split, "RAZOR_MARGIN"));
@@ -219,6 +219,9 @@ void uci::processCommand(std::string str) {
         }
         if (str.find("PROBCUT_DEPTH") != string::npos) {
             PROBCUT_DEPTH = stoi(getValue(split, "PROBCUT_DEPTH"));
+        }
+        if (str.find("FUTILITY_MARGIN") != string::npos) {
+            FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
         }
 
 extern int                 PROBCUT_DEPTH;

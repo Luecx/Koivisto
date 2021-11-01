@@ -101,7 +101,7 @@ class Search {
 };
 
 extern int                 RAZOR_MARGIN;
-extern int                 FUTILITY_MARGIN;
+extern int                 STNMP_MARGIN;
 extern int                 SE_MARGIN_STATIC;
 extern int                 LMR_DIV;
 
@@ -116,6 +116,8 @@ extern int                 SEE_MARGIN_QUIET;
 extern int                 SEE_MARGIN_NOISY;
 
 extern int                 PROBCUT_DEPTH;
+
+extern int                 FUTILITY_MARGIN;
 
 void initLMR();
 

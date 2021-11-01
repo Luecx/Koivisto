@@ -31,8 +31,9 @@
 
 int  lmrReductions[256][256];
 
+// old tuning margins
 int  RAZOR_MARGIN     = 198;
-int  FUTILITY_MARGIN  = 81;
+int  STNMP_MARGIN     = 81;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 215;
 
@@ -46,10 +47,15 @@ int NULL_ENEMYTHREAT_DEPTH  = 5;
 int NULL_EVAL_DIV           = 81;
 int NULL_DEPTH_DIV          = 4;
 
+// see margins
 int SEE_MARGIN_QUIET        = 40;
 int SEE_MARGIN_NOISY        = 100;
 
+// probcut margins
 int PROBCUT_DEPTH           = 4;
+
+// futility margin
+int FUTILITY_MARGIN         = 100;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
@@ -465,7 +471,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // will definetly be above beta and stop the search here and fail soft. Also reuse information
         // from eval to prevent pruning if the oponent has multiple threats.
         // **********************************************************************************************************
-        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
+        if (depth <= 7 && enemyThreats < 2 && staticEval >= beta + (depth - (isImproving && !enemyThreats)) * STNMP_MARGIN
             && staticEval < MIN_MATE_SCORE)
             return staticEval;
 
@@ -612,7 +618,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
                 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * STNMP_MARGIN + FUTILITY_MARGIN + sd->eval[b->getActivePlayer()][ply] < alpha)
                     continue;
 
                 // **************************************************************************************************
