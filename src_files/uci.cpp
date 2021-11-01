@@ -224,7 +224,6 @@ void uci::processCommand(std::string str) {
             FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
         }
 
-extern int                 PROBCUT_DEPTH;
     } else if (split.at(0) == "position") {
 
         auto fenPos  = str.find("fen");
@@ -403,6 +402,46 @@ void uci::set_option(std::string& name, std::string& value) {
         PolyGlot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
         PolyGlot::book.open(value);
+    }
+    else if (name == "STNMP_MARGIN") {
+        STNMP_MARGIN = stoi(value);
+    }
+    else if (name == "RAZOR_MARGIN") {
+        RAZOR_MARGIN = stoi(value);
+    }
+    else if (name == "SE_MARGIN_STATIC") {
+        SE_MARGIN_STATIC = stoi(value);
+    }
+    else if (name == "LMR_DIV")
+        LMR_DIV = stoi(value);
+        initLMR();
+    }
+    else if (name == "NULL_QSDROP_DEPTH") {
+        NULL_QSDROP_DEPTH = stoi(value);
+    }
+    else if (name == "NULL_QSDROP_MARGIN") {
+        NULL_QSDROP_MARGIN = stoi(value);
+    }
+    else if (name == "NULL_ENEMYTHREAT_DEPTH") {
+        NULL_ENEMYTHREAT_DEPTH = stoi(value);
+    }
+    else if (name == "NULL_EVAL_DIV") {
+        NULL_EVAL_DIV = stoi(value);
+    }
+    else if (name == "NULL_DEPTH_DIV") {
+        NULL_DEPTH_DIV = stoi(value);
+    }
+    else if (name == "SEE_MARGIN_QUIET") {
+        SEE_MARGIN_QUIET = stoi(value);
+    }
+    else if (name == "SEE_MARGIN_NOISY") {
+            SEE_MARGIN_NOISY = stoi(value);
+    }
+    else if (name == "PROBCUT_DEPTH") {
+            PROBCUT_DEPTH = stoi(value);
+    }
+    else if (name == "FUTILITY_MARGIN") {
+            FUTILITY_MARGIN = stoi(value);
     }
 }
 
