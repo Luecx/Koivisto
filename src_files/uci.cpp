@@ -412,7 +412,7 @@ void uci::set_option(std::string& name, std::string& value) {
     else if (name == "SE_MARGIN_STATIC") {
         SE_MARGIN_STATIC = stoi(value);
     }
-    else if (name == "LMR_DIV")
+    else if (name == "LMR_DIV") {
         LMR_DIV = stoi(value);
         initLMR();
     }
