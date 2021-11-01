@@ -36,6 +36,21 @@ int  FUTILITY_MARGIN  = 81;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 215;
 
+// new tuning margins
+
+// null Move stuff
+int NULL_QSDROP_DEPTH       = 5;
+int NULL_QSDROP_MARGIN      = 30;
+int NULL_NOQSDROP_MARGIN    = 0;
+int NULL_ENEMYTHREAT_DEPTH  = 5;
+int NULL_EVAL_DIV           = 81;
+int NULL_DEPTH_DIV          = 4;
+
+int SEE_MARGIN_QUIET        = 40;
+int SEE_MARGIN_NOISY        = 100;
+
+int PROBCUT_DEPTH           = 4;
+
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
 /**
@@ -469,14 +484,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // assume that we could achieve beta, so we can return early. Don't do nmp when the oponent
         // has threats or the position or we don't have non-pawn material.
         // **********************************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
+        if (staticEval >= beta + (NULL_QSDROP_DEPTH > depth ? NULL_QSDROP_MARGIN : NULL_NOQSDROP_MARGIN) && !(depth < NULL_ENEMYTHREAT_DEPTH && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             sd->playedMoves[ply] = 0;
             score =
                 -pvSearch(b, -beta, 1 - beta,
-                          depth - (depth / 4 + 3) * ONE_PLY
-                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
+                          depth - (depth / NULL_DEPTH_DIV + 3) * ONE_PLY
+                              - (staticEval - beta < 4 * NULL_EVAL_DIV ? (staticEval - beta) / NULL_EVAL_DIV : 3),
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
@@ -495,7 +510,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // **********************************************************************************************************
 
     Score     betaCut = beta + 100;
-    if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
+    if (!inCheck && !pv && depth > PROBCUT_DEPTH && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         generateNonQuietMoves(b, mv, hashMove, sd, ply);
         MoveOrderer moveOrderer {mv};
@@ -617,7 +632,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // evaluation for the given move is very negative, dont consider this quiet move as well.
             // ******************************************************************************************************
             if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && b->staticExchangeEvaluation(m) <= (quiet ? -SEE_MARGIN_QUIET * moveDepth : -SEE_MARGIN_NOISY * moveDepth))
                 continue;
         }
 

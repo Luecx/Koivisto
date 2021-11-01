@@ -196,6 +196,32 @@ void uci::processCommand(std::string str) {
             LMR_DIV = stoi(getValue(split, "LMR_DIV"));
             initLMR();
         }
+        if (str.find("NULL_QSDROP_DEPTH") != string::npos) {
+            NULL_QSDROP_DEPTH = stoi(getValue(split, "NULL_QSDROP_DEPTH"));
+        }
+        if (str.find("NULL_QSDROP_MARGIN") != string::npos) {
+            NULL_QSDROP_MARGIN = stoi(getValue(split, "NULL_QSDROP_MARGIN"));
+        }
+        if (str.find("NULL_ENEMYTHREAT_DEPTH") != string::npos) {
+            NULL_ENEMYTHREAT_DEPTH = stoi(getValue(split, "NULL_ENEMYTHREAT_DEPTH"));
+        }
+        if (str.find("NULL_EVAL_DIV") != string::npos) {
+            NULL_EVAL_DIV = stoi(getValue(split, "NULL_EVAL_DIV"));
+        }
+        if (str.find("NULL_DEPTH_DIV") != string::npos) {
+            NULL_DEPTH_DIV = stoi(getValue(split, "NULL_DEPTH_DIV"));
+        }
+        if (str.find("SEE_MARGIN_QUIET") != string::npos) {
+            SEE_MARGIN_QUIET = stoi(getValue(split, "SEE_MARGIN_QUIET"));
+        }
+        if (str.find("SEE_MARGIN_NOISY") != string::npos) {
+            SEE_MARGIN_NOISY = stoi(getValue(split, "SEE_MARGIN_NOISY"));
+        }
+        if (str.find("PROBCUT_DEPTH") != string::npos) {
+            PROBCUT_DEPTH = stoi(getValue(split, "PROBCUT_DEPTH"));
+        }
+
+extern int                 PROBCUT_DEPTH;
     } else if (split.at(0) == "position") {
 
         auto fenPos  = str.find("fen");

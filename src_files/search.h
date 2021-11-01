@@ -105,6 +105,18 @@ extern int                 FUTILITY_MARGIN;
 extern int                 SE_MARGIN_STATIC;
 extern int                 LMR_DIV;
 
+extern int                 NULL_QSDROP_DEPTH;
+extern int                 NULL_QSDROP_MARGIN;
+extern int                 NULL_NOQSDROP_MARGIN;
+extern int                 NULL_ENEMYTHREAT_DEPTH;
+extern int                 NULL_EVAL_DIV;
+extern int                 NULL_DEPTH_DIV;
+
+extern int                 SEE_MARGIN_QUIET;
+extern int                 SEE_MARGIN_NOISY;
+
+extern int                 PROBCUT_DEPTH;
+
 void initLMR();
 
 #endif    // KOIVISTO_SEARCH_H
