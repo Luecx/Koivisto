@@ -579,6 +579,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
@@ -605,8 +606,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0)
-                    < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                if (!inCheck && history < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
             }
@@ -637,15 +637,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
 
-        // keep track of the depth we want to extend by
-        int extension = 0;
+        // History extension, to my knowledge first implemented in Seer
+        // https://github.com/connormcmonigle/seer-nnue/commit/2f7092dbd2909550627017bfb721f49e3a7109af
+        int extension = ply > 0 && depth > 4 && history > 756;
 
         // *********************************************************************************************************
         // singular extensions
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
-        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
+        if (depth >= 8 && !extension && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
             && abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
@@ -701,7 +702,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
