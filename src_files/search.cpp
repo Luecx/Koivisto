@@ -32,30 +32,30 @@
 int  lmrReductions[256][256];
 
 // old tuning margins
-int  RAZOR_MARGIN     = 246;
-int  STNMP_MARGIN     = 76;
-int  SE_MARGIN_STATIC = 11;
-int  LMR_DIV          = 286;
+int  RAZOR_MARGIN     = 231;
+int  STNMP_MARGIN     = 56;
+int  SE_MARGIN_STATIC = 4;
+int  LMR_DIV          = 184;
 
 // new tuning margins
 
 // null Move stuff
-int NULL_QSDROP_DEPTH       = 6;
-int NULL_QSDROP_MARGIN      = 44;
+int NULL_QSDROP_DEPTH       = 4;
+int NULL_QSDROP_MARGIN      = 57;
 int NULL_NOQSDROP_MARGIN    = 0;
 int NULL_ENEMYTHREAT_DEPTH  = 5;
-int NULL_EVAL_DIV           = 110;
-int NULL_DEPTH_DIV          = 2;
+int NULL_EVAL_DIV           = 109;
+int NULL_DEPTH_DIV          = 3;
 
 // see margins
-int SEE_MARGIN_QUIET        = 57;
-int SEE_MARGIN_NOISY        = 120;
+int SEE_MARGIN_QUIET        = 56;
+int SEE_MARGIN_NOISY        = 102;
 
 // probcut margins
-int PROBCUT_DEPTH           = 4;
+int PROBCUT_DEPTH           = 3;
 
 // futility margin
-int FUTILITY_MARGIN         = 74;
+int FUTILITY_MARGIN         = 106;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
