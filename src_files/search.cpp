@@ -639,7 +639,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // History extension, to my knowledge first implemented in Seer
         // https://github.com/connormcmonigle/seer-nnue/commit/2f7092dbd2909550627017bfb721f49e3a7109af
-        int extension = ply > 0 && depth > 4 && history > 756 && sameMove(hashMove, m);
+        int extension = ply > 0 && depth >= 8 && history > 756 && sameMove(hashMove, m);
 
         // *********************************************************************************************************
         // singular extensions
