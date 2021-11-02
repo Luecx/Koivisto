@@ -513,7 +513,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
             if (qScore >= betaCut)
-                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP);
+                qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, !b->getActivePlayer());
 
             b->undoMove();
 
