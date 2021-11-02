@@ -649,7 +649,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
-            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
+            score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, b->getActivePlayer());
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
@@ -659,7 +659,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
+                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, b->getActivePlayer());
                 if (score >= beta)
                     return score;
             }
