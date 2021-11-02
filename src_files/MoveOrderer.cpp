@@ -26,6 +26,8 @@ MoveOrderer::MoveOrderer(move::MoveList* p_moves) {
     this->moves     = p_moves;
     this->counter   = 0;
     this->skip      = false;
+
+    this->moves->sort();
 }
 
 MoveOrderer::~MoveOrderer() {}
@@ -36,7 +38,8 @@ move::Move MoveOrderer::next(U64 kingBB) {
     if (skip) {    
         for (int i = counter; i < moves->getSize(); i++) {
             moves->scoreMove(i, 0);
-            if (isCapture(moves->getMove(i)) || (kingBB & (ONE << getSquareTo(moves->getMove(i))))) {
+            Move m = moves->getMove(i);
+            if (isCapture(m) || getBit(kingBB, getSquareTo(m))) {
                 counter = i+1;
                 return moves->getMove(i);
             }
@@ -44,13 +47,6 @@ move::Move MoveOrderer::next(U64 kingBB) {
         return 0;
     }
     int bestIndex = counter;
-    // Move best = moves->getMove(0);
-    for (int i = counter + 1; i < moves->getSize(); i++) {
-        if (moves->getScore(i) > moves->getScore(bestIndex)) {
-            bestIndex = i;
-        }
-    }
     moves->scoreMove(bestIndex, 0);
-    moves->swap(bestIndex, counter);
     return moves->getMove(counter++);
 }

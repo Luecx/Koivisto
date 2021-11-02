@@ -18,6 +18,8 @@
  ****************************************************************************************************/
 #include "Move.h"
 
+#include <algorithm>
+
 using namespace move;
 
 /**
@@ -98,10 +100,38 @@ void MoveList::swap(int i1, int i2) {
     Move m1      = moves[i1];
     moves[i1]    = moves[i2];
     moves[i2]    = m1;
-    
+
     MoveScore s1 = scores[i1];
     scores[i1]   = scores[i2];
     scores[i2]   = s1;
+}
+
+/**
+ * sorts the movelist
+ */
+void       MoveList::sort(int lo, int hi) {
+    if (hi == -1)
+        hi = size-1;
+    if (lo >= 0 && hi >= 0 && lo < hi){
+
+        MoveScore pivot = scores[hi];    // pivot
+        int i = lo - 1;          // Index of smaller element
+
+        for (int j = lo; j <= hi; j++)
+        {
+            // If current element is smaller than or
+            // equal to pivot
+            if (scores[j] >= pivot)
+            {
+                i++;    // increment index of smaller element
+                swap(i,j);
+            }
+        }
+        int partition = i;
+
+        this->sort(lo, partition-1);
+        this->sort(partition+1, hi);
+    }
 }
 
 /**

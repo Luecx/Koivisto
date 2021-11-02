@@ -181,6 +181,7 @@ class MoveList {
     
     public:
     void       swap(int i1, int i2);
+    void       sort(int lo =0, int hi =-1);
     move::Move getMove(int index);
     void       clear();
     void       add(move::Move move);

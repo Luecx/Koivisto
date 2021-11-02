@@ -1184,7 +1184,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
     
     Square kingSq = bitscanForward(getPieceBB(side, KING));
     
-    constexpr Color them = side ^ 1;
+    constexpr Color them = !side;
     
     U64 pinner = lookUpRookXRayAttack(kingSq, m_occupiedBB, m_teamOccupiedBB[side])
                  & (getPieceBB(them, ROOK) | getPieceBB(them, QUEEN));
