@@ -646,10 +646,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
         if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
-            && en.zobrist == zobrist && abs(en.score) < MIN_MATE_SCORE
-            && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
+            && abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
-            betaCut = en.score - SE_MARGIN_STATIC - depth * 2;
+            betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
