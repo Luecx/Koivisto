@@ -639,14 +639,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // History extension, to my knowledge first implemented in Seer
         // https://github.com/connormcmonigle/seer-nnue/commit/2f7092dbd2909550627017bfb721f49e3a7109af
-        int extension = ply > 0 && depth > 4 && history > 756;
+        int extension = ply > 0 && depth > 4 && history > 756 && sameMove(hashMove, m);
 
         // *********************************************************************************************************
         // singular extensions
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
-        if (depth >= 8 && !extension && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
+        if (depth >= 8 && !extension && !skipMove && sameMove(m, hashMove) && ply > 0 && !inCheck
             && abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
