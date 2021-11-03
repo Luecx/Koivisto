@@ -24,6 +24,10 @@
 
 using namespace bb;
 
+Score see_piece_vals[6]{
+    100, 325, 325, 500, 1000, 10000
+};
+
 float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };

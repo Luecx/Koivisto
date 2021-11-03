@@ -374,6 +374,15 @@ void uci::set_option(std::string& name, std::string& value) {
         PolyGlot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
         PolyGlot::book.open(value);
+    } else if (name == "see_pawn") {
+        see_piece_vals[PAWN] = stoi(value);
+    }else if (name == "see_knight_bishop") {
+        see_piece_vals[KNIGHT] = stoi(value);
+        see_piece_vals[BISHOP] = stoi(value);
+    }else if (name == "see_rook") {
+        see_piece_vals[ROOK] = stoi(value);
+    }else if (name == "see_queen") {
+        see_piece_vals[QUEEN] = stoi(value);
     }
 }
 
