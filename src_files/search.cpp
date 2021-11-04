@@ -737,7 +737,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
-        if (sameMove(hashMove, m) && en.type == CUT_NODE && !isCapture(m) && history < 0)
+        if (sameMove(hashMove, m) && depth > 7 && en.type == CUT_NODE && !isCapture(m) && history < 0)
             extension = 1;
 
         mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
