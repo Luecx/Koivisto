@@ -553,10 +553,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
-    int         legalMoves      = 0;
-    int         quiets          = 0;
-    U64         prevNodeCount   = td->nodes;
-    U64         bestNodeCount   = 0;
+    int         legalMoves          = 0;
+    int         quiets              = 0;
+    U64         prevNodeCount       = td->nodes;
+    U64         bestNodeCount       = 0;
+    U64         highestNodeCount    = 0;
+    Move        nodeCountMove       = 0;
 
     // speedup stuff for movepicking
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
@@ -819,6 +821,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             return highestScore;
         }
+        if (td->nodes - nodeCount > highestNodeCount) {
+            highestNodeCount = td->nodes - nodeCount;
+            nodeCountMove = m;
+        }
 
         // we consider this seperate to having a new best score for simplicity
         if (score > alpha) {
@@ -858,7 +864,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = 0;
+                bestMove = depth > 6 ? nodeCountMove : 0;
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
