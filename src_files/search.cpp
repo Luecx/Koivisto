@@ -759,7 +759,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             // at root we research the reduced move with slowly increasing depth untill it
             // fails/proves to be best.
-            if (ply == 0) {
+            if (ply == 0 || (depth > 10 && pv)) {
                 if (lmr && score > alpha) {
                     for (int i = lmr - 1; i > 0; i--) {
                         score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
