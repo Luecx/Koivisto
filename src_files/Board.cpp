@@ -1214,5 +1214,12 @@ Score Board::evaluate(){
          - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
          - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
          / 24.0f;
-    return (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
+    int eval = this->evaluator.evaluate(this->getActivePlayer());
+    int eg   = phase * eval;
+    int mg   = eval - eg;
+
+    int winningPawnCount = bitCount(getPieceBB(eg > 0 ? getActivePlayer() : !getActivePlayer(), PAWN));
+
+    eg = eg * (120 - (8 - winningPawnCount) * (8 - winningPawnCount)) / 100;
+    return mg * 1.6 + eg * 0.8;
 }
