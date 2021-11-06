@@ -1218,8 +1218,8 @@ Score Board::evaluate(){
     int eg   = phase * eval;
     int mg   = eval - eg;
 
-    int winningPawnCount = bitCount(getPieceBB(eg > 0 ? getActivePlayer() : !getActivePlayer(), PAWN));
+    int winningPawnCount = std::min(4, bitCount(getPieceBB(eg > 0 ? getActivePlayer() : !getActivePlayer(), PAWN)));
 
-    eg = eg * (120 - (8 - winningPawnCount) * (8 - winningPawnCount)) / 100;
+    eg = eg * (25 - (4 - winningPawnCount) * (4 - winningPawnCount)) / 25;
     return mg * 1.6 + eg * 0.8;
 }
