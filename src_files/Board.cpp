@@ -1221,5 +1221,5 @@ Score Board::evaluate(){
     int winningPawnCount = std::min(4, bitCount(getPieceBB(eg > 0 ? getActivePlayer() : !getActivePlayer(), PAWN)));
 
     eg = eg * (25 - (4 - winningPawnCount) * (4 - winningPawnCount)) / 25;
-    return mg * 1.6 + eg * 0.8;
+    return mg * 1.6 + eg;
 }
