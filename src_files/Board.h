@@ -283,7 +283,7 @@ class Board {
     template<Color color>
     [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 8 + piece];}
     
-    Score evaluate();
+    Score evaluate(int tempo = 0);
 };
 
 #endif    // CHESSCOMPUTER_BOARD_H
