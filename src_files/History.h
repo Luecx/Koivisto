@@ -32,7 +32,7 @@ struct SearchData {
 
     MoveList moves[MAX_INTERNAL_PLY] {};
     // Effort spent
-    int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
+    U64      spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
     // EvalImprovement
     int      maxImprovement[N_SQUARES][N_SQUARES]                                = {0};
     // capture history table (side-from-to)
@@ -47,6 +47,8 @@ struct SearchData {
     Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
     // threat data
     int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
+    U64      threatBB[MAX_INTERNAL_PLY][N_COLORS]                                = {0};
+
     // played moves
     Move     playedMoves[MAX_INTERNAL_PLY]                                       = {0};
     // eval history across plies

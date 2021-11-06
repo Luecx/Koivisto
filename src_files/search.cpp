@@ -65,14 +65,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 whitePawnAttacks = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnAttacks = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
-    sd->threatCount[ply][WHITE] =
-        bitCount(whitePawnAttacks
+    sd->threatBB[ply][WHITE] = whitePawnAttacks
                  & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)
-                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] =
-        bitCount(blackPawnAttacks
+                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN));
+    sd->threatBB[ply][BLACK] = blackPawnAttacks
                  & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP)
-                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN));
 
     U64 whiteMinorAttacks = 0;
     U64 blackMinorAttacks = 0;
@@ -96,10 +94,10 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
         blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
-    sd->threatCount[ply][WHITE] +=
-        bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] +=
-        bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+    sd->threatBB[ply][WHITE] |= whiteMinorAttacks 
+                 & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN));
+    sd->threatBB[ply][BLACK] |= blackMinorAttacks 
+                 & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN));
 
     U64 whiteRookAttacks = 0;
     U64 blackRookAttacks = 0;
@@ -113,8 +111,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
         blackRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
-    sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
+    sd->threatBB[ply][WHITE] |= whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN));
+    sd->threatBB[ply][BLACK] |= blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN));
+
+    sd->threatCount[ply][WHITE] = bitCount(sd->threatBB[ply][WHITE]);
+    sd->threatCount[ply][BLACK] = bitCount(sd->threatBB[ply][BLACK]);
+
 }
 
 void initLMR() {
@@ -339,6 +341,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score       staticEval;
     Score       ownThreats   = 0;
     Score       enemyThreats = 0;
+    U64         threatenedBB = 0;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse
     // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
     // has actually been evaluated.
@@ -350,6 +353,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
+        threatenedBB = sd->threatBB[ply][b->getActivePlayer()];
         
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
