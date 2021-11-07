@@ -39,7 +39,7 @@ class MoveOrderer {
     
     bool hasNext();
 
-    move::Move next(U64 kingBB);
+    move::Move next(U64 kingBB, U64 threat = 0);
 };
 
 #endif    // KOIVISTO_MOVEORDERER_H
