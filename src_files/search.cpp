@@ -579,7 +579,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
-
+        bool killer      = sd->isKiller(m, ply, b->getActivePlayer());
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
@@ -607,7 +607,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // **************************************************************************************************
                 if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0)
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
-                    moveOrderer.skip = true;
+                    if (!killer) 
+                        moveOrderer.skip = true;
                     continue;
                 }
             }
@@ -706,10 +707,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
+            lmr -= killer;
             if (!sd->targetReached) 
                 lmr++;
-            if (sd->isKiller(m, ply, b->getActivePlayer()))
-                lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
             if (lmr > MAX_PLY) {
