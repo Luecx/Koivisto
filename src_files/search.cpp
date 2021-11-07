@@ -479,9 +479,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
-            if (score >= beta) {
+
+            // Verification search at high depths
+            if (score >= beta && depth >= 10)
+                score = pvSearch(b, alpha, beta,
+                          depth - (depth / 4 + 3) * ONE_PLY
+                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
+                          ply, td, 0xFFFF, behindNMP);
+
+            if (score >= beta) 
                 return score;
-            }
         }
     }
 
