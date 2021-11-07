@@ -475,9 +475,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             sd->playedMoves[ply] = 0;
-            score =
-                -pvSearch(b, -beta, 1 - beta, nullDepth,
+            if (nullDepth > 6 && nullDepth < MAX_PLY) {
+                score = -pvSearch(b, -beta, 1 - beta, nullDepth/2,
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
+                if (score >= beta) {
+                    score = -pvSearch(b, -beta, 1 - beta, nullDepth,
+                              ply + ONE_PLY, td, 0, !b->getActivePlayer());
+                }
+            }
+            else {
+                score = -pvSearch(b, -beta, 1 - beta, nullDepth,
+                          ply + ONE_PLY, td, 0, !b->getActivePlayer());
+            }
             b->undoMove_null();
             if (score >= beta) {
                 return score;
