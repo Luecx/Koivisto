@@ -485,7 +485,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 score = pvSearch(b, alpha, beta,
                           depth - (depth / 4 + 3) * ONE_PLY
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
-                          ply, td, 0xFFFF, behindNMP);
+                          ply, td, 0, behindNMP);
 
             if (score >= beta) 
                 return score;
