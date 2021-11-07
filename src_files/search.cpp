@@ -469,14 +469,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // assume that we could achieve beta, so we can return early. Don't do nmp when the oponent
         // has threats or the position or we don't have non-pawn material.
         // **********************************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
+        Depth nullDepth = depth - (depth / 4 + 3) * ONE_PLY
+                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3);
+        if (staticEval >= beta + (nullDepth - 1 > MAX_PLY ? 30 : 0) && !(nullDepth - 1 > MAX_PLY && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             sd->playedMoves[ply] = 0;
             score =
-                -pvSearch(b, -beta, 1 - beta,
-                          depth - (depth / 4 + 3) * ONE_PLY
-                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
+                -pvSearch(b, -beta, 1 - beta, nullDepth,
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
