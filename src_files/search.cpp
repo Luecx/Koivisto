@@ -740,7 +740,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + (extension || (hashMove && !isCapture(hashMove) && sd->eval[b->getActivePlayer()][ply] < alpha && en.type == CUT_NODE)), ply + ONE_PLY, td, 0,
+            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + (extension || (!inCheck && hashMove && !isCapture(hashMove) && sd->eval[!b->getActivePlayer()][ply] < alpha && en.type == CUT_NODE)), ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
             // kk reduction logic.
