@@ -321,7 +321,11 @@ void Board::setPiece(Square sq, Piece piece) {
     
     // update the evaluator
     if constexpr (updateNN) {
-        evaluator.setPieceOnSquare<true>(getPieceType(piece), getPieceColor(piece), sq);
+        evaluator.setPieceOnSquare<true>(getPieceType(piece),
+                                         getPieceColor(piece),
+                                         sq,
+                                         bitscanForward(m_piecesBB[WHITE_KING]),
+                                         bitscanForward(m_piecesBB[BLACK_KING]));
     }
 
     // also adjust the zobrist key
@@ -356,7 +360,9 @@ void Board::unsetPiece(Square sq) {
     
     // update the evaluator
     if constexpr (updateNN){
-        evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq);
+        evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq,
+                                          bitscanForward(m_piecesBB[WHITE_KING]),
+                                          bitscanForward(m_piecesBB[BLACK_KING]));
     }
     
     // removing the piece from the square-wise piece table.
@@ -388,8 +394,12 @@ void Board::replacePiece(Square sq, Piece piece) {
     
     // update the evaluator
     if constexpr (updateNN){
-        evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq);
-        evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq);
+        evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq,
+                                          bitscanForward(m_piecesBB[WHITE_KING]),
+                                          bitscanForward(m_piecesBB[BLACK_KING]));
+        evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq,
+                                          bitscanForward(m_piecesBB[WHITE_KING]),
+                                          bitscanForward(m_piecesBB[BLACK_KING]));
     }
 
     // removing the piece from the square-wise piece table.
@@ -506,6 +516,7 @@ void Board::move(Move m) {
             Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
             unsetPiece(rookSquare);
             setPiece(rookTarget, ROOK + 8 * color);
+//            this->evaluator.reset(this);
         }
         
         this->unsetPiece(sqFrom);
@@ -513,6 +524,11 @@ void Board::move(Move m) {
             this->replacePiece(sqTo, pFrom);
         } else {
             this->setPiece(sqTo, pFrom);
+        }
+        
+        // check if it crossed squares
+        if(fileIndex(sqTo) + fileIndex(sqFrom) == 7 || isCastle(m)){
+            this->evaluator.reset(this);
         }
         
         // we need to compute the repetition count
@@ -1214,5 +1230,6 @@ Score Board::evaluate(){
          - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
          - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
          / 24.0f;
-    return (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer());
+    
+    return (2.0f - phase) * 0.8f * this->evaluator.evaluate(this->getActivePlayer(), this);
 }
