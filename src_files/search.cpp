@@ -375,7 +375,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         hashMove = en.move;
 
         // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
+        if ((en.type == PV_NODE) || (en.type & CUT_NODE && staticEval < en.score)
             || (en.type & ALL_NODE && staticEval > en.score)) {
 
             staticEval = en.score;
@@ -388,7 +388,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth) {
             if (en.type == PV_NODE) {
                 return en.score;
-            } else if (en.type == CUT_NODE) {
+            } else if (en.type & CUT_NODE) {
                 if (en.score >= beta) {
                     return en.score;
                 }
@@ -808,7 +808,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(zobrist, score, m, CUT_NODE, depth);
+                if (zobrist == en.zobrist && !(en.type & CUT_NODE)) {
+                    table->put(zobrist, score, m, FORMER_ALL_NODE, depth);
+                } else {
+                    table->put(zobrist, score, m, CUT_NODE, depth);
+                }
             }
             // also set this move as a killer move into the history
             if (!isCapture(m))
@@ -904,7 +908,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (en.zobrist == zobrist) {
         if (en.type == PV_NODE) {
             return en.score;
-        } else if (en.type == CUT_NODE) {
+        } else if (en.type & CUT_NODE) {
             if (en.score >= beta) {
                 return en.score;
             }
@@ -925,7 +929,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == zobrist) {
         // adjusting eval
-        if ((en.type == PV_NODE) || (en.type == CUT_NODE && stand_pat < en.score)
+        if ((en.type == PV_NODE) || (en.type & CUT_NODE && stand_pat < en.score)
             || (en.type & ALL_NODE && stand_pat > en.score)) {
 
             bestScore = en.score;
