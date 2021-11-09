@@ -720,7 +720,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
-
+        if (sameMove(m, hashMove) && depth > 4 && b->getActivePlayer() == behindNMP && sd->eval[b->getActivePlayer()][ply] < alpha - 100 && !isCapture(hashMove))
+            extension = 1;
         // doing the move
         b->move(m);
 
