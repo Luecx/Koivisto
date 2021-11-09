@@ -28,7 +28,9 @@ using namespace move;
 
 struct SearchData {
 
-    Move     bestMove = 0;
+    Move     bestMove   = 0;
+
+    bool     threatFlag = 0;
 
     MoveList moves[MAX_INTERNAL_PLY] {};
     // Effort spent

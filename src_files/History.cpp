@@ -82,9 +82,15 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move followup) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
-        return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
-               + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * history[side][getSqToSqFromCombination(m)]) / 3;
+        if (threatFlag) {
+            return (1 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
+                + 4 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+                + 1 * history[side][getSqToSqFromCombination(m)]) / 3;
+        } else {
+            return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
+                + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+                + 2 * history[side][getSqToSqFromCombination(m)]) / 3;
+        }
     }
 }
 

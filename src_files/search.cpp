@@ -549,7 +549,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // create a moveorderer and assign the movelist to score the moves.
+    sd->threatFlag = enemyThreats;
     generateMoves(b, mv, hashMove, sd, ply);
+    sd->threatFlag = false;
     MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
@@ -663,8 +665,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
+            sd->threatFlag = enemyThreats;
             generateMoves(b, mv, hashMove, sd, ply);
             moveOrderer = {mv};
+            sd->threatFlag = false;
 
             m           = moveOrderer.next(0);
         }
