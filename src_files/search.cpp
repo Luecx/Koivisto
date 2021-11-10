@@ -56,6 +56,17 @@ bool hasOnlyPawns(Board* board, Color color) {
            == ((board->getPieceBB()[PAWN + color * 8] | board->getPieceBB()[KING + color * 8]));
 }
 
+bool isThreatMove(Board* b, Move m) {
+    if (getMovingPieceType(m) == PAWN) {
+        return b->getActivePlayer() == WHITE ?
+                bitCount((shiftNorthEast(ONE << getSquareTo(m)) | shiftNorthWest(ONE << getSquareTo(m)))
+                & (b->getTeamOccupiedBB(BLACK) & ~b->getPieceBB(BLACK, PAWN))) > 1 
+                : bitCount((shiftSouthEast(ONE << getSquareTo(m)) | shiftSouthWest(ONE << getSquareTo(m)))
+                & (b->getTeamOccupiedBB(WHITE) & ~b->getPieceBB(WHITE, PAWN))) > 1;
+    }
+    return false;
+}
+
 void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 occupied         = b->getOccupiedBB();
 
@@ -578,7 +589,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
-        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        bool isThreat    = isThreatMove(b, m);
+        bool quiet       = !isCapture(m) && !isPromotion && !givesCheck && !isThreat;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
