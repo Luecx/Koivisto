@@ -122,7 +122,7 @@ void initLMR() {
     
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1.75 + log(d) * log(m) * 100 / LMR_DIV;
 }
 
 /**
@@ -703,7 +703,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (lmr) {
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
             lmr = lmr - history / 150;
-            lmr += !isImproving;
+            lmr -= isImproving;
             lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
