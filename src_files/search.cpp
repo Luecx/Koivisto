@@ -652,8 +652,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
-                    //depth += *lmrFactor;
-                    //*lmrFactor = 0;
+                    if (*lmrFactor == 0)
+                        extension++;
+                    depth += *lmrFactor;
+                    *lmrFactor = 0;
                 }
                 extension++;
             } else if (score >= beta) {
@@ -733,7 +735,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
-        if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
+        if (extension == 0 && sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
         mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
