@@ -87,7 +87,7 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / division)*3 + whiteInc) - 25
                                                        : (int(black / division)*3 + blackInc) - 25;
 
-    timeToUse = upperTimeBound / 3;
+    timeToUse = upperTimeBound / 3 + board->getActivePlayer() == WHITE ? whiteInc / 3 : blackInc / 3;
 
     timeToUse = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
     upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
