@@ -744,7 +744,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                               behindNMP);
         } else {
             // kk reduction logic.
-            if (ply == 0 && lmr) {
+            if (pv && lmr && !(ply & 0x1)) {
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
             }
@@ -752,9 +752,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
             // more kk reduction logic.
-            if (pv)
-                sd->reduce = true;
-            if (ply == 0) {
+            if (pv && lmr && !(ply & 0x1)) {
+                sd->reduce       = true;
                 sd->sideToReduce = b->getActivePlayer();
             }
             // at root we research the reduced move with slowly increasing depth untill it
