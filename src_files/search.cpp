@@ -206,7 +206,6 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
             while (this->isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
                 s      = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
-                window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
                 if (s >= beta) {
@@ -218,6 +217,8 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
                 } else {
                     break;
                 }
+                window += window;
+
             }
         }
         int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
