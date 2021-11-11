@@ -27,8 +27,9 @@
 #include <vector>
 
 
-#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2)
-#define HIDDEN_SIZE    (1024)
+#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 2)
+#define HIDDEN_SIZE    (512)
+#define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
 #define OUTPUT_SIZE    (1)
  
 #if defined(__AVX512F__)
@@ -47,7 +48,7 @@ class Board;
 namespace nn {
 
 extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
-extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_SIZE];
+extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 extern int16_t inputBias    [HIDDEN_SIZE];
 extern int32_t hiddenBias   [OUTPUT_SIZE];
 
@@ -62,8 +63,8 @@ struct Evaluator {
     // summations
     std::vector<Accumulator> history{};
     
-    alignas(ALIGNMENT) int16_t activation[HIDDEN_SIZE] {};
-    alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE] {};
+    alignas(ALIGNMENT) int16_t activation[HIDDEN_DSIZE] {};
+    alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE ] {};
 
     Evaluator();
     
@@ -73,11 +74,19 @@ struct Evaluator {
     
     void clearHistory();
     
-    int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color activePlayer);
+    int index( bb::PieceType pieceType,
+               bb::Color pieceColor,
+               bb::Square square,
+               bb::Color activePlayer,
+               bb::Square kingSquare);
 
     template<bool value>
-    void setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square);
-
+    void setPieceOnSquare(bb::PieceType pieceType,
+                          bb::Color pieceColor,
+                          bb::Square square,
+                          bb::Square wKingSquare,
+                          bb::Square bKingSquare);
+    
     void reset(Board* board);
     
     int evaluate(bb::Color activePlayer, Board* board = nullptr);
