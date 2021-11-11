@@ -717,7 +717,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
-            if (history > 256*(2-isCapture(m)))
+            if (history > 512*!isCapture(m))
                 lmr = 0;
         }
 
