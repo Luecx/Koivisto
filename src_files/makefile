@@ -6,7 +6,7 @@ ROOT     = ../
 NAME     = Koivisto
 EVALFILE = $(ROOT)networks/default.net
 EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
-MINOR    = 3
+MINOR    = 4
 MAJOR    = 7
 ifeq ($(OS),Windows_NT)
     PREFIX := windows
