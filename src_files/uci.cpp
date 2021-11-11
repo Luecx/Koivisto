@@ -161,7 +161,7 @@ void uci::processCommand(std::string str) {
 
             uci::go_match((wtime.empty()) ? 60000000 : stoi(wtime), (btime.empty()) ? 60000000 : stoi(btime),
                          (wincr.empty()) ? 0 : stoi(wincr), (bincr.empty()) ? 0 : stoi(bincr),
-                         (mvtog.empty()) ? 22 : stoi(mvtog), (depth.empty()) ? MAX_PLY : stoi(depth));
+                         (mvtog.empty()) ? 23 : stoi(mvtog), (depth.empty()) ? MAX_PLY : stoi(depth));
 
         } else if (str.find("depth") != string::npos) {
             uci::go_depth(stoi(getValue(split, "depth")));
