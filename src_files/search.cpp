@@ -442,7 +442,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (score < beta) {
                 return score;
             } else if (depth == 1)
-                return beta;
+                return score;
         }
         // **********************************************************************************************************
         // static null move pruning:
@@ -461,7 +461,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // that we can atleast achieve beta
         // **********************************************************************************************************
         if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
-            return beta;
+            return staticEval;
 
         // **********************************************************************************************************
         // null move pruning:
@@ -519,7 +519,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             if (qScore >= betaCut) {
                 table->put(zobrist, qScore, m, CUT_NODE, depth - 3);
-                return betaCut;
+                return qScore;
             }
         }
     }
