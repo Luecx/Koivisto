@@ -60,7 +60,7 @@ struct SearchData {
 
     int      rootAverageEvals[N_SQUARES][N_SQUARES]                              = {0};
 
-    void     rescoreMoveListOnEvals(MoveList* mv, Move hashMove);
+    void     rescoreMoveListOnEvals(MoveList* mv, Move hashMove, Move previous);
 
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup);
 

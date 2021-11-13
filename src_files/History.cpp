@@ -20,10 +20,10 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::rescoreMoveListOnEvals(MoveList* mv, Move hashMove) {
+void SearchData::rescoreMoveListOnEvals(MoveList* mv, Move hashMove, Move previous) {
     for (int i = 0; i < mv->getSize(); i++) {
         Move m = mv->getMove(i);
-        mv->scoreMove(i, rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = -9999 ? 1000 + history[getMovingPieceColor(m)][getSqToSqFromCombination(m)] : 11000  + std::min(std::max(rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -9999), 10000));
+        mv->scoreMove(i, rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = -9999 ? 1000 + getHistories(m, getMovingPieceColor(m), previous, 0) : 11000  + std::min(std::max(rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -9999), 10000));
         if (sameMove(hashMove, m)) {
             mv->scoreMove(i, 1e6);
         }
