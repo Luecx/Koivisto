@@ -637,7 +637,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
-            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = 0;
+            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = -10000;
         }
 
         // compute the static exchange evaluation if the move is a capture
