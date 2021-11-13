@@ -744,6 +744,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                               behindNMP);
         } else {
             // reduced search.
+            if (ply == 0 && lmr == 0) {
+                sd->reduce       = true;
+                sd->sideToReduce = !b->getActivePlayer();
+            }
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
             // at root we research the reduced move with slowly increasing depth untill it
@@ -757,7 +761,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                             break;
                     }
                 }
-                if (ply == 0 && lmr) {
+                if (ply == 0) {
                     sd->reduce       = true;
                     sd->sideToReduce = !b->getActivePlayer();
                 }
