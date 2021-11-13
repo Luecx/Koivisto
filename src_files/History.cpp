@@ -20,6 +20,16 @@
 
 #define MAX_HISTORY_SCORE 512;
 
+void SearchData::rescoreMoveListOnEvals(MoveList* mv, Move hashMove) {
+    for (int i = 0; i < mv->getSize(); i++) {
+        Move m = mv->getMove(i);
+        mv->scoreMove(i, 10000  + std::min(std::max(rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -10000), 10000));
+        if (sameMove(hashMove, m)) {
+            mv->scoreMove(i, 1e6);
+        }
+    }
+}
+
 void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup) {
     if (depth > 20)
         return;

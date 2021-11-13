@@ -552,6 +552,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // create a moveorderer and assign the movelist to score the moves.
     generateMoves(b, mv, hashMove, sd, ply);
+    if (ply == 0 && depth > 9)
+        sd->rescoreMoveListOnEvals(mv, hashMove);
     MoveOrderer moveOrderer {mv};
 
     // count the legal and quiet moves.
@@ -635,6 +637,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
+            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = 0;
         }
 
         // compute the static exchange evaluation if the move is a capture
@@ -800,10 +803,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
-        if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) > bestAverageEval) {
-            bestAverageEval         = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
-            bestAverageEvalMove     = m;
-        }
+        if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && depth > 8) 
+            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
         /*if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && ply == 0) {
             // std::cout << "AVERAGE EVAL MOVE "  << (int)(sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) << std::endl << toString(m) << std::endl;
         }*/
@@ -879,7 +880,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = bestAverageEvalMove;
+                bestMove = 0;
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
