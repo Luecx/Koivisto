@@ -784,7 +784,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                       td, 0, behindNMP);    // re-search
             } else {
                 // if not at root use standard logic
-                if (lmr && score > alpha)
+                if (lmr && (score > alpha 
+                              ||  (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 
+                              && abs(score) > 8
+                              && (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) > std::max((int)beta, bestAverageEval + 50))))
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                       ply + ONE_PLY, td, 0, behindNMP);    // re-search
                 if (score > alpha && score < beta)
@@ -803,8 +806,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) > bestAverageEval) {
             bestAverageEval         = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
             bestAverageEvalMove     = m;
-        } else if (bestAverageEvalMove == 0) {
-            bestAverageEval         = MAX_MATE_SCORE;
         }
         /*if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && ply == 0) {
             // std::cout << "AVERAGE EVAL MOVE "  << (int)(sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) << std::endl << toString(m) << std::endl;
@@ -881,7 +882,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = depth > 6 ? bestAverageEvalMove : 0;
+                bestMove = 0;
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
