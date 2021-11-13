@@ -122,7 +122,7 @@ void initLMR() {
     
     for (d = 0; d < 256; d++)
         for (m = 0; m < 256; m++)
-            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1.5 + log(d) * log(m) * 100 / LMR_DIV;
 }
 
 /**
@@ -709,8 +709,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
-            if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
-                lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
