@@ -579,13 +579,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
-
+        quiets           += quiet;
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
 
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 
             if (quiet) {
-                quiets++;
                 // **************************************************************************************************
                 // late move pruning:
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
