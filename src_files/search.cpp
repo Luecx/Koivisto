@@ -803,6 +803,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) > bestAverageEval) {
             bestAverageEval         = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
             bestAverageEvalMove     = m;
+        } else if (bestAverageEvalMove == 0) {
+            bestAverageEval         = MAX_MATE_SCORE;
         }
         /*if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && ply == 0) {
             // std::cout << "AVERAGE EVAL MOVE "  << (int)(sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) << std::endl << toString(m) << std::endl;
