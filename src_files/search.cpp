@@ -802,7 +802,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
-            // std::cout << "AVBGEGASFLA " << toString(m) << " - " << std::min(std::max(sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -9999), 10000) << std::endl;
+            //std::cout << "AVBGEGASFLA " << toString(m) << " - " << std::min(std::max(sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -9999), 10000) << std::endl;
         }
 
         if (ply == 0 && sd->totalEvalCalls- oldTotalCalls > 5) 
