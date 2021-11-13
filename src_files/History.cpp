@@ -23,7 +23,7 @@
 void SearchData::rescoreMoveListOnEvals(MoveList* mv, Move hashMove) {
     for (int i = 0; i < mv->getSize(); i++) {
         Move m = mv->getMove(i);
-        mv->scoreMove(i, 10000  + std::min(std::max(rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -10000), 10000));
+        mv->scoreMove(i, 10000  + std::min(std::max(rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -9999), 10000));
         if (sameMove(hashMove, m)) {
             mv->scoreMove(i, 1e6);
         }

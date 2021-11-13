@@ -637,7 +637,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
-            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = -10000;
+            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = -9999;
         }
 
         // compute the static exchange evaluation if the move is a capture
@@ -803,7 +803,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
-        if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && depth > 8) 
+        if (ply == 0 && sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && depth > 8) 
             sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
         /*if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && ply == 0) {
             // std::cout << "AVERAGE EVAL MOVE "  << (int)(sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) << std::endl << toString(m) << std::endl;
