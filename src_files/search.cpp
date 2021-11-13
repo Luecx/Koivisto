@@ -354,7 +354,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 sd->totalEval[b->getActivePlayer()]     += staticEval;
-                sd->totalEvalCalls[b->getActivePlayer()]++;
+                sd->totalEval[!b->getActivePlayer()]    -= staticEval;
+                sd->totalEvalCalls++;
                 int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
             }
@@ -731,7 +732,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         int64_t     oldTotalEval    = sd->totalEval[b->getActivePlayer()];
-        int64_t     oldTotalCalls   = sd->totalEvalCalls[b->getActivePlayer()];
+        int64_t     oldTotalCalls   = sd->totalEvalCalls;
 
         // doing the move
         b->move(m);
@@ -801,10 +802,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
+            // std::cout << "AVBGEGASFLA " << toString(m) << " - " << std::min(std::max(sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)], -9999), 10000) << std::endl;
         }
 
-        if (ply == 0 && sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && depth > 8) 
-            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
+        if (ply == 0 && sd->totalEvalCalls- oldTotalCalls > 5) 
+            sd->rootAverageEvals[getSquareFrom(m)][getSquareTo(m)] = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls - oldTotalCalls);
         /*if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && ply == 0) {
             // std::cout << "AVERAGE EVAL MOVE "  << (int)(sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) << std::endl << toString(m) << std::endl;
         }*/

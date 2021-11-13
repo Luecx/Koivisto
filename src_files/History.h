@@ -56,7 +56,7 @@ struct SearchData {
     bool     targetReached                                                       = 1;
 
     int64_t  totalEval[N_COLORS]                                                 = {0};
-    int64_t  totalEvalCalls[N_COLORS]                                            = {0};
+    int64_t  totalEvalCalls                                                      = {0};
 
     int      rootAverageEvals[N_SQUARES][N_SQUARES]                              = {0};
 
