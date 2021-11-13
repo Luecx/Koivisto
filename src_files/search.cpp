@@ -353,6 +353,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
+                sd->totalEval[b->getActivePlayer()]     += staticEval;
+                sd->totalEvalCalls[b->getActivePlayer()]++;
                 int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
             }
@@ -557,6 +559,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
+    int64_t     oldTotalEval    = 0;
+    int64_t     oldTotalCalls   = 0;
+    int         bestAverageEval = -MAX_MATE_SCORE;
+    int         bestAverageEvalMove = 0;
 
     // speedup stuff for movepicking
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
@@ -721,6 +727,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
+        int64_t     oldTotalEval    = sd->totalEval[b->getActivePlayer()];
+        int64_t     oldTotalCalls   = sd->totalEvalCalls[b->getActivePlayer()];
+
         // doing the move
         b->move(m);
 
@@ -791,6 +800,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
+        if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) > bestAverageEval) {
+            bestAverageEval         = (sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls);
+            bestAverageEvalMove     = m;
+        }
+        /*if (sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls > 10 && ply == 0) {
+            // std::cout << "AVERAGE EVAL MOVE "  << (int)(sd->totalEval[b->getActivePlayer()] - oldTotalEval)/(sd->totalEvalCalls[b->getActivePlayer()] - oldTotalCalls) << std::endl << toString(m) << std::endl;
+        }*/
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
@@ -839,6 +855,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         return staticEval;
     }
 
+    /*if (ply == 0) {
+        std::cout << "BEST AVERAGE EVAL MOVE "  << (int)bestAverageEval << std::endl << toString(bestAverageEvalMove) << std::endl;
+        sd->bestMove = bestAverageEvalMove;
+    }*/
+
     // if there are no legal moves, its either stalemate or checkmate.
     if (legalMoves == 0) {
         // if we are not in check, it must be stalemate (draw)
@@ -858,7 +879,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = 0;
+                bestMove = bestAverageEvalMove;
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {

@@ -54,6 +54,10 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                       = 1;
+
+    int64_t  totalEval[N_COLORS]                                                 = {0};
+    int64_t  totalEvalCalls[N_COLORS]                                            = {0};
+
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup);
 
     int      getHistories(Move m, Color side, Move previous, Move followup);
