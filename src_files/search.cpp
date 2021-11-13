@@ -879,7 +879,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = bestAverageEvalMove;
+                bestMove = depth > 6 ? bestAverageEvalMove : 0;
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
