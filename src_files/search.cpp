@@ -554,7 +554,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // count the legal and quiet moves.
     int         legalMoves      = 0;
-    int         quiets          = 0;
+    int         quiets          = -1;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
 
