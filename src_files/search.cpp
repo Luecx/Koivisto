@@ -675,7 +675,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // implementation is quite different and it also is different functionally. Stockfish type
         // cutnode stuff has not gained in Koivisto, while this has.
         // *********************************************************************************************************
-        if (pv) {
+        if (ply == 0) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce       = false;
             if (legalMoves == 0) {
