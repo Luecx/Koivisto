@@ -57,6 +57,7 @@ void isReady();
 
 void debug(bool mode);
 
+void logo();
 void uci();
 
 void position_fen(std::string fen, std::string moves);

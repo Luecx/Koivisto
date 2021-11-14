@@ -17,6 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+#include <cpuid.h>
 #include "uci.h"
 #include "polyglot.h"
 #include "search.h"
@@ -80,9 +81,8 @@ void uci::mainloop(int argc, char* argv[]){
     searchObject.init(16);
 
 
-    std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
-              << std::endl;
-
+    uci::logo();
+  
     board = new Board();
 
     std::atexit(uci::quit);
@@ -120,7 +120,21 @@ void uci::uci() {
     std::cout << "uciok" << std::endl;
 }
 
-
+/**
+ * displays a logo of Koivisto with the version + authors
+ */
+void uci::logo(){
+    std::cout << R"(                                                                          )" << std::endl;
+    std::cout << R"(                        \¯¯¯¯¯\      /¯¯¯¯¯/     by K. Kahre, F. Eggers   )" << std::endl;
+    std::cout << R"(                         ¯¯¯\  \    /  /¯¯¯                               )" << std::endl;
+    std::cout << R"(     |¯| /¯/   /¯¯¯¯\   |¯|  \  \  /  /  |¯|  /¯¯¯¯|  |¯¯¯¯¯¯¯|   /¯¯¯¯\  )" << std::endl;
+    std::cout << R"(     | |/ /   | |¯¯| |  | |   \  \/  /   | |  | |¯¯   ¯¯¯| |¯¯¯  | |¯¯| | )" << std::endl;
+    std::cout << R"(     |   |    | |  | |  | |    \    /    | |  \___ \     | |     | |  | | )" << std::endl;
+    std::cout << R"(     | |\ \   | |__| |  | |     \  /     | |   __| |     | |     | |__| | )" << std::endl;
+    std::cout << R"(     |_| \_\   \____/   |_|      \/      |_|  |____/     |_|      \____/  )" << std::endl;
+    std::cout << R"(                                                                    v)"
+              << MAJOR_VERSION << "." << MINOR_VERSION<< std::endl;
+}
 
 /**
  * processes a single command.
