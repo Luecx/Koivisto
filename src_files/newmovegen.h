@@ -66,10 +66,13 @@ class moveGen {
     SearchData*     m_sd;
     Depth           m_ply;
     Move            m_hashMove;
+    Move            m_previous;
+    Move            m_followup;
+    Color           c;
     int             m_mode;
 
     public: 
-    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, int mode);
+    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode);
     Move next();
     void addNoisy(Move m);
     void addQuiet(Move m);
@@ -78,7 +81,7 @@ class moveGen {
     void addSearched(Move m);
     void generateNoisy();
     void generateQuiet();
-    void updateHistory(int weight, Move previous, Move followup);
+    void updateHistory(int weight);
 };
 
 #endif

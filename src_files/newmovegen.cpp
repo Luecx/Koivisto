@@ -17,12 +17,18 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "newmovegen.h"
+    
+static const int piece_values[6] = {
+    90, 463, 474, 577, 1359, 0,
+};
 
-void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, int mode) {
+void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode) {
     m_sd            = sd;
     m_board         = b;
     m_ply           = ply;
     m_hashMove      = hashMove;
+    m_previous      = previous;
+    m_followup      = followup;
     m_mode          = mode;
     stage           = GET_HASHMOVE;
     quietSize       = 0;
@@ -31,6 +37,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, int mode)
     noisy_index     = 0;
     quiet_index     = 0;
     searched_index  = 0;
+    c               = b->getActivePlayer();
 }
 
 Move moveGen::next() {
@@ -71,16 +78,29 @@ Move moveGen::next() {
 void moveGen::addNoisy(Move m) {
     if (sameMove(m_hashMove, m))
         return;
+    int score   = m_board->staticExchangeEvaluation(m);
+    int mvvLVA  = piece_values[(getCapturedPieceType(m))];
+    if (score >= 0) {
+        score = 100000 + mvvLVA + m_sd->getHistories(m, c, 0, 0);
+        goodNoisyCount++;
+    } else {
+        score = 10000 + m_sd->getHistories(m, c, 0, 0);
+    }
     noisy[noisySize] = m;
-    noisyScores[noisySize++] = 1;
-    goodNoisyCount++;
+    noisyScores[noisySize++] = score;
 }
 
 void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m))
         return;
+    int score = 0;
+    if (m_sd->isKiller(m, m_ply, c)){
+        score = 30000 + m_sd->isKiller(m, m_ply, c);
+    } else{
+        score = 20000 + m_sd->getHistories(m, c, m_previous, m_followup);
+    }
     quiets[quietSize] = m;
-    quietScores[quietSize++] = 1;
+    quietScores[quietSize++] = score;
 }
 
 Move moveGen::nextNoisy() {
@@ -112,8 +132,6 @@ void moveGen::addSearched(Move m) {
 }
 
 void moveGen::generateNoisy() {
-
-    const Color c = m_board->getActivePlayer();
     
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
@@ -187,8 +205,6 @@ void moveGen::generateNoisy() {
 }
 
 void moveGen::generateQuiet() {
-        
-    const Color c = m_board->getActivePlayer();
     
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
@@ -228,59 +244,58 @@ void moveGen::generateQuiet() {
     }
 }
 
-void moveGen::updateHistory(int weight, Move previous, Move followup) {
+void moveGen::updateHistory(int weight) {
 
     weight          = weight * weight + 5 * weight;
     Move bestMove   = searched[searched_index];    
-    Color side      = m_board->getActivePlayer();
 
     if (isCapture(bestMove)) {
-        m_sd->captureHistory[side][getSqToSqFromCombination(bestMove)] +=
+        m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->captureHistory[side][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
 
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                    m_sd->captureHistory[side][getSqToSqFromCombination(m)] +=
+                    m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
                                 - weight
-                                - weight * m_sd->captureHistory[side][getSqToSqFromCombination(m)]
+                                - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
                                 / MAX_HIST;
             }
         } 
     } else {
-        m_sd->history[side][getSqToSqFromCombination(bestMove)] +=
+        m_sd->history[c][getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->history[side][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->history[c][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
-        m_sd->cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(bestMove)] +=
+        m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(bestMove)]
+                    - weight * m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)]
                     / MAX_HIST;
-        m_sd->fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(bestMove)] +=
+        m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(bestMove)]
+                    - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)]
                     / MAX_HIST;
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                m_sd->captureHistory[side][getSqToSqFromCombination(m)] +=
+                m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
                             - weight
-                            - weight * m_sd->captureHistory[side][getSqToSqFromCombination(m)]
+                            - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
                             / MAX_HIST;
             } else {
-                m_sd->history[side][getSqToSqFromCombination(bestMove)] +=
+                m_sd->history[c][getSqToSqFromCombination(bestMove)] +=
                             - weight
-                            - weight * m_sd->history[side][getSqToSqFromCombination(m)]
+                            - weight * m_sd->history[c][getSqToSqFromCombination(m)]
                             / MAX_HIST;
-                m_sd->cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)] +=
+                m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)] +=
                             - weight
-                            - weight * m_sd->cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
+                            - weight * m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)]
                             / MAX_HIST;
-                m_sd->fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] +=
+                m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)] +=
                             - weight
-                            - weight * m_sd->fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)]
+                            - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)]
                             / MAX_HIST;
             }
         } 
