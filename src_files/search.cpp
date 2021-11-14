@@ -24,6 +24,7 @@
 #include "TimeManager.h"
 #include "UCIAssert.h"
 #include "movegen.h"
+#include "newmovegen.h"
 #include "polyglot.h"
 #include "syzygy/tbprobe.h"
 
@@ -548,28 +549,17 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return matingValue;
     }
 
-    // create a moveorderer and assign the movelist to score the moves.
-    generateMoves(b, mv, hashMove, sd, ply);
-    MoveOrderer moveOrderer {mv};
-
+    moveGen mGen;
+    mGen.init(sd, b, ply, hashMove, PV_SEARCH);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
 
-    // speedup stuff for movepicking
-    Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
-
+    Move m;
     // loop over all moves in the movelist
-    while (moveOrderer.hasNext()) {
-
-        // get the current move
-        Move m = moveOrderer.next(kingBB);
-
-        if (!m)
-            break;
+    while (m = mGen.next()) {
 
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
@@ -592,7 +582,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // move
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth]) {
-                    moveOrderer.skip = true;
                     continue;
                 }
                 
@@ -663,10 +652,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
-            generateMoves(b, mv, hashMove, sd, ply);
-            moveOrderer = {mv};
-
-            m           = moveOrderer.next(0);
+            mGen.init(sd, b, ply, hashMove, PV_SEARCH);
+            m = mGen.next();
         }
         // *********************************************************************************************************
         // kk reductions:
@@ -736,8 +723,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
-        mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
-
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
@@ -791,6 +776,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
+        mGen.addSearched(m);
+
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
@@ -815,7 +802,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
+            mGen.updateHistory(depth + (staticEval < alpha), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
 
             return highestScore;
         }
