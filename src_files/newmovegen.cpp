@@ -400,7 +400,7 @@ void moveGen::generateQuiet() {
 void moveGen::updateHistory(int weight) {
 
     weight          = std::min(weight * weight + 5 * weight, 256);
-    Move bestMove   = searched[searched_index];    
+    Move bestMove   = searched[searched_index - 1];    
 
     if (isCapture(bestMove)) {
         m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)] +=
