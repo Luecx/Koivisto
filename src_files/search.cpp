@@ -487,7 +487,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // we reuse movelists for memory reasons.
-    MoveList* mv      = &sd->moves[ply];
+    moveGen* mGen   = &td->generators[ply];
+    MoveList* mv    = &sd->moves[ply];
 
     // **********************************************************************************************************
     // probcut was first implemented in StockFish by Gary Linscott. See
@@ -549,8 +550,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return matingValue;
     }
 
-    moveGen mGen;
-    mGen.init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH);
+
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
@@ -559,7 +560,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Move m;
     // loop over all moves in the movelist
-    while (m = mGen.next()) {
+    while (m = mGen->next()) {
 
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
@@ -582,6 +583,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // move
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth]) {
+                    mGen->skip();
                     continue;
                 }
                 
@@ -652,8 +654,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
-            mGen.init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH);
-            m = mGen.next();
+            mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH);
+            m = mGen->next();
         }
         // *********************************************************************************************************
         // kk reductions:
@@ -776,7 +778,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
-        mGen.addSearched(m);
+        mGen->addSearched(m);
 
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
@@ -802,7 +804,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            mGen.updateHistory(depth + (staticEval < alpha));
+            mGen->updateHistory(depth + (staticEval < alpha));
 
             return highestScore;
         }
@@ -1317,3 +1319,6 @@ Move Search::probeDTZ(Board* board) {
 
     return 0;
 }
+
+ThreadData::ThreadData(int threadId) : threadID(threadId) {}
+ThreadData::ThreadData() {}

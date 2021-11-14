@@ -38,6 +38,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     quiet_index     = 0;
     searched_index  = 0;
     c               = b->getActivePlayer();
+    m_skip            = false;
 }
 
 Move moveGen::next() {
@@ -104,6 +105,8 @@ void moveGen::addQuiet(Move m) {
 }
 
 Move moveGen::nextNoisy() {
+    if (m_skip)
+        return noisy[noisy_index++];
     int bestNoisy = noisy_index;
     for (int i = noisy_index + 1; i < noisySize; i++) {
         if (noisyScores[i] > noisyScores[bestNoisy])
@@ -116,6 +119,8 @@ Move moveGen::nextNoisy() {
 }
 
 Move moveGen::nextQuiet() {
+    if (m_skip)
+        return quiets[quiet_index++];
     int bestQuiet = quiet_index;
     for (int i = quiet_index + 1; i < quietSize; i++) {
         if (quietScores[i] > quietScores[bestQuiet])
@@ -141,20 +146,22 @@ void moveGen::generateNoisy() {
     const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
     const Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
     
-    const U64 opponents         = m_board->getTeamOccupiedBB(!c);
-    
-    const U64 pawns             = m_board->getPieceBB(c, PAWN);
-    const U64 occupied          = m_board->getOccupiedBB();
+    const U64 opponents          = m_board->getTeamOccupiedBB(!c);
+    const U64 friendly           = m_board->getTeamOccupiedBB(c);
+
+    const U64 pawns              = m_board->getPieceBB(c, PAWN);
+    const U64 occupied           = m_board->getOccupiedBB();
     
     const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
     const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
     const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
     
-    const Piece movingPiece = c * 8 + PAWN;
+    Piece movingPiece = c * 8 + PAWN;
     
     U64 nonPromoAttacks = opponents & ~relative_rank_8_bb;
     Square target;
     
+    // Pawn
     U64 attacks = pawnsLeft & nonPromoAttacks;
     while (attacks) {
         target = bitscanForward(attacks);
@@ -202,6 +209,67 @@ void moveGen::generateNoisy() {
             attacks = lsbReset(attacks);
         }
     }
+
+
+    // Pieces
+    for(Piece p = KNIGHT; p <= QUEEN; p++){
+        U64 pieceOcc    = m_board->getPieceBB(c, p);
+        U64 movingPiece = p + 8 * c;
+        while(pieceOcc){
+            Square square = bitscanForward(pieceOcc);
+            U64 attacks = ZERO;
+            switch (p) {
+                case KNIGHT:
+                    attacks = KNIGHT_ATTACKS[square];
+                    break;
+                case BISHOP:
+                    attacks =
+                        lookUpBishopAttack  (square, occupied);
+                    break;
+                case ROOK:
+                    attacks =
+                        lookUpRookAttack    (square,occupied);
+                    break;
+                case QUEEN:
+                    attacks =
+                        lookUpBishopAttack  (square, occupied) |
+                        lookUpRookAttack    (square, occupied);
+                    break;
+                
+            }
+            attacks &= ~friendly;
+
+            while(attacks){
+                Square target = bitscanForward(attacks);
+                if(m_board->getPiece(target) != -1){
+                    addNoisy(genMove(square, target, CAPTURE, movingPiece, m_board->getPiece(target)));
+                }
+                attacks = lsbReset(attacks);
+            }
+            pieceOcc = lsbReset(pieceOcc);
+        }
+    }
+    
+
+    // King
+    movingPiece = KING + c * 8;
+    
+    U64 kings      = m_board->getPieceBB(c, KING);
+    
+    while (kings) {
+        Square s       = bitscanForward(kings);
+        U64 attacks = KING_ATTACKS[s] & ~friendly;
+        while (attacks) {
+            Square target = bitscanForward(attacks);
+            
+            if (m_board->getPiece(target) >= 0) {
+                addNoisy(genMove(s, target, CAPTURE, movingPiece, m_board->getPiece(target)));
+            }
+            
+            attacks = lsbReset(attacks);
+        }
+        kings = lsbReset(kings);
+    }
 }
 
 void moveGen::generateQuiet() {
@@ -214,20 +282,21 @@ void moveGen::generateQuiet() {
     const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
     const Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
     
-    const U64 opponents         = m_board->getTeamOccupiedBB(!c);
+    const U64 opponents          = m_board->getTeamOccupiedBB(!c);
+    const U64 friendly           = m_board->getTeamOccupiedBB(c);
     
-    const U64 pawns             = m_board->getPieceBB(c, PAWN);
-    const U64 occupied          = m_board->getOccupiedBB();
+    const U64 pawns              = m_board->getPieceBB(c, PAWN);
+    const U64 occupied           = m_board->getOccupiedBB();
     
     const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
     const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
     const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
     
-    const Piece movingPiece = c * 8 + PAWN;
+    Piece movingPiece = c * 8 + PAWN;
 
     Square target;
 
-    
+    // Pawn
     U64 pawnPushes = pawnsCenter & ~relative_rank_8_bb;
     U64 attacks = pawnPushes;
     while (attacks) {
@@ -242,11 +311,95 @@ void moveGen::generateQuiet() {
         addQuiet(genMove(target - forward * 2, target, DOUBLED_PAWN_PUSH, movingPiece));
         attacks = lsbReset(attacks);
     }
+
+
+    // Piece
+    for(Piece p = KNIGHT; p <= QUEEN; p++){
+        U64 pieceOcc    = m_board->getPieceBB(c, p);
+        U64 movingPiece = p + 8 * c;
+        while(pieceOcc){
+            Square square = bitscanForward(pieceOcc);
+            U64 attacks = ZERO;
+            switch (p) {
+                case KNIGHT:
+                    attacks = KNIGHT_ATTACKS[square];
+                    break;
+                case BISHOP:
+                    attacks =
+                        lookUpBishopAttack  (square, occupied);
+                    break;
+                case ROOK:
+                    attacks =
+                        lookUpRookAttack    (square,occupied);
+                    break;
+                case QUEEN:
+                    attacks =
+                        lookUpBishopAttack  (square, occupied) |
+                        lookUpRookAttack    (square, occupied);
+                    break;
+                
+            }
+            attacks &= ~friendly;
+
+            while(attacks){
+                Square target = bitscanForward(attacks);
+                if(m_board->getPiece(target) == -1){
+                    addQuiet(genMove(square, target, QUIET, movingPiece));
+                }
+                attacks = lsbReset(attacks);
+            }
+            pieceOcc = lsbReset(pieceOcc);
+        }
+    }
+    
+    
+    // King
+    movingPiece = KING + c * 8;
+    
+    U64 kings      = m_board->getPieceBB(c, KING);
+    
+    while (kings) {
+        Square s       = bitscanForward(kings);
+        U64 attacks = KING_ATTACKS[s] & ~friendly;
+        while (attacks) {
+            Square target = bitscanForward(attacks);
+            
+            if (m_board->getPiece(target) < 0) {
+                addQuiet(genMove(s, target, QUIET, movingPiece));
+            }
+            
+            attacks = lsbReset(attacks);
+        }
+    
+    
+        if (c == WHITE) {
+            if (m_board->getCastlingRights(WHITE_QUEENSIDE_CASTLING) && m_board->getPiece(A1) == WHITE_ROOK
+                && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
+                addQuiet(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
+            }
+            if (m_board->getCastlingRights(WHITE_KINGSIDE_CASTLING) && m_board->getPiece(H1) == WHITE_ROOK
+                && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
+                addQuiet(genMove(E1, G1, KING_CASTLE, WHITE_KING));
+            }
+            
+        } else {
+        
+            if (m_board->getCastlingRights(BLACK_QUEENSIDE_CASTLING) && m_board->getPiece(A8) == BLACK_ROOK
+                && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
+                addQuiet(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
+            }
+            if (m_board->getCastlingRights(BLACK_KINGSIDE_CASTLING) && m_board->getPiece(H8) == BLACK_ROOK
+                && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
+                addQuiet(genMove(E8, G8, KING_CASTLE, BLACK_KING));
+            }
+        }
+        kings = lsbReset(kings);
+    }
 }
 
 void moveGen::updateHistory(int weight) {
 
-    weight          = weight * weight + 5 * weight;
+    weight          = std::min(weight * weight + 5 * weight, 256);
     Move bestMove   = searched[searched_index];    
 
     if (isCapture(bestMove)) {
@@ -300,4 +453,8 @@ void moveGen::updateHistory(int weight) {
             }
         } 
     }
+}
+
+void moveGen::skip() {
+    m_skip = true;
 }

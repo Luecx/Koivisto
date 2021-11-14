@@ -50,18 +50,19 @@ class moveGen {
 
     int             stage;
 
-    Move            quiets[MAX_QUIET];
-    Move            noisy[MAX_NOISY];
-    Move            searched[MAX_QUIET];
-    int             quietScores[MAX_QUIET];
-    int             noisyScores[MAX_NOISY];
+    Move            quiets[MAX_QUIET]       = {0};
+    Move            noisy[MAX_NOISY]        = {0};
+    Move            searched[MAX_QUIET]     = {0};
+    int             quietScores[MAX_QUIET]  = {0};
+    int             noisyScores[MAX_NOISY]  = {0};
     int             quietSize;
     int             noisySize;
     int             goodNoisyCount;
     int             noisy_index;
     int             quiet_index;
     int             searched_index;
-
+    
+    bool            m_skip;
     Board*          m_board;
     SearchData*     m_sd;
     Depth           m_ply;
@@ -82,6 +83,7 @@ class moveGen {
     void generateNoisy();
     void generateQuiet();
     void updateHistory(int weight);
+    void skip();
 };
 
 #endif

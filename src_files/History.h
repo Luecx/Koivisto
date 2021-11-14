@@ -67,20 +67,5 @@ struct SearchData {
     bool     isImproving(Score eval, Color color, Depth ply);
 } __attribute__((aligned(64)));
 
-/**
- * data about each thread
- */
-struct ThreadData {
-    int        threadID = 0;
-    U64        nodes    = 0;
-    int        seldepth = 0;
-    int        tbhits   = 0;
-    bool       dropOut  = false;
-    SearchData searchData {};
-
-    ThreadData();
-
-    ThreadData(int threadId);
-} __attribute__((aligned(4096)));
 
 #endif    // KOIVISTO_HISTORY_H

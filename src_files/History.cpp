@@ -124,7 +124,3 @@ bool SearchData::isImproving(Score ev, Color color, Depth ply) {
         return true;
     }
 }
-ThreadData::ThreadData(int threadId) : threadID(threadId) {
-}
-ThreadData::ThreadData() {
-}
