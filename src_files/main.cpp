@@ -19,9 +19,6 @@
 
 #include "uci.h"
 
-#include <stdio.h>
-#include <intrin.h>
-
 using namespace std;
 using namespace bb;
 using namespace move;
