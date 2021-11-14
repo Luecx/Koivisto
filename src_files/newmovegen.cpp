@@ -438,7 +438,7 @@ void moveGen::updateHistory(int weight) {
                             - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
                             / MAX_HIST;
             } else {
-                m_sd->history[c][getSqToSqFromCombination(bestMove)] +=
+                m_sd->history[c][getSqToSqFromCombination(m)] +=
                             - weight
                             - weight * m_sd->history[c][getSqToSqFromCombination(m)]
                             / MAX_HIST;
