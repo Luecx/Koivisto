@@ -17,15 +17,12 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include <cpuid.h>
 #include "uci.h"
 #include "polyglot.h"
-#include "search.h"
 #include "UCIAssert.h"
 
 #include "syzygy/tbprobe.h"
 
-#include <fstream>
 #include <iostream>
 #include <thread>
 
