@@ -57,6 +57,9 @@ Move moveGen::next() {
                 return nextNoisy();
             stage++;
 
+        case KILLERS:
+            
+
         case GEN_QUIET:
             generateQuiet();
             stage++;

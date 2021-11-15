@@ -1071,6 +1071,8 @@ bool Board::isLegal(Move m) {
     return !isAttacked;
 }
 
+    // Checks if the move is likely pseudo-legal. Doesn't cover en-passant, etc.
+    bool isPseudoLegal(Move m);
 /**
  * returns true if castling for the given index is possible.
  * For a reference to the indexing, check Board.h

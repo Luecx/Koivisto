@@ -39,6 +39,7 @@ enum {
     GET_HASHMOVE,
     GEN_NOISY,
     GET_GOOD_NOISY,
+    KILLERS,
     GEN_QUIET,
     GET_QUIET,
     GET_BAD_NOISY,
