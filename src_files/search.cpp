@@ -196,7 +196,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
-            s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
+            s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 0);
         } else {
             Score window = 10;
             Score alpha  = s - window;
@@ -205,7 +205,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
                                  // http://www.talkchess.com/forum3/viewtopic.php?t=45624.
             while (this->isTimeLeft()) {
                 sDepth = sDepth < d - 3 ? d - 3 : sDepth;
-                s      = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
+                s      = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 0);
                 window += window;
                 if (window > 500)
                     window = MIN_MATE_SCORE;
@@ -477,7 +477,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
-                          ply + ONE_PLY, td, 0, !b->getActivePlayer());
+                          ply + ONE_PLY, td, 0, behindNMP | (1 + !b->getActivePlayer()));
             b->undoMove_null();
             if (score >= beta) {
                 return score;
@@ -695,7 +695,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
-        if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
+        if (legalMoves > 0 && depth > 2 && (1 + b->getActivePlayer()) & behindNMP)
             lmr++;
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
@@ -750,7 +750,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
-                              td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+                              td, 0, lmr != 0 ? behindNMP | (1 + b->getActivePlayer()) : behindNMP, &lmr);
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
