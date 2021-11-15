@@ -28,7 +28,6 @@
 
 namespace bb {
 
-#define mirrorSquare(s) (bb::squareIndex(7 - bb::rankIndex(s), bb::fileIndex(s)))
 
 typedef uint64_t U64;
 typedef int8_t   Square;
@@ -414,6 +413,8 @@ inline Square squareIndex(std::string& str) {
     return squareIndex(r, f);
 }
 
+
+
 inline Diagonal diagonalIndex(const Square& square_index) {
     return 7 + rankIndex(square_index) - fileIndex(square_index);
 }
@@ -440,6 +441,14 @@ inline PieceType getPieceType(Piece p) {
 
 inline Piece getPiece(Color c, PieceType pt) {
     return c * 8 + pt;
+}
+
+inline Square mirrorSquareVertical(Square s){
+    return s ^ 56;
+}
+
+inline Square mirrorSquareHorizontal(Square s){
+    return s ^ 7;
 }
 
 /**

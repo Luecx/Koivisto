@@ -108,7 +108,7 @@ int nn::Evaluator::index(bb::PieceType pieceType,
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSideFactor   = 64 * 6 * 2;
 
-    const Square  relativeSquare   = view == WHITE ? square : mirrorSquare(square);
+    const Square  relativeSquare   = view == WHITE ? square : mirrorSquareVertical(square);
 
     return relativeSquare
            + pieceType * pieceTypeFactor
