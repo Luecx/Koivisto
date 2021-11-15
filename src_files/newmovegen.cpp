@@ -38,7 +38,9 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     quiet_index     = 0;
     searched_index  = 0;
     c               = b->getActivePlayer();
-    m_skip            = false;
+    m_skip          = false;
+    m_killer1       = m_sd->killer[c][m_ply][0];
+    m_killer2       = m_sd->killer[c][m_ply][1];
 }
 
 Move moveGen::next() {
@@ -57,8 +59,15 @@ Move moveGen::next() {
                 return nextNoisy();
             stage++;
 
-        case KILLERS:
-            
+        case KILLER1:
+            stage++;
+            if (m_board->isPseudoLegal(m_killer1))
+                return m_killer1;
+
+        case KILLER2:
+            stage++;
+            if (m_board->isPseudoLegal(m_killer2))
+                return m_killer1;
 
         case GEN_QUIET:
             generateQuiet();
@@ -95,7 +104,7 @@ void moveGen::addNoisy(Move m) {
 }
 
 void moveGen::addQuiet(Move m) {
-    if (sameMove(m_hashMove, m))
+    if (sameMove(m_hashMove, m) |sameMove(m_killer1, m) | sameMove(m_killer2, m))
         return;
     int score = 0;
     if (m_sd->isKiller(m, m_ply, c)){

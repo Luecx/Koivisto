@@ -39,7 +39,8 @@ enum {
     GET_HASHMOVE,
     GEN_NOISY,
     GET_GOOD_NOISY,
-    KILLERS,
+    KILLER1,
+    KILLER2,
     GEN_QUIET,
     GET_QUIET,
     GET_BAD_NOISY,
@@ -68,6 +69,8 @@ class moveGen {
     SearchData*     m_sd;
     Depth           m_ply;
     Move            m_hashMove;
+    Move            m_killer1;
+    Move            m_killer2;
     Move            m_previous;
     Move            m_followup;
     Color           c;
