@@ -210,11 +210,11 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
                 if (window > 500)
                     window = MIN_MATE_SCORE;
                 if (s >= beta) {
-                    beta += window;
+                    beta = s + window;
                     sDepth--;
                 } else if (s <= alpha) {
                     beta = (alpha + beta) / 2;
-                    alpha -= window;
+                    alpha = s - window;
                 } else {
                     break;
                 }
