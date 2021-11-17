@@ -775,7 +775,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                       td, 0, behindNMP);    // re-search
             } else {
                 // if not at root use standard logic
-                if (lmr && score > alpha)
+                if (lmr && score > alpha && 1 - b->getActivePlayer() == behindNMP)
                     score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                       ply + ONE_PLY, td, 0, behindNMP);    // re-search
                 if (score > alpha && score < beta)
