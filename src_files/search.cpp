@@ -761,7 +761,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // fails/proves to be best.
             if (ply == 0) {
                 if (lmr && score > alpha) {
-                    for (int i = lmr - 1; i > 0; i--) {
+                    for (int i = lmr - 1; i >= 0; i--) {
                         score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
                                           ply + ONE_PLY, td, 0, behindNMP);    // re-search
                         if (score <= alpha)
