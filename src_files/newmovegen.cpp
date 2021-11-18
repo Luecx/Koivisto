@@ -244,13 +244,12 @@ void moveGen::generateNoisy() {
                     break;
                 
             }
-            attacks &= ~friendly;
+            attacks &= ~friendly & opponents;
 
             while(attacks){
                 Square target = bitscanForward(attacks);
-                if(m_board->getPiece(target) != -1){
-                    addNoisy(genMove(square, target, CAPTURE, movingPiece, m_board->getPiece(target)));
-                }
+                addNoisy(genMove(square, target, CAPTURE, movingPiece, m_board->getPiece(target)));
+                
                 attacks = lsbReset(attacks);
             }
             pieceOcc = lsbReset(pieceOcc);
@@ -265,13 +264,10 @@ void moveGen::generateNoisy() {
     
     while (kings) {
         Square s       = bitscanForward(kings);
-        U64 attacks = KING_ATTACKS[s] & ~friendly;
+        U64 attacks = KING_ATTACKS[s] & ~friendly & opponents;
         while (attacks) {
             Square target = bitscanForward(attacks);
-            
-            if (m_board->getPiece(target) >= 0) {
-                addNoisy(genMove(s, target, CAPTURE, movingPiece, m_board->getPiece(target)));
-            }
+            addNoisy(genMove(s, target, CAPTURE, movingPiece, m_board->getPiece(target)));
             
             attacks = lsbReset(attacks);
         }
