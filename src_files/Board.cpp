@@ -1110,12 +1110,7 @@ bool Board::isPseudoLegal(Move m){
             }
             else if (isCapture){
                 if(isEnPassant(m)){
-                    //check if there is a pawn to be captured
-                    if(activePlayer == WHITE){
-                        return getPiece(sqTo - 8) == BLACK_PAWN;
-                    }else{
-                        return getPiece(sqTo + 8) == WHITE_PAWN;
-                    }
+                    return sqTo == getEnPassantSquare();
                 }else{
                     // check if the piece captured is actually at the given square
                     return getPiece(sqTo) == getCapturedPiece(m);
