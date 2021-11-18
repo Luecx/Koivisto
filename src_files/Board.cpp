@@ -1144,10 +1144,10 @@ bool Board::isPseudoLegal(Move m){
             // for this we can look into the meta information
             if(isCastle(m)){
                 bool kingSideCastle = sqTo > sqFrom;
-                bool canCastle      = m_occupiedBB & (activePlayer == WHITE ? 
+                U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ? 
                       (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK) 
-                      : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK)) == 0;
-                if(canCastle && getCastlingRights(activePlayer * 2 + kingSideCastle)){
+                      : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
+                if(canCastleMask == 0 && getCastlingRights(activePlayer * 2 + kingSideCastle)){
                     return true;
                 }
                 // we can exit early as this cannot be a capture
