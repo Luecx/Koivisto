@@ -29,8 +29,6 @@ using namespace move;
 struct SearchData {
 
     Move     bestMove = 0;
-
-    MoveList moves[MAX_INTERNAL_PLY] {};
     // Effort spent
     int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
     // EvalImprovement

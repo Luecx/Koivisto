@@ -57,6 +57,8 @@ Move moveGen::next() {
         case GET_GOOD_NOISY:
             if (noisy_index < goodNoisyCount) 
                 return nextNoisy();
+            if (m_mode == Q_SEARCH)
+                return 0;
             stage++;
 
         case KILLER1:
@@ -263,7 +265,7 @@ void moveGen::generateNoisy() {
     U64 kings      = m_board->getPieceBB(c, KING);
     
     while (kings) {
-        Square s       = bitscanForward(kings);
+        Square s    = bitscanForward(kings);
         U64 attacks = KING_ATTACKS[s] & ~friendly & opponents;
         while (attacks) {
             Square target = bitscanForward(attacks);
@@ -360,7 +362,7 @@ void moveGen::generateQuiet() {
     U64 kings      = m_board->getPieceBB(c, KING);
     
     while (kings) {
-        Square s       = bitscanForward(kings);
+        Square s    = bitscanForward(kings);
         U64 attacks = KING_ATTACKS[s] & ~friendly & ~opponents;
         while (attacks) {
             Square target = bitscanForward(attacks);

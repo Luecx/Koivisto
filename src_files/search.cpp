@@ -488,7 +488,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // we reuse movelists for memory reasons.
     moveGen* mGen   = &td->generators[ply];
-    MoveList* mv    = &sd->moves[ply];
 
     // **********************************************************************************************************
     // probcut was first implemented in StockFish by Gary Linscott. See
@@ -499,11 +498,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score     betaCut = beta + 100;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
-        generateNonQuietMoves(b, mv, hashMove, sd, ply);
-        MoveOrderer moveOrderer {mv};
-        while (moveOrderer.hasNext()) {
-            // get the current move
-            Move m = moveOrderer.next(0);
+        mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH);
+        Move m;
+        while (m = mGen->next()) {
+
+            if (!m)
+                break;
 
             if (!b->isLegal(m))
                 continue;
@@ -926,25 +926,14 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (alpha < bestScore)
         alpha = bestScore;
 
-    // extract all:
-    //- captures (including e.p.)
-    //- promotions
-    //
-    // moves that give check are not considered non-quiet in
-    // getNonQuietMoves() although they are not quiet.
-    //
-    MoveList* mv = &sd->moves[ply];
-
-    // create a moveorderer to sort the moves during the search
-    generateNonQuietMoves(b, mv, 0, sd, ply, inCheck);
-    MoveOrderer moveOrderer {mv};
+    moveGen* mGen   = &td->generators[ply];
+    mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH);
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
+    Move        m;
 
-    for (int i = 0; i < mv->getSize(); i++) {
-
-        Move m = moveOrderer.next(0);
+    while (m = mGen->next()) {
         
         // do not consider illegal moves
         if (!b->isLegal(m))
@@ -992,8 +981,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 alpha      = score;
             }
         }
-        if (!isCapture(m) && !isPromotion(m))
-            break;
     }
 
     // store the current position inside the transposition table
