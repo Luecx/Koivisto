@@ -112,8 +112,6 @@ void moveGen::addQuiet(Move m) {
 }
 
 Move moveGen::nextNoisy() {
-    if (m_skip)
-        return noisy[noisy_index++];
     int bestNoisy = noisy_index;
     for (int i = noisy_index + 1; i < noisySize; i++) {
         if (noisyScores[i] > noisyScores[bestNoisy])
@@ -126,8 +124,6 @@ Move moveGen::nextNoisy() {
 }
 
 Move moveGen::nextQuiet() {
-    if (m_skip)
-        return quiets[quiet_index++];
     int bestQuiet = quiet_index;
     for (int i = quiet_index + 1; i < quietSize; i++) {
         if (quietScores[i] > quietScores[bestQuiet])
@@ -455,4 +451,5 @@ void moveGen::updateHistory(int weight) {
 
 void moveGen::skip() {
     m_skip = true;
+    stage  = GET_BAD_NOISY;
 }
