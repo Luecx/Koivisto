@@ -67,7 +67,7 @@ Move moveGen::next() {
         case KILLER2:
             stage++;
             if (m_board->isPseudoLegal(m_killer2))
-                return m_killer1;
+                return m_killer2;
 
         case GEN_QUIET:
             generateQuiet();
@@ -89,7 +89,7 @@ Move moveGen::next() {
 }
 
 void moveGen::addNoisy(Move m) {
-    if (sameMove(m_hashMove, m))
+    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
         return;
     int score   = m_board->staticExchangeEvaluation(m);
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];

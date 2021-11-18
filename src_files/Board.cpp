@@ -1083,7 +1083,7 @@ bool Board::isLegal(Move m) {
  * @return
  */
 bool Board::isPseudoLegal(Move m){
-    
+
     if (!m)
         return false;
     
@@ -1138,29 +1138,30 @@ bool Board::isPseudoLegal(Move m){
         case QUEEN:
             // if there is a piece in the way, this move is invalid
             if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
-            if (isCapture - (getPiece(sqTo) != -1) == 0)
+            if (isCapture - (getPiece(sqTo) != -1) != 0) return false;
             break;
         case KING:
             // we only need to check if the castling move is valid.
             // for this we can look into the meta information
             if(isCastle(m)){
                 bool kingSideCastle = sqTo > sqFrom;
-                if(!getCastlingRights(activePlayer * 2 + kingSideCastle)){
-                    return false;
+                bool canCastle      = m_occupiedBB & (activePlayer == WHITE ? 
+                      (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK) 
+                      : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK)) == 0;
+                if(canCastle && getCastlingRights(activePlayer * 2 + kingSideCastle)){
+                    return true;
                 }
                 // we can exit early as this cannot be a capture
-                return true;
+                return false;
             }
             break;
     }
 
     // finally we need to check for the moves if its a capture and if thats the case, that the captured piece is on that
     // square
-    if (isCapture){
+    if (isCapture)
         return getPiece(sqTo) == getCapturedPiece(m);
-    }
-
-    return true;
+    return getPiece(sqTo) == -1;
 }
 /**
  * returns true if castling for the given index is possible.
