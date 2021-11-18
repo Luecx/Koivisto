@@ -1126,8 +1126,7 @@ bool Board::isPseudoLegal(Move m){
                 return getPiece(sqTo) == -1 && getPiece(sqTo + 8 * (getActivePlayer() == WHITE ? -1:1)) == -1;
             }else{
                 // validate that the target square is empty
-                if(getPiece(sqTo) != -1) return false;
-                return true;
+                return getPiece(sqTo) == -1;
             }
             break;
         // skip knights as there are no rays which need to be checked
