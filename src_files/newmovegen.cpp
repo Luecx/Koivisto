@@ -295,8 +295,6 @@ void moveGen::generateQuiet() {
     const U64 pawns              = m_board->getPieceBB(c, PAWN);
     const U64 occupied           = m_board->getOccupiedBB();
     
-    const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
-    const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
     const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
     
     Piece movingPiece = c * 8 + PAWN;
@@ -326,7 +324,7 @@ void moveGen::generateQuiet() {
         U64 movingPiece = p + 8 * c;
         while(pieceOcc){
             Square square = bitscanForward(pieceOcc);
-            U64 attacks = ZERO;
+            U64 attacks   = ZERO;
             switch (p) {
                 case KNIGHT:
                     attacks = KNIGHT_ATTACKS[square];
@@ -347,12 +345,12 @@ void moveGen::generateQuiet() {
                 
             }
             attacks &= ~friendly;
+            attacks &= ~opponents;
 
             while(attacks){
                 Square target = bitscanForward(attacks);
-                if(m_board->getPiece(target) == -1){
-                    addQuiet(genMove(square, target, QUIET, movingPiece));
-                }
+                addQuiet(genMove(square, target, QUIET, movingPiece));
+                
                 attacks = lsbReset(attacks);
             }
             pieceOcc = lsbReset(pieceOcc);
@@ -367,13 +365,10 @@ void moveGen::generateQuiet() {
     
     while (kings) {
         Square s       = bitscanForward(kings);
-        U64 attacks = KING_ATTACKS[s] & ~friendly;
+        U64 attacks = KING_ATTACKS[s] & ~friendly & ~opponents;
         while (attacks) {
             Square target = bitscanForward(attacks);
-            
-            if (m_board->getPiece(target) < 0) {
-                addQuiet(genMove(s, target, QUIET, movingPiece));
-            }
+            addQuiet(genMove(s, target, QUIET, movingPiece));
             
             attacks = lsbReset(attacks);
         }
