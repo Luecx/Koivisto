@@ -86,7 +86,7 @@ Move moveGen::next() {
         case END:
             return 0;
     }
-}
+};
 
 void moveGen::addNoisy(Move m) {
     if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
@@ -108,7 +108,7 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = 20000 + m_sd->getHistories(m, c, m_previous, m_followup);
+    quietScores[quietSize++] = 20000 + m_sd->getHistories(m, c, m_previous, m_sd->killer[1 - c][m_ply + 1][0]);
 }
 
 Move moveGen::nextNoisy() {
@@ -263,7 +263,7 @@ void moveGen::generateNoisy() {
     U64 kings      = m_board->getPieceBB(c, KING);
     
     while (kings) {
-        Square s       = bitscanForward(kings);
+        Square s    = bitscanForward(kings);
         U64 attacks = KING_ATTACKS[s] & ~friendly & opponents;
         while (attacks) {
             Square target = bitscanForward(attacks);
