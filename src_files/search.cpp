@@ -757,31 +757,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (ply == 0) {
                 sd->sideToReduce = b->getActivePlayer();
             }
-            // at root we research the reduced move with slowly increasing depth untill it
-            // fails/proves to be best.
-            if (ply == 0) {
-                if (lmr && score > alpha) {
-                    for (int i = lmr - 1; i > 0; i--) {
-                        score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - i + extension,
-                                          ply + ONE_PLY, td, 0, behindNMP);    // re-search
-                        if (score <= alpha)
-                            break;
-                    }
-                }
-                // if the move passes all null window searches, search with the full aspiration
-                // window.
-                if (score > alpha && score < beta)
-                    score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
-            } else {
-                // if not at root use standard logic
-                if (lmr && score > alpha)
-                    score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
-                                      ply + ONE_PLY, td, 0, behindNMP);    // re-search
-                if (score > alpha && score < beta)
-                    score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
-                                      td, 0, behindNMP);    // re-search
-            }
+
+            if (lmr && score > alpha)
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
+                                  ply + ONE_PLY, td, 0, behindNMP);    // re-search
+            if (score > alpha && score < beta)
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
+                                  td, 0, behindNMP);    // re-search
         }
 
         // undo the move

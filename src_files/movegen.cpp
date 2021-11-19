@@ -63,7 +63,7 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
         } else{
-            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove(), sd->killer[1 - c][ply + 1][0]));
+            mv->scoreMove(idx, 20000 + sd->getHistories(move, board->getActivePlayer(), board->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0));
         }
         
     }else if constexpr (m == GENERATE_NON_QUIET){
