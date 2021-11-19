@@ -502,9 +502,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         Move m;
         while (m = mGen->next()) {
 
-            if (!m)
-                break;
-
             if (!b->isLegal(m))
                 continue;
 
@@ -719,7 +716,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
-        if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && (depth > 4 || depth == 1) && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)

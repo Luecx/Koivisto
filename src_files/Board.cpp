@@ -1132,7 +1132,6 @@ bool Board::isPseudoLegal(Move m){
         case QUEEN:
             // if there is a piece in the way, this move is invalid
             if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
-            if (isCapture - (getPiece(sqTo) != -1) != 0) return false;
             break;
         case KING:
             // we only need to check if the castling move is valid.
