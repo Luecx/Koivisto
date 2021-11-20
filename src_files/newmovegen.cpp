@@ -96,8 +96,8 @@ Move moveGen::next() {
             return 0;
         
         case QS_EVASIONS:
-            if (noisy_index < noisySize) 
-                return nextNoisy();
+            if (quiet_index < quietSize)
+                return nextQuiet();
             stage = END;
             return 0;
     }
