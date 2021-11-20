@@ -46,7 +46,6 @@ enum {
     GET_QUIET,
     GET_BAD_NOISY,
     END,
-    QS_EVASIONS,
 };
 
 class moveGen {

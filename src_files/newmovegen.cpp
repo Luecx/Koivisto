@@ -60,7 +60,7 @@ Move moveGen::next() {
             if (m_mode == Q_SEARCH)
                 return 0;
             if (m_mode == Q_SEARCHCHECK) {
-                stage = QS_EVASIONS;
+                stage = END;
                 generateEvasions();
                 if (quiet_index < quietSize)
                     return nextQuiet();
@@ -93,12 +93,6 @@ Move moveGen::next() {
             stage++;
 
         case END:
-            return 0;
-        
-        case QS_EVASIONS:
-            if (quiet_index < quietSize)
-                return nextQuiet();
-            stage = END;
             return 0;
     }
 }
