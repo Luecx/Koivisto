@@ -39,8 +39,8 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     searched_index  = 0;
     c               = b->getActivePlayer();
     m_skip          = false;
-    m_killer1       = m_sd->killer[c][m_ply][0];
-    m_killer2       = m_sd->killer[c][m_ply][1];
+    m_killer1       = 0;
+    m_killer2       = 0;
 }
 
 Move moveGen::next() {
