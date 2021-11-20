@@ -55,7 +55,7 @@ Move moveGen::next() {
             stage++;
 
         case GET_GOOD_NOISY:
-            if (noisy_index < goodNoisyCount) 
+            if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
                 return 0;
