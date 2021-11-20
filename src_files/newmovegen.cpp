@@ -59,6 +59,13 @@ Move moveGen::next() {
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
                 return 0;
+            if (m_mode == Q_SEARCHCHECK) {
+                stage = QS_EVASIONS;
+                generateEvasions();
+                if (quiet_index < quietSize)
+                    return nextQuiet();
+                return 0;
+            }
             stage++;
 
         case KILLER1:
@@ -86,6 +93,12 @@ Move moveGen::next() {
             stage++;
 
         case END:
+            return 0;
+        
+        case QS_EVASIONS:
+            if (noisy_index < noisySize) 
+                return nextNoisy();
+            stage = END;
             return 0;
     }
 }
@@ -392,6 +405,25 @@ void moveGen::generateQuiet() {
                 && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
                 addQuiet(genMove(E8, G8, KING_CASTLE, BLACK_KING));
             }
+        }
+        kings = lsbReset(kings);
+    }
+}
+
+void moveGen::generateEvasions() {
+    
+    const U64 occupied  = m_board->getOccupiedBB();
+    Square target;
+    Piece movingPiece   = KING + c * 8;
+    U64 kings           = m_board->getPieceBB(c, KING);
+    
+    while (kings) {
+        Square s    = bitscanForward(kings);
+        U64 attacks = KING_ATTACKS[s] & ~occupied;
+        while (attacks) {
+            Square target = bitscanForward(attacks);
+            addQuiet(genMove(s, target, QUIET, movingPiece));
+            attacks = lsbReset(attacks);
         }
         kings = lsbReset(kings);
     }

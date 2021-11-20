@@ -33,6 +33,7 @@ constexpr int MAX_HIST  = 512;
 enum {
     PV_SEARCH,
     Q_SEARCH,
+    Q_SEARCHCHECK,
 };
 
 enum {
@@ -45,6 +46,7 @@ enum {
     GET_QUIET,
     GET_BAD_NOISY,
     END,
+    QS_EVASIONS,
 };
 
 class moveGen {
@@ -86,6 +88,7 @@ class moveGen {
     void addSearched(Move m);
     void generateNoisy();
     void generateQuiet();
+    void generateEvasions();
     void updateHistory(int weight);
     void skip();
 };
