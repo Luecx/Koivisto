@@ -55,7 +55,7 @@ Move moveGen::next() {
             stage++;
 
         case GET_GOOD_NOISY:
-            if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
+            if (noisy_index < goodNoisyCount) 
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
                 return 0;
@@ -98,7 +98,9 @@ Move moveGen::next() {
         case QS_EVASIONS:
             if (quiet_index < quietSize)
                 return nextQuiet();
-            stage = END;
+            stage = GET_BAD_NOISY;
+            if (noisy_index < noisySize) 
+                return nextNoisy();
             return 0;
     }
 }
