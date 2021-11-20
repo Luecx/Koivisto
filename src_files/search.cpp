@@ -927,7 +927,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         alpha = bestScore;
 
     moveGen* mGen   = &td->generators[ply];
-    mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH + inCheck);
+    mGen->init(sd, b, ply, 0, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, Q_SEARCH + inCheck);
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
