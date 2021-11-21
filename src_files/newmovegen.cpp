@@ -61,13 +61,6 @@ Move moveGen::next() {
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
                 return 0;
-            if (m_mode == Q_SEARCHCHECK) {
-                stage = QS_EVASIONS;
-                generateEvasions();
-                if (quiet_index < quietSize)
-                    return nextQuiet();
-                return 0;
-            }
             stage++;
 
         case KILLER1:
@@ -89,6 +82,13 @@ Move moveGen::next() {
             if (shouldSkip()) {
                 stage = GET_BAD_NOISY;
                 return next();
+            }
+            if (m_mode == Q_SEARCHCHECK) {
+                stage = QS_EVASIONS;
+                generateEvasions();
+                if (quiet_index < quietSize)
+                    return nextQuiet();
+                return 0;
             }
             generateQuiet();
             stage++;
@@ -115,7 +115,7 @@ Move moveGen::next() {
 }
 
 void moveGen::addNoisy(Move m) {
-    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m) | sameMove(m_counter, m))
+    if (sameMove(m_hashMove, m))
         return;
     int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
               - 1 : m_board->staticExchangeEvaluation(m);
