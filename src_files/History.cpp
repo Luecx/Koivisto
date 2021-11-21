@@ -50,6 +50,21 @@ int SearchData::isKiller(Move move, Depth ply, Color color) {
 }
 
 /*
+ * Set killer
+ */
+void SearchData::setCounter(Color color, Move move, Move previous) {
+    if (previous)
+        counter[color][getPieceTypeSqToCombination(previous)] = move;
+}
+
+/*
+ * Is killer?
+ */
+bool SearchData::isCounter(Color color, Move move, Move previous) {
+    return sameMove(move, counter[color][getPieceTypeSqToCombination(previous)]);
+}
+
+/*
  * Set historic eval
  */
 void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {

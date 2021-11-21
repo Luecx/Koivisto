@@ -697,7 +697,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
-            if (sd->isKiller(m, ply, b->getActivePlayer()))
+            if (sd->isKiller(m, ply, b->getActivePlayer()) || sd->isCounter(b->getActivePlayer(), m, b->getPreviousMove()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
@@ -783,8 +783,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
             // also set this move as a killer move into the history
-            if (!isCapture(m))
+            if (!isCapture(m)) {
                 sd->setKiller(m, ply, b->getActivePlayer());
+                sd->setCounter(b->getActivePlayer(), m, b->getPreviousMove());
+            }
 
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
