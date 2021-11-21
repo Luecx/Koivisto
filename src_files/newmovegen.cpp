@@ -63,6 +63,9 @@ Move moveGen::next() {
                 return 0;
             if (m_mode == Q_SEARCHCHECK) {
                 stage = QS_EVASIONS;
+                m_killer1 = 0;
+                m_killer2 = 0;
+                m_counter = 0;
                 generateEvasions();
                 if (quiet_index < quietSize)
                     return nextQuiet();
