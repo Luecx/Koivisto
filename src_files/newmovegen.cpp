@@ -499,3 +499,7 @@ void moveGen::updateHistory(int weight) {
 void moveGen::skip() {
     m_skip = true;
 }
+
+bool moveGen::shouldSkip() {
+    return m_skip;
+}

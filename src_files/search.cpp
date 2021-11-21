@@ -582,9 +582,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // **************************************************************************************************
-                if (depth <= 7 && quiets > lmp[isImproving][depth]) {
-                    mGen->skip();
+                if (mGen->shouldSkip())
                     continue;
+                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
+                    mGen->skip();
                 }
                 
                 // prune quiet moves that are unlikely to improve alpha
