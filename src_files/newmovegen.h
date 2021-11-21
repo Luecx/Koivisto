@@ -16,53 +16,82 @@
  *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
  *                                                                                                  *
  ****************************************************************************************************/
+
+#ifndef KOIVISTO_NEWMOVEGEN_H
+#define KOIVISTO_NEWMOVEGEN_H
+
+#include "Board.h"
 #include "History.h"
+#include "Move.h"
+#include "Bitboard.h"
 
-#define MAX_HISTORY_SCORE 512;
+constexpr int MAX_QUIET = 128;
+constexpr int MAX_NOISY = 32;
 
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup) {
-    if (isCapture(m)) {
-        return captureHistory[side][getSqToSqFromCombination(m)];
-    } else {
-        return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
-               + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * history[side][getSqToSqFromCombination(m)]) / 3;
-    }
-}
+constexpr int MAX_HIST  = 512;
 
-/*
- * Set killer
- */
-void SearchData::setKiller(Move move, Depth ply, Color color) {
-    if (!sameMove(move, killer[color][ply][0])) {
-        killer[color][ply][1] = killer[color][ply][0];
-        killer[color][ply][0] = move;
-    }
-}
+enum {
+    PV_SEARCH,
+    Q_SEARCH,
+    Q_SEARCHCHECK,
+};
 
-/*
- * Is killer?
- */
-int SearchData::isKiller(Move move, Depth ply, Color color) {
-    if (sameMove(move, killer[color][ply][0]))
-        return 2;
-    return sameMove(move, killer[color][ply][1]);
-}
+enum {
+    GET_HASHMOVE,
+    GEN_NOISY,
+    GET_GOOD_NOISY,
+    KILLER1,
+    KILLER2,
+    GEN_QUIET,
+    GET_QUIET,
+    GET_BAD_NOISY,
+    END,
+    QS_EVASIONS,
+};
 
-/*
- * Set historic eval
- */
-void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
-    eval[color][ply] = ev;
-}
+class moveGen {
+    private:
 
-/*
- * Is improving
- */
-bool SearchData::isImproving(Score ev, Color color, Depth ply) {
-    if (ply >= 2) {
-        return (ev > eval[color][ply - 2]);
-    } else {
-        return true;
-    }
-}
+    int             stage;
+
+    Move            quiets[MAX_QUIET]       = {0};
+    Move            noisy[MAX_NOISY]        = {0};
+    Move            searched[MAX_QUIET]     = {0};
+    int             quietScores[MAX_QUIET]  = {0};
+    int             noisyScores[MAX_NOISY]  = {0};
+    int             quietSize;
+    int             noisySize;
+    int             goodNoisyCount;
+    int             noisy_index;
+    int             quiet_index;
+    int             searched_index;
+    
+    bool            m_skip;
+    Board*          m_board;
+    SearchData*     m_sd;
+    Depth           m_ply;
+    Move            m_hashMove;
+    Move            m_killer1;
+    Move            m_killer2;
+    Move            m_previous;
+    Move            m_followup;
+    U64             m_checkerSq;
+    Color           c;
+    int             m_mode;
+
+    public: 
+    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, U64 checkerSq = 0);
+    Move next();
+    void addNoisy(Move m);
+    void addQuiet(Move m);
+    Move nextNoisy();
+    Move nextQuiet();
+    void addSearched(Move m);
+    void generateNoisy();
+    void generateQuiet();
+    void generateEvasions();
+    void updateHistory(int weight);
+    void skip();
+};
+
+#endif

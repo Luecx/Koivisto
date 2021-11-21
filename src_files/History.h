@@ -29,8 +29,6 @@ using namespace move;
 struct SearchData {
 
     Move     bestMove = 0;
-
-    MoveList moves[MAX_INTERNAL_PLY] {};
     // Effort spent
     int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
     // EvalImprovement
@@ -67,20 +65,5 @@ struct SearchData {
     bool     isImproving(Score eval, Color color, Depth ply);
 } __attribute__((aligned(64)));
 
-/**
- * data about each thread
- */
-struct ThreadData {
-    int        threadID = 0;
-    U64        nodes    = 0;
-    int        seldepth = 0;
-    int        tbhits   = 0;
-    bool       dropOut  = false;
-    SearchData searchData {};
-
-    ThreadData();
-
-    ThreadData(int threadId);
-} __attribute__((aligned(4096)));
 
 #endif    // KOIVISTO_HISTORY_H

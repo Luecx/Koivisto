@@ -24,6 +24,7 @@
 #include "TimeManager.h"
 #include "UCIAssert.h"
 #include "movegen.h"
+#include "newmovegen.h"
 #include "polyglot.h"
 #include "syzygy/tbprobe.h"
 
@@ -486,7 +487,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // we reuse movelists for memory reasons.
-    MoveList* mv      = &sd->moves[ply];
+    moveGen* mGen   = &td->generators[ply];
 
     // **********************************************************************************************************
     // probcut was first implemented in StockFish by Gary Linscott. See
@@ -497,11 +498,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score     betaCut = beta + 100;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
-        generateNonQuietMoves(b, mv, hashMove, sd, ply);
-        MoveOrderer moveOrderer {mv};
-        while (moveOrderer.hasNext()) {
-            // get the current move
-            Move m = moveOrderer.next(0);
+        mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH);
+        Move m;
+        while (m = mGen->next()) {
+
+            if (!m)
+                break;
 
             if (!b->isLegal(m))
                 continue;
@@ -548,28 +550,17 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             return matingValue;
     }
 
-    // create a moveorderer and assign the movelist to score the moves.
-    generateMoves(b, mv, hashMove, sd, ply);
-    MoveOrderer moveOrderer {mv};
-
+    Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
 
-    // speedup stuff for movepicking
-    Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    U64         kingBB     = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
-
+    Move m;
     // loop over all moves in the movelist
-    while (moveOrderer.hasNext()) {
-
-        // get the current move
-        Move m = moveOrderer.next(kingBB);
-
-        if (!m)
-            break;
+    while (m = mGen->next()) {
 
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
@@ -592,7 +583,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // move
                 // **************************************************************************************************
                 if (depth <= 7 && quiets > lmp[isImproving][depth]) {
-                    moveOrderer.skip = true;
+                    mGen->skip();
                     continue;
                 }
                 
@@ -663,10 +654,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
-            generateMoves(b, mv, hashMove, sd, ply);
-            moveOrderer = {mv};
-
-            m           = moveOrderer.next(0);
+            mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+            m = mGen->next();
         }
         // *********************************************************************************************************
         // kk reductions:
@@ -736,8 +725,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
-        mv->scoreMove(moveOrderer.counter - 1, depth + (staticEval < alpha));
-
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
@@ -773,6 +760,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
+        mGen->addSearched(m);
+
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
@@ -797,7 +786,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            sd->updateHistories(m, depth, mv, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
+            mGen->updateHistory(depth + (staticEval < alpha));
 
             return highestScore;
         }
@@ -919,25 +908,14 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (alpha < bestScore)
         alpha = bestScore;
 
-    // extract all:
-    //- captures (including e.p.)
-    //- promotions
-    //
-    // moves that give check are not considered non-quiet in
-    // getNonQuietMoves() although they are not quiet.
-    //
-    MoveList* mv = &sd->moves[ply];
-
-    // create a moveorderer to sort the moves during the search
-    generateNonQuietMoves(b, mv, 0, sd, ply, inCheck);
-    MoveOrderer moveOrderer {mv};
+    moveGen* mGen   = &td->generators[ply];
+    mGen->init(sd, b, ply, 0, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, Q_SEARCH + inCheck);
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
+    Move        m;
 
-    for (int i = 0; i < mv->getSize(); i++) {
-
-        Move m = moveOrderer.next(0);
+    while (m = mGen->next()) {
         
         // do not consider illegal moves
         if (!b->isLegal(m))
@@ -985,8 +963,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 alpha      = score;
             }
         }
-        if (!isCapture(m) && !isPromotion(m))
-            break;
     }
 
     // store the current position inside the transposition table
@@ -1312,3 +1288,6 @@ Move Search::probeDTZ(Board* board) {
 
     return 0;
 }
+
+ThreadData::ThreadData(int threadId) : threadID(threadId) {}
+ThreadData::ThreadData() {}
