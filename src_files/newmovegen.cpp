@@ -80,6 +80,10 @@ Move moveGen::next() {
                 return m_killer2;
 
         case GEN_QUIET:
+            if (shouldSkip()) {
+                stage = GET_BAD_NOISY;
+                return next();
+            }
             generateQuiet();
             stage++;
 
