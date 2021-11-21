@@ -22,7 +22,7 @@ static const int piece_values[6] = {
     90, 463, 474, 577, 1359, 0,
 };
 
-void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode) {
+void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, U64 checkerSq) {
     m_sd            = sd;
     m_board         = b;
     m_ply           = ply;
@@ -41,6 +41,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_skip          = false;
     m_killer1       = m_sd->killer[c][m_ply][0];
     m_killer2       = m_sd->killer[c][m_ply][1];
+    m_checkerSq     = checkerSq;
 }
 
 Move moveGen::next() {
@@ -141,8 +142,16 @@ Move moveGen::nextNoisy() {
 }
 
 Move moveGen::nextQuiet() {
-    if (m_skip)
-        return quiets[quiet_index++];
+    if (m_skip) {
+        for (int i = quiet_index; i < quietSize; i++) {
+            if ((m_checkerSq & (ONE << getSquareTo(quiets[i])))) {
+                quiet_index = i;
+                return quiets[quiet_index++];
+            }
+        }
+        stage++;
+        return next();
+    }
     int bestQuiet = quiet_index;
     for (int i = quiet_index + 1; i < quietSize; i++) {
         if (quietScores[i] > quietScores[bestQuiet])
