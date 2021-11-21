@@ -42,6 +42,7 @@ enum {
     GET_GOOD_NOISY,
     KILLER1,
     KILLER2,
+    COUNTER,
     GEN_QUIET,
     GET_QUIET,
     GET_BAD_NOISY,
@@ -73,6 +74,7 @@ class moveGen {
     Move            m_hashMove;
     Move            m_killer1;
     Move            m_killer2;
+    Move            m_counter;
     Move            m_previous;
     Move            m_followup;
     U64             m_checkerSq;

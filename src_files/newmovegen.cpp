@@ -41,6 +41,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_skip          = false;
     m_killer1       = m_sd->killer[c][m_ply][0];
     m_killer2       = m_sd->killer[c][m_ply][1];
+    m_counter       = previous ? m_sd->counter[c][getPieceTypeSqToCombination(previous)] : 0;
     m_checkerSq     = checkerSq;
 }
 
@@ -79,6 +80,11 @@ Move moveGen::next() {
             if (m_board->isPseudoLegal(m_killer2))
                 return m_killer2;
 
+        case COUNTER:
+            stage++;
+            if (m_board->isPseudoLegal(m_counter))
+                return m_counter;
+
         case GEN_QUIET:
             if (shouldSkip()) {
                 stage = GET_BAD_NOISY;
@@ -109,7 +115,7 @@ Move moveGen::next() {
 }
 
 void moveGen::addNoisy(Move m) {
-    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
+    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m) | sameMove(m_counter, m))
         return;
     int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
               - 1 : m_board->staticExchangeEvaluation(m);
@@ -125,10 +131,10 @@ void moveGen::addNoisy(Move m) {
 }
 
 void moveGen::addQuiet(Move m) {
-    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
+    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m) | sameMove(m_counter, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = 20000 + (m_sd->isCounter(c, m, m_previous) ? 10000 : m_sd->getHistories(m, c, m_previous, m_followup));
+    quietScores[quietSize++] = 20000 + m_sd->getHistories(m, c, m_previous, m_followup);
 }
 
 Move moveGen::nextNoisy() {
