@@ -454,9 +454,9 @@ void moveGen::updateHistory(int weight) {
                     + weight
                     - weight * m_sd->history[c][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
-        m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)] +=
+        m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)]
+                    - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)]
                     / MAX_HIST;
         m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
@@ -474,9 +474,9 @@ void moveGen::updateHistory(int weight) {
                             - weight
                             - weight * m_sd->history[c][getSqToSqFromCombination(m)]
                             / MAX_HIST;
-                m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)] +=
+                m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)] +=
                             - weight
-                            - weight * m_sd->cmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)]
+                            - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)]
                             / MAX_HIST;
                 m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)] +=
                             - weight
