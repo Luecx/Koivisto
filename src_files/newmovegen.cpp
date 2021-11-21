@@ -84,6 +84,8 @@ Move moveGen::next() {
             stage++;
 
         case GET_QUIET:
+            if (m_skip && (noisy_index < noisySize))
+                return nextNoisy();
             if (quiet_index < quietSize)
                 return nextQuiet();
             stage++;
