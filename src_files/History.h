@@ -52,6 +52,8 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                       = 1;
+
+    int      lastNoisySeeValue                                                   = 0;
     void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup);
 
     int      getHistories(Move m, Color side, Move previous, Move followup);

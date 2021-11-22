@@ -45,6 +45,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
 }
 
 Move moveGen::next() {
+    m_sd->lastNoisySeeValue = 0;
     switch (stage) {
         case GET_HASHMOVE:
             stage++;
@@ -107,9 +108,9 @@ Move moveGen::next() {
 void moveGen::addNoisy(Move m) {
     if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
         return;
-    int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
-              - 1 : m_board->staticExchangeEvaluation(m);
+    int score   = m_board->staticExchangeEvaluation(m);
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];
+    noisySee[noisySize] = score;
     if (score >= 0) {
         score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup);
         goodNoisyCount++;
@@ -136,6 +137,7 @@ Move moveGen::nextNoisy() {
             bestNoisy = i;
     }
     Move m = noisy[bestNoisy];
+    m_sd->lastNoisySeeValue = noisySee[bestNoisy];
     noisyScores[bestNoisy]  = noisyScores[noisy_index];
     noisy[bestNoisy]        = noisy[noisy_index++];
     return m;
