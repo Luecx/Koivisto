@@ -24,13 +24,16 @@
 #define INCBIN_STYLE INCBIN_STYLE_CAMEL
 #include "incbin/incbin.h"
 
-alignas(ALIGNMENT) int16_t nn::inputWeights [INPUT_SIZE][HIDDEN_SIZE];
-alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
-alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
+alignas(ALIGNMENT) int16_t nn::l1Weights[INPUT_SIZE ][L1_SIZE];
+alignas(ALIGNMENT) int16_t nn::l2Weights[L2_SIZE    ][L1_SIZE*2];
+alignas(ALIGNMENT) int32_t nn::l3Weights[OUTPUT_SIZE][L2_SIZE];
+alignas(ALIGNMENT) int16_t nn::l1Bias   [L1_SIZE];
+alignas(ALIGNMENT) int32_t nn::l2Bias   [L2_SIZE];
+alignas(ALIGNMENT) int64_t nn::l3Bias   [OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (256)
-#define HIDDEN_WEIGHT_MULTIPLIER (128)
+#define L1_SCALAR  (8)
+#define L2_SCALAR  (128)
+#define L3_SCALAR  (512)
 
 #if defined(__AVX512F__)
 typedef __m512i avx_register_type;
@@ -85,18 +88,21 @@ inline int32_t sumRegisterEpi32(avx_register_type reg){
 }
 
 void nn::init() {
-    
-    
     int memoryIndex = 0;
-    std::memcpy(inputWeights, &gEvalData[memoryIndex],   INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));
-    memoryIndex += INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t);
-    std::memcpy(inputBias   , &gEvalData[memoryIndex],                HIDDEN_SIZE * sizeof(int16_t));
-    memoryIndex +=              HIDDEN_SIZE * sizeof(int16_t);
+    std::memcpy(l1Weights, &gEvalData[memoryIndex],   INPUT_SIZE * L1_SIZE * sizeof(int16_t));
+    memoryIndex += INPUT_SIZE * L1_SIZE * sizeof(int16_t);
+    std::memcpy(l1Bias, &gEvalData[memoryIndex], L1_SIZE * sizeof(int16_t));
+    memoryIndex += L1_SIZE * sizeof(int16_t);
     
-    std::memcpy(hiddenWeights, &gEvalData[memoryIndex],  HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t));
-    memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
-    std::memcpy(hiddenBias   , &gEvalData[memoryIndex],                 OUTPUT_SIZE * sizeof(int32_t));
-    memoryIndex +=               OUTPUT_SIZE * sizeof(int32_t);
+    std::memcpy(l2Weights, &gEvalData[memoryIndex],  L1_SIZE * 2 * L2_SIZE * sizeof(int16_t));
+    memoryIndex += L1_SIZE * 2 * L2_SIZE * sizeof(int16_t);
+    std::memcpy(l2Bias, &gEvalData[memoryIndex],                   L2_SIZE * sizeof(int32_t));
+    memoryIndex +=               L2_SIZE * sizeof(int32_t);
+    
+    std::memcpy(l3Weights, &gEvalData[memoryIndex],  OUTPUT_SIZE * L2_SIZE * sizeof(int32_t));
+    memoryIndex += OUTPUT_SIZE * L2_SIZE * sizeof(int32_t);
+    std::memcpy(l3Bias, &gEvalData[memoryIndex],               OUTPUT_SIZE * sizeof(int64_t));
+    memoryIndex +=               OUTPUT_SIZE * sizeof(int64_t);
 }
 int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color pieceColor,
@@ -106,7 +112,6 @@ int nn::Evaluator::index(bb::PieceType pieceType,
 
     constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
-    constexpr int kingSideFactor   = 64 * 6 * 2;
 
     Square  relativeSquare   = view == WHITE ? square : mirrorSquareVertical(square);
     
@@ -131,14 +136,14 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
     
     for (Color c : {WHITE, BLACK}) {
 
-        auto wgt = (avx_register_type*) (inputWeights[idx[c]]);
+        auto wgt = (avx_register_type*) (l1Weights[idx[c]]);
         auto sum = (avx_register_type*) (history.back().summation[c]);
         if constexpr (value) {
-            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+            for (int i = 0; i < L1_SIZE / STRIDE_16_BIT; i++) {
                 sum[i] = avx_add_epi16(sum[i], wgt[i]);
             }
         } else {
-            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+            for (int i = 0; i < L1_SIZE / STRIDE_16_BIT; i++) {
                 sum[i] = avx_sub_epi16(sum[i], wgt[i]);
             }
         }
@@ -146,8 +151,8 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
 }
 
 void nn::Evaluator::reset(Board* board) {
-    std::memcpy(history.back().summation[WHITE], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
-    std::memcpy(history.back().summation[BLACK], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(history.back().summation[WHITE], l1Bias, sizeof(int16_t) * L1_SIZE);
+    std::memcpy(history.back().summation[BLACK], l1Bias, sizeof(int16_t) * L1_SIZE);
     
     Square wKingSq = bitscanForward(board->getPieceBB<WHITE>(KING));
     Square bKingSq = bitscanForward(board->getPieceBB<BLACK>(KING));
@@ -172,33 +177,52 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     }
     
     // concat based on stm
-    std::memcpy( activation             , history.back().summation[ activePlayer], sizeof(uint16_t) * HIDDEN_SIZE);
-    std::memcpy(&activation[HIDDEN_SIZE], history.back().summation[!activePlayer], sizeof(uint16_t) * HIDDEN_SIZE);
+    std::memcpy( l1_activation         , history.back().summation[ activePlayer], sizeof(uint16_t) * L1_SIZE);
+    std::memcpy(&l1_activation[L1_SIZE], history.back().summation[!activePlayer], sizeof(uint16_t) * L1_SIZE);
 
     constexpr avx_register_type reluBias {};
-    avx_register_type*          act = (avx_register_type*) (activation);
+    avx_register_type*          act = (avx_register_type*) (l1_activation);
 
     // apply relu to the summation first
-    for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
+    for (int i = 0; i < L1_SIZE * 2 / STRIDE_16_BIT; i++) {
         act[i] = avx_max_epi16(act[i], reluBias);
     }
-
-    // do the sum for the output neurons
-    for (int o = 0; o < OUTPUT_SIZE; o++) {
     
-        auto              wgt = (avx_register_type*) (hiddenWeights[o]);
+//    float accum = 0;
+//    for(int i = 0; i < L1_SIZE * 2; i++){
+//        accum += l1_activation[i] * l2Weights[31][i];
+//        std::cout << i << "  " << l1_activation[i] << "  " << l2Weights[31][i] << "   " << accum << std::endl;
+//    }
+    
+    // do L2
+    for (int o = 0; o < L2_SIZE; o++) {
+
+        auto              wgt = (avx_register_type*) (l2Weights[o]);
         avx_register_type res {};
-        for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
+        for (int i = 0; i < L1_SIZE * 2 / STRIDE_16_BIT; i++) {
             res = avx_add_epi32(res, avx_madd_epi16(act[i], wgt[i]));
         }
-
         // credit to Connor
         int32_t sums = sumRegisterEpi32(res);
-
-        output[o]    = sums + hiddenBias[0];
+        l2_activation[o]    = std::max(0,sums + l2Bias[o]);
     }
-
-    return output[0] / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
+    
+    // do L3
+    int64_t outp = l3Bias[0];
+    for(int i = 0; i < L2_SIZE; i++){
+        outp += l2_activation[i] * l3Weights[0][i];
+    }
+    
+    
+//    for(int i = 0; i < L1_SIZE*2; i++){
+//        std::cout << l1_activation[i] / (float) (L1_SCALAR) << "  ";
+//    }std::cout << std::endl;
+//
+//    for(int i = 0; i < L2_SIZE; i++){
+//        std::cout << l2_activation[i] / (float) (L1_SCALAR * L2_SCALAR)<< "  ";
+//    }std::cout << std::endl;
+    
+    return outp / L1_SCALAR / L2_SCALAR / L3_SCALAR;
 }
 
 nn::Evaluator::Evaluator() {
