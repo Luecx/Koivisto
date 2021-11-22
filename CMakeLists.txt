@@ -25,6 +25,8 @@ add_executable(Koivisto
         src_files/eval.h
         src_files/MoveOrderer.cpp
         src_files/MoveOrderer.h
+        src_files/newmovegen.cpp
+        src_files/newmovegen.h
         src_files/History.cpp
         src_files/History.h
         src_files/Verification.h
