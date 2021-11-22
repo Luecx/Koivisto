@@ -118,7 +118,7 @@ Move moveGen::next() {
 }
 
 void moveGen::addNoisy(Move m) {
-    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m) | sameMove(m_counter, m))
+    if (sameMove(m_hashMove, m))
         return;
     int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
               - 1 : m_board->staticExchangeEvaluation(m);
