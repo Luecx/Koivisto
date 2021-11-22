@@ -584,7 +584,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // **************************************************************************************************
                 if (mGen->shouldSkip())
                     continue;
-                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
+                if (depth <= 7 && legalMoves >= lmp[isImproving][depth]) {
                     mGen->skip();
                 }
                 
