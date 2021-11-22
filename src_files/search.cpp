@@ -608,9 +608,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
                 continue;
-            if (depth <= 7 && legalMoves > lmp[isImproving][depth]) {
-                mGen->skip();
-            }
         }
 
         // dont search illegal moves
@@ -801,6 +798,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
+        if (depth <= 7 && legalMoves > lmp[isImproving][depth]) {
+            mGen->skip();
+        }
     }
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
