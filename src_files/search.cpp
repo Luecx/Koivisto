@@ -37,7 +37,7 @@ int  FUTILITY_MARGIN  = 81;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 215;
 
-int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
+int  lmp[2][8]        = {{0, 1, 2, 4, 7, 11, 16, 22}, {0, 2, 5, 8, 11, 17, 27, 39}};
 
 /**
  * =================================================================================
@@ -582,11 +582,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // **************************************************************************************************
-                if (mGen->shouldSkip())
+                if (mGen->shouldSkip() && mGen->stage > GEN_QUIET)
                     continue;
-                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
-                    mGen->skip();
-                }
                 
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
@@ -801,6 +798,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
+        if (depth <= 7 && legalMoves >= lmp[isImproving][depth]) {
+            mGen->skip();
+        }
     }
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
