@@ -85,7 +85,7 @@ Move moveGen::next() {
 
         case COUNTER:
             stage++;
-            if (m_board->isPseudoLegal(m_counter))
+            if (m_counter != m_killer2 && m_counter != m_killer1 && m_board->isPseudoLegal(m_counter))
                 return m_counter;
 
         case GEN_QUIET:
