@@ -75,17 +75,17 @@ Move moveGen::next() {
 
         case KILLER1:
             stage++;
-            if (m_killer1 != m_hashMove && m_board->isPseudoLegal(m_killer1))
+            if (!sameMove(m_killer1, m_hashMove) && m_board->isPseudoLegal(m_killer1))
                 return m_killer1;
 
         case KILLER2:
             stage++;
-            if (m_killer2 != m_hashMove && m_board->isPseudoLegal(m_killer2))
+            if (!sameMove(m_killer2, m_hashMove) && m_board->isPseudoLegal(m_killer2))
                 return m_killer2;
 
         case COUNTER:
             stage++;
-            if (m_counter != m_hashMove && m_counter != m_killer2 && m_counter != m_killer1 && m_board->isPseudoLegal(m_counter))
+            if (!sameMove(m_counter, m_hashMove) && !sameMove(m_counter, m_killer2) && !sameMove(m_counter, m_killer1) && m_board->isPseudoLegal(m_counter))
                 return m_counter;
 
         case GEN_QUIET:
