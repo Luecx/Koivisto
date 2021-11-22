@@ -584,9 +584,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // **************************************************************************************************
                 if (mGen->shouldSkip())
                     continue;
-                if (depth <= 7 && legalMoves >= lmp[isImproving][depth]) {
-                    mGen->skip();
-                }
                 
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
@@ -611,6 +608,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (moveDepth <= 5 + quiet * 3 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
                 && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
                 continue;
+            if (depth <= 7 && legalMoves > lmp[isImproving][depth]) {
+                mGen->skip();
+            }
         }
 
         // dont search illegal moves
