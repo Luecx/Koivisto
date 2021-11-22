@@ -62,6 +62,8 @@ Move moveGen::next() {
                 return 0;
             if (m_mode == Q_SEARCHCHECK) {
                 stage = QS_EVASIONS;
+                m_killer1 = 0;
+                m_killer2 = 0;
                 generateEvasions();
                 if (quiet_index < quietSize)
                     return nextQuiet();
@@ -71,15 +73,19 @@ Move moveGen::next() {
 
         case KILLER1:
             stage++;
-            if (m_board->isPseudoLegal(m_killer1))
+            if (!sameMove(m_killer1, m_hashMove) && m_board->isPseudoLegal(m_killer1))
                 return m_killer1;
 
         case KILLER2:
             stage++;
-            if (m_board->isPseudoLegal(m_killer2))
+            if (!sameMove(m_killer2, m_hashMove) && m_board->isPseudoLegal(m_killer2))
                 return m_killer2;
 
         case GEN_QUIET:
+            if (shouldSkip()) {
+                stage = GET_BAD_NOISY;
+                return next();
+            }
             generateQuiet();
             stage++;
 
@@ -105,7 +111,7 @@ Move moveGen::next() {
 }
 
 void moveGen::addNoisy(Move m) {
-    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
+    if (sameMove(m_hashMove, m))
         return;
     int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
               - 1 : m_board->staticExchangeEvaluation(m);
@@ -498,4 +504,8 @@ void moveGen::updateHistory(int weight) {
 
 void moveGen::skip() {
     m_skip = true;
+}
+
+bool moveGen::shouldSkip() {
+    return m_skip;
 }

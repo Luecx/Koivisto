@@ -92,6 +92,7 @@ class moveGen {
     void generateEvasions();
     void updateHistory(int weight);
     void skip();
+    bool shouldSkip();
 };
 
 #endif
