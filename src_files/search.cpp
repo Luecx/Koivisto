@@ -554,7 +554,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
-    int         quiets          = 0;
+    int         lmpCount        = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
 
@@ -572,18 +572,23 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
+            
+            lmpCount++;
+
+            // **************************************************************************************************
+            // late move pruning:
+            // if the depth is small enough and we searched enough quiet moves, dont consider this
+            // move
+            // **************************************************************************************************
+            if (quiet && mGen->shouldSkip() && mGen->stage > GEN_QUIET)
+                    continue;
+
+            if (depth <= 7 && lmpCount > lmp[isImproving][depth])
+                mGen->skip();
 
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 
             if (quiet) {
-                quiets++;
-                // **************************************************************************************************
-                // late move pruning:
-                // if the depth is small enough and we searched enough quiet moves, dont consider this
-                // move
-                // **************************************************************************************************
-                if (mGen->shouldSkip() && mGen->stage > GEN_QUIET)
-                    continue;
                 
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] +  moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
@@ -612,7 +617,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // dont search illegal moves
         if (!b->isLegal(m)) {
-            quiets -= quiet;
+            lmpCount -= lmpCount;
             continue;
         }
 
@@ -798,9 +803,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
-        if (depth <= 7 && legalMoves > lmp[isImproving][depth]) {
-            mGen->skip();
-        }
     }
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
