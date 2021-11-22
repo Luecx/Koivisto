@@ -783,8 +783,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 table->put(zobrist, score, m, CUT_NODE, depth);
             }
             // also set this move as a killer move into the history
-            if (!isCapture(m))
+            if (!isCapture(m) && !isPromotion) {
                 sd->setKiller(m, ply, b->getActivePlayer());
+            }
 
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
