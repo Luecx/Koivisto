@@ -88,6 +88,10 @@ Move moveGen::next() {
             stage++;
 
         case GET_QUIET:
+            if (shouldSkip()) {
+                stage = GET_BAD_NOISY;
+                return next();
+            }
             if (quiet_index < quietSize)
                 return nextQuiet();
             stage++;
