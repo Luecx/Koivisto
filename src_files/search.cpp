@@ -798,7 +798,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
-        if (depth <= 7 && legalMoves >= lmp[isImproving][depth]) {
+        if (depth <= 7 && legalMoves > lmp[isImproving][depth]) {
             mGen->skip();
         }
     }
