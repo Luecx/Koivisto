@@ -52,8 +52,6 @@ enum {
 class moveGen {
     private:
 
-    int             stage;
-
     Move            quiets[MAX_QUIET]       = {0};
     Move            noisy[MAX_NOISY]        = {0};
     Move            searched[MAX_QUIET]     = {0};
@@ -80,6 +78,9 @@ class moveGen {
     int             m_mode;
 
     public: 
+
+    int             stage;
+
     void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, U64 checkerSq = 0);
     Move next();
     void addNoisy(Move m);
