@@ -16,7 +16,7 @@ else
     SUFFIX := 
 endif
 
-WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+WFLAGS = -std=gnu++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
 CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
@@ -28,7 +28,7 @@ SSEFLAGS    = $(POPCNTFLAGS) -msse -msse4.1 -mssse3 -msse2
 AVX2FLAGS   = $(SSEFLAGS) -mavx2
 AVX512FLAGS = $(AVX2FLAGS) -mavx512f -mavx512bw -mavx512dq
 OPENMPFLAGS = -fopenmp
-NATIVEFLAGS = -march=native
+NATIVEFLAGS = -march=native -mtune=native
 
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
