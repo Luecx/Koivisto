@@ -35,8 +35,8 @@ struct SearchData {
     int      maxImprovement[N_SQUARES][N_SQUARES]                                = {0};
     // capture history table (side-from-to)
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
-    // history table (side-from-to)
-    int      history[N_COLORS][N_SQUARES * N_SQUARES]                            = {0};
+    // threat history
+    int      th[N_COLORS][N_SQUARES][N_SQUARES * N_SQUARES]                      = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // killer history
@@ -45,6 +45,7 @@ struct SearchData {
     Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
     // threat data
     int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
+    Square   mainThreat[MAX_INTERNAL_PLY]                                        = {0}; 
     // played moves
     Move     playedMoves[MAX_INTERNAL_PLY]                                       = {0};
     // eval history across plies
@@ -52,9 +53,8 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                       = 1;
-    void     updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup);
 
-    int      getHistories(Move m, Color side, Move previous, Move followup);
+    int      getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare);
 
     void     setKiller(Move move, Depth ply, Color color);
 

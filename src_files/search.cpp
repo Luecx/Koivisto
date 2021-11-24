@@ -66,14 +66,18 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 whitePawnAttacks = shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns);
     U64 blackPawnAttacks = shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns);
 
-    sd->threatCount[ply][WHITE] =
-        bitCount(whitePawnAttacks
+    whitePawnAttacks = whitePawnAttacks
                  & (b->getPieceBB<BLACK>(KNIGHT) | b->getPieceBB<BLACK>(BISHOP)
-                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] =
-        bitCount(blackPawnAttacks
+                    | b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN));
+    
+    blackPawnAttacks = blackPawnAttacks
                  & (b->getPieceBB<WHITE>(KNIGHT) | b->getPieceBB<WHITE>(BISHOP)
-                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+                    | b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN));
+
+    sd->threatCount[ply][WHITE] =
+        bitCount(whitePawnAttacks);
+    sd->threatCount[ply][BLACK] =
+        bitCount(blackPawnAttacks);
 
     U64 whiteMinorAttacks = 0;
     U64 blackMinorAttacks = 0;
@@ -97,10 +101,13 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
         blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
+    whiteMinorAttacks = whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN));
+    blackMinorAttacks = blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN));
+
     sd->threatCount[ply][WHITE] +=
-        bitCount(whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN)));
+        bitCount(whiteMinorAttacks);
     sd->threatCount[ply][BLACK] +=
-        bitCount(blackMinorAttacks & (b->getPieceBB<WHITE>(ROOK) | b->getPieceBB<WHITE>(QUEEN)));
+        bitCount(blackMinorAttacks);
 
     U64 whiteRookAttacks = 0;
     U64 blackRookAttacks = 0;
@@ -114,8 +121,17 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
         blackRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
-    sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN)));
-    sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN)));
+
+    whiteRookAttacks = whiteRookAttacks & (b->getPieceBB<BLACK>(QUEEN));
+    blackRookAttacks = blackRookAttacks & (b->getPieceBB<WHITE>(QUEEN));
+    sd->threatCount[ply][WHITE] += bitCount(whiteRookAttacks);
+    sd->threatCount[ply][BLACK] += bitCount(blackRookAttacks);
+
+    U64 threats = b->getActivePlayer() == WHITE ?
+              blackPawnAttacks | blackMinorAttacks | blackRookAttacks
+            : whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks;
+
+    sd->mainThreat[ply] = bitscanForward(threats);
 }
 
 void initLMR() {
@@ -338,8 +354,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Move        bestMove      = 0;
     Move        hashMove      = 0;
     Score       staticEval;
-    Score       ownThreats   = 0;
-    Score       enemyThreats = 0;
+    Score       ownThreats    = 0;
+    Score       enemyThreats  = 0;
+    Square      mainThreat    = 0;
     // the idea for the static evaluation is that if the last move has been a null move, we can reuse
     // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
     // has actually been evaluated.
@@ -351,6 +368,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
+        mainThreat   = sd->mainThreat[ply];
         
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
@@ -498,7 +516,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score     betaCut = beta + 100;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
-        mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH);
+        mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
         Move m;
         while (m = mGen->next()) {
 
@@ -551,7 +569,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
@@ -597,7 +615,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0)
+                if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat)
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -655,7 +673,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
-            mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+            mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
             m = mGen->next();
         }
         // *********************************************************************************************************
@@ -691,7 +709,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0);
+            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -910,7 +928,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         alpha = bestScore;
 
     moveGen* mGen   = &td->generators[ply];
-    mGen->init(sd, b, ply, 0, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, Q_SEARCH + inCheck);
+    mGen->init(sd, b, ply, 0, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, Q_SEARCH + inCheck, 0);
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
@@ -1024,7 +1042,7 @@ void           Search::useTableBase(bool val) { this->useTB = val; }
 void           Search::clearHistory() {
     for (int i = 0; i < threadCount; i++) {
         if(this->tds[i] != nullptr) {
-            memset(&this->tds[i]->searchData.history[0][0], 0, 2*4096*4);
+            memset(&this->tds[i]->searchData.th[0][0][0], 0, 2*64*4096*4);
             memset(&this->tds[i]->searchData.captureHistory[0][0], 0, 2*4096*4);
             memset(&this->tds[i]->searchData.cmh[0][0][0], 0, 384*2*384*4);
             memset(&this->tds[i]->searchData.fmh[0][0][0], 0, 384*2*384*4);

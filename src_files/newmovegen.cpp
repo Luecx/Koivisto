@@ -22,7 +22,7 @@ static const int piece_values[6] = {
     90, 463, 474, 577, 1359, 0,
 };
 
-void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, U64 checkerSq) {
+void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq) {
     m_sd            = sd;
     m_board         = b;
     m_ply           = ply;
@@ -41,6 +41,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_skip          = false;
     m_killer1       = m_sd->killer[c][m_ply][0];
     m_killer2       = m_sd->killer[c][m_ply][1];
+    m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
 }
 
@@ -117,10 +118,10 @@ void moveGen::addNoisy(Move m) {
               - 1 : m_board->staticExchangeEvaluation(m);
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];
     if (score >= 0) {
-        score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup);
+        score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
         goodNoisyCount++;
     } else {
-        score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup);
+        score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
     }
     noisy[noisySize] = m;
     noisyScores[noisySize++] = score;
@@ -130,7 +131,7 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = 20000 + m_sd->getHistories(m, c, m_previous, m_followup);
+    quietScores[quietSize++] = 20000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
 }
 
 Move moveGen::nextNoisy() {
@@ -465,9 +466,9 @@ void moveGen::updateHistory(int weight) {
             }
         } 
     } else {
-        m_sd->history[c][getSqToSqFromCombination(bestMove)] +=
+        m_sd->th[c][m_threatSquare][getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->history[c][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
         m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
@@ -485,9 +486,9 @@ void moveGen::updateHistory(int weight) {
                             - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
                             / MAX_HIST;
             } else {
-                m_sd->history[c][getSqToSqFromCombination(m)] +=
+                m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)] +=
                             - weight
-                            - weight * m_sd->history[c][getSqToSqFromCombination(m)]
+                            - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)]
                             / MAX_HIST;
                 m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)] +=
                             - weight
