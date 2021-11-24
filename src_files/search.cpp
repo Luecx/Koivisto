@@ -676,13 +676,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
             m = mGen->next();
         }
-        // *********************************************************************************************************
-        // kk reductions:
-        // we reduce more/less depending on which side we are currently looking at. The idea behind
-        // this is probably quite similar to the cutnode stuff found in stockfish, altough the
-        // implementation is quite different and it also is different functionally. Stockfish type
-        // cutnode stuff has not gained in Koivisto, while this has.
-        // *********************************************************************************************************
+
         if (pv) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce       = false;
@@ -739,6 +733,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
+            extension = 1;
+
+        if (mainThreat && !isCapture(en.move) && en.type == CUT_NODE && sameMove(hashMove, m))
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
