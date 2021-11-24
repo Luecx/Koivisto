@@ -288,6 +288,9 @@ class Board {
     [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 8 + piece];}
     
     Score evaluate();
+
+    int lastFutMargin = 80;
+
 };
 
 #endif    // CHESSCOMPUTER_BOARD_H
