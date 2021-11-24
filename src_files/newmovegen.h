@@ -75,12 +75,14 @@ class moveGen {
     Move            m_killer2;
     Move            m_previous;
     Move            m_followup;
+    Square          m_threatSquare;
     U64             m_checkerSq;
     Color           c;
     int             m_mode;
+    
 
     public: 
-    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, U64 checkerSq = 0);
+    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq = 0);
     Move next();
     void addNoisy(Move m);
     void addQuiet(Move m);
