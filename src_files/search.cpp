@@ -492,6 +492,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             sd->playedMoves[ply] = 0;
+            U64 n = td->nodes;
             score =
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
@@ -500,6 +501,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove_null();
             if (score >= beta) {
                 return score;
+            }
+            if (!mainThreat && td->nodes > n + 1 && isCapture(sd->playedMoves[ply+1])) {
+                mainThreat = getSquareTo(sd->playedMoves[ply+1]);
             }
         }
     }
