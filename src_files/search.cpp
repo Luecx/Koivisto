@@ -520,9 +520,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         Move m;
         while (m = mGen->next()) {
 
-            if (!m)
-                break;
-
             if (!b->isLegal(m))
                 continue;
 
@@ -550,6 +547,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // **********************************************************************************************************
     if (depth >= 4 && !hashMove)
         depth--;
+
+    if (depth > 8 && b->getActivePlayer() == behindNMP && !hashMove) {
+        pvSearch(b, alpha, beta, depth >> 1, ply, td, 0, behindNMP);
+        en = table->get(zobrist);
+        if (en.zobrist == zobrist)
+            hashMove = en.move;
+    }
 
     // **********************************************************************************************************
     // mate distance pruning:
