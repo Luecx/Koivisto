@@ -364,7 +364,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (inCheck)
         staticEval = -MAX_MATE_SCORE + ply;
     else {
-        staticEval = b->evaluate();
+        if (skipMove) {
+            staticEval = sd->eval[b->getActivePlayer()][ply];
+        } else {
+            staticEval = b->evaluate();
+        }
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
