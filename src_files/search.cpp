@@ -520,9 +520,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         Move m;
         while (m = mGen->next()) {
 
-            if (!m)
-                break;
-
             if (!b->isLegal(m))
                 continue;
 
@@ -676,13 +673,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
             m = mGen->next();
         }
-        // *********************************************************************************************************
-        // kk reductions:
-        // we reduce more/less depending on which side we are currently looking at. The idea behind
-        // this is probably quite similar to the cutnode stuff found in stockfish, altough the
-        // implementation is quite different and it also is different functionally. Stockfish type
-        // cutnode stuff has not gained in Koivisto, while this has.
-        // *********************************************************************************************************
+
         if (pv) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce       = false;
@@ -692,6 +683,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         U64   nodeCount = td->nodes;
+        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
 
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
@@ -709,7 +701,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -742,6 +733,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
+            extension = 1;
+
+        if (sameMove(m, hashMove) && history > 768 && !isCapture(m) && !isPromotion && depth > 4)
             extension = 1;
 
         // principal variation search recursion.
