@@ -361,9 +361,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // the eval and simply adjust the tempo-bonus. We also get the threat information if the position
     // has actually been evaluated.
 
-    if (inCheck)
+    if (inCheck) {
         staticEval = -MAX_MATE_SCORE + ply;
-    else {
+        mainThreat = bitscanForward(b->getPieceBB(b->getActivePlayer(), KING));
+    } else {
         staticEval = b->evaluate();
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
