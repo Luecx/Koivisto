@@ -974,7 +974,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(zobrist, bestScore, m, ttNodeType, !inCheckOpponent);
+                table->put(zobrist, bestScore, m, ttNodeType, 1);
                 return score;
             }
             if (score > alpha) {
