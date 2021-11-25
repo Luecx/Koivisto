@@ -982,6 +982,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 alpha      = score;
             }
         }
+        if (!isCapture(m) && !isPromotion(m))
+            break;
     }
 
     // store the current position inside the transposition table
