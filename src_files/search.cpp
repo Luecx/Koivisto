@@ -741,7 +741,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (depth > 4 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
-        if (depth > 4 && sameMove(hashMove, m) && en.type < ALL_NODE && sd->th[!b->getActivePlayer()][0][getSqToSqFromCombination(m)] < -128)
+        if (depth > 4 && sameMove(hashMove, m) && !isCapture(m) && en.type < ALL_NODE && sd->th[!b->getActivePlayer()][0][getSqToSqFromCombination(m)] < -128)
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
