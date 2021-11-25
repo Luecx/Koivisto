@@ -735,7 +735,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
-        if (sameMove(m, hashMove) && history > 768 && !isCapture(m) && !isPromotion && depth > 4)
+        if (sameMove(m, hashMove) && history > 512 && !isCapture(m) && !isPromotion && depth > 4)
             extension = 1;
 
         // principal variation search recursion.
