@@ -39,6 +39,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     searched_index  = 0;
     c               = b->getActivePlayer();
     m_skip          = false;
+    m_cskip         = false;
     m_killer1       = m_sd->killer[c][m_ply][0];
     m_killer2       = m_sd->killer[c][m_ply][1];
     m_threatSquare  = threatSquare;
@@ -53,7 +54,7 @@ Move moveGen::next() {
                 return m_hashMove;
 
         case GEN_NOISY:
-            generateNoisy();
+            if (!m_cskip) generateNoisy();
             stage++;
 
         case GET_GOOD_NOISY:
@@ -509,4 +510,8 @@ void moveGen::skip() {
 
 bool moveGen::shouldSkip() {
     return m_skip;
+}
+
+void moveGen::cSkip() {
+    m_cskip = true;
 }

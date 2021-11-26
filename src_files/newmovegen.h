@@ -67,6 +67,7 @@ class moveGen {
     int             searched_index;
     
     bool            m_skip;
+    bool            m_cskip;
     Board*          m_board;
     SearchData*     m_sd;
     Depth           m_ply;
@@ -95,6 +96,7 @@ class moveGen {
     void updateHistory(int weight);
     void skip();
     bool shouldSkip();
+    void cSkip();
 };
 
 #endif
