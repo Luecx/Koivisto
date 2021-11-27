@@ -570,7 +570,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
-    if (!inCheck && depth == 1 && hashMove && en.score < alpha && en.type > CUT_NODE) {
+    if (!pv && !inCheck && depth == 1 && hashMove && en.score < alpha && en.type > CUT_NODE) {
         mGen->cSkip();
         highestScore = en.score;
     }
