@@ -50,7 +50,7 @@ Move moveGen::next() {
     switch (stage) {
         case GET_HASHMOVE:
             stage++;
-            if (m_board->isPseudoLegal(m_hashMove))
+            if (!(m_cskip && isCapture(m_hashMove)) && m_board->isPseudoLegal(m_hashMove))
                 return m_hashMove;
 
         case GEN_NOISY:
