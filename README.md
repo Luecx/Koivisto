@@ -41,14 +41,12 @@ Assuming build tools have been installed, one can type:
 git clone https://github.com/Luecx/Koivisto.git
 cd Koivisto/
 
-mkdir bin/ 
 cd src_files
 make native
 ```
 
 Besides compiling a native version which should be best in terms of performance, one can also compile static executables using:
 ```
-mkdir bin/ 
 cd src_files
 make release
 ```
@@ -56,8 +54,3 @@ make release
 #### MacOS
 
 We do not provide binaries for MacOS yet. 
-
-
-
-
-
