@@ -129,15 +129,15 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
     
     for (Color c : {WHITE, BLACK}) {
 
-        auto wgt = (avx_register_type*) (inputWeights[idx[c]]);
-        auto sum = (avx_register_type*) (history.back().summation[c]);
+        auto wgt =  (inputWeights[idx[c]]);
+        auto sum =  (history.back().summation[c]);
         if constexpr (value) {
-            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-                sum[i] = avx_add_epi16(sum[i], wgt[i]);
+            for (int i = 0; i < HIDDEN_SIZE; i++) {
+                sum[i] = sum[i] + wgt[i];
             }
         } else {
-            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-                sum[i] = avx_sub_epi16(sum[i], wgt[i]);
+            for (int i = 0; i < HIDDEN_SIZE; i++) {
+                sum[i] = sum[i] - wgt[i];
             }
         }
     }
