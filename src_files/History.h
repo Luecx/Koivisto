@@ -36,7 +36,7 @@ struct SearchData {
     // capture history table (side-from-to)
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // threat history
-    int      th[N_COLORS][N_SQUARES][N_SQUARES * N_SQUARES]                      = {0};
+    int      th[N_COLORS][N_SQUARES + 1][N_SQUARES * N_SQUARES]                      = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // killer history
