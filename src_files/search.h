@@ -28,33 +28,19 @@
 #include "TranspositionTable.h"
 #include "eval.h"
 #include "newmovegen.h"
+#include "threaddata.h"
 
 #include <chrono>
 #include <cmath>
 #include <ctime>
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
-#include <tgmath.h>
+#include <ctgmath>
 #include <thread>
 
 #define MAX_THREADS 256
 
-/**
- * data about each thread
- */
-struct ThreadData {
-    int        threadID = 0;
-    U64        nodes    = 0;
-    int        seldepth = 0;
-    int        tbhits   = 0;
-    bool       dropOut  = false;
-    SearchData searchData {};
-    moveGen    generators[MAX_INTERNAL_PLY] {};
-    ThreadData();
-
-    ThreadData(int threadId);
-} __attribute__((aligned(4096)));
 
 /**
  * used to store information about a search
@@ -112,15 +98,15 @@ class Search {
     Move           bestMove(Board* b, Depth maxDepth, TimeManager* p_timeManager, int threadId=0);
     Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
                             Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
-    Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
-    Score           probeWDL(Board* board);
-    Move            probeDTZ(Board* board);
+    Score          qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
+    Score          probeWDL(Board* board);
+    Move           probeDTZ(Board* board);
 };
 
-extern int                 RAZOR_MARGIN;
-extern int                 FUTILITY_MARGIN;
-extern int                 SE_MARGIN_STATIC;
-extern int                 LMR_DIV;
+extern int RAZOR_MARGIN;
+extern int FUTILITY_MARGIN;
+extern int SE_MARGIN_STATIC;
+extern int LMR_DIV;
 
 void initLMR();
 

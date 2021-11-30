@@ -41,7 +41,7 @@ add_executable(Koivisto
         src_files/syzygy/tbchess.c
         src_files/movegen.h
         src_files/movegen.cpp
-        src_files/incbin/incbin.h)
+        src_files/incbin/incbin.h src_files/threaddata.cpp src_files/threaddata.h)
 
 add_definitions(-DEVALFILE=\"../networks/default.net\")
 add_definitions(-DMINOR_VERSION=0)

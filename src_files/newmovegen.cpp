@@ -60,7 +60,7 @@ Move moveGen::next() {
             if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
-                return 0;
+                return NO_MOVE;
             if (m_mode == Q_SEARCHCHECK) {
                 stage = QS_EVASIONS;
                 m_killer1 = 0;
@@ -68,7 +68,7 @@ Move moveGen::next() {
                 generateEvasions();
                 if (quiet_index < quietSize)
                     return nextQuiet();
-                return 0;
+                return NO_MOVE;
             }
             stage++;
 
@@ -101,14 +101,15 @@ Move moveGen::next() {
             stage++;
 
         case END:
-            return 0;
+            return NO_MOVE;
         
         case QS_EVASIONS:
             if (quiet_index < quietSize)
                 return nextQuiet();
             stage = END;
-            return 0;
+            return NO_MOVE;
     }
+    return NO_MOVE;
 }
 
 void moveGen::addNoisy(Move m) {
