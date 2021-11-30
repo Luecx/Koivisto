@@ -109,7 +109,7 @@ class Search {
     void           printInfoString(Board* b, Depth d, Score score);
     void           extractPV(Board* b, MoveList* mvList, Depth depth);
     
-    Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId=0);
+    Move           bestMove(Board* b, Depth maxDepth, TimeManager* p_timeManager, int threadId=0);
     Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
                             Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
     Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);

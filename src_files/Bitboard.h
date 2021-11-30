@@ -44,8 +44,6 @@ typedef bool    Color;
 
 typedef uint8_t Depth;
 typedef int16_t Score;
-typedef int32_t EvalScore;
-
 
 enum Plies{
     ONE_PLY          = 1,

@@ -32,7 +32,7 @@ struct SearchData {
     // Effort spent
     int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
     // EvalImprovement
-    int      maxImprovement[N_SQUARES][N_SQUARES]                                = {0};
+    int      maxImprovement[N_SQUARES * N_SQUARES]                               = {0};
     // capture history table (side-from-to)
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // threat history

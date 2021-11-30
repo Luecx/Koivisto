@@ -17,39 +17,34 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#pragma once 
+#pragma once
 #include "Board.h"
+
 #include <string_view>
 #include <vector>
 
-namespace PolyGlot
-{
-    class Book
-    {
+namespace PolyGlot {
+class Book {
     public:
-        Book() = default;
+    Book() = default;
 
-        void open(std::string_view path);
-        
-        Move probe(Board&) const;
+    void   open(std::string_view path);
 
-        size_t size() const 
-        {
-            return entries.size();
-        }
+    Move   probe(Board&) const;
 
-        bool enabled = false;
+    size_t size() const { return entries.size(); }
+
+    bool   enabled = false;
 
     private:
-        struct Entry 
-        {
-            uint64_t key;
-            uint16_t move;
-            uint16_t weight;
-            uint32_t learn;
-        };
-        std::vector<Entry> entries; 
+    struct Entry {
+        uint64_t key;
+        uint16_t move;
+        uint16_t weight;
+        uint32_t learn;
     };
+    std::vector<Entry> entries;
+};
 
-    inline Book book;
-}
+inline Book book;
+}    // namespace PolyGlot

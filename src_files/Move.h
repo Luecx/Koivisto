@@ -82,6 +82,11 @@ enum MoveShifts{
     SHIFT_SCORE_INFO     = 24,
 };
 
+enum SpecialMoves{
+    NULL_MOVE = 0,
+    NO_MOVE   = 0
+};
+
 template<uint8_t N>
 constexpr uint32_t MASK = (1 << N) - 1;
 
