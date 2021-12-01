@@ -20,10 +20,10 @@
 #ifndef KOIVISTO_NEWMOVEGEN_H
 #define KOIVISTO_NEWMOVEGEN_H
 
+#include "Bitboard.h"
 #include "Board.h"
 #include "History.h"
 #include "Move.h"
-#include "Bitboard.h"
 
 constexpr int MAX_QUIET = 128;
 constexpr int MAX_NOISY = 32;
@@ -51,38 +51,37 @@ enum {
 
 class moveGen {
     private:
+    int         stage;
 
-    int             stage;
+    Move        quiets[MAX_QUIET]      = {0};
+    Move        noisy[MAX_NOISY]       = {0};
+    Move        searched[MAX_QUIET]    = {0};
+    int         quietScores[MAX_QUIET] = {0};
+    int         noisyScores[MAX_NOISY] = {0};
+    int         quietSize;
+    int         noisySize;
+    int         goodNoisyCount;
+    int         noisy_index;
+    int         quiet_index;
+    int         searched_index;
 
-    Move            quiets[MAX_QUIET]       = {0};
-    Move            noisy[MAX_NOISY]        = {0};
-    Move            searched[MAX_QUIET]     = {0};
-    int             quietScores[MAX_QUIET]  = {0};
-    int             noisyScores[MAX_NOISY]  = {0};
-    int             quietSize;
-    int             noisySize;
-    int             goodNoisyCount;
-    int             noisy_index;
-    int             quiet_index;
-    int             searched_index;
-    
-    bool            m_skip;
-    Board*          m_board;
-    SearchData*     m_sd;
-    Depth           m_ply;
-    Move            m_hashMove;
-    Move            m_killer1;
-    Move            m_killer2;
-    Move            m_previous;
-    Move            m_followup;
-    Square          m_threatSquare;
-    U64             m_checkerSq;
-    Color           c;
-    int             m_mode;
-    
+    bool        m_skip;
+    Board*      m_board;
+    SearchData* m_sd;
+    Depth       m_ply;
+    Move        m_hashMove;
+    Move        m_killer1;
+    Move        m_killer2;
+    Move        m_previous;
+    Move        m_followup;
+    Square      m_threatSquare;
+    U64         m_checkerSq;
+    Color       c;
+    int         m_mode;
 
-    public: 
-    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq = 0);
+    public:
+    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup,
+              int mode, Square threatSquare, U64 checkerSq = 0);
     Move next();
     void addNoisy(Move m);
     void addQuiet(Move m);

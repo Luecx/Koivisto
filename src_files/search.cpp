@@ -231,8 +231,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* p_timeManager, int 
                 }
             }
         }
-        int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
-                                                     [getSquareTo  (td->searchData.bestMove)]
+        int timeManScore = td->searchData.spentEffort[getSqToSqFromCombination(td->searchData.bestMove)]
                            * 100 / td->nodes;
 
         if (threadId == 0) {
@@ -366,17 +365,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         mainThreat   = sd->mainThreat [ply];
         
-        if (ply > 0 && b->getPreviousMove() != NULL_MOVE) {
-            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
-                // compute the improvement
-                int improvement =
-                    - staticEval
-                    - sd->eval[!b->getActivePlayer()][ply - 1];
-                // store the improvement
-                sd->maxImprovement[getSqToSqFromCombination(b->getPreviousMove())] = improvement;
-            }
+        if (   ply > 0
+            && b->getPreviousMove() != NULL_MOVE
+            && sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
+            // compute the improvement
+            int improvement =
+                - staticEval
+                - sd->eval[!b->getActivePlayer()][ply - 1];
+            // store the improvement
+            sd->maxImprovement[getSqToSqFromCombination(b->getPreviousMove())] = improvement;
         }
     }
+    
 
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -679,7 +679,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (   ply   == 0
             && depth == 1) {
             // reset effort spend for this move
-            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
+            sd->spentEffort[getSqToSqFromCombination(m)] = 0;
         }
 
         // compute the static exchange evaluation if the move is a capture
@@ -856,7 +856,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     
         // track how many nodes we spent looking at the given move (in the entire tree)
         if (ply == 0) {
-            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += nodes_spend;
+            sd->spentEffort[getSqToSqFromCombination(m)] += nodes_spend;
         }
     
         // track that we searched this move so we can update histories

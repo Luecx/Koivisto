@@ -30,7 +30,7 @@ struct SearchData {
 
     Move     bestMove = 0;
     // Effort spent
-    int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
+    int64_t  spentEffort[N_SQUARES * N_SQUARES]                                  = {0};
     // EvalImprovement
     int      maxImprovement[N_SQUARES * N_SQUARES]                               = {0};
     // capture history table (side-from-to)
