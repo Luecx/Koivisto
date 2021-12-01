@@ -27,6 +27,7 @@
 #include "TimeManager.h"
 #include "TranspositionTable.h"
 #include "eval.h"
+#include "newmovegen.h"
 
 #include <chrono>
 #include <cmath>
@@ -38,6 +39,22 @@
 #include <thread>
 
 #define MAX_THREADS 256
+
+/**
+ * data about each thread
+ */
+struct ThreadData {
+    int        threadID = 0;
+    U64        nodes    = 0;
+    int        seldepth = 0;
+    int        tbhits   = 0;
+    bool       dropOut  = false;
+    SearchData searchData {};
+    moveGen    generators[MAX_INTERNAL_PLY] {};
+    ThreadData();
+
+    ThreadData(int threadId);
+} __attribute__((aligned(4096)));
 
 /**
  * used to store information about a search

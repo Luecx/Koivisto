@@ -20,71 +20,13 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-void SearchData::updateHistories(Move m, Depth depth, MoveList* mv, Color side, Move previous, Move followup) {
-    if (depth > 20)
-        return;
-    Move  m2;
-
-    Color color = getMovingPieceColor(m);
-
-    for (int i = 0; i < mv->getSize(); i++) {
-        m2         = mv->getMove(i);
-
-        int score  = mv->getScore(i);
-        int scalar = score * score + 5 * score;
-
-        if (sameMove(m, m2)) {
-            if (isCapture(m)) {
-                captureHistory[side][getSqToSqFromCombination(m)] +=
-                    + scalar
-                    - scalar * captureHistory[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE;
-            } else {
-                history[side][getSqToSqFromCombination(m)] +=
-                    + scalar
-                    - scalar * history[side][getSqToSqFromCombination(m)]
-                          / MAX_HISTORY_SCORE;
-                cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
-                    + scalar
-                    - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
-                          / MAX_HISTORY_SCORE;
-                fmh[getPieceTypeSqToCombination(followup)][color][getPieceTypeSqToCombination(m2)] +=
-                    + scalar
-                    - scalar * fmh[getPieceTypeSqToCombination(followup)][color][getPieceTypeSqToCombination(m2)]
-                          / MAX_HISTORY_SCORE;
-            }
-        
-            // we can return at this point because all moves searched are in front of this move
-            return;
-        } else if (isCapture(m2)) {
-            captureHistory[side][getSqToSqFromCombination(m2)] +=
-                - scalar
-                - scalar * captureHistory[side][getSqToSqFromCombination(m2)]
-                      / MAX_HISTORY_SCORE;
-        } else if (!isCapture(m)) {
-            history[side][getSqToSqFromCombination(m2)] +=
-                - scalar
-                - scalar * history[side][getSqToSqFromCombination(m2)]
-                      / MAX_HISTORY_SCORE;
-            cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)] +=
-                - scalar
-                - scalar * cmh[getPieceTypeSqToCombination(previous)][color][getPieceTypeSqToCombination(m2)]
-                      / MAX_HISTORY_SCORE;
-            fmh[getPieceTypeSqToCombination(followup)][color][getPieceTypeSqToCombination(m2)] +=
-                - scalar
-                - scalar * fmh[getPieceTypeSqToCombination(followup)][color][getPieceTypeSqToCombination(m2)]
-                      / MAX_HISTORY_SCORE;
-        }
-    }
-}
-
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup) {
+int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
         return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
                + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * history[side][getSqToSqFromCombination(m)]) / 3;
+               + 2 * th[side][threatSquare][getSqToSqFromCombination(m)]) / 3;
     }
 }
 
@@ -123,8 +65,4 @@ bool SearchData::isImproving(Score ev, Color color, Depth ply) {
     } else {
         return true;
     }
-}
-ThreadData::ThreadData(int threadId) : threadID(threadId) {
-}
-ThreadData::ThreadData() {
 }

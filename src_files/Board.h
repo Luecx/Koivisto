@@ -237,6 +237,10 @@ class Board {
     // no legal move generation is implemented so this is also used for perft.
     bool isLegal(Move m);
     
+
+    // Checks if the move is likely pseudo-legal. Doesn't cover en-passant, etc.
+    bool isPseudoLegal(Move m);
+    
     // returns the castling rights for the given index. note that no square is required but an index.
     // for the indices, look at the start of Board.h
     bool getCastlingRights(int index);
