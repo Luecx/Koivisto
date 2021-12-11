@@ -881,7 +881,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     // extract information like search data (history tables), zobrist etc
     SearchData* sd         = &td->searchData;
-    U32         key        = b->zobrist();
+    U64         key        = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
 
