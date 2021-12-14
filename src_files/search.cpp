@@ -403,6 +403,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         mainThreat   = sd->mainThreat[ply];
     }
 
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+
     if (en.zobrist == key >> 32) {
         // adjusting eval
         if ((en.type == PV_NODE) || (en.type == CUT_NODE && staticEval < en.score)
@@ -411,10 +415,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             staticEval = en.score;
         }
     } 
-
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
 
     // **************************************************************************************************************
     // tablebase probing:
