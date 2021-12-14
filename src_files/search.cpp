@@ -541,7 +541,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, qScore, m, CUT_NODE, depth - 3, staticEval);
                 return betaCut;
             }
         }
@@ -801,7 +801,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, score, m, CUT_NODE, depth, staticEval);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
@@ -846,7 +846,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(key, highestScore, bestMove, PV_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+            table->put(key, highestScore, bestMove, PV_NODE, depth, staticEval);
         } else {
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
@@ -855,9 +855,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
-                table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth, staticEval);
             } else {
-                table->put(key, highestScore, bestMove, ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, highestScore, bestMove, ALL_NODE, depth, staticEval);
             }
         }
     }
