@@ -535,7 +535,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, qScore, m, CUT_NODE, depth - 3, staticEval);
+                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
                 return betaCut;
             }
         }
