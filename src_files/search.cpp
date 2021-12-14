@@ -150,9 +150,9 @@ void initLMR() {
  * @param b
  * @return
  */
-Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId) {
+Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int threadId) {
     UCI_ASSERT(b);
-    UCI_ASSERT(timeManager);
+    UCI_ASSERT(timeman);
 
     // if the main thread calls this function, we need to generate the search data for all the threads
     // first
@@ -175,7 +175,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
             maxDepth = MAX_PLY;
 
         // if no dtz move has been found, set the time manager so that the search can be stopped
-        this->timeManager = timeManager;
+        this->timeManager = timeman;
 
         // we need to reset the hash between searches
         this->table->incrementAge();
@@ -192,7 +192,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
         // we will call this function for the other threads which will skip this part and jump
         // straight to the part below
         for (int n = 1; n < threadCount; n++) {
-            this->runningThreads.emplace_back(&Search::bestMove, this, b, maxDepth, timeManager, n);
+            this->runningThreads.emplace_back(&Search::bestMove, this, b, maxDepth, timeman, n);
         }
     }
 
@@ -254,7 +254,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
     if (threadId == 0) {
 
         // tell all other threads if they are running to stop the search
-        timeManager->stopSearch();
+        timeman->stopSearch();
         for (std::thread& th : this->runningThreads) {
             th.join();
         }
@@ -267,7 +267,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int th
         this->searchOverview.nodes = this->totalNodes();
         this->searchOverview.depth = d;
         this->searchOverview.score = s;
-        this->searchOverview.time  = timeManager->elapsedTime();
+        this->searchOverview.time  = timeman->elapsedTime();
         this->searchOverview.move  = best;
 
         // return the best move if its the main thread
@@ -518,7 +518,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
         Move m;
-        while (m = mGen->next()) {
+        while ((m = mGen->next())) {
 
             if (!m)
                 break;
@@ -578,7 +578,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Move m;
     // loop over all moves in the movelist
-    while (m = mGen->next()) {
+    while ((m = mGen->next())) {
 
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
@@ -935,7 +935,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     Move        bestMove = 0;
     Move        m;
 
-    while (m = mGen->next()) {
+    while ((m = mGen->next())) {
         
         // do not consider illegal moves
         if (!b->isLegal(m))

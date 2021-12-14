@@ -51,11 +51,11 @@ Move moveGen::next() {
             stage++;
             if (m_board->isPseudoLegal(m_hashMove))
                 return m_hashMove;
-
+            // fallthrough
         case GEN_NOISY:
             generateNoisy();
             stage++;
-
+            // fallthrough
         case GET_GOOD_NOISY:
             if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
                 return nextNoisy();
@@ -71,17 +71,17 @@ Move moveGen::next() {
                 return 0;
             }
             stage++;
-
+            // fallthrough
         case KILLER1:
             stage++;
             if (!sameMove(m_killer1, m_hashMove) && m_board->isPseudoLegal(m_killer1))
                 return m_killer1;
-
+            // fallthrough
         case KILLER2:
             stage++;
             if (!sameMove(m_killer2, m_hashMove) && m_board->isPseudoLegal(m_killer2))
                 return m_killer2;
-
+            // fallthrough
         case GEN_QUIET:
             if (shouldSkip()) {
                 stage = GET_BAD_NOISY;
@@ -89,17 +89,17 @@ Move moveGen::next() {
             }
             generateQuiet();
             stage++;
-
+            // fallthrough
         case GET_QUIET:
             if (quiet_index < quietSize)
                 return nextQuiet();
             stage++;
-
+            // fallthrough
         case GET_BAD_NOISY:
             if (noisy_index < noisySize) 
                 return nextNoisy();
             stage++;
-
+            // fallthrough
         case END:
             return 0;
         
@@ -109,6 +109,8 @@ Move moveGen::next() {
             stage = END;
             return 0;
     }
+
+    return 0;
 }
 
 void moveGen::addNoisy(Move m) {
@@ -178,7 +180,6 @@ void moveGen::generateNoisy() {
     
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
-    const U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
     
     const Direction forward      = c == WHITE ? NORTH:SOUTH;
     const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
@@ -252,10 +253,10 @@ void moveGen::generateNoisy() {
     // Pieces
     for(Piece p = KNIGHT; p <= QUEEN; p++){
         U64 pieceOcc    = m_board->getPieceBB(c, p);
-        U64 movingPiece = p + 8 * c;
+        movingPiece = p + 8 * c;
         while(pieceOcc){
             Square square = bitscanForward(pieceOcc);
-            U64 attacks = ZERO;
+            attacks = ZERO;
             switch (p) {
                 case KNIGHT:
                     attacks = KNIGHT_ATTACKS[square];
@@ -278,7 +279,7 @@ void moveGen::generateNoisy() {
             attacks &= ~friendly & opponents;
 
             while(attacks){
-                Square target = bitscanForward(attacks);
+                target = bitscanForward(attacks);
                 addNoisy(genMove(square, target, CAPTURE, movingPiece, m_board->getPiece(target)));
                 
                 attacks = lsbReset(attacks);
@@ -295,9 +296,9 @@ void moveGen::generateNoisy() {
     
     while (kings) {
         Square s    = bitscanForward(kings);
-        U64 attacks = KING_ATTACKS[s] & ~friendly & opponents;
+        attacks = KING_ATTACKS[s] & ~friendly & opponents;
         while (attacks) {
-            Square target = bitscanForward(attacks);
+            target = bitscanForward(attacks);
             addNoisy(genMove(s, target, CAPTURE, movingPiece, m_board->getPiece(target)));
             
             attacks = lsbReset(attacks);
@@ -309,12 +310,9 @@ void moveGen::generateNoisy() {
 void moveGen::generateQuiet() {
     
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
-    const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
     const U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
     
     const Direction forward      = c == WHITE ? NORTH:SOUTH;
-    const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
-    const Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
     
     const U64 opponents          = m_board->getTeamOccupiedBB(!c);
     const U64 friendly           = m_board->getTeamOccupiedBB(c);
@@ -348,10 +346,10 @@ void moveGen::generateQuiet() {
     // Piece
     for(Piece p = KNIGHT; p <= QUEEN; p++){
         U64 pieceOcc    = m_board->getPieceBB(c, p);
-        U64 movingPiece = p + 8 * c;
+        movingPiece = p + 8 * c;
         while(pieceOcc){
             Square square = bitscanForward(pieceOcc);
-            U64 attacks   = ZERO;
+            attacks   = ZERO;
             switch (p) {
                 case KNIGHT:
                     attacks = KNIGHT_ATTACKS[square];
@@ -375,7 +373,7 @@ void moveGen::generateQuiet() {
             attacks &= ~opponents;
 
             while(attacks){
-                Square target = bitscanForward(attacks);
+                target = bitscanForward(attacks);
                 addQuiet(genMove(square, target, QUIET, movingPiece));
                 
                 attacks = lsbReset(attacks);
@@ -392,9 +390,9 @@ void moveGen::generateQuiet() {
     
     while (kings) {
         Square s    = bitscanForward(kings);
-        U64 attacks = KING_ATTACKS[s] & ~friendly & ~opponents;
+        attacks = KING_ATTACKS[s] & ~friendly & ~opponents;
         while (attacks) {
-            Square target = bitscanForward(attacks);
+            target = bitscanForward(attacks);
             addQuiet(genMove(s, target, QUIET, movingPiece));
             
             attacks = lsbReset(attacks);
@@ -437,7 +435,7 @@ void moveGen::generateEvasions() {
         Square s    = bitscanForward(kings);
         U64 attacks = KING_ATTACKS[s] & ~occupied;
         while (attacks) {
-            Square target = bitscanForward(attacks);
+            target = bitscanForward(attacks);
             addQuiet(genMove(s, target, QUIET, movingPiece));
             attacks = lsbReset(attacks);
         }
