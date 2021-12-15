@@ -123,14 +123,14 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth) {
+bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval) {
 
-    U64 index = zobrist & m_mask;
-
+    U64 index  = zobrist & m_mask;
     Entry* enP = &m_entries[index];
+    U32 key    = zobrist >> 32;
 
     if (enP->zobrist == 0) {
-        enP->set(zobrist, score, move, type, depth);
+        enP->set(key, score, move, type, depth, eval);
         enP->setAge(m_currentAge);
         return true;
     } else {
@@ -143,8 +143,8 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
         //  This idea of replacement can be found in many strong engines (SF and Ethereal), however they use a static margin. 
         //  Martin (author of Cheng) tested and validated a variable margin.
 
-        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == zobrist && enP->depth <= depth * 2)) {
-            enP->set(zobrist, score, move, type, depth);
+        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == key && enP->depth <= depth * 2)) {
+            enP->set(key, score, move, type, depth, eval);
             enP->setAge(m_currentAge);
             return true;
         }
