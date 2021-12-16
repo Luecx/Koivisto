@@ -664,7 +664,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
-        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck && en.type == CUT_NODE && en.avgE < alpha) {
+        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck && en.type == CUT_NODE && en.avgE != 0 && en.avgE * (1 - 2 * b->getActivePlayer()) < alpha) {
             extension = 1;
         }
         else if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
@@ -811,7 +811,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!skipMove && !td->dropOut) {
                 Score averageEvals = 0;
                 if (sd->totalEvalCalls > callSoFar + 10)
-                    averageEvals = (sd->totalEval - evalSoFar) / (sd->totalEvalCalls - evalSoFar);
+                    averageEvals = (sd->totalEval - evalSoFar) / (sd->totalEvalCalls - callSoFar);
                 // put the beta cutoff into the perft_tt
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply], averageEvals);
             }
