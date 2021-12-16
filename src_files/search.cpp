@@ -397,6 +397,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     if (!inCheck) {
+        sd->totalEval += staticEval * (1 - 2 * b->getActivePlayer());
+        sd->totalEvalCalls++;
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
@@ -581,6 +583,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Move m;
     // loop over all moves in the movelist
+
+    int64_t evalSoFar = sd->totalEval;
+    int64_t callSoFar = sd->totalEvalCalls;
+
     while ((m = mGen->next())) {
 
         // if the move is the move we want to skip, skip this move (used for extensions)
@@ -658,7 +664,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
         // node turns out to be singular. Also standard multi-cut.
         // *********************************************************************************************************
-        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
+        if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck && en.type == CUT_NODE && en.avgE < alpha) {
+            extension = 1;
+        }
+        else if (depth >= 8 && !skipMove && legalMoves == 0 && sameMove(m, hashMove) && ply > 0 && !inCheck
             && abs(en.score) < MIN_MATE_SCORE && (en.type == CUT_NODE || en.type == PV_NODE) && en.depth >= depth - 3) {
 
             betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
@@ -800,8 +809,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // beta -cutoff
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
+                Score averageEvals = 0;
+                if (sd->totalEvalCalls > callSoFar + 10)
+                    averageEvals = (sd->totalEval - evalSoFar) / (sd->totalEvalCalls - evalSoFar);
                 // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply], averageEvals);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
@@ -913,6 +925,11 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         stand_pat = bestScore = en.eval;
     } else {
         stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+    }
+    
+    if (!inCheck) {
+        sd->totalEval += stand_pat * (1 - 2 * b->getActivePlayer());
+        sd->totalEvalCalls++;
     }
 
     // we can also use the perft_tt entry to adjust the evaluation.

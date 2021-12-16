@@ -51,13 +51,14 @@ struct Entry {
         return os;
     }
 
-    void set(U32 p_key, Score p_score, Move p_move, NodeType p_type, Depth p_depth, Score p_eval) {
+    void set(U32 p_key, Score p_score, Move p_move, NodeType p_type, Depth p_depth, Score p_eval, Score p_avgE) {
         this->zobrist = p_key;
         this->score   = p_score;
         this->move    = p_move;
         this->type    = p_type;
         this->depth   = p_depth;
         this->eval    = p_eval;
+        this->avgE    = p_avgE;
     }
 
     NodeAge getAge() { return getScore(move); }
@@ -70,6 +71,7 @@ struct Entry {
     NodeType type;       // 8 bit
     Score    score;      // 16 bit
     Score    eval;  	 // 16 bit -> 112 bit = 14 byte
+    Score    avgE;
 };
 
 class TranspositionTable {
@@ -94,7 +96,7 @@ class TranspositionTable {
 
     Entry get(U64 zobrist);
 
-    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval);
+    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval, Score avgE = 0);
 
     void incrementAge();
 

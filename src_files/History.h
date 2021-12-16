@@ -53,6 +53,8 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                       = 1;
+    int64_t  totalEval                                                           = 0;
+    int64_t  totalEvalCalls                                                      = 0;
 
     int      getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare);
 
