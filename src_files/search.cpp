@@ -709,6 +709,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
+        if (legalMoves == 0 && enemyThreats)
+            extension = 1;
+
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
