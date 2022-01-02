@@ -587,6 +587,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(m, skipMove))
             continue;
 
+        mGen->addSearched(m);
+
         // check if the move gives check and/or its promoting
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
@@ -781,8 +783,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply == 0) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
-
-        mGen->addSearched(m);
 
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
