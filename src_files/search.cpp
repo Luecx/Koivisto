@@ -709,9 +709,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
-        if (legalMoves == 0 && enemyThreats)
-            extension = 1;
-
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
@@ -745,6 +742,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
+            extension = 1;
+
+        if (legalMoves == 0 && depth > 4 && enemyThreats)
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
