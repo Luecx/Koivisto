@@ -341,7 +341,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
     if (depth == 0 || depth > MAX_PLY || ply > MAX_PVSEARCH_PLY) {
-        return qSearch(b, alpha, beta, ply, td, inCheck);
+        
+        if (!b->getPreviousMove() || isCapture(b->getPreviousMove()) || inCheck) return qSearch(b, alpha, beta, ply, td, inCheck);
+        return b->evaluate();
     }
 
     // we extract a lot of information about various things.
