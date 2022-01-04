@@ -30,6 +30,7 @@ namespace bb {
 
 
 typedef uint64_t U64;
+typedef uint32_t U32;
 typedef int8_t   Square;
 typedef int8_t   Diagonal;
 typedef int8_t   AntiDiagonal;
