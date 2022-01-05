@@ -29,8 +29,8 @@ alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (32)
-#define HIDDEN_WEIGHT_MULTIPLIER (32)
+#define INPUT_WEIGHT_MULTIPLIER  (128)
+#define HIDDEN_WEIGHT_MULTIPLIER (128)
 
 #if defined(__AVX512F__)
 typedef __m512i avx_register_type;
@@ -166,6 +166,27 @@ void nn::Evaluator::reset(Board* board) {
     }
 }
 
+
+inline void print_256i_epi16(const __m256i &h){
+    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d \n",
+           _mm256_extract_epi16(h,0),
+           _mm256_extract_epi16(h,1),
+           _mm256_extract_epi16(h,2),
+           _mm256_extract_epi16(h,3),
+           _mm256_extract_epi16(h,4),
+           _mm256_extract_epi16(h,5),
+           _mm256_extract_epi16(h,6),
+           _mm256_extract_epi16(h,7),
+           _mm256_extract_epi16(h,8),
+           _mm256_extract_epi16(h,9),
+           _mm256_extract_epi16(h,10),
+           _mm256_extract_epi16(h,11),
+           _mm256_extract_epi16(h,12),
+           _mm256_extract_epi16(h,13),
+           _mm256_extract_epi16(h,14),
+           _mm256_extract_epi16(h,15));
+}
+
 int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     if (board != nullptr) {
         reset(board);
@@ -182,7 +203,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
         act[i] = avx_max_epi16(act[i], reluBias);
     }
-
+    
     // do the sum for the output neurons
     for (int o = 0; o < OUTPUT_SIZE; o++) {
     
