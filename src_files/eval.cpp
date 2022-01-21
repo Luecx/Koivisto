@@ -29,8 +29,8 @@ alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (128)
-#define HIDDEN_WEIGHT_MULTIPLIER (128)
+#define INPUT_WEIGHT_MULTIPLIER  (64)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 typedef __m512i avx_register_type;
@@ -97,6 +97,7 @@ void nn::init() {
     memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
     std::memcpy(hiddenBias   , &gEvalData[memoryIndex],                 OUTPUT_SIZE * sizeof(int32_t));
     memoryIndex +=               OUTPUT_SIZE * sizeof(int32_t);
+    
 }
 int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color pieceColor,
@@ -116,6 +117,7 @@ int nn::Evaluator::index(bb::PieceType pieceType,
            + (fileIndex(kingSquare) > 3) * kingSideFactor;
 }
 
+
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
                                      bb::Color pieceColor,
@@ -128,7 +130,7 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
     int idx[N_COLORS] {idxWhite, idxBlack};
     
     for (Color c : {WHITE, BLACK}) {
-
+        
         auto wgt = (avx_register_type*) (inputWeights[idx[c]]);
         auto sum = (avx_register_type*) (history.back().summation[c]);
         if constexpr (value) {
@@ -164,25 +166,7 @@ void nn::Evaluator::reset(Board* board) {
     }
 }
 
-inline void print_256i_epi16(const __m256i &h){
-    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d \n",
-           _mm256_extract_epi16(h,0),
-           _mm256_extract_epi16(h,1),
-           _mm256_extract_epi16(h,2),
-           _mm256_extract_epi16(h,3),
-           _mm256_extract_epi16(h,4),
-           _mm256_extract_epi16(h,5),
-           _mm256_extract_epi16(h,6),
-           _mm256_extract_epi16(h,7),
-           _mm256_extract_epi16(h,8),
-           _mm256_extract_epi16(h,9),
-           _mm256_extract_epi16(h,10),
-           _mm256_extract_epi16(h,11),
-           _mm256_extract_epi16(h,12),
-           _mm256_extract_epi16(h,13),
-           _mm256_extract_epi16(h,14),
-           _mm256_extract_epi16(h,15));
-}
+
 
 int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     if (board != nullptr) {
@@ -203,15 +187,6 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
 
     // do the sum for the output neurons
     for (int o = 0; o < OUTPUT_SIZE; o++) {
-//        int check_sum = 0;
-//        for(int i = 0; i < 512; i++){
-//            check_sum += (int)hiddenWeights[o][i] * (int)activation[i];
-//            std::cout << i << "    "
-//                      << (int)hiddenWeights[o][i] << "    "
-//                      << (int)activation[i] << "    "
-//                      << check_sum / HIDDEN_WEIGHT_MULTIPLIER / INPUT_WEIGHT_MULTIPLIER << std::endl;
-//        }
-    
         auto              wgt = (avx_register_type*) (hiddenWeights[o]);
         avx_register_type res {};
         for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
