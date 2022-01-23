@@ -44,7 +44,7 @@ add_executable(Koivisto
         src_files/incbin/incbin.h)
 
 add_definitions(-DEVALFILE=\"../networks/default.net\")
-add_definitions(-DMINOR_VERSION=0)
+add_definitions(-DMINOR_VERSION=11)
 add_definitions(-DMAJOR_VERSION=7)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
