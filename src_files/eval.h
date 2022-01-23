@@ -27,7 +27,7 @@
 #include <vector>
 
 
-#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 2)
+#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
 #define HIDDEN_SIZE    (512)
 #define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
 #define OUTPUT_SIZE    (1)
@@ -74,12 +74,14 @@ struct Evaluator {
     
     void clearHistory();
     
+    int kingSquareIndex( bb::Square kingSquare, bb::Color kingColor);
+    
     int index( bb::PieceType pieceType,
                bb::Color pieceColor,
                bb::Square square,
-               bb::Color activePlayer,
+               bb::Color view,
                bb::Square kingSquare);
-
+    
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,
                           bb::Color pieceColor,
@@ -87,7 +89,16 @@ struct Evaluator {
                           bb::Square wKingSquare,
                           bb::Square bKingSquare);
     
+    template<bool value>
+    void setPieceOnSquareAccumulator(bb::Color side,
+                                     bb::PieceType pieceType,
+                                     bb::Color pieceColor,
+                                     bb::Square square,
+                                     bb::Square kingSquare);
+
     void reset(Board* board);
+    
+    void resetAccumulator(Board* board, bb::Color color);
     
     int evaluate(bb::Color activePlayer, Board* board = nullptr);
 } __attribute__((aligned(128)));
