@@ -20,7 +20,6 @@
 #include "Board.h"
 
 #include "UCIAssert.h"
-#include "search.h"
 
 using namespace bb;
 
@@ -516,8 +515,8 @@ void Board::move(Move m) {
             // move the rook as well. castling rights are handled below
             Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
             Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-            unsetPiece(rookSquare);
-            setPiece(rookTarget, ROOK + 8 * color);
+            this->unsetPiece(rookSquare);
+            this->setPiece(rookTarget, ROOK + 8 * color);
         }
         
         this->unsetPiece(sqFrom);
@@ -528,8 +527,11 @@ void Board::move(Move m) {
         }
         
         // check if it crossed squares
-        if(fileIndex(sqTo) + fileIndex(sqFrom) == 7 || isCastle(m)){
-            this->evaluator.reset(this);
+        if(     evaluator.kingSquareIndex(sqTo, color) !=
+                evaluator.kingSquareIndex(sqFrom, color)
+            ||  isCastle(m)
+            ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
+            this->evaluator.resetAccumulator(this, color);
         }
         
         // we need to compute the repetition count

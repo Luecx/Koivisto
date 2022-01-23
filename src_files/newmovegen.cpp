@@ -130,10 +130,10 @@ void moveGen::addNoisy(Move m) {
 }
 
 void moveGen::addQuiet(Move m) {
-    if (sameMove(m_hashMove, m) | sameMove(m_killer1, m) | sameMove(m_killer2, m))
+    if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = 20000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
 }
 
 Move moveGen::nextNoisy() {

@@ -30,7 +30,7 @@ alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
 #define INPUT_WEIGHT_MULTIPLIER  (128)
-#define HIDDEN_WEIGHT_MULTIPLIER (128)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 typedef __m512i avx_register_type;
@@ -97,6 +97,7 @@ void nn::init() {
     memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
     std::memcpy(hiddenBias   , &gEvalData[memoryIndex],                 OUTPUT_SIZE * sizeof(int32_t));
     memoryIndex +=               OUTPUT_SIZE * sizeof(int32_t);
+    
 }
 int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color pieceColor,
@@ -104,64 +105,57 @@ int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color view,
                          bb::Square kingSquare) {
 
+//    constexpr int pieceTypeFactor  = 64;
+//    constexpr int pieceColorFactor = 64 * 6;
+//    constexpr int kingSideFactor   = 64 * 6 * 2;
+//
+//    const Square  relativeSquare   = view == WHITE ? square : mirrorVertically(square);
+//
+//    return relativeSquare
+//           + pieceType * pieceTypeFactor
+//           + (pieceColor == view) * pieceColorFactor
+//           + (fileIndex(kingSquare) > 3) * kingSideFactor;
+
     constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
-    constexpr int kingSideFactor   = 64 * 6 * 2;
-
-    const Square  relativeSquare   = view == WHITE ? square : mirrorSquare(square);
-
+    constexpr int kingSquareFactor = 64 * 6 * 2;
+    
+    const bool      kingSide           = fileIndex(kingSquare) > 3;
+    const int       ksIndex            = kingSquareIndex(kingSquare, view);
+    Square          relativeSquare     = view == WHITE ? square : mirrorVertically(square);
+    
+    if (kingSide) {
+        relativeSquare = mirrorHorizontally(relativeSquare);
+    }
+    
     return relativeSquare
-           + pieceType * pieceTypeFactor
-           + (pieceColor == view) * pieceColorFactor
-           + (fileIndex(kingSquare) > 3) * kingSideFactor;
+           + pieceType              * pieceTypeFactor
+           + (pieceColor == view)   * pieceColorFactor
+           + ksIndex                * kingSquareFactor;
+
 }
 
-template<bool value>
-void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
-                                     bb::Color pieceColor,
-                                     bb::Square square,
-                                     bb::Square wKingSquare,
-                                     bb::Square bKingSquare) {
+int nn::Evaluator::kingSquareIndex( bb::Square relativeKingSquare, bb::Color kingColor){
+    // return zero if there is no king on the board yet ->
+    // requires manual reset
+    if(relativeKingSquare > 63) return 0;
     
-    int idxWhite    = index(pieceType, pieceColor, square, WHITE, wKingSquare);
-    int idxBlack    = index(pieceType, pieceColor, square, BLACK, bKingSquare);
-    int idx[N_COLORS] {idxWhite, idxBlack};
+    constexpr int indices[N_SQUARES]{
+        0 ,1 ,2 ,3 ,3 ,2 ,1 ,0 ,
+        4 ,5 ,6 ,7 ,7 ,6 ,5 ,4 ,
+        8 ,9 ,10,11,11,10,9 ,8 ,
+        8 ,9 ,10,11,11,10,9 ,8 ,
+        12,12,13,13,13,13,12,12,
+        12,12,13,13,13,13,12,12,
+        14,14,15,15,15,15,14,14,
+        14,14,15,15,15,15,14,14,
+        
+    };
     
-    for (Color c : {WHITE, BLACK}) {
-
-        auto wgt = (avx_register_type*) (inputWeights[idx[c]]);
-        auto sum = (avx_register_type*) (history.back().summation[c]);
-        if constexpr (value) {
-            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-                sum[i] = avx_add_epi16(sum[i], wgt[i]);
-            }
-        } else {
-            for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-                sum[i] = avx_sub_epi16(sum[i], wgt[i]);
-            }
-        }
+    if(kingColor == BLACK){
+        relativeKingSquare = mirrorVertically(relativeKingSquare);
     }
-}
-
-void nn::Evaluator::reset(Board* board) {
-    std::memcpy(history.back().summation[WHITE], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
-    std::memcpy(history.back().summation[BLACK], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
-    
-    Square wKingSq = bitscanForward(board->getPieceBB<WHITE>(KING));
-    Square bKingSq = bitscanForward(board->getPieceBB<BLACK>(KING));
-    
-    for (Color c : {WHITE, BLACK}) {
-        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING}) {
-            U64 bb = board->getPieceBB(c, pt);
-            while (bb) {
-                Square s = bitscanForward(bb);
-
-                setPieceOnSquare<true>(pt, c, s, wKingSq, bKingSq);
-
-                bb = lsbReset(bb);
-            }
-        }
-    }
+    return indices[relativeKingSquare];
 }
 
 inline void print_256i_epi16(const __m256i &h){
@@ -184,6 +178,77 @@ inline void print_256i_epi16(const __m256i &h){
            _mm256_extract_epi16(h,15));
 }
 
+inline void print_256i_epi32(const __m256i &h){
+    printf("%d %d %d %d %d %d %d %d \n",
+           _mm256_extract_epi32(h,0),
+           _mm256_extract_epi32(h,1),
+           _mm256_extract_epi32(h,2),
+           _mm256_extract_epi32(h,3),
+           _mm256_extract_epi32(h,4),
+           _mm256_extract_epi32(h,5),
+           _mm256_extract_epi32(h,6),
+           _mm256_extract_epi32(h,7));
+}
+
+
+template<bool value>
+void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
+                                     bb::Color pieceColor,
+                                     bb::Square square,
+                                     bb::Square wKingSquare,
+                                     bb::Square bKingSquare) {
+    
+    setPieceOnSquareAccumulator<value>(WHITE, pieceType, pieceColor, square, wKingSquare);
+    setPieceOnSquareAccumulator<value>(BLACK, pieceType, pieceColor, square, bKingSquare);
+}
+
+
+template<bool value>
+void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
+                                                bb::PieceType pieceType,
+                                                bb::Color pieceColor,
+                                                bb::Square square,
+                                                bb::Square kingSquare){
+    int idx  = index(pieceType, pieceColor, square, side, kingSquare);
+    
+    auto wgt = (avx_register_type*) (inputWeights[idx]);
+    auto sum = (avx_register_type*) (history.back().summation[side]);
+    if constexpr (value) {
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+            sum[i] = avx_add_epi16(sum[i], wgt[i]);
+        }
+    } else {
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+            sum[i] = avx_sub_epi16(sum[i], wgt[i]);
+        }
+    }
+}
+
+void nn::Evaluator::reset(Board* board) {
+    resetAccumulator(board, WHITE);
+    resetAccumulator(board, BLACK);
+}
+
+void nn::Evaluator::resetAccumulator(Board* board, bb::Color color){
+    std::memcpy(history.back().summation[color], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    
+    Square kingSquare = bitscanForward(board->getPieceBB(color, KING));
+    
+    for (Color c : {WHITE, BLACK}) {
+        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING}) {
+            U64 bb = board->getPieceBB(c, pt);
+            while (bb) {
+                Square s = bitscanForward(bb);
+                
+                setPieceOnSquareAccumulator<true>(color, pt, c, s,kingSquare);
+
+                bb = lsbReset(bb);
+            }
+        }
+    }
+}
+
+
 int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     if (board != nullptr) {
         reset(board);
@@ -203,15 +268,6 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
 
     // do the sum for the output neurons
     for (int o = 0; o < OUTPUT_SIZE; o++) {
-//        int check_sum = 0;
-//        for(int i = 0; i < 512; i++){
-//            check_sum += (int)hiddenWeights[o][i] * (int)activation[i];
-//            std::cout << i << "    "
-//                      << (int)hiddenWeights[o][i] << "    "
-//                      << (int)activation[i] << "    "
-//                      << check_sum / HIDDEN_WEIGHT_MULTIPLIER / INPUT_WEIGHT_MULTIPLIER << std::endl;
-//        }
-    
         auto              wgt = (avx_register_type*) (hiddenWeights[o]);
         avx_register_type res {};
         for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
@@ -241,13 +297,15 @@ void nn::Evaluator::clearHistory() {
     this->history.push_back(Accumulator{});
 }
 
-template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType,
-                                                    bb::Color pieceColor,
-                                                    bb::Square square,
-                                                    bb::Square wKingSquare,
-                                                    bb::Square bKingSquare);
-template void nn::Evaluator::setPieceOnSquare<false>(bb::PieceType pieceType,
-                                                     bb::Color pieceColor,
-                                                     bb::Square square,
-                                                     bb::Square wKingSquare,
-                                                     bb::Square bKingSquare);
+template
+void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType,
+                                          bb::Color pieceColor,
+                                          bb::Square square,
+                                          bb::Square wKingSquare,
+                                          bb::Square bKingSquare);
+template
+void nn::Evaluator::setPieceOnSquare<false>(bb::PieceType pieceType,
+                                           bb::Color pieceColor,
+                                           bb::Square square,
+                                           bb::Square wKingSquare,
+                                           bb::Square bKingSquare);
