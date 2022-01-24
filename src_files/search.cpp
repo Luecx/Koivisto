@@ -619,7 +619,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // move.
                 // **************************************************************************************************
                 if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat)
-                    < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                    < std::min(100 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
             }
