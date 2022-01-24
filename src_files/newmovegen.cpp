@@ -136,6 +136,13 @@ void moveGen::addQuiet(Move m) {
     quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
 }
 
+void moveGen::addBadQuiet(Move m) {
+    if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
+        return;
+    quiets[quietSize] = m;
+    quietScores[quietSize++] = -10000;
+}
+
 Move moveGen::nextNoisy() {
     if (m_skip)
         return noisy[noisy_index++];
@@ -354,21 +361,21 @@ void moveGen::generateQuiet() {
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
-            addQuiet(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
+            addBadQuiet(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
             attacks = lsbReset(attacks);
         }
         
         attacks = pawnsLeft & relative_rank_8_bb & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
-            addQuiet(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
+            addBadQuiet(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
             attacks = lsbReset(attacks);
         }
 
         attacks = pawnsRight & relative_rank_8_bb & opponents;
         while (attacks) {
             target = bitscanForward(attacks);
-            addQuiet(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
+            addBadQuiet(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
             attacks = lsbReset(attacks);
         }
     }

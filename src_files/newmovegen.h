@@ -86,6 +86,7 @@ class moveGen {
     Move next();
     void addNoisy(Move m);
     void addQuiet(Move m);
+    void addBadQuiet(Move m);
     Move nextNoisy();
     Move nextQuiet();
     void addSearched(Move m);
