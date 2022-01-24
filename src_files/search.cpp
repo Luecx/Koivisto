@@ -760,6 +760,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+
+            if (score > alpha && bestMove == 0) {
+                bestMove = m;
+                hashMove = m;
+            }
+
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
@@ -784,11 +790,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         mGen->addSearched(m);
 
+
+        // we consider this seperate to having a new best score for simplicity
+        if (score > alpha) {
+            // increase alpha
+            alpha = score;
+            bestMove = m;
+        }
+
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
         if (score > highestScore) {
             highestScore = score;
-            bestMove     = m;
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
@@ -811,12 +824,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->updateHistory(depth + (staticEval < alpha));
 
             return highestScore;
-        }
-
-        // we consider this seperate to having a new best score for simplicity
-        if (score > alpha) {
-            // increase alpha
-            alpha = score;
         }
 
         // if this loop finished, we can increment the legal move counter by one which is important
