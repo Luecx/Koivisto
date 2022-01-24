@@ -50,8 +50,7 @@ struct SearchData {
     Move     playedMoves[MAX_INTERNAL_PLY]                                       = {0};
     // eval history across plies
     Score    eval[N_COLORS][MAX_INTERNAL_PLY]                                    = {0};
-    bool     sideToReduce;
-    bool     reduce;
+    
     bool     targetReached                                                       = 1;
 
     int      getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare);

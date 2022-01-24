@@ -679,20 +679,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
             m = mGen->next();
         }
-        // *********************************************************************************************************
-        // kk reductions:
-        // we reduce more/less depending on which side we are currently looking at. The idea behind
-        // this is probably quite similar to the cutnode stuff found in stockfish, altough the
-        // implementation is quite different and it also is different functionally. Stockfish type
-        // cutnode stuff has not gained in Koivisto, while this has.
-        // *********************************************************************************************************
-        if (pv) {
-            sd->sideToReduce = !b->getActivePlayer();
-            sd->reduce       = false;
-            if (legalMoves == 0) {
-                sd->reduce = true;
-            }
-        }
 
         U64   nodeCount = td->nodes;
 
@@ -720,8 +706,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
-            if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
-                lmr++;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -752,20 +736,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
-            // kk reduction logic.
-            if (ply == 0 && lmr) {
-                sd->reduce       = true;
-                sd->sideToReduce = !b->getActivePlayer();
-            }
+            
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
-            // more kk reduction logic.
-            if (pv)
-                sd->reduce = true;
-            if (ply == 0) {
-                sd->sideToReduce = b->getActivePlayer();
-            }
 
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
@@ -945,7 +919,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         // if the move seems to be really good just return beta.
         if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
+                - see_piece_vals[getPieceType(getMovingPiece(m))] - 200 + stand_pat
             > beta)
             return beta;
 
