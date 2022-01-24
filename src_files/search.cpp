@@ -760,6 +760,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+
+            if (score > alpha && bestMove == 0)
+                bestMove = m;
+
             // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
@@ -788,7 +792,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // best move
         if (score > highestScore) {
             highestScore = score;
-            bestMove     = m;
             if (ply == 0 && (isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
@@ -815,6 +818,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // we consider this seperate to having a new best score for simplicity
         if (score > alpha) {
+            bestMove = m;
             // increase alpha
             alpha = score;
         }
@@ -850,8 +854,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         } else {
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
-            } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = 0;
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
