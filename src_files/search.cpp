@@ -606,7 +606,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (mGen->shouldSkip())
                     continue;
 
-                if (!inCheck && depth == 1 && getMovingPieceType(m) != KING && legalMoves >= 1) 
+                if (!inCheck && depth == 1 && getMovingPieceType(m) == KING && legalMoves >= 1) 
                     continue;
 
                 if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
