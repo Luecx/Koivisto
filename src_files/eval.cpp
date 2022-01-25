@@ -253,34 +253,24 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     if (board != nullptr) {
         reset(board);
     }
-    
-    // concat based on stm
-    std::memcpy( activation             , history.back().summation[ activePlayer], sizeof(uint16_t) * HIDDEN_SIZE);
-    std::memcpy(&activation[HIDDEN_SIZE], history.back().summation[!activePlayer], sizeof(uint16_t) * HIDDEN_SIZE);
-
     constexpr avx_register_type reluBias {};
-    avx_register_type*          act = (avx_register_type*) (activation);
 
-    // apply relu to the summation first
-    for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
-        act[i] = avx_max_epi16(act[i], reluBias);
+    auto acc_act = (avx_register_type*) history.back().summation[ activePlayer];
+    auto acc_nac = (avx_register_type*) history.back().summation[!activePlayer];
+
+    // compute the dot product
+    avx_register_type res {};
+    auto              wgt = (avx_register_type*) (hiddenWeights[0]);
+    for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+         res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_act[i], reluBias), wgt[i]));
+    }
+    for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+        res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_nac[i], reluBias), wgt[i + HIDDEN_SIZE / STRIDE_16_BIT]));
     }
 
-    // do the sum for the output neurons
-    for (int o = 0; o < OUTPUT_SIZE; o++) {
-        auto              wgt = (avx_register_type*) (hiddenWeights[o]);
-        avx_register_type res {};
-        for (int i = 0; i < HIDDEN_DSIZE / STRIDE_16_BIT; i++) {
-            res = avx_add_epi32(res, avx_madd_epi16(act[i], wgt[i]));
-        }
 
-        // credit to Connor
-        int32_t sums = sumRegisterEpi32(res);
-
-        output[o]    = sums + hiddenBias[0];
-    }
-
-    return output[0] / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
+    auto outp = sumRegisterEpi32(res) + hiddenBias[0];
+    return outp / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
 }
 
 nn::Evaluator::Evaluator() {
