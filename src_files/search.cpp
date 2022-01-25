@@ -708,11 +708,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // this is a sound reduction in theory.
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
+            
+        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -745,6 +746,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
+            extension = 1;
+
+        if (sameMove(hashMove, m) && !isCapture(m) && history < 0)
             extension = 1;
 
         // principal variation search recursion.
