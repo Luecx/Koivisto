@@ -914,7 +914,9 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     } else {
         if (inCheck) {
             stand_pat = bestScore = -MAX_MATE_SCORE + ply;
-        } else if ((beta - alpha) != 1 && -sd->eval[!b->getActivePlayer()][ply - 1] < alpha) {
+        } else if ((beta - alpha) != 1 && isCapture(b->getPreviousMove()) 
+            && -sd->eval[!b->getActivePlayer()][ply - 1] - see_piece_vals[(getPieceType(getCapturedPiece(b->getPreviousMove())))] < alpha + 70 
+            && -sd->eval[!b->getActivePlayer()][ply - 1] != beta) {
             stand_pat = bestScore = alpha;
         } else {
             stand_pat = bestScore = b->evaluate();
