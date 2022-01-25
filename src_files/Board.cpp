@@ -17,6 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+
+#include "attacks.h"
 #include "Board.h"
 
 #include "UCIAssert.h"
@@ -661,12 +663,12 @@ Move Board::getPreviousMove() {
  */
 template<Color attacker> U64 Board::getAttackedSquares() {
     
-    U64 attacks = ZERO;
+    U64 att = ZERO;
     
     if (attacker == WHITE) {
-        attacks |= shiftNorthEast(m_piecesBB[WHITE_PAWN]) | shiftNorthWest((m_piecesBB[WHITE_PAWN]));
+        att |= shiftNorthEast(m_piecesBB[WHITE_PAWN]) | shiftNorthWest((m_piecesBB[WHITE_PAWN]));
     } else {
-        attacks |= shiftSouthEast(m_piecesBB[BLACK_PAWN]) | shiftSouthWest((m_piecesBB[BLACK_PAWN]));
+        att |= shiftSouthEast(m_piecesBB[BLACK_PAWN]) | shiftSouthWest((m_piecesBB[BLACK_PAWN]));
     }
     
     U64 knights(m_piecesBB[KNIGHT + 8 * attacker]);
@@ -677,32 +679,32 @@ template<Color attacker> U64 Board::getAttackedSquares() {
     
     while (knights) {
         Square s = bitscanForward(knights);
-        attacks |= KNIGHT_ATTACKS[s];
+        att |= attacks::KNIGHT_ATTACKS[s];
         knights = lsbReset(knights);
     }
     while (bishops) {
         Square s = bitscanForward(bishops);
-        attacks |= lookUpBishopAttack(s, m_occupiedBB);
+        att |= attacks::lookUpBishopAttacks(s, m_occupiedBB);
         bishops = lsbReset(bishops);
     }
     while (rooks) {
         Square s = bitscanForward(rooks);
-        attacks |= lookUpRookAttack(s, m_occupiedBB);
+        att |= attacks::lookUpRookAttacks(s, m_occupiedBB);
         rooks = lsbReset(rooks);
     }
     while (queens) {
         Square s = bitscanForward(queens);
-        attacks |= lookUpRookAttack(s, m_occupiedBB);
-        attacks |= lookUpBishopAttack(s, m_occupiedBB);
+        att |= attacks::lookUpRookAttacks(s, m_occupiedBB);
+        att |= attacks::lookUpBishopAttacks(s, m_occupiedBB);
         queens = lsbReset(queens);
     }
     while (kings) {
         Square s = bitscanForward(kings);
-        attacks |= KING_ATTACKS[s];
+        att |= attacks::KING_ATTACKS[s];
         kings = lsbReset(kings);
     }
     
-    return attacks;
+    return att;
 }
 
 /**
@@ -756,14 +758,14 @@ Score Board::staticExchangeEvaluation(Move m) {
     
     U64 fixed = ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
                 | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN])
-                | (KNIGHT_ATTACKS[sqTo] & (m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT]))
-                | (KING_ATTACKS[sqTo] & (m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING]));
+                | (attacks::KNIGHT_ATTACKS[sqTo] & (m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT]))
+                | (attacks::KING_ATTACKS[sqTo] & (m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING]));
     
     // fixed is the attackset of attackers that cannot pin other m_piecesBB like
     // pawns, kings, knights
     
     U64 attadef =
-            (fixed | ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens)));
+            (fixed | ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens)));
     
     if (isCapture(m))
         gain[d] = see_piece_vals[getPieceType(capturedPiece)];
@@ -783,7 +785,7 @@ Score Board::staticExchangeEvaluation(Move m) {
         attadef ^= fromSet;    // reset bit in set to traverse
         occ ^= fromSet;
         attadef |=
-            occ & ((lookUpBishopAttack(sqTo, occ) & bishopsQueens) | (lookUpRookAttack(sqTo, occ) & rooksQueens));
+            occ & ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens));
         fromSet = getLeastValuablePiece(attadef, attacker, capturingPiece);
         
     } while (fromSet);
@@ -815,9 +817,9 @@ U64 Board::attacksTo(U64 p_occupied, Square sq) {
     bishopsQueens |= m_piecesBB[WHITE_BISHOP] | m_piecesBB[BLACK_BISHOP];
     
     return ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
-           | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN]) | (KNIGHT_ATTACKS[sq] & knights)
-           | (KING_ATTACKS[sq] & kings) | (lookUpBishopAttack(sq, p_occupied) & bishopsQueens)
-           | (lookUpRookAttack(sq, p_occupied) & rooksQueens);
+           | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN]) | (attacks::KNIGHT_ATTACKS[sq] & knights)
+           | (attacks::KING_ATTACKS[sq] & kings) | (attacks::lookUpBishopAttacks(sq, p_occupied) & bishopsQueens)
+           | (attacks::lookUpRookAttacks(sq, p_occupied) & rooksQueens);
 }
 
 /**
@@ -830,17 +832,17 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
     U64 sqBB = ONE << square;
     
     if constexpr (attacker == WHITE) {
-        return (lookUpRookAttack(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] | m_piecesBB[WHITE_ROOK])) != 0
-               || (lookUpBishopAttack(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] | m_piecesBB[WHITE_BISHOP])) != 0
-               || (KNIGHT_ATTACKS[square] & m_piecesBB[WHITE_KNIGHT]) != 0
+        return (attacks::lookUpRookAttacks(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] | m_piecesBB[WHITE_ROOK])) != 0
+               || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] | m_piecesBB[WHITE_BISHOP])) != 0
+               || (attacks::KNIGHT_ATTACKS[square] & m_piecesBB[WHITE_KNIGHT]) != 0
                || ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB)) & m_piecesBB[WHITE_PAWN]) != 0
-               || (KING_ATTACKS[square] & m_piecesBB[WHITE_KING]) != 0;
+               || (attacks::KING_ATTACKS[square] & m_piecesBB[WHITE_KING]) != 0;
     } else {
-        return (lookUpRookAttack(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] | m_piecesBB[BLACK_ROOK])) != 0
-               || (lookUpBishopAttack(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] | m_piecesBB[BLACK_BISHOP])) != 0
-               || (KNIGHT_ATTACKS[square] & m_piecesBB[BLACK_KNIGHT]) != 0
+        return (attacks::lookUpRookAttacks(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] | m_piecesBB[BLACK_ROOK])) != 0
+               || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] | m_piecesBB[BLACK_BISHOP])) != 0
+               || (attacks::KNIGHT_ATTACKS[square] & m_piecesBB[BLACK_KNIGHT]) != 0
                || ((shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) & m_piecesBB[BLACK_PAWN]) != 0
-               || (KING_ATTACKS[square] & m_piecesBB[BLACK_KING]) != 0;
+               || (attacks::KING_ATTACKS[square] & m_piecesBB[BLACK_KING]) != 0;
     }
 }
 
@@ -891,7 +893,7 @@ bool Board::givesCheck(Move m) {
     // direct check
     switch (getPieceType(pFrom)) {
         case QUEEN: {
-            U64 att = lookUpBishopAttack(sqTo, m_occupiedBB) | lookUpRookAttack(sqTo, m_occupiedBB);
+            U64 att = attacks::lookUpBishopAttacks(sqTo, m_occupiedBB) | attacks::lookUpRookAttacks(sqTo, m_occupiedBB);
             //            printBitmap(m_occupiedBB);
             //            printBitmap(att);
             if (att & opponentKing) {
@@ -901,7 +903,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case BISHOP: {
-            U64 att = lookUpBishopAttack(sqTo, m_occupiedBB);
+            U64 att = attacks::lookUpBishopAttacks(sqTo, m_occupiedBB);
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -909,7 +911,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case ROOK: {
-            U64 att = lookUpRookAttack(sqTo, m_occupiedBB);
+            U64 att = attacks::lookUpRookAttacks(sqTo, m_occupiedBB);
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -917,7 +919,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case KNIGHT: {
-            U64 att = KNIGHT_ATTACKS[sqTo];
+            U64 att = attacks::KNIGHT_ATTACKS[sqTo];
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -964,7 +966,7 @@ bool Board::givesCheck(Move m) {
     if (isCastle(m)) {
         unsetBit(m_occupiedBB, sqFrom);
         Square rookSquare = getActivePlayer() == WHITE ? (sqTo - sqFrom) > 0 ? F1 : D1 : (sqTo - sqFrom) > 0 ? F8 : D8;
-        if ((lookUpRookAttack(rookSquare, m_occupiedBB) & opponentKing) != 0) {
+        if ((attacks::lookUpRookAttacks(rookSquare, m_occupiedBB) & opponentKing) != 0) {
             m_occupiedBB = occ;
             return true;
         }
@@ -1023,8 +1025,8 @@ bool Board::isLegal(Move m) {
         
         this->move(m);
         bool isOk =
-                 (bb::lookUpRookAttack(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
-                 && (bb::lookUpBishopAttack(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
+                 (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
+                 && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
         this->undoMove();
         
         return isOk;
@@ -1291,7 +1293,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
     
     constexpr Color them = side ^ 1;
     
-    U64 pinner = lookUpRookXRayAttack(kingSq, m_occupiedBB, m_teamOccupiedBB[side])
+    U64 pinner = attacks::lookUpRookXRayAttack(kingSq, m_occupiedBB, m_teamOccupiedBB[side])
                  & (getPieceBB(them, ROOK) | getPieceBB(them, QUEEN));
     pinners |= pinner;
     while (pinner) {
@@ -1300,7 +1302,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
         pinner = lsbReset(pinner);
     }
     
-    pinner = lookUpBishopXRayAttack(kingSq, m_occupiedBB, m_teamOccupiedBB[side])
+    pinner = attacks::lookUpBishopXRayAttack(kingSq, m_occupiedBB, m_teamOccupiedBB[side])
              & (getPieceBB(them, BISHOP) | getPieceBB(them, QUEEN));
     pinners |= pinner;
     

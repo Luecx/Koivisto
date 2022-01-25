@@ -19,6 +19,7 @@
 #include "movegen.h"
 #include "UCIAssert.h"
 
+#include "attacks.h"
 
 // check if all moves should be generated or only quiet moves
 enum MoveGenConfig{
@@ -226,20 +227,20 @@ void generatePieceMoves(
             U64 attacks = ZERO;
             switch (p) {
                 case KNIGHT:
-                    attacks = KNIGHT_ATTACKS[square];
+                    attacks = attacks::KNIGHT_ATTACKS[square];
                     break;
                 case BISHOP:
                     attacks =
-                        lookUpBishopAttack  (square, occupied);
+                        attacks::lookUpBishopAttacks  (square, occupied);
                     break;
                 case ROOK:
                     attacks =
-                        lookUpRookAttack    (square,occupied);
+                        attacks::lookUpRookAttacks    (square,occupied);
                     break;
                 case QUEEN:
                     attacks =
-                        lookUpBishopAttack  (square, occupied) |
-                        lookUpRookAttack    (square, occupied);
+                        attacks::lookUpBishopAttacks  (square, occupied) |
+                        attacks::lookUpRookAttacks    (square, occupied);
                     break;
                 
             }
@@ -297,7 +298,7 @@ void generateKingMoves(
     
     while (kings) {
         Square s       = bitscanForward(kings);
-        U64 attacks = KING_ATTACKS[s] & ~friendly;
+        U64 attacks = attacks::KING_ATTACKS[s] & ~friendly;
         while (attacks) {
             Square target = bitscanForward(attacks);
             

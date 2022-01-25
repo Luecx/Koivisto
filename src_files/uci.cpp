@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "uci.h"
+#include "attacks.h"
 #include "polyglot.h"
 #include "search.h"
 #include "UCIAssert.h"
@@ -27,7 +28,6 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
-
 
 TimeManager timeManager;
 Board*      board;
@@ -74,6 +74,7 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
  */
 void uci::mainloop(int argc, char* argv[]){
 
+    attacks::init();
     bb::init();
     nn::init();
     searchObject = {};
