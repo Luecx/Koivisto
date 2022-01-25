@@ -74,9 +74,9 @@ void searchAndPrint(Depth maxDepth, TimeManager* p_timeManager) {
  */
 void uci::mainloop(int argc, char* argv[]){
 
+    attacks::init();
     bb::init();
     nn::init();
-    attacks::init();
     searchObject = {};
     searchObject.init(16);
 
