@@ -3,46 +3,9 @@ project(Koivisto VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Koivisto
-        src_files/main.cpp
-        src_files/Bitboard.h
-        src_files/Bitboard.cpp
-        src_files/Board.h
-        src_files/Board.cpp
-        src_files/Move.h
-        src_files/Move.cpp
-        src_files/TranspositionTable.h
-        src_files/TranspositionTable.cpp
-        src_files/Perft.h
-        src_files/Perft.cpp
-        src_files/Util.h
-        src_files/Util.cpp
-        src_files/search.cpp
-        src_files/search.h
-        src_files/uci.cpp
-        src_files/uci.h
-        src_files/eval.cpp
-        src_files/eval.h
-        src_files/MoveOrderer.cpp
-        src_files/MoveOrderer.h
-        src_files/newmovegen.cpp
-        src_files/newmovegen.h
-        src_files/History.cpp
-        src_files/History.h
-        src_files/Verification.h
-        src_files/TimeManager.cpp
-        src_files/TimeManager.h
-        src_files/polyglot.cpp
-        src_files/polyglot.h
-        src_files/syzygy/stdendian.h
-        src_files/syzygy/tbprobe.h
-        src_files/syzygy/tbconfig.h
-        src_files/syzygy/tbprobe.c
-        src_files/syzygy/tbchess.c
-        src_files/movegen.h
-        src_files/movegen.cpp
-        src_files/incbin/incbin.h)
+file(GLOB_RECURSE SRCS src_files/*.c src_files/*.cpp src_files/*.h)
 
+add_executable(Koivisto ${SRCS} src_files/search/score.h)
 add_definitions(-DEVALFILE=\"../networks/default.net\")
 add_definitions(-DMINOR_VERSION=11)
 add_definitions(-DMAJOR_VERSION=7)
