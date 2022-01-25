@@ -923,7 +923,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         }
     }
 
-    sd->eval[b->getActivePlayer()][ply];
+    sd->eval[b->getActivePlayer()][ply] = stand_pat;
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == key >> 32) {
