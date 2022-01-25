@@ -36,10 +36,12 @@ struct SearchData {
     // capture history table (side-from-to)
     int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
     // threat history
-    int      th[N_COLORS][N_SQUARES + 1][N_SQUARES * N_SQUARES]                      = {0};
+    int      th[N_COLORS][N_SQUARES + 1][N_SQUARES * N_SQUARES]                  = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // killer history
+    int      kmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
+    // followup move history
     int      fmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
     Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
@@ -54,7 +56,7 @@ struct SearchData {
     bool     reduce;
     bool     targetReached                                                       = 1;
 
-    int      getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare);
+    int      getHistories(Move m, Color side, Move previous, Move followup, Move killer, Square threatSquare);
 
     void     setKiller(Move move, Depth ply, Color color);
 

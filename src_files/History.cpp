@@ -20,13 +20,14 @@
 
 #define MAX_HISTORY_SCORE 512;
 
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
+int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Move killer, Square threatSquare) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
         return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
                + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * th[side][threatSquare][getSqToSqFromCombination(m)]) / 3;
+               + 2 * kmh[getPieceTypeSqToCombination(killer)][side][getPieceTypeSqToCombination(m)]
+               + 2 * th[side][threatSquare][getSqToSqFromCombination(m)]) / 4;
     }
 }
 

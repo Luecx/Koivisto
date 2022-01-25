@@ -519,7 +519,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score     betaCut = beta + 100;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
-        mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
+        mGen->init(sd, b, ply, 0, 0, 0, 0, Q_SEARCH, 0);
         Move m;
         while ((m = mGen->next())) {
 
@@ -572,7 +572,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, sd->killer[!b->getActivePlayer()][ply + 1][0], PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
@@ -618,7 +618,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat)
+                if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, sd->killer[!b->getActivePlayer()][ply + 1][0], mainThreat)
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -676,7 +676,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (score >= beta)
                     return score;
             }
-            mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+            mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, sd->killer[!b->getActivePlayer()][ply + 1][0], PV_SEARCH, mainThreat, *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
             m = mGen->next();
         }
         // *********************************************************************************************************
@@ -712,7 +712,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
+            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, sd->killer[!b->getActivePlayer()][ply + 1][0], mainThreat);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -931,7 +931,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         alpha = bestScore;
 
     moveGen* mGen   = &td->generators[ply];
-    mGen->init(sd, b, ply, 0, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, Q_SEARCH + inCheck, 0);
+    mGen->init(sd, b, ply, 0, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, 0, Q_SEARCH + inCheck, 0);
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
