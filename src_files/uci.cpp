@@ -507,7 +507,6 @@ void uci::quit() {
     board = nullptr;
 
     bb::cleanUp();
-    attacks::cleanUp();
     searchObject.cleanUp();
 }
 

@@ -154,11 +154,10 @@ constexpr bb::U64 KNIGHT_ATTACKS[] {
     0x0004020000000000L, 0x0008050000000000L, 0x00110a0000000000L, 0x0022140000000000L,
     0x0044280000000000L, 0x0088500000000000L, 0x0010a00000000000L, 0x0020400000000000L};
 
-extern       bb::U64 *ROOK_ATTACKS  [bb::N_SQUARES];
-extern       bb::U64 *BISHOP_ATTACKS[bb::N_SQUARES];
+extern       bb::U64 ROOK_ATTACKS  [bb::N_SQUARES][4096];
+extern       bb::U64 BISHOP_ATTACKS[bb::N_SQUARES][ 512];
 
 void init();
-void cleanUp();
 
 bb::U64 generateSlidingAttacks(bb::Square sq, bb::Direction direction, bb::U64 occ);
 bb::U64 generateRookAttacks   (bb::Square sq, bb::U64 occupied);

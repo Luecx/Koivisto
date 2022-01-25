@@ -25,8 +25,8 @@
 using namespace bb;
 
 
-bb::U64 *attacks::ROOK_ATTACKS  [bb::N_SQUARES]{};
-bb::U64 *attacks::BISHOP_ATTACKS[bb::N_SQUARES]{};
+bb::U64 attacks::ROOK_ATTACKS  [bb::N_SQUARES][4096]{};
+bb::U64 attacks::BISHOP_ATTACKS[bb::N_SQUARES][ 512]{};
 
 U64 populateMask(U64 mask, U64 index) {
     
@@ -55,32 +55,21 @@ void attacks::init() {
         U64  rook_entries   = (ONE << (64 - rook_shift));
         U64  bish_entries   = (ONE << (64 - bish_shift));
         
-        ROOK_ATTACKS    [n] = new U64[rook_entries];
-        BISHOP_ATTACKS  [n] = new U64[bish_entries];
-        
         for (int i = 0; i < rook_entries; i++) {
             U64 rel_occ            = populateMask(rookMasks[n], i);
-            int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
+            int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
         
         for (int i = 0; i < bish_entries; i++) {
             U64 rel_occ              = populateMask(bishopMasks[n], i);
-            int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
+            int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
     }
 }
 
-void attacks::cleanUp() {
-    for (int n = 0; n < 64; n++) {
-        delete[] ROOK_ATTACKS  [n];
-        delete[] BISHOP_ATTACKS[n];
-        
-        ROOK_ATTACKS  [n] = nullptr;
-        BISHOP_ATTACKS[n] = nullptr;
-    }
-}
+
 
 bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     
