@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE SRCS src_files/*.c src_files/*.cpp src_files/*.h)
 
-add_executable(Koivisto ${SRCS} src_files/search/score.h)
+add_executable(Koivisto ${SRCS})
 add_definitions(-DEVALFILE=\"../networks/default.net\")
 add_definitions(-DMINOR_VERSION=11)
 add_definitions(-DMAJOR_VERSION=7)

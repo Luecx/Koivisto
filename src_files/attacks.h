@@ -25,20 +25,22 @@
 namespace attacks{
 
 
-extern const bb::U64 bishopMasks   [bb::N_SQUARES];
-extern const bb::U64 rookMasks     [bb::N_SQUARES];
-extern const int     bishopShifts  [bb::N_SQUARES];
-extern const int     rookShifts    [bb::N_SQUARES];
-extern const bb::U64 bishopMagics  [bb::N_SQUARES];
-extern const bb::U64 rookMagics    [bb::N_SQUARES];
+extern const bb::U64 bishopMasks    [bb::N_SQUARES];
+extern const bb::U64 rookMasks      [bb::N_SQUARES];
+extern const int     bishopShifts   [bb::N_SQUARES];
+extern const int     rookShifts     [bb::N_SQUARES];
+extern const bb::U64 bishopMagics   [bb::N_SQUARES];
+extern const bb::U64 rookMagics     [bb::N_SQUARES];
 
-extern const bb::U64 KING_ATTACKS  [bb::N_SQUARES];
-extern const bb::U64 KNIGHT_ATTACKS[bb::N_SQUARES];
+extern const bb::U64 KING_ATTACKS   [bb::N_SQUARES];
+extern const bb::U64 KNIGHT_ATTACKS [bb::N_SQUARES];
 
-extern       bb::U64 ROOK_ATTACKS  [bb::N_SQUARES][4096];
-extern       bb::U64 BISHOP_ATTACKS[bb::N_SQUARES][ 512];
+extern       bb::U64 *ROOK_ATTACKS  [bb::N_SQUARES];
+extern       bb::U64 *BISHOP_ATTACKS[bb::N_SQUARES];
 
 void init();
+void cleanUp();
+
 bb::U64 generateSlidingAttacks(bb::Square sq, bb::Direction direction, bb::U64 occ);
 bb::U64 generateRookAttacks   (bb::Square sq, bb::U64 occupied);
 bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);

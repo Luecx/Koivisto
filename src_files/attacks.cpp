@@ -152,8 +152,8 @@ constexpr bb::U64 attacks::KNIGHT_ATTACKS[] {
     0x0004020000000000L, 0x0008050000000000L, 0x00110a0000000000L, 0x0022140000000000L,
     0x0044280000000000L, 0x0088500000000000L, 0x0010a00000000000L, 0x0020400000000000L};
 
-bb::U64 attacks::ROOK_ATTACKS  [bb::N_SQUARES][4096]{};
-bb::U64 attacks::BISHOP_ATTACKS[bb::N_SQUARES][ 512]{};
+bb::U64 *attacks::ROOK_ATTACKS  [bb::N_SQUARES]{};
+bb::U64 *attacks::BISHOP_ATTACKS[bb::N_SQUARES]{};
 
 U64 populateMask(U64 mask, U64 index) {
     
@@ -176,17 +176,36 @@ U64 populateMask(U64 mask, U64 index) {
 
 void attacks::init() {
     for (int n = 0; n < 64; n++) {
-        for (int i = 0; i < pow(2, 64 - rookShifts[n]); i++) {
+        auto rook_shift = rookShifts[n];
+        auto bish_shift = bishopShifts[n];
+        
+        U64  rook_entries   = (ONE << (64 - rook_shift));
+        U64  bish_entries   = (ONE << (64 - bish_shift));
+        
+        ROOK_ATTACKS    [n] = new U64[rook_entries];
+        BISHOP_ATTACKS  [n] = new U64[bish_entries];
+        
+        for (int i = 0; i < rook_entries; i++) {
             U64 rel_occ            = populateMask(rookMasks[n], i);
             int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rookShifts[n]);
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
         
-        for (int i = 0; i < pow(2, 64 - bishopShifts[n]); i++) {
+        for (int i = 0; i < bish_entries; i++) {
             U64 rel_occ              = populateMask(bishopMasks[n], i);
             int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bishopShifts[n]);
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
+    }
+}
+
+void attacks::cleanUp() {
+    for (int n = 0; n < 64; n++) {
+        delete[] ROOK_ATTACKS  [n];
+        delete[] BISHOP_ATTACKS[n];
+        
+        ROOK_ATTACKS  [n] = nullptr;
+        BISHOP_ATTACKS[n] = nullptr;
     }
 }
 
