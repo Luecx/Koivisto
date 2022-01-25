@@ -88,12 +88,12 @@ Board::Board(std::string fen) {
             Square sq = squareIndex(y, x);
             
             switch (toupper(c)) {
-                case 'P': setPiece(sq, 0 + offset); break;
-                case 'N': setPiece(sq, 1 + offset); break;
-                case 'B': setPiece(sq, 2 + offset); break;
-                case 'R': setPiece(sq, 3 + offset); break;
-                case 'Q': setPiece(sq, 4 + offset); break;
-                case 'K': setPiece(sq, 5 + offset); break;
+                case 'P': setPiece<false>(sq, 0 + offset); break;
+                case 'N': setPiece<false>(sq, 1 + offset); break;
+                case 'B': setPiece<false>(sq, 2 + offset); break;
+                case 'R': setPiece<false>(sq, 3 + offset); break;
+                case 'Q': setPiece<false>(sq, 4 + offset); break;
+                case 'K': setPiece<false>(sq, 5 + offset); break;
             }
             
             x++;
