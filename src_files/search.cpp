@@ -733,6 +733,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
+        if (mainThreat < 64 && sd->th[b->getActivePlayer()][mainThreat][getSqToSqFromCombination(m)] > 256)
+            extension = 1;
+
         // doing the move
         b->move(m);
 
@@ -746,9 +749,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
-            extension = 1;
-
-        if (sameMove(hashMove, m) && !isCapture(m) && history < 0)
             extension = 1;
 
         // principal variation search recursion.
