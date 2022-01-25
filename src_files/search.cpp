@@ -912,8 +912,16 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         }
         stand_pat = bestScore = en.eval;
     } else {
-        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+        if (inCheck) {
+            stand_pat = bestScore = -MAX_MATE_SCORE + ply;
+        } else if ((beta - alpha) != 1 && -sd->eval[!b->getActivePlayer()][ply - 1] < alpha) {
+            stand_pat = bestScore = alpha;
+        } else {
+            stand_pat = bestScore = b->evaluate();
+        }
     }
+
+    sd->eval[b->getActivePlayer()][ply];
 
     // we can also use the perft_tt entry to adjust the evaluation.
     if (en.zobrist == key >> 32) {
