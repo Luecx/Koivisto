@@ -112,7 +112,7 @@ class Search {
     Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
                             Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
     Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
-    Score           probeWDL(Board* board);
+    Score           probeWDL(Board* board) const;
     Move            probeDTZ(Board* board);
 };
 

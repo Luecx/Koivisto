@@ -135,27 +135,18 @@ int nn::Evaluator::index(bb::PieceType pieceType,
 
 }
 
-int nn::Evaluator::kingSquareIndex( bb::Square relativeKingSquare, bb::Color kingColor){
+int nn::Evaluator::kingSquareIndex( bb::Square kingSquare, bb::Color kingColor){
     // return zero if there is no king on the board yet ->
     // requires manual reset
-    if(relativeKingSquare > 63) return 0;
-    
-    constexpr int indices[N_SQUARES]{
-        0 ,1 ,2 ,3 ,3 ,2 ,1 ,0 ,
-        4 ,5 ,6 ,7 ,7 ,6 ,5 ,4 ,
-        8 ,9 ,10,11,11,10,9 ,8 ,
-        8 ,9 ,10,11,11,10,9 ,8 ,
-        12,12,13,13,13,13,12,12,
-        12,12,13,13,13,13,12,12,
-        14,14,15,15,15,15,14,14,
-        14,14,15,15,15,15,14,14,
-        
-    };
-    
+    if(kingSquare > 63) return 0;
+
     if(kingColor == BLACK){
-        relativeKingSquare = mirrorVertically(relativeKingSquare);
+        kingSquare = mirrorVertically(kingSquare);
     }
-    return indices[relativeKingSquare];
+    if(fileIndex(kingSquare) > 3){
+        kingSquare = mirrorHorizontally(kingSquare);
+    }
+    return rankIndex(kingSquare) * 4 + fileIndex(kingSquare);
 }
 
 inline void print_256i_epi16(const __m256i &h){
