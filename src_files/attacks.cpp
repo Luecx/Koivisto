@@ -119,18 +119,18 @@ bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ)
     }
 }
 
-bb::U64 attacks::generateRookAttacks(bb::Square sq, bb::U64 occupied) {
-    return   generateSlidingAttacks(sq, NORTH, occupied)
-           | generateSlidingAttacks(sq, EAST, occupied)
-           | generateSlidingAttacks(sq, WEST, occupied)
-           | generateSlidingAttacks(sq, SOUTH, occupied);
+bb::U64 attacks::generateRookAttacks(bb::Square square, bb::U64 occupied) {
+    return   generateSlidingAttacks(square, NORTH, occupied)
+           | generateSlidingAttacks(square, EAST , occupied)
+           | generateSlidingAttacks(square, WEST , occupied)
+           | generateSlidingAttacks(square, SOUTH, occupied);
 }
 
-bb::U64 attacks::generateBishopAttacks(bb::Square sq, bb::U64 occupied) {
-    return   generateSlidingAttacks(sq, NORTH_WEST, occupied)
-           | generateSlidingAttacks(sq, NORTH_EAST, occupied)
-           | generateSlidingAttacks(sq, SOUTH_WEST, occupied)
-           | generateSlidingAttacks(sq, SOUTH_EAST, occupied);
+bb::U64 attacks::generateBishopAttacks(bb::Square square, bb::U64 occupied) {
+    return   generateSlidingAttacks(square, NORTH_WEST, occupied)
+           | generateSlidingAttacks(square, NORTH_EAST, occupied)
+           | generateSlidingAttacks(square, SOUTH_WEST, occupied)
+           | generateSlidingAttacks(square, SOUTH_EAST, occupied);
 }
 
 

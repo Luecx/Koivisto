@@ -84,8 +84,8 @@ std::string move::toString(const Move& move) {
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
     res.append(bb::SQUARE_IDENTIFIER[getSquareTo(move)]);
     if (isPromotion(move)) {
-        char c = tolower(bb::PIECE_IDENTIFER[getPromotionPiece(move)]);
-        res.push_back(c);
+        char chr = tolower(bb::PIECE_IDENTIFER[getPromotionPiece(move)]);
+        res.push_back(chr);
     }
     
     return res;

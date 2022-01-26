@@ -20,7 +20,6 @@
 #include "Bitboard.h"
 #include "Board.h"
 #include "Move.h"
-#include "MoveOrderer.h"
 #include "Verification.h"
 #include "uci.h"
 
