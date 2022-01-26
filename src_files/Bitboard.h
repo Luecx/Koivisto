@@ -376,11 +376,6 @@ void       generateData();
 void       init();
 
 /**
- * deletes allocated arrays
- */
-void       cleanUp();
-
-/**
  * generates a random Bitboard
  * @return
  */

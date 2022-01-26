@@ -167,8 +167,8 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
         if (dtzMove != 0)
             return dtzMove;
 
-        if (PolyGlot::book.enabled) {
-            Move bookmove = PolyGlot::book.probe(*b);
+        if (polyglot::book.enabled) {
+            Move bookmove = polyglot::book.probe(*b);
             if (bookmove)
                 return bookmove;
         }

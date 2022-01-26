@@ -18,8 +18,6 @@
  ****************************************************************************************************/
 #include "History.h"
 
-#define MAX_HISTORY_SCORE 512;
-
 int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];

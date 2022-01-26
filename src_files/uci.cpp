@@ -372,9 +372,9 @@ void uci::set_option(std::string& name, std::string& value) {
         int count           = stoi(value);
         searchObject.setThreads(count);
     } else if (name == "OwnBook") {
-        PolyGlot::book.enabled = (value == "true");
+        polyglot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
-        PolyGlot::book.open(value);
+        polyglot::book.open(value);
     }
 }
 
@@ -506,7 +506,6 @@ void uci::quit() {
     delete board;
     board = nullptr;
 
-    bb::cleanUp();
     searchObject.cleanUp();
 }
 

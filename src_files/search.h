@@ -23,7 +23,6 @@
 #include "Bitboard.h"
 #include "Board.h"
 #include "History.h"
-#include "MoveOrderer.h"
 #include "TimeManager.h"
 #include "TranspositionTable.h"
 #include "eval.h"

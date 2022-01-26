@@ -23,7 +23,6 @@
 using namespace bb;
 
 U64 bb::ALL_HASHES[N_PIECES][N_SQUARES] = {};
-
 U64 bb::IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
 
 U64 bb::seed = 1293812938;
@@ -33,10 +32,6 @@ void bb::init() {
     
     generateZobristKeys();
     generateData();
-}
-
-void bb::cleanUp() {
-
 }
 
 U64 bb::randU64() {
@@ -50,7 +45,6 @@ void bb::generateData() {
     
     // in between squares
     for (Square n = A1; n <= H8; n++) {
-        
         for (Square i = A1; i <= H8; i++) {
             if (i == n)
                 continue;
@@ -61,15 +55,16 @@ void bb::generateData() {
             setBit(occ, i);
             
             Direction r = i - n;
+            Direction sign = r / abs(r);
             
-            if (rankIndex(n) == rankIndex(i)) {
-                m = attacks::generateSlidingAttacks(n, EAST * r / abs(r), occ);
+            if        (rankIndex(n) == rankIndex(i)) {
+                m = attacks::generateSlidingAttacks(n, EAST       * sign, occ);
             } else if (fileIndex(n) == fileIndex(i)) {
-                m = attacks::generateSlidingAttacks(n, NORTH * r / abs(r), occ);
+                m = attacks::generateSlidingAttacks(n, NORTH      * sign, occ);
             } else if (diagonalIndex(n) == diagonalIndex(i)) {
-                m = attacks::generateSlidingAttacks(n, NORTH_EAST * r / abs(r), occ);
+                m = attacks::generateSlidingAttacks(n, NORTH_EAST * sign, occ);
             } else if (antiDiagonalIndex(n) == antiDiagonalIndex(i)) {
-                m = attacks::generateSlidingAttacks(n, NORTH_WEST * r / abs(r), occ);
+                m = attacks::generateSlidingAttacks(n, NORTH_WEST * sign, occ);
             }
             
             m &= ~occ;

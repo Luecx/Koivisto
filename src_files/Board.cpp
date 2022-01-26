@@ -832,17 +832,21 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
     U64 sqBB = ONE << square;
     
     if constexpr (attacker == WHITE) {
-        return (attacks::lookUpRookAttacks(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] | m_piecesBB[WHITE_ROOK])) != 0
-               || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] | m_piecesBB[WHITE_BISHOP])) != 0
-               || (attacks::KNIGHT_ATTACKS[square] & m_piecesBB[WHITE_KNIGHT]) != 0
-               || ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB)) & m_piecesBB[WHITE_PAWN]) != 0
-               || (attacks::KING_ATTACKS[square] & m_piecesBB[WHITE_KING]) != 0;
+        return (   attacks::lookUpRookAttacks  (square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] |
+                                                                         m_piecesBB[WHITE_ROOK]))  != 0
+               || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] |
+                                                                         m_piecesBB[WHITE_BISHOP]))!= 0
+               || (attacks::KNIGHT_ATTACKS[square]                    &  m_piecesBB[WHITE_KNIGHT]) != 0
+               || (attacks::KING_ATTACKS  [square]                    &  m_piecesBB[WHITE_KING])   != 0
+               || ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB))      &  m_piecesBB[WHITE_PAWN])   != 0;
     } else {
-        return (attacks::lookUpRookAttacks(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] | m_piecesBB[BLACK_ROOK])) != 0
-               || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] | m_piecesBB[BLACK_BISHOP])) != 0
-               || (attacks::KNIGHT_ATTACKS[square] & m_piecesBB[BLACK_KNIGHT]) != 0
-               || ((shiftNorthEast(sqBB) | shiftNorthWest(sqBB)) & m_piecesBB[BLACK_PAWN]) != 0
-               || (attacks::KING_ATTACKS[square] & m_piecesBB[BLACK_KING]) != 0;
+        return (  attacks::lookUpRookAttacks   (square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] |
+                                                                         m_piecesBB[BLACK_ROOK]))  != 0
+               || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] |
+                                                                         m_piecesBB[BLACK_BISHOP]))!= 0
+               || (attacks::KNIGHT_ATTACKS[square]                    &  m_piecesBB[BLACK_KNIGHT]) != 0
+               || (attacks::KING_ATTACKS  [square]                    &  m_piecesBB[BLACK_KING])   != 0
+               || ((shiftNorthEast(sqBB) | shiftNorthWest(sqBB))      & m_piecesBB[BLACK_PAWN])    != 0;
     }
 }
 
@@ -972,7 +976,7 @@ bool Board::givesCheck(Move m) {
         }
     }
         
-        // en passant
+    // en passant
     else if (isEnPassant(m)) {
         
         if (getActivePlayer() == WHITE) {
