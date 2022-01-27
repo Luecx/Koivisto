@@ -58,19 +58,10 @@ Move moveGen::next() {
             stage++;
             // fallthrough
         case GET_GOOD_NOISY:
-            if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
+            if (noisy_index < (m_mode & Q_SEARCH ? noisySize : goodNoisyCount)) 
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
                 return 0;
-            if (m_mode == Q_SEARCHCHECK) {
-                stage = QS_EVASIONS;
-                m_killer1 = 0;
-                m_killer2 = 0;
-                generateEvasions();
-                if (quiet_index < quietSize)
-                    return nextQuiet();
-                return 0;
-            }
             stage++;
             // fallthrough
         case KILLER1:
