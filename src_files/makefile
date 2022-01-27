@@ -1,5 +1,5 @@
 CC       = g++
-SRC      = *.cpp syzygy/tbprobe.c
+SRC      = $(wildcard *.cpp */*.cpp */*/*.cpp */*/*/*.cpp) syzygy/tbprobe.c
 LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
 ROOT     = ../
@@ -45,6 +45,9 @@ release: updateNetwork
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX512FLAGS) -o $(EXE)-x64-$(PREFIX)-avx512$(SUFFIX)
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-avx2$(SUFFIX)
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(SSEFLAGS) -o $(EXE)-x64-$(PREFIX)-sse2$(SUFFIX)
+
+generator: updateNetwork
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -DGENERATOR -o $(EXE)-x64-$(PREFIX)-generator$(SUFFIX)
 
 updateNetwork:
 ifeq ($(EVALFILE),$(ROOT)networks/default.net)

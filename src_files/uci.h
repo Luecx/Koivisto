@@ -68,4 +68,5 @@ void quit();
     
 }
 
+std::string getValue(std::vector<std::string>& vec, std::string key);
 #endif    // KOIVISTO_UCI_H
