@@ -944,7 +944,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
  * @param ply
  * @return
  */
-Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck, bool useHash) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -968,7 +968,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // perft_tt entry.
     // ***********************************************************************************************
 
-    if (en.zobrist == key >> 32) {
+    if (useHash && en.zobrist == key >> 32) {
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -985,8 +985,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
     }
 
-    // we can also use the tt entry to adjust the evaluation.
-    if (en.zobrist == key >> 32) {
+    // we can also use the perft_tt entry to adjust the evaluation.
+    if (useHash && en.zobrist == key >> 32) {
         // adjusting eval
         if (   (en.type == PV_NODE)
             || (en.type == CUT_NODE && stand_pat < en.score)
@@ -1031,7 +1031,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
-        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent);
+        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent, useHash);
 
         b->undoMove();
 
@@ -1042,7 +1042,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(key, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
+                if(useHash)
+                    table->put(key, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
                 return score;
             }
             if (score > alpha) {
@@ -1053,11 +1054,20 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     }
 
     // store the current position inside the transposition table
-    if (bestMove)
+    if (bestMove && useHash)
         table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat);
     return bestScore;
 }
 
+    //    return 0;
+}
+
+Score Search::qSearch(Board* b){
+    return qSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, tds[0], b->isInCheck(b->getActivePlayer()), false);
+}
+
+//Search::Search(int hashsize) { this->init(hashsize); }
+//Search::~Search() { this->cleanUp(); }
 void Search::init(int hashsize) {
     if (table != nullptr)
         delete table;

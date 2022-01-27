@@ -115,6 +115,7 @@ class Search {
                                      ThreadData* sd, bool inCheck = false);
     [[nodiscard]] bb::Score  probeWDL(Board* board);
     [[nodiscard]] move::Move probeDTZ(Board* board);
+    Score           qSearch(Board* b);
 };
 
 extern int RAZOR_MARGIN;

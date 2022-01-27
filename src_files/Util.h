@@ -73,6 +73,8 @@ std::string               loadingBar(int count, int max, const std::string& msg)
  */
 std::string&              findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr);
 
+
+
 /**
  * splits the string into subparts at the specified char.
  * @param txt
