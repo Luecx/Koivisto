@@ -79,8 +79,7 @@ void uci::mainloop(int argc, char* argv[]){
     nn::init();
     searchObject = {};
     searchObject.init(16);
-
-
+    
     std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
               << std::endl;
 
@@ -88,7 +87,7 @@ void uci::mainloop(int argc, char* argv[]){
 
     std::atexit(uci::quit);
     std::string line;
-
+    
     // read given commands from shell
     for(int i = 1; i < argc; i++){
         processCommand(argv[i]);

@@ -1140,7 +1140,7 @@ bool Board::isPseudoLegal(Move m){
         case QUEEN:
             // if there is a piece in the way, this move is invalid
             if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
-            if (isCapture - (getPiece(sqTo) != -1) != 0) return false;
+            if (isCapture ^ (getPiece(sqTo) != -1)) return false;
             break;
         case KING:
             // we only need to check if the castling move is valid.
@@ -1148,7 +1148,7 @@ bool Board::isPseudoLegal(Move m){
             if(isCastle(m)){
                 bool kingSideCastle = sqTo > sqFrom;
                 U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ? 
-                      (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK) 
+                        (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK)
                       : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
                 if(canCastleMask == 0 && getCastlingRights(activePlayer * 2 + kingSideCastle)){
                     return true;
