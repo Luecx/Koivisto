@@ -214,12 +214,18 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
     auto wgt = (avx_register_type*) (inputWeights[idx]);
     auto sum = (avx_register_type*) (history.back().summation[side]);
     if constexpr (value) {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-            sum[i] = avx_add_epi16(sum[i], wgt[i]);
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
+            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
+            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
+            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
         }
     } else {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-            sum[i] = avx_sub_epi16(sum[i], wgt[i]);
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
+            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
+            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
+            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
         }
     }
 }
