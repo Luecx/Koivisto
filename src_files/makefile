@@ -2,6 +2,7 @@ CC       = g++
 SRC      = *.cpp syzygy/tbprobe.c
 LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 FOLDER   = bin/
+PGO_DIR  = _pgo/
 ROOT     = ../
 NAME     = Koivisto
 EVALFILE = $(ROOT)networks/default.net
@@ -33,13 +34,20 @@ NATIVEFLAGS = -march=native
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
 
-openbench: updateNetwork
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -o $(EXE)
+openbench: pgo
 
 native: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
-    
+
+pgo: updateNetwork
+	mkdir -p $(ROOT)$(FOLDER)
+	mkdir -p $(ROOT)$(PGO_DIR)
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-generate -fprofile-dir=$(ROOT)$(PGO_DIR) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
+	./$(EXE)-x64-$(PREFIX)-native$(SUFFIX) "setoption name Threads value 4" "bench"
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-use -fprofile-dir=$(ROOT)$(PGO_DIR) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
+	rm -rf $(ROOT)$(PGO_DIR)
+
 release: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX512FLAGS) -o $(EXE)-x64-$(PREFIX)-avx512$(SUFFIX)
