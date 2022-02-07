@@ -18,7 +18,7 @@ else
 endif
 
 WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
-CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
+CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native -static
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
 DFLAGS = -O0 $(WFLAGS) -g
@@ -38,7 +38,7 @@ openbench: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
 	mkdir -p $(ROOT)$(PGO_DIR)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-generate -fprofile-dir=$(ROOT)$(PGO_DIR) -o $(EXE)
-	./$(EXE)-x64-$(PREFIX)-native$(SUFFIX) "setoption name Threads value 4" "bench"
+	./$(EXE) "setoption name Threads value 4" "bench"
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-use -fprofile-dir=$(ROOT)$(PGO_DIR) -o $(EXE)
 	rm -rf $(ROOT)$(PGO_DIR)
 
