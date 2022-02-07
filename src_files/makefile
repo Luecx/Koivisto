@@ -34,7 +34,13 @@ NATIVEFLAGS = -march=native
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
 
-openbench: pgo
+openbench: updateNetwork
+	mkdir -p $(ROOT)$(FOLDER)
+	mkdir -p $(ROOT)$(PGO_DIR)
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-generate -fprofile-dir=$(ROOT)$(PGO_DIR) -o $(EXE)
+	./$(EXE)-x64-$(PREFIX)-native$(SUFFIX) "setoption name Threads value 4" "bench"
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-use -fprofile-dir=$(ROOT)$(PGO_DIR) -o $(EXE)
+	rm -rf $(ROOT)$(PGO_DIR)
 
 native: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
