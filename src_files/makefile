@@ -37,7 +37,7 @@ MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 openbench: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-generate -o $(EXE)
-	$(EXE) "setoption name Threads value 4" "bench"
+	./$(EXE) "setoption name Threads value 4" "bench"
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -fprofile-use -o $(EXE)
 
 native: updateNetwork
