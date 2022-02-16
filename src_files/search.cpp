@@ -453,6 +453,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+    if (ply > 1 && sd->threatCount[ply][b->getActivePlayer()] > sd->threatCount[ply - 2][b->getActivePlayer()] && lmrFactor != nullptr) {
+        depth += *lmrFactor;
+        *lmrFactor = 0;
+    }
+
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
