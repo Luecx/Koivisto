@@ -390,7 +390,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     return en.score;
                 }
             }
+        
         }
+
+        if (en.score * -1 > (alpha * -1) + (depth - 1) * FUTILITY_MARGIN && depth <= 8) {
+            return alpha;
+        }
+
     } else {
         if (inCheck)
             staticEval = -MAX_MATE_SCORE + ply;
