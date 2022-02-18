@@ -858,9 +858,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
-                table->put(key, depth > 6 ? alpha : highestScore, bestMove, FORCED_ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, b->getActivePlayer() == behindNMP ? alpha : highestScore, bestMove, FORCED_ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
             } else {
-                table->put(key, depth > 6 ? alpha : highestScore, bestMove, ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, b->getActivePlayer() == behindNMP ? alpha : highestScore, bestMove, ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
             }
         }
     }
