@@ -375,6 +375,8 @@ void uci::set_option(std::string& name, std::string& value) {
         polyglot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
         polyglot::book.open(value);
+    } else if (name == "FUTILITY_MARGIN") {
+        FUTILITY_MARGIN = stoi(value);
     }
 }
 
