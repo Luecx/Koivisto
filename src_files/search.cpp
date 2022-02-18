@@ -393,7 +393,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         
         }
 
-        if (en.score * -1 > (alpha * -1) + (depth - 1) * FUTILITY_MARGIN && depth <= 8) {
+        if (!pv && en.score * -1 > (alpha * -1) + (depth - 1) * FUTILITY_MARGIN && depth <= 8) {
             return alpha;
         }
 
