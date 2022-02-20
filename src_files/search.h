@@ -91,7 +91,7 @@ class Search {
     U64  tbHits();
 
     bool isTimeLeft(SearchData* sd = nullptr);
-    bool rootTimeLeft(int score);
+    bool rootTimeLeft(int score, int scoreDelta);
 
     public:
     SearchOverview overview();

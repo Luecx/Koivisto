@@ -202,8 +202,9 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
     // the thread id starts at 0 for the first thread
     ThreadData* td = this->tds[threadId];
     // start the basic search on all threads
-    Depth       d  = 1;
-    Score       s  = 0;
+    Depth       d       = 1;
+    Score       s       = 0;
+    Score       oldS    = 0;
 
     // we will create a copy of the board object which will be used during search
     // This is relevant as multiple threads can clearly not use the same object.
@@ -216,7 +217,8 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
     for (d = 1; d <= maxDepth; d++) {
 
         if (d < 6) {
-            s = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
+            s       = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, d, 0, td, 0, 2);
+            oldS    = s;
         } else {
             Score window = 10;
             Score alpha  = s - window;
@@ -243,14 +245,14 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
         int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
                                                       [getSquareTo(td->searchData.bestMove)]
                            * 100 / td->nodes;
-
         if (threadId == 0) {
             this->printInfoString(&printBoard, d, s);
         }
 
         // if the search finished due to timeout, we also need to stop here
-        if (!this->rootTimeLeft(timeManScore))
+        if (!this->rootTimeLeft(timeManScore, s - oldS))
             break;
+        oldS = s;
     }
 
     // if the main thread finishes, we will record the data of this thread
@@ -1040,7 +1042,7 @@ U64 Search::tbHits() {
     return th;
 }
 bool           Search::isTimeLeft(SearchData* sd) { return timeManager->isTimeLeft(sd); }
-bool           Search::rootTimeLeft(int score) { return timeManager->rootTimeLeft(score); }
+bool           Search::rootTimeLeft(int score, int scoreDelta) { return timeManager->rootTimeLeft(score, scoreDelta); }
 SearchOverview Search::overview() { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
 void           Search::disableInfoStrings() { this->printInfo = false; }

@@ -155,7 +155,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) {
  * iterations. It ensures that the search will mostly finish its iteration.
  * @return
  */
-bool TimeManager::rootTimeLeft(int score) {
+bool TimeManager::rootTimeLeft(int score, int scoreDelta) {
     int elapsed = elapsedTime();
 
     // stop the search if requested
@@ -163,7 +163,7 @@ bool TimeManager::rootTimeLeft(int score) {
         return false;
 
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*50/std::max(score, 30))
+    if (elapsed >= timeToUse*std::max(30, 50 - std::max(scoreDelta, - 40))/std::max(score, 30))
         return false;
 
     return true;
