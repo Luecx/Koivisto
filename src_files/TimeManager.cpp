@@ -163,7 +163,7 @@ bool TimeManager::rootTimeLeft(int score, int scoreDelta) {
         return false;
 
     // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*std::max(30, 50 - std::max(scoreDelta, - 40))/std::max(score, 30))
+    if (mode != DEPTH && elapsed >= timeToUse*std::max(30, 40 - std::max(scoreDelta, - 40))/std::max(score, 30))
         return false;
 
     return true;
