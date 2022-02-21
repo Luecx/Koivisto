@@ -18,6 +18,7 @@
  ****************************************************************************************************/
 
 #include "search.h"
+#include "attacks.h"
 
 #include "Bitboard.h"
 #include "History.h"
@@ -29,6 +30,8 @@
 #include "syzygy/tbprobe.h"
 
 #include <thread>
+
+using namespace attacks;
 
 int  lmrReductions[256][256];
 
@@ -93,12 +96,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     }
     k = b->getPieceBB(WHITE, BISHOP);
     while (k) {
-        whiteMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
+        whiteMinorAttacks |= lookUpBishopAttacks(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
     k = b->getPieceBB(BLACK, BISHOP);
     while (k) {
-        blackMinorAttacks |= lookUpBishopAttack(bitscanForward(k), occupied);
+        blackMinorAttacks |= lookUpBishopAttacks(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
     whiteMinorAttacks = whiteMinorAttacks & (b->getPieceBB<BLACK>(ROOK) | b->getPieceBB<BLACK>(QUEEN));
@@ -113,12 +116,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 blackRookAttacks = 0;
     k                    = b->getPieceBB(WHITE, ROOK);
     while (k) {
-        whiteRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
+        whiteRookAttacks |= lookUpRookAttacks(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
     k = b->getPieceBB(BLACK, ROOK);
     while (k) {
-        blackRookAttacks |= lookUpRookAttack(bitscanForward(k), occupied);
+        blackRookAttacks |= lookUpRookAttacks(bitscanForward(k), occupied);
         k = lsbReset(k);
     }
 
@@ -164,8 +167,8 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
         if (dtzMove != 0)
             return dtzMove;
 
-        if (PolyGlot::book.enabled) {
-            Move bookmove = PolyGlot::book.probe(*b);
+        if (polyglot::book.enabled) {
+            Move bookmove = polyglot::book.probe(*b);
             if (bookmove)
                 return bookmove;
         }

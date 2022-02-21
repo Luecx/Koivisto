@@ -160,8 +160,7 @@ static Move decode_move(Board& board, uint16_t move)
 }
 
 
-namespace PolyGlot
-{
+namespace polyglot {
     void Book::open(std::string_view path)
     {
         std::ifstream fil(path.data(), std::ios::binary | std::ios::ate);

@@ -17,7 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "newmovegen.h"
-    
+#include "attacks.h"
+using namespace attacks;
 static const int piece_values[6] = {
     90, 463, 474, 577, 1359, 0,
 };
@@ -263,16 +264,16 @@ void moveGen::generateNoisy() {
                     break;
                 case BISHOP:
                     attacks =
-                        lookUpBishopAttack  (square, occupied);
+                        lookUpBishopAttacks  (square, occupied);
                     break;
                 case ROOK:
                     attacks =
-                        lookUpRookAttack    (square,occupied);
+                        lookUpRookAttacks    (square,occupied);
                     break;
                 case QUEEN:
                     attacks =
-                        lookUpBishopAttack  (square, occupied) |
-                        lookUpRookAttack    (square, occupied);
+                        lookUpBishopAttacks  (square, occupied) |
+                        lookUpRookAttacks    (square, occupied);
                     break;
                 
             }
@@ -386,16 +387,16 @@ void moveGen::generateQuiet() {
                     break;
                 case BISHOP:
                     attacks =
-                        lookUpBishopAttack  (square, occupied);
+                        lookUpBishopAttacks  (square, occupied);
                     break;
                 case ROOK:
                     attacks =
-                        lookUpRookAttack    (square,occupied);
+                        lookUpRookAttacks    (square,occupied);
                     break;
                 case QUEEN:
                     attacks =
-                        lookUpBishopAttack  (square, occupied) |
-                        lookUpRookAttack    (square, occupied);
+                        lookUpBishopAttacks  (square, occupied) |
+                        lookUpRookAttacks    (square, occupied);
                     break;
                 
             }
