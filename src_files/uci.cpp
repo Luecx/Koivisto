@@ -117,6 +117,9 @@ void uci::uci() {
     std::cout << "option name OwnBook type check default false" << std::endl;
     std::cout << "option name BookPath type string" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
+    std::cout << "option name FUT_MARGIN type spin default 81 min 0 max 1000" << std::endl;
+    std::cout << "option name RAZ_MARGIN type spin default 198 min 0 max 1000" << std::endl;
+    std::cout << "option name LMR_DIV type spin default 215 min 0 max 1000 " << std::endl;
 
     std::cout << "uciok" << std::endl;
 }
@@ -375,6 +378,13 @@ void uci::set_option(std::string& name, std::string& value) {
         polyglot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
         polyglot::book.open(value);
+    } else if (name == "FUT_MARGIN") {
+        FUTILITY_MARGIN = stoi(value);
+    } else if (name == "RAZ_MARGIN") {
+        RAZOR_MARGIN = stoi(value);
+    } else if (name == "LMR_DIV") {
+        LMR_DIV = stoi(value);
+        initLMR();
     }
 }
 
