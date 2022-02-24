@@ -312,8 +312,12 @@ void moveGen::generateQuiet() {
     
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
+        
+    const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
     
     const Direction forward      = c == WHITE ? NORTH:SOUTH;
+    const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
+    const Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
     
     const U64 opponents          = m_board->getTeamOccupiedBB(!c);
     const U64 friendly           = m_board->getTeamOccupiedBB(c);
@@ -322,6 +326,8 @@ void moveGen::generateQuiet() {
     const U64 occupied           = m_board->getOccupiedBB();
     
     const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
+    const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
+    const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
     
     Piece movingPiece = c * 8 + PAWN;
 
@@ -343,6 +349,30 @@ void moveGen::generateQuiet() {
         attacks = lsbReset(attacks);
     }
 
+
+    if (pawns & relative_rank_7_bb) {
+        
+        attacks = pawnsCenter & relative_rank_8_bb;
+        while (attacks) {
+            target = bitscanForward(attacks);
+            addQuiet(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
+            attacks = lsbReset(attacks);
+        }
+        
+        attacks = pawnsLeft & relative_rank_8_bb & opponents;
+        while (attacks) {
+            target = bitscanForward(attacks);
+            addQuiet(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
+            attacks = lsbReset(attacks);
+        }
+
+        attacks = pawnsRight & relative_rank_8_bb & opponents;
+        while (attacks) {
+            target = bitscanForward(attacks);
+            addQuiet(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
+            attacks = lsbReset(attacks);
+        }
+    }
 
     // Piece
     for(Piece p = KNIGHT; p <= QUEEN; p++){
