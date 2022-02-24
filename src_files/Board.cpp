@@ -29,6 +29,8 @@ float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };
 
+Score see_piece_vals[6] = {100, 325, 325, 500, 1000, 10000};
+
 /**
  * The default constructor uses a fen-representation of the board. if nothing is specified, the starting position
  * will be used. This might crash if the given fen is illegal in its structure. e.g. not all rows/columns specified.

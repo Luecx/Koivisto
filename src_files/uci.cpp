@@ -120,6 +120,9 @@ void uci::uci() {
     std::cout << "option name FUT_MARGIN type spin default 81 min 0 max 1000" << std::endl;
     std::cout << "option name RAZ_MARGIN type spin default 198 min 0 max 1000" << std::endl;
     std::cout << "option name LMR_DIV type spin default 215 min 0 max 1000 " << std::endl;
+    std::cout << "option name SEEM type spin default 325 min 0 max 10000 " << std::endl;
+    std::cout << "option name SEER type spin default 500 min 0 max 10000 " << std::endl;
+    std::cout << "option name SEEQ type spin default 1000 min 0 max 10000 " << std::endl;
 
     std::cout << "uciok" << std::endl;
 }
@@ -385,6 +388,13 @@ void uci::set_option(std::string& name, std::string& value) {
     } else if (name == "LMR_DIV") {
         LMR_DIV = stoi(value);
         initLMR();
+    } else if (name == "SEEM") {
+        see_piece_vals[1] = stoi(value);
+        see_piece_vals[2] = stoi(value);
+    } else if (name == "SEER") {
+        see_piece_vals[3] = stoi(value);
+    } else if (name == "SEEQ") {
+        see_piece_vals[4] = stoi(value);
     }
 }
 
