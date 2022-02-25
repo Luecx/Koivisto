@@ -807,9 +807,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
             }
             // also set this move as a killer move into the history
-            if (!isCapture(m) && !isPromotion)
+            if (!isCapture(m) && !isPromotion) {
                 sd->setKiller(m, ply, b->getActivePlayer());
-
+            } else {
+                sd->bigBoiKiller[ply] = 0;
+            }
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
 
