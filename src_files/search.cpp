@@ -396,6 +396,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             staticEval = -MAX_MATE_SCORE + ply;
         else {
             staticEval = b->evaluate();
+            table->put(key, 0, 0, EMPTY_NODE, 0, staticEval);
         }
     }
 
