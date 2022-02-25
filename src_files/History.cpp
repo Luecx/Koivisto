@@ -35,6 +35,9 @@ void SearchData::setKiller(Move move, Depth ply, Color color) {
     if (!sameMove(move, killer[color][ply][0])) {
         killer[color][ply][1] = killer[color][ply][0];
         killer[color][ply][0] = move;
+        bigBoiKiller[ply] = 0;
+    } else {
+        bigBoiKiller[ply] += 1;
     }
 }
 

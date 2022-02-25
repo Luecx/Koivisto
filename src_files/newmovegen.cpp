@@ -42,6 +42,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_skip          = false;
     m_killer1       = m_sd->killer[c][m_ply][0];
     m_killer2       = m_sd->killer[c][m_ply][1];
+    bigKiller       = sd->bigBoiKiller[ply] > 2 ? m_killer1 : 0;
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
 }
@@ -57,6 +58,10 @@ Move moveGen::next() {
             generateNoisy();
             stage++;
             // fallthrough
+            if (m_mode == PV_SEARCH && bigKiller && !sameMove(bigKiller, m_hashMove) && m_board->isPseudoLegal(m_killer1)) {
+                m_killer1 = 0;
+                return bigKiller;
+            }
         case GET_GOOD_NOISY:
             if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
                 return nextNoisy();

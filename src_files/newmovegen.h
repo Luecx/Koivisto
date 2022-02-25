@@ -73,6 +73,7 @@ class moveGen {
     Move            m_hashMove;
     Move            m_killer1;
     Move            m_killer2;
+    Move            bigKiller;
     Move            m_previous;
     Move            m_followup;
     Square          m_threatSquare;
