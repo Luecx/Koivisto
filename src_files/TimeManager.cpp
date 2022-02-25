@@ -82,15 +82,15 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
     UCI_ASSERT(black > 0);
     UCI_ASSERT(movesToGo >= 0);
 
-    double division = movesToGo+1;
+    double division = std::max(3, movesToGo-6);
 
-    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / division)*3 + std::min(white * 0.9 + whiteInc, whiteInc * 3.0) - 25)
-                                                       : (int(black / division)*3 + std::min(black * 0.9 + blackInc, blackInc * 3.0) - 25);
+    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / division)*3 + std::min(white * 0.8 + whiteInc, whiteInc * 3.0) - 25)
+                                                       : (int(black / division)*3 + std::min(black * 0.8 + blackInc, blackInc * 3.0) - 25);
 
     timeToUse = upperTimeBound / 3;
 
-    timeToUse = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
-    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
+    timeToUse = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 100 : black - 100);
+    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 100 : black - 100);
 
     startTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
