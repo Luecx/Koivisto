@@ -35,10 +35,10 @@ using namespace attacks;
 
 int  lmrReductions[256][256];
 
-int  RAZOR_MARGIN     = 198;
-int  FUTILITY_MARGIN  = 81;
+int  RAZOR_MARGIN     = 243;
+int  FUTILITY_MARGIN  = 68;
 int  SE_MARGIN_STATIC = 0;
-int  LMR_DIV          = 215;
+int  LMR_DIV          = 267;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
