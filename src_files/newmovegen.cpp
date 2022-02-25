@@ -509,12 +509,7 @@ void moveGen::updateHistory(int weight) {
                     / MAX_HIST;
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
-            if (isCapture(m)) {
-                m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
-                            - weight
-                            - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
-                            / MAX_HIST;
-            } else {
+            if (!isCapture(m)) {
                 m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)] +=
                             - weight
                             - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)]
