@@ -177,7 +177,7 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
     return indices[relativeKingSquare];
 }
 
-/*
+#if not(defined(__ARM_NEON))
 inline void print_256i_epi16(const __m256i &h) {
     printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d \n",
            _mm256_extract_epi16(h, 0),
@@ -209,7 +209,7 @@ inline void print_256i_epi32(const __m256i &h) {
            _mm256_extract_epi32(h, 6),
            _mm256_extract_epi32(h, 7));
 }
-*/
+#endif
 
 
 template<bool value>
