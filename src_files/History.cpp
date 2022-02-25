@@ -18,48 +18,48 @@
  ****************************************************************************************************/
 #include "History.h"
 
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
+int SearchData::getHistories(Move m, Move previous, Move followup, Square threatSquare) {
     if (isCapture(m)) {
-        return captureHistory[side][getSqToSqFromCombination(m)];
+        return captureHistory[getSqToSqFromCombination(m)];
     } else {
-        return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
-               + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * th[side][threatSquare][getSqToSqFromCombination(m)]) / 3;
+        return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][getPieceTypeSqToCombination(m)] : 0)
+               + 2 * cmh[getPieceTypeSqToCombination(previous)][getPieceTypeSqToCombination(m)]
+               + 2 * th[threatSquare][getSqToSqFromCombination(m)]) / 3;
     }
 }
 
 /*
  * Set killer
  */
-void SearchData::setKiller(Move move, Depth ply, Color color) {
-    if (!sameMove(move, killer[color][ply][0])) {
-        killer[color][ply][1] = killer[color][ply][0];
-        killer[color][ply][0] = move;
+void SearchData::setKiller(Move move, Depth ply) {
+    if (!sameMove(move, killer[ply][0])) {
+        killer[ply][1] = killer[ply][0];
+        killer[ply][0] = move;
     }
 }
 
 /*
  * Is killer?
  */
-int SearchData::isKiller(Move move, Depth ply, Color color) {
-    if (sameMove(move, killer[color][ply][0]))
+int SearchData::isKiller(Move move, Depth ply) {
+    if (sameMove(move, killer[ply][0]))
         return 2;
-    return sameMove(move, killer[color][ply][1]);
+    return sameMove(move, killer[ply][1]);
 }
 
 /*
  * Set historic eval
  */
-void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
-    eval[color][ply] = ev;
+void SearchData::setHistoricEval(Score ev, Depth ply) {
+    eval[ply] = ev;
 }
 
 /*
  * Is improving
  */
-bool SearchData::isImproving(Score ev, Color color, Depth ply) {
+bool SearchData::isImproving(Score ev, Depth ply) {
     if (ply >= 2) {
-        return (ev > eval[color][ply - 2]);
+        return (ev > eval[ply - 2]);
     } else {
         return true;
     }

@@ -51,8 +51,8 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
         } else if constexpr (isPromotion){
             MoveScore mvvLVA = (getCapturedPieceType(move)) - (getMovingPieceType(move));
             mv->scoreMove(idx, 40000 + mvvLVA + getPromotionPiece(move));
-        } else if (sd->isKiller(move, ply, c)){
-            mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
+        } else if (sd->isKiller(move, ply)){
+            mv->scoreMove(idx, 30000 + sd->isKiller(move, ply));
         } else{
         }
         

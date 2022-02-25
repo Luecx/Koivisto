@@ -40,8 +40,8 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     searched_index  = 0;
     c               = b->getActivePlayer();
     m_skip          = false;
-    m_killer1       = m_sd->killer[c][m_ply][0];
-    m_killer2       = m_sd->killer[c][m_ply][1];
+    m_killer1       = m_sd->killer[m_ply][0];
+    m_killer2       = m_sd->killer[m_ply][1];
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
 }
@@ -121,10 +121,10 @@ void moveGen::addNoisy(Move m) {
               - 1 : m_board->staticExchangeEvaluation(m);
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];
     if (score >= 0) {
-        score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+        score = 100000 + mvvLVA + m_sd->getHistories(m, m_previous, m_followup, m_threatSquare);
         goodNoisyCount++;
     } else {
-        score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+        score = 10000 + m_sd->getHistories(m, m_previous, m_followup, m_threatSquare);
     }
     noisy[noisySize] = m;
     noisyScores[noisySize++] = score;
@@ -134,7 +134,7 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize++] = m_sd->getHistories(m, m_previous, m_followup, m_threatSquare);
 }
 
 Move moveGen::nextNoisy() {
@@ -480,52 +480,52 @@ void moveGen::updateHistory(int weight) {
     Move bestMove   = searched[searched_index - 1];    
 
     if (isCapture(bestMove)) {
-        m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)] +=
+        m_sd->captureHistory[getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->captureHistory[getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
 
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                    m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
+                    m_sd->captureHistory[getSqToSqFromCombination(m)] +=
                                 - weight
-                                - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
+                                - weight * m_sd->captureHistory[getSqToSqFromCombination(m)]
                                 / MAX_HIST;
             }
         } 
     } else {
-        m_sd->th[c][m_threatSquare][getSqToSqFromCombination(bestMove)] +=
+        m_sd->th[m_threatSquare][getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->th[m_threatSquare][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
-        m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)] +=
+        m_sd->cmh[getPieceTypeSqToCombination(m_previous)][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)]
+                    - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][getPieceTypeSqToCombination(bestMove)]
                     / MAX_HIST;
-        m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)] +=
+        m_sd->fmh[getPieceTypeSqToCombination(m_followup)][getPieceTypeSqToCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)]
+                    - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][getPieceTypeSqToCombination(bestMove)]
                     / MAX_HIST;
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
+                m_sd->captureHistory[getSqToSqFromCombination(m)] +=
                             - weight
-                            - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
+                            - weight * m_sd->captureHistory[getSqToSqFromCombination(m)]
                             / MAX_HIST;
             } else {
-                m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)] +=
+                m_sd->th[m_threatSquare][getSqToSqFromCombination(m)] +=
                             - weight
-                            - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)]
+                            - weight * m_sd->th[m_threatSquare][getSqToSqFromCombination(m)]
                             / MAX_HIST;
-                m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)] +=
+                m_sd->cmh[getPieceTypeSqToCombination(m_previous)][getPieceTypeSqToCombination(m)] +=
                             - weight
-                            - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)]
+                            - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][getPieceTypeSqToCombination(m)]
                             / MAX_HIST;
-                m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)] +=
+                m_sd->fmh[getPieceTypeSqToCombination(m_followup)][getPieceTypeSqToCombination(m)] +=
                             - weight
-                            - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)]
+                            - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][getPieceTypeSqToCombination(m)]
                             / MAX_HIST;
             }
         } 

@@ -405,16 +405,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         mainThreat   = sd->mainThreat[ply];
         if (ply > 0 && b->getPreviousMove() != 0) {
-            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
-                int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
+            if (sd->eval[ply - 1] > -TB_WIN_SCORE) {
+                int improvement =  -staticEval - sd->eval[ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
             }
         }
     }
 
     // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+    sd->setHistoricEval(staticEval, ply);
+    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, ply);
 
     if (en.zobrist == key >> 32) {
         // adjusting eval
@@ -454,8 +454,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // reset killer of granchildren
-    sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
-    sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    sd->killer[ply + 2][0] = 0;
+    sd->killer[ply + 2][1] = 0;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -544,7 +544,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[ply]);
                 return betaCut;
             }
         }
@@ -613,7 +613,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
                 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] + moveDepth * FUTILITY_MARGIN + 100 + sd->eval[b->getActivePlayer()][ply] < alpha)
+                if (!inCheck && moveDepth <= 7 && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] + moveDepth * FUTILITY_MARGIN + 100 + sd->eval[ply] < alpha)
                     continue;
 
                 // **************************************************************************************************
@@ -621,7 +621,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // **************************************************************************************************
-                if (!inCheck && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat)
+                if (!inCheck && sd->getHistories(m, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat)
                     < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
@@ -715,13 +715,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
+            int history = sd->getHistories(m, b->getPreviousMove(), ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
             lmr = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
-            if (sd->isKiller(m, ply, b->getActivePlayer()))
+            if (sd->isKiller(m, ply))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
@@ -804,11 +804,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, score, m, CUT_NODE, depth, sd->eval[ply]);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
-                sd->setKiller(m, ply, b->getActivePlayer());
+                sd->setKiller(m, ply);
 
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
@@ -849,7 +849,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(key, highestScore, bestMove, PV_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+            table->put(key, highestScore, bestMove, PV_NODE, depth, sd->eval[ply]);
         } else {
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
@@ -858,9 +858,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
-                table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth, sd->eval[ply]);
             } else {
-                table->put(key, highestScore, bestMove, ALL_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, highestScore, bestMove, ALL_NODE, depth, sd->eval[ply]);
             }
         }
     }
@@ -1048,11 +1048,11 @@ void           Search::useTableBase(bool val) { this->useTB = val; }
 void           Search::clearHistory() {
     for (int i = 0; i < threadCount; i++) {
         if(this->tds[i] != nullptr) {
-            memset(&this->tds[i]->searchData.th[0][0][0], 0, 2*64*4096*4);
-            memset(&this->tds[i]->searchData.captureHistory[0][0], 0, 2*4096*4);
-            memset(&this->tds[i]->searchData.cmh[0][0][0], 0, 384*2*384*4);
-            memset(&this->tds[i]->searchData.fmh[0][0][0], 0, 384*2*384*4);
-            memset(&this->tds[i]->searchData.killer[0][0][0], 0, 2*257*2*4);
+            memset(&this->tds[i]->searchData.th[0][0], 0, 64*4096*4);
+            memset(&this->tds[i]->searchData.captureHistory[0], 0, 4096*4);
+            memset(&this->tds[i]->searchData.cmh[0][0], 0, 384*384*4);
+            memset(&this->tds[i]->searchData.fmh[0][0], 0, 384*384*4);
+            memset(&this->tds[i]->searchData.killer[0][0], 0, 257*4);
             memset(&this->tds[i]->searchData.maxImprovement[0][0], 0, 64*64*4); 
         }
     }
