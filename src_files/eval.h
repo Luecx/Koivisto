@@ -23,7 +23,11 @@
 
 #include <cstdint>
 #include <cstring>
+#if defined(__ARM_NEON)
+#include <arm_neon.h>
+#else
 #include <immintrin.h>
+#endif
 #include <vector>
 
 
@@ -36,7 +40,7 @@
 #define BIT_ALIGNMENT  (512)
 #elif defined(__AVX2__) || defined(__AVX__)
 #define BIT_ALIGNMENT  (256)
-#elif defined(__SSE2__)
+#elif defined(__SSE2__) || defined(__ARM_NEON)
 #define BIT_ALIGNMENT  (128)
 #endif
 #define STRIDE_16_BIT  (BIT_ALIGNMENT / 16)
