@@ -555,7 +555,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
     // **********************************************************************************************************
     if (depth >= 4 && !hashMove)
-        depth--;
+        depth -= 2 - sd->targetReached;
 
     // **********************************************************************************************************
     // mate distance pruning:
