@@ -56,6 +56,8 @@ struct SearchData {
 
     int      getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare);
 
+    int      getCaptureHistory(Move m, Color side);
+    
     void     setKiller(Move move, Depth ply, Color color);
 
     int      isKiller(Move move, Depth ply, Color color);

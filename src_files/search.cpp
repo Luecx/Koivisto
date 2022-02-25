@@ -946,9 +946,14 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (!b->isLegal(m))
             continue;
 
+    	
+        if (isCapture(m) && sd->getCaptureHistory(m, b->getActivePlayer()) < -256) {
+            continue;
+        }   
+
         // if the move seems to be really good just return beta.
         if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
+                - see_piece_vals[getPieceType(getMovingPiece(m))] - 200 + stand_pat
             > beta)
             return beta;
 
