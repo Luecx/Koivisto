@@ -32,9 +32,10 @@
 
 
 #define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
-#define HIDDEN_SIZE    (512)
-#define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
+#define L1_SIZE        (1024)
+#define L2_SIZE        (8)
 #define OUTPUT_SIZE    (1)
+#define L1_SIZE_HALF   (L1_SIZE / 2)
  
 #if defined(__AVX512F__)
 #define BIT_ALIGNMENT  (512)
@@ -51,15 +52,19 @@ class Board;
 
 namespace nn {
 
-extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
-extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-extern int16_t inputBias    [HIDDEN_SIZE];
-extern int32_t hiddenBias   [OUTPUT_SIZE];
+extern int16_t l1_weights[INPUT_SIZE ][L1_SIZE_HALF];
+extern int16_t l1_bias   [L1_SIZE_HALF];
+
+extern int16_t l2_weights[L2_SIZE * L1_SIZE];
+extern int32_t l2_bias   [L2_SIZE];
+
+extern float   l3_weights[OUTPUT_SIZE * L2_SIZE];
+extern float   l3_bias   [OUTPUT_SIZE];
 
 void init();
 
 struct Accumulator{
-    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
+    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][L1_SIZE_HALF]{};
 };
 
 struct Evaluator {
@@ -67,8 +72,9 @@ struct Evaluator {
     // summations
     std::vector<Accumulator> history{};
     
-    alignas(ALIGNMENT) int16_t activation[HIDDEN_DSIZE] {};
-    alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE ] {};
+    alignas(ALIGNMENT) int16_t l1_activation[L1_SIZE] {};
+    alignas(ALIGNMENT) float   l2_activation[L2_SIZE] {};
+    alignas(ALIGNMENT) float   output       [OUTPUT_SIZE] {};
 
     Evaluator();
     

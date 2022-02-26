@@ -26,13 +26,17 @@
 
 #include "incbin/incbin.h"
 
-alignas(ALIGNMENT) int16_t nn::inputWeights[INPUT_SIZE][HIDDEN_SIZE];
-alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-alignas(ALIGNMENT) int16_t nn::inputBias[HIDDEN_SIZE];
-alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
+alignas(ALIGNMENT)  int16_t nn::l1_weights[INPUT_SIZE ][L1_SIZE_HALF];
+alignas(ALIGNMENT)  int16_t nn::l1_bias   [L1_SIZE_HALF];
 
-#define INPUT_WEIGHT_MULTIPLIER  (128)
-#define HIDDEN_WEIGHT_MULTIPLIER (256)
+alignas(ALIGNMENT)  int16_t nn::l2_weights[L2_SIZE * L1_SIZE];
+alignas(ALIGNMENT)  int32_t nn::l2_bias   [L2_SIZE];
+
+alignas(ALIGNMENT)  float   nn::l3_weights[OUTPUT_SIZE * L2_SIZE];
+alignas(ALIGNMENT)  float   nn::l3_bias   [OUTPUT_SIZE];
+
+#define INPUT_WEIGHT_MULTIPLIER  (64)
+#define HIDDEN_WEIGHT_MULTIPLIER (64)
 
 #if defined(__AVX512F__)
 typedef __m512i avx_register_type_16;
@@ -74,48 +78,22 @@ typedef int32x4_t avx_register_type_32;
 
 INCBIN(Eval, EVALFILE);
 
-inline int32_t sumRegisterEpi32(avx_register_type_32 reg) {
-    // first summarize in case of avx512 registers into one 256 bit register
-#if defined(__AVX512F__)
-    const __m256i reduced_8 =
-            _mm256_add_epi32(_mm512_castsi512_si256(reg), _mm512_extracti32x8_epi32(reg, 1));
-#elif defined(__AVX2__) || defined(__AVX__)
-    const __m256i reduced_8 = reg;
-#endif
-
-    // then summarize the 256 bit register into a 128 bit register
-#if defined(__AVX512F__) || defined(__AVX2__) || defined(__AVX__)
-    const __m128i reduced_4 =
-                      _mm_add_epi32(_mm256_castsi256_si128(reduced_8), _mm256_extractf128_si256(reduced_8, 1));
-#elif defined(__SSE2__)
-    const __m128i reduced_4 = reg;
-#endif
-
-#if defined(__ARM_NEON)
-    return vaddvq_s32(reg);
-#else
-    // summarize the 128 register using SSE instructions
-    __m128i vsum = _mm_add_epi32(reduced_4, _mm_srli_si128(reduced_4, 8));
-    vsum = _mm_add_epi32(vsum, _mm_srli_si128(vsum, 4));
-    int32_t sums = _mm_cvtsi128_si32(vsum);
-    return sums;
-#endif
-}
-
 void nn::init() {
-
+    #define LOAD(memory, source, type, size, memoryIndex){                       \
+        std::memcpy((memory), &(source)[(memoryIndex)], (size) * sizeof(type));  \
+        (memoryIndex) += (size) * sizeof(type);                                  \
+    }
 
     int memoryIndex = 0;
-    std::memcpy(inputWeights, &gEvalData[memoryIndex], INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));
-    memoryIndex += INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t);
-    std::memcpy(inputBias, &gEvalData[memoryIndex], HIDDEN_SIZE * sizeof(int16_t));
-    memoryIndex += HIDDEN_SIZE * sizeof(int16_t);
-
-    std::memcpy(hiddenWeights, &gEvalData[memoryIndex], HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t));
-    memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
-    std::memcpy(hiddenBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(int32_t));
-    memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
-
+    
+    LOAD(l1_weights, gEvalData, int16_t, INPUT_SIZE  * L1_SIZE_HALF, memoryIndex);
+    LOAD(l1_bias   , gEvalData, int16_t,               L1_SIZE_HALF, memoryIndex);
+    LOAD(l2_weights, gEvalData, int16_t, L2_SIZE     * L1_SIZE     , memoryIndex);
+    LOAD(l2_bias   , gEvalData, float  , L2_SIZE                   , memoryIndex);
+    LOAD(l3_weights, gEvalData, float  , OUTPUT_SIZE * L2_SIZE     , memoryIndex);
+    LOAD(l3_bias   , gEvalData, float  , OUTPUT_SIZE               , memoryIndex);
+    
+    #undef LOAD
 }
 
 int nn::Evaluator::index(bb::PieceType pieceType,
@@ -124,24 +102,13 @@ int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color view,
                          bb::Square kingSquare) {
 
-//    constexpr int pieceTypeFactor  = 64;
-//    constexpr int pieceColorFactor = 64 * 6;
-//    constexpr int kingSideFactor   = 64 * 6 * 2;
-//
-//    const Square  relativeSquare   = view == WHITE ? square : mirrorVertically(square);
-//
-//    return relativeSquare
-//           + pieceType * pieceTypeFactor
-//           + (pieceColor == view) * pieceColorFactor
-//           + (fileIndex(kingSquare) > 3) * kingSideFactor;
-
-    constexpr int pieceTypeFactor = 64;
+    constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSquareFactor = 64 * 6 * 2;
 
-    const bool kingSide = fileIndex(kingSquare) > 3;
-    const int ksIndex = kingSquareIndex(kingSquare, view);
-    Square relativeSquare = view == WHITE ? square : mirrorVertically(square);
+    const bool    kingSide         = fileIndex(kingSquare) > 3;
+    const int     ksIndex          = kingSquareIndex(kingSquare, view);
+    Square        relativeSquare   = view == WHITE ? square : mirrorVertically(square);
 
     if (kingSide) {
         relativeSquare = mirrorHorizontally(relativeSquare);
@@ -160,15 +127,14 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
     if (relativeKingSquare > 63) return 0;
 
     constexpr int indices[N_SQUARES]{
-            0, 1, 2, 3, 3, 2, 1, 0,
-            4, 5, 6, 7, 7, 6, 5, 4,
-            8, 9, 10, 11, 11, 10, 9, 8,
-            8, 9, 10, 11, 11, 10, 9, 8,
+             0,  1,  2,  3,  3,  2,  1,  0,
+             4,  5,  6,  7,  7,  6,  5,  4,
+             8,  9, 10, 11, 11, 10,  9,  8,
+             8,  9, 10, 11, 11, 10,  9,  8,
             12, 12, 13, 13, 13, 13, 12, 12,
             12, 12, 13, 13, 13, 13, 12, 12,
             14, 14, 15, 15, 15, 15, 14, 14,
             14, 14, 15, 15, 15, 15, 14, 14,
-
     };
 
     if (kingColor == BLACK) {
@@ -211,6 +177,94 @@ inline void print_256i_epi32(const __m256i &h) {
 }
 #endif
 
+inline __m128i hsum4_epi32(__m256i a,
+                           __m256i b,
+                           __m256i c,
+                           __m256i d) {
+    __m256i sumab           = _mm256_hadd_epi32(a, b);
+    __m256i sumcd           = _mm256_hadd_epi32(c, d);
+    
+    __m256i sumabcd_twice   = _mm256_hadd_epi32(sumab, sumcd);
+    
+    __m128i sumabcd_lo      = _mm256_castsi256_si128  (sumabcd_twice);
+    __m128i sumabcd_hi      = _mm256_extracti128_si256(sumabcd_twice, 1);
+    
+    return _mm_add_epi32(sumabcd_hi, sumabcd_lo);
+}
+
+inline void relu_accumulator(int16_t* accumulator_1,
+                             int16_t* accumulator_2,
+                             int16_t * result,
+                             Color activePlayer){
+    
+    // for avx2 we can process 256 bits at once. 256 equals 16 * 16 bits (short) in the result
+    // therefor we need to process S/16 chunks where S is half the size of the result.
+    // if size(result) == 1024, then size(acc1) = size(acc2) = S
+    constexpr int chunks = L1_SIZE_HALF / 16;
+    
+    const auto* acc1 = (__m256i*) accumulator_1;
+    const auto* acc2 = (__m256i*) accumulator_2;
+    
+    auto* res_acc_1 = (__m256i*) &result[activePlayer == WHITE ? 0:L1_SIZE_HALF];
+    auto* res_acc_2 = (__m256i*) &result[activePlayer == WHITE ? L1_SIZE_HALF:0];
+    
+    auto ZERO_256 = _mm256_set1_epi16(0);
+    
+    // compute each chunk for accumulator 1
+    // we store the result in res_acc_1 which is either the first or second half of
+    // the result array. This depends on the active player
+    for(int i = 0; i < chunks; i++){
+        res_acc_1[i] = _mm256_max_epi16(acc1[i], ZERO_256);
+    }
+    for(int i = 0; i < chunks; i++){
+        res_acc_2[i] = _mm256_max_epi16(acc2[i], ZERO_256);
+    }
+}
+
+template<int I, int O, int S>
+inline void affine_epi16(int16_t* weights,
+                         int16_t* input,
+                         int32_t* bias,
+                         float* output){
+    
+    constexpr int ROWS = O / 4;
+    constexpr int COLS = I / 16;
+    
+    __m128i RELU = _mm_set1_epi32(0);
+    
+    auto* inp = (avx_register_type_16*) (input);
+    auto* wgt = (avx_register_type_16*) (weights);
+    auto* bia = (__m128i*) (bias);
+    auto* out = (__m128*) (output);
+    
+    for(int o = 0; o < ROWS; o++){
+        // track two sets of 32 bits (128 bits in total)
+        avx_register_type_32 acc1{};
+        avx_register_type_32 acc2{};
+        avx_register_type_32 acc3{};
+        avx_register_type_32 acc4{};
+        
+        
+        for(int i = 0; i < COLS; i++){
+            int offset = i + 4 * o * COLS;
+            
+            acc1 = avx_add_epi32(avx_madd_epi16(wgt[offset + 0 * COLS], inp[i]), acc1);
+            acc2 = avx_add_epi32(avx_madd_epi16(wgt[offset + 1 * COLS], inp[i]), acc2);
+            acc3 = avx_add_epi32(avx_madd_epi16(wgt[offset + 2 * COLS], inp[i]), acc3);
+            acc4 = avx_add_epi32(avx_madd_epi16(wgt[offset + 3 * COLS], inp[i]), acc4);
+        }
+        
+        // sum up into 32 bit
+        __m128i total_1 = hsum4_epi32(acc1, acc2, acc3, acc4);
+        // apply relu onto the 32 bit registers
+        total_1 = _mm_max_epi32(RELU, _mm_add_epi32(bia[o],total_1));
+        // shift 32 bits down
+        total_1 = _mm_srai_epi32(total_1, S);
+        // convert to floating point
+        out[o] = _mm_cvtepi32_ps(total_1);
+    }
+    
+}
 
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
@@ -232,17 +286,17 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
                                                 bb::Square kingSquare) {
     int idx = index(pieceType, pieceColor, square, side, kingSquare);
 
-    auto wgt = (avx_register_type_16 *) (inputWeights[idx]);
+    auto wgt = (avx_register_type_16 *) (l1_weights[idx]);
     auto sum = (avx_register_type_16 *) (history.back().summation[side]);
     if constexpr (value) {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+        for (int i = 0; i < L1_SIZE_HALF / STRIDE_16_BIT / 4; i++) {
             sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
             sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
             sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
             sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
         }
     } else {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+        for (int i = 0; i < L1_SIZE_HALF / STRIDE_16_BIT / 4; i++) {
             sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
             sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
             sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
@@ -257,7 +311,7 @@ void nn::Evaluator::reset(Board *board) {
 }
 
 void nn::Evaluator::resetAccumulator(Board *board, bb::Color color) {
-    std::memcpy(history.back().summation[color], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(history.back().summation[color], l1_bias, sizeof(int16_t) * L1_SIZE_HALF);
 
     Square kingSquare = bitscanForward(board->getPieceBB(color, KING));
 
@@ -280,25 +334,20 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board *board) {
     if (board != nullptr) {
         reset(board);
     }
-    constexpr avx_register_type_16 reluBias{};
+    
+    relu_accumulator(history.back().summation[WHITE],
+                     history.back().summation[BLACK],
+                     l1_activation,
+                     activePlayer);
 
-    auto acc_act = (avx_register_type_16 *) history.back().summation[activePlayer];
-    auto acc_nac = (avx_register_type_16 *) history.back().summation[!activePlayer];
-
-    // compute the dot product
-    avx_register_type_32 res{};
-    auto wgt = (avx_register_type_16 *) (hiddenWeights[0]);
-    for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-        res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_act[i], reluBias), wgt[i]));
+    affine_epi16<L1_SIZE, L2_SIZE, 0>(l2_weights, l1_activation, l2_bias, l2_activation);
+    
+    float res = l3_bias[0];
+    for(int i = 0; i < 8; i++){
+        res += l2_activation[i] * l3_weights[i];
     }
-    for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-        res = avx_add_epi32(res,
-                            avx_madd_epi16(avx_max_epi16(acc_nac[i], reluBias), wgt[i + HIDDEN_SIZE / STRIDE_16_BIT]));
-    }
-
-
-    auto outp = sumRegisterEpi32(res) + hiddenBias[0];
-    return outp / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
+    
+    return res / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
 }
 
 nn::Evaluator::Evaluator() {
