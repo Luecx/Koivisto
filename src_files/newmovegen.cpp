@@ -42,7 +42,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_skip          = false;
     m_killer1       = m_sd->killer[c][m_ply][0];
     m_killer2       = m_sd->killer[c][m_ply][1];
-    bigKiller       = sd->bigBoiKiller[ply] > 1 ? m_killer1 : 0;
+    bigKiller       = sd->bigBoiKiller[ply] > 3 ? m_killer1 : 0;
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
 }
