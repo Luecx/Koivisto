@@ -133,8 +133,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 threats = b->getActivePlayer() == WHITE ?
               blackPawnAttacks | blackMinorAttacks | blackRookAttacks
             : whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks;
-
-    sd->mainThreat[ply] = bitscanForward(threats);
+    
+    if(threats){
+        sd->mainThreat[ply] = bitscanForward(threats);
+    }else{
+        sd->mainThreat[ply] = 64;
+    }
 }
 
 void initLMR() {
