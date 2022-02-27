@@ -178,7 +178,6 @@ void moveGen::addSearched(Move m) {
 }
 
 void moveGen::generateNoisy() {
-    
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
     
@@ -227,7 +226,6 @@ void moveGen::generateNoisy() {
     }
  
     if (pawns & relative_rank_7_bb) {
-        
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -275,7 +273,6 @@ void moveGen::generateNoisy() {
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
                     break;
-                
             }
             attacks &= ~friendly & opponents;
 
@@ -309,7 +306,6 @@ void moveGen::generateNoisy() {
 }
 
 void moveGen::generateQuiet() {
-    
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
         
@@ -351,7 +347,6 @@ void moveGen::generateQuiet() {
 
 
     if (pawns & relative_rank_7_bb) {
-        
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -398,7 +393,6 @@ void moveGen::generateQuiet() {
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
                     break;
-                
             }
             attacks &= ~friendly;
             attacks &= ~opponents;
@@ -439,9 +433,7 @@ void moveGen::generateQuiet() {
                 && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
                 addQuiet(genMove(E1, G1, KING_CASTLE, WHITE_KING));
             }
-            
         } else {
-        
             if (m_board->getCastlingRights(BLACK_QUEENSIDE_CASTLING) && m_board->getPiece(A8) == BLACK_ROOK
                 && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
                 addQuiet(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
@@ -456,7 +448,6 @@ void moveGen::generateQuiet() {
 }
 
 void moveGen::generateEvasions() {
-    
     const U64 occupied  = m_board->getOccupiedBB();
     Square target;
     Piece movingPiece   = KING + c * 8;
@@ -475,7 +466,6 @@ void moveGen::generateEvasions() {
 }
 
 void moveGen::updateHistory(int weight) {
-
     weight          = std::min(weight * weight + 5 * weight, 256);
     Move bestMove   = searched[searched_index - 1];    
 

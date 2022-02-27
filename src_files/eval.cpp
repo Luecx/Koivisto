@@ -103,8 +103,6 @@ inline int32_t sumRegisterEpi32(avx_register_type_32 &reg) {
 }
 
 void nn::init() {
-
-
     int memoryIndex = 0;
     std::memcpy(inputWeights, &gEvalData[memoryIndex], INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));
     memoryIndex += INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t);
@@ -115,7 +113,6 @@ void nn::init() {
     memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
     std::memcpy(hiddenBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(int32_t));
     memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
-
 }
 
 int nn::Evaluator::index(bb::PieceType pieceType,
@@ -123,18 +120,6 @@ int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Square square,
                          bb::Color view,
                          bb::Square kingSquare) {
-
-//    constexpr int pieceTypeFactor  = 64;
-//    constexpr int pieceColorFactor = 64 * 6;
-//    constexpr int kingSideFactor   = 64 * 6 * 2;
-//
-//    const Square  relativeSquare   = view == WHITE ? square : mirrorVertically(square);
-//
-//    return relativeSquare
-//           + pieceType * pieceTypeFactor
-//           + (pieceColor == view) * pieceColorFactor
-//           + (fileIndex(kingSquare) > 3) * kingSideFactor;
-
     constexpr int pieceTypeFactor = 64;
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSquareFactor = 64 * 6 * 2;
@@ -151,7 +136,6 @@ int nn::Evaluator::index(bb::PieceType pieceType,
            + pieceType * pieceTypeFactor
            + (pieceColor == view) * pieceColorFactor
            + ksIndex * kingSquareFactor;
-
 }
 
 int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
@@ -168,7 +152,6 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
             12, 12, 13, 13, 13, 13, 12, 12,
             14, 14, 15, 15, 15, 15, 14, 14,
             14, 14, 15, 15, 15, 15, 14, 14,
-
     };
 
     if (kingColor == BLACK) {
@@ -177,48 +160,12 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
     return indices[relativeKingSquare];
 }
 
-#if not(defined(__ARM_NEON))
-inline void print_256i_epi16(const __m256i &h) {
-    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d \n",
-           _mm256_extract_epi16(h, 0),
-           _mm256_extract_epi16(h, 1),
-           _mm256_extract_epi16(h, 2),
-           _mm256_extract_epi16(h, 3),
-           _mm256_extract_epi16(h, 4),
-           _mm256_extract_epi16(h, 5),
-           _mm256_extract_epi16(h, 6),
-           _mm256_extract_epi16(h, 7),
-           _mm256_extract_epi16(h, 8),
-           _mm256_extract_epi16(h, 9),
-           _mm256_extract_epi16(h, 10),
-           _mm256_extract_epi16(h, 11),
-           _mm256_extract_epi16(h, 12),
-           _mm256_extract_epi16(h, 13),
-           _mm256_extract_epi16(h, 14),
-           _mm256_extract_epi16(h, 15));
-}
-
-inline void print_256i_epi32(const __m256i &h) {
-    printf("%d %d %d %d %d %d %d %d \n",
-           _mm256_extract_epi32(h, 0),
-           _mm256_extract_epi32(h, 1),
-           _mm256_extract_epi32(h, 2),
-           _mm256_extract_epi32(h, 3),
-           _mm256_extract_epi32(h, 4),
-           _mm256_extract_epi32(h, 5),
-           _mm256_extract_epi32(h, 6),
-           _mm256_extract_epi32(h, 7));
-}
-#endif
-
-
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
                                      bb::Color pieceColor,
                                      bb::Square square,
                                      bb::Square wKingSquare,
                                      bb::Square bKingSquare) {
-
     setPieceOnSquareAccumulator<value>(WHITE, pieceType, pieceColor, square, wKingSquare);
     setPieceOnSquareAccumulator<value>(BLACK, pieceType, pieceColor, square, bKingSquare);
 }

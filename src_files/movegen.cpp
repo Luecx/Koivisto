@@ -29,7 +29,6 @@ enum MoveGenConfig{
 
 template<Color c, MoveTypes t, MoveGenConfig m>
 inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd, Depth ply){
-    
     Move move = mv->getMove(mv->getSize()-1);
     int  idx  = mv->getSize()-1;
     
@@ -53,15 +52,12 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
             mv->scoreMove(idx, 40000 + mvvLVA + getPromotionPiece(move));
         } else if (sd->isKiller(move, ply, c)){
             mv->scoreMove(idx, 30000 + sd->isKiller(move, ply, c));
-        } else{
         }
-        
     }else if constexpr (m == GENERATE_NON_QUIET){
         // scoring when only non quiet moves are generated
         MoveScore mvvLVA = 100 * (getCapturedPieceType(move)) - 10 * (getMovingPieceType(move))
                            + (getSquareTo(board->getPreviousMove()) == getSquareTo(move));
         mv->scoreMove(idx, 100000 + mvvLVA);
-        
     }
 }
 
@@ -149,7 +145,6 @@ void generatePawnMoves(
     }
  
     if (pawns & relative_rank_7_bb) {
-        
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -198,10 +193,6 @@ void generatePawnMoves(
             attacks = lsbReset(attacks);
         }
     }
-
-
-    
-    
 }
 
 template<Color c, MoveGenConfig m, bool score>
@@ -242,7 +233,6 @@ void generatePieceMoves(
                         attacks::lookUpBishopAttacks  (square, occupied) |
                         attacks::lookUpRookAttacks    (square, occupied);
                     break;
-                
             }
             attacks &= ~friendly;
 
@@ -267,13 +257,10 @@ void generatePieceMoves(
                     if constexpr (score) scoreMove<c, QUIET, m>(b, mv, hashMove, sd, ply);
                 }
                 attacks = lsbReset(attacks);
-               
             }
             
             pieceOcc = lsbReset(pieceOcc);
         }
-        
-        
     }
 }
 
@@ -328,9 +315,7 @@ void generateKingMoves(
                     mv->add(genMove(E1, G1, KING_CASTLE, WHITE_KING));
                     if constexpr (score) scoreMove<c, KING_CASTLE, m>(b, mv, hashMove, sd, ply);
                 }
-                
             } else {
-                
                 if (b->getCastlingRights(BLACK_QUEENSIDE_CASTLING) && b->getPiece(A8) == BLACK_ROOK
                     && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
                     mv->add(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
@@ -377,7 +362,6 @@ template<MoveGenConfig config, bool score> void generate(
         }
         generatePieceMoves<BLACK, config, score>(b, mv, hashMove, sd, ply);
     }
-    
 }
 
 void generateMoves(Board* b, MoveList* mv, Move hashMove, SearchData* sd, Depth ply) {

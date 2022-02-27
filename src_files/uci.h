@@ -36,7 +36,6 @@
 #include <unistd.h>
 
 namespace uci{
-
 void mainloop(int argc, char* argv[]);
 
 void processCommand(std::string str);
@@ -60,7 +59,6 @@ void position_startpos(std::string moves);
 void bench();
 
 void quit();
-    
 }
 
 #endif    // KOIVISTO_UCI_H

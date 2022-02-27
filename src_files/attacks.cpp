@@ -29,7 +29,6 @@ bb::U64 attacks::ROOK_ATTACKS  [bb::N_SQUARES][4096]{};
 bb::U64 attacks::BISHOP_ATTACKS[bb::N_SQUARES][ 512]{};
 
 U64 populateMask(U64 mask, U64 index) {
-    
     U64    res = 0;
     Square i   = 0;
     
@@ -55,13 +54,13 @@ void attacks::init() {
         U64  rook_entries   = (ONE << (64 - rook_shift));
         U64  bish_entries   = (ONE << (64 - bish_shift));
         
-        for (int i = 0; i < rook_entries; i++) {
+        for (U64 i = 0; i < rook_entries; i++) {
             U64 rel_occ            = populateMask(rookMasks[n], i);
             int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
         
-        for (int i = 0; i < bish_entries; i++) {
+        for (U64 i = 0; i < bish_entries; i++) {
             U64 rel_occ              = populateMask(bishopMasks[n], i);
             int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
@@ -72,7 +71,6 @@ void attacks::init() {
 
 
 bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
-    
     U64              res {0};
     
     static const U64 topBottom = RANK_1_BB | RANK_8_BB;

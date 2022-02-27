@@ -25,7 +25,6 @@
  * @param MB
  */
 void TranspositionTable::init(U64 MB) {
-
     U64 bytes      = MB * 1024 * 1024;
     U64 maxEntries = bytes / sizeof(Entry);
 
@@ -81,7 +80,6 @@ void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_s
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
 double TranspositionTable::usage() {
-
     double used = 0;
     // Thank you Andrew for this idea :)
     for (U64 i = 0; i < 100; i++) {
@@ -100,7 +98,6 @@ double TranspositionTable::usage() {
  * @return
  */
 Entry TranspositionTable::get(U64 zobrist) {
-
     U64 index = zobrist & m_mask;
 
     Entry enP = m_entries[index];
@@ -124,7 +121,6 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @return
  */
 bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval) {
-
     U64 index  = zobrist & m_mask;
     Entry* enP = &m_entries[index];
     U32 key    = zobrist >> 32;
@@ -134,8 +130,7 @@ bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type,
         enP->setAge(m_currentAge);
         return true;
     } else {
-
-        //  on enP->depth < depth * 2: 
+        //  on enP->depth < depth * 2:
         //  The idea behind this replacement scheme is to allow faster searches of subtrees by allowing more localized 
         //  search results to be stored in the TT. A hard replacement scheme has been tested on another engine, and has 
         //  been shown to be worse (there is a limit to how great of a depth override should occur).

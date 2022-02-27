@@ -45,7 +45,6 @@ void perft_init(bool hash) {
  * called at the end of the program.
  */
 void perft_cleanUp() {
-
     if (perft_tt != nullptr)
         delete perft_tt;
 
@@ -78,7 +77,6 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
 
     U64 zob = ZERO;
     if (hash) {
-
         if (ply == 0) {
             perft_tt->clear();
         }
@@ -103,7 +101,6 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     //    generations ++;
 
     for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
-
         Move m = perft_mvlist_buffer[depth]->getMove(i);
         //        checks ++;
 
@@ -114,7 +111,6 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         if (d1 && depth == 1) {
             nodes += 1;
         } else {
-            
             b->move(m);
 
             U64 np = perft(b, depth - 1, false, d1, hash, ply + 1);

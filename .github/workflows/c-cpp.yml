@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: make
       working-directory: ./src_files/
-      run: 
+      run:
         make EXE=../bin/Koivisto
     - name: run and validate bench
       working-directory: ./bin/

@@ -139,7 +139,6 @@ void startMeasure() {
  * @return
  */
 int stopMeasure() {
-
     auto                          end  = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end - start;
 

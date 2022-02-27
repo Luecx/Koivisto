@@ -35,7 +35,6 @@ float phaseValues[N_PIECE_TYPES] {
  * @param fen
  */
 Board::Board(std::string fen) {
-    
     // first we set all piece occupancies to zero.
     for (int i = 0; i < N_PIECES; i++) {
         m_piecesBB[i] = 0;
@@ -71,7 +70,6 @@ Board::Board(std::string fen) {
     File x {0};
     Rank y {7};
     for (char c : split[0]) {
-        
         // we continue to the next rank and reset the file
         if (c == '/') {
             x = 0;
@@ -84,7 +82,6 @@ Board::Board(std::string fen) {
             x += (c - '0');
             continue;
         } else {
-            
             int offset = (c >= 'a') ? 8 : 0;
             
             Square sq = squareIndex(y, x);
@@ -112,7 +109,6 @@ Board::Board(std::string fen) {
     
     // if the fen is large enough, we parse the castling rights next.
     if (split.size() >= 3) {
-        
         for (int i = 0; i < 4; i++) {
             setCastlingRights(i, false);
         }
@@ -196,7 +192,6 @@ Board::~Board() {}
  * Returns a FEN-representation of the board object which can be used for other engines, and debugging.
  */
 std::string Board::fen() {
-    
     std::stringstream ss;
     
     // we do it in the same way we read a fen.
@@ -308,7 +303,6 @@ Piece Board::getPiece(Square sq) { return m_pieceBoard[sq]; }
  */
 template<bool updateNN>
 void Board::setPiece(Square sq, Piece piece) {
-    
     // first we set the piece on the piece board
     m_pieceBoard[sq] = piece;
     
@@ -464,7 +458,6 @@ void Board::move(Move m) {
     
     newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
     if (getPieceType(pFrom) == PAWN) {
-        
         // reset fifty move counter if pawn has moved
         newBoardStatus.fiftyMoveCounter = 0;
         
@@ -476,7 +469,6 @@ void Board::move(Move m) {
             // promotions are handled differently because the new piece at the target square is not the piece that initially
             // moved.
         else if (isPromotion(m)) {
-            
             // we handle this case seperately so we return after this finished.
             m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
             this->changeActivePlayer();
@@ -492,7 +484,6 @@ void Board::move(Move m) {
             
             return;
         } else if (mType == EN_PASSANT) {
-            
             m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
             this->changeActivePlayer();
             
@@ -504,7 +495,6 @@ void Board::move(Move m) {
             return;
         }
     } else if (getPieceType(pFrom) == KING) {
-        
         // revoke castling rights if king moves
         newBoardStatus.castlingRights &= ~(ONE << (color * 2));
         newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
@@ -541,7 +531,6 @@ void Board::move(Move m) {
         
         
         return;
-        
     }
         
         // revoke castling rights if rook moves and it is on the initial square
@@ -575,14 +564,12 @@ void Board::move(Move m) {
     
     this->changeActivePlayer();
     this->computeNewRepetition();
-    
 }
 
 /**
  * undoes the last move. Assumes the last move has not been a null move.
  */
 void Board::undoMove() {
-    
     Move m = getBoardStatus()->move;
     
     changeActivePlayer();
@@ -640,7 +627,6 @@ void Board::move_null() {
  * undoes a null move. Assumes that the previous move has been a null move.
  */
 void Board::undoMove_null() {
-    
     m_boardStatusHistory.pop_back();
     changeActivePlayer();
 }
@@ -662,7 +648,6 @@ Move Board::getPreviousMove() {
  * @return
  */
 template<Color attacker> U64 Board::getAttackedSquares() {
-    
     U64 att = ZERO;
     
     if (attacker == WHITE) {
@@ -731,7 +716,6 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) {
  * @return
  */
 Score Board::staticExchangeEvaluation(Move m) {
-
 #ifdef SEE_CACHE_SIZE
     U64 zob = zobrist();
     if (seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key == (zob ^ m)) {
@@ -787,7 +771,6 @@ Score Board::staticExchangeEvaluation(Move m) {
         attadef |=
             occ & ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens));
         fromSet = getLeastValuablePiece(attadef, attacker, capturingPiece);
-        
     } while (fromSet);
     
     while (--d) {
@@ -870,7 +853,6 @@ bool Board::isUnderAttack(Square square, Color attacker) {
  * @return
  */
 bool Board::givesCheck(Move m) {
-    
     int opponentKingPos;
     U64 opponentKing;
     
@@ -978,7 +960,6 @@ bool Board::givesCheck(Move m) {
         
     // en passant
     else if (isEnPassant(m)) {
-        
         if (getActivePlayer() == WHITE) {
             unsetBit(m_occupiedBB, sqTo - 8);
             unsetBit(m_occupiedBB, sqFrom);
@@ -1007,7 +988,6 @@ bool Board::givesCheck(Move m) {
  * @return
  */
 bool Board::isLegal(Move m) {
-    
     Square thisKing;
     U64    opponentQueenBitboard;
     U64    opponentRookBitboard;
@@ -1026,7 +1006,6 @@ bool Board::isLegal(Move m) {
     }
     
     if (isEnPassant(m)) {
-        
         this->move(m);
         bool isOk =
                  (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
@@ -1035,7 +1014,6 @@ bool Board::isLegal(Move m) {
         
         return isOk;
     } else if (isCastle(m)) {
-        
         U64 secure = ZERO;
         
         MoveType t = getType(m);
@@ -1069,7 +1047,6 @@ bool Board::isLegal(Move m) {
         unsetBit(this->m_piecesBB[captured], sqTo);
         isAttacked = isUnderAttack(thisKing, !this->getActivePlayer());
         setBit(this->m_piecesBB[captured], sqTo);
-        
     } else {
         isAttacked = isUnderAttack(thisKing, !this->getActivePlayer());
     }
@@ -1091,7 +1068,6 @@ bool Board::isLegal(Move m) {
  * @return
  */
 bool Board::isPseudoLegal(Move m){
-
     if (!m)
         return false;
     
@@ -1252,7 +1228,6 @@ Color Board::getActivePlayer() { return m_activePlayer; }
  * writes the board object to the given stream
  */
 std::ostream& operator<<(std::ostream& os, Board& board) {
-    
     os << "zobrist key              " << board.zobrist() << "\n";
     os << "repetition               " << board.getCurrentRepetitionCount() << "\n";
     os << "50 move rule             " << board.getCurrent50MoveRuleCount() << "\n";
@@ -1266,7 +1241,6 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
     os << " +---+---+---+---+---+---+---+---+\n";
     
     for (Rank r = 7; r >= 0; r--) {
-        
         for (File f = 0; f <= 7; ++f) {
             // os << squareIndex(r,f);
             Square sq = bb::squareIndex(r, f);
