@@ -408,6 +408,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement =  -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())][getSquareTo(b->getPreviousMove())] = improvement;
+                if (improvement > 50 && !isCapture(b->getPreviousMove())) {
+                    if (lmrFactor != nullptr) {
+                    depth += *lmrFactor;
+                    *lmrFactor = 0;
+                }
+                }
             }
         }
     }
