@@ -38,9 +38,9 @@ class TimeManager {
     private:
     TimeMode mode;
 
-    int      timeToUse;
+    U64      timeToUse;
     U64      nodesToUse;
-    int      upperTimeBound;
+    U64      upperTimeBound;
     bool     forceStop;
 
     public:

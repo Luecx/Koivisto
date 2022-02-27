@@ -84,17 +84,21 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
 
     double division = movesToGo+1;
 
-    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / division)*3 + std::min(white * 0.9 + whiteInc, whiteInc * 3.0) - 25)
-                                                       : (int(black / division)*3 + std::min(black * 0.9 + blackInc, blackInc * 3.0) - 25);
+    upperTimeBound =
+        board->getActivePlayer() == WHITE
+            ? (int(white / division) * 3 + std::min(white * 0.9 + whiteInc, whiteInc * 3.0) - 25)
+            : (int(black / division) * 3 + std::min(black * 0.9 + blackInc, blackInc * 3.0) - 25);
 
-    timeToUse = upperTimeBound / 3;
+    timeToUse      = upperTimeBound / 3;
+    timeToUse      = std::min(timeToUse     , board->getActivePlayer() == WHITE ?
+                                                              (U64) white - 50 :
+                                                              (U64) black - 50);
+    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ?
+                                                              (U64) white - 50 :
+                                                              (U64) black - 50);
 
-    timeToUse = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
-    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
-
-    startTime =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+    startTime =std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 /**
@@ -102,9 +106,8 @@ TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int m
  * @return
  */
 int TimeManager::elapsedTime() {
-    auto end =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+    auto end =std::chrono::duration_cast<std::chrono::milliseconds>(
+                   std::chrono::steady_clock::now().time_since_epoch()).count();
     auto diff = end - startTime;
 
     return diff;
