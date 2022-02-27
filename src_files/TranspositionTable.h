@@ -41,7 +41,6 @@ constexpr NodeType FORCED_ALL_NODE = 3;
 constexpr NodeType FORMER_CUT_NODE = 6;
 
 struct Entry {
-
     //    Entry() = default;
     //    ~Entry() = default;
 
@@ -73,7 +72,6 @@ struct Entry {
 };
 
 class TranspositionTable {
-
     private:
     NodeAge m_currentAge;
     U64     m_size;
@@ -81,7 +79,6 @@ class TranspositionTable {
     void init(U64 MB);
 
     public:
-    
     Entry*  m_entries;
     U64     m_mask;
     TranspositionTable(U64 mb);

@@ -50,7 +50,6 @@
 class Board;
 
 namespace nn {
-
 extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
 extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 extern int16_t inputBias    [HIDDEN_SIZE];
@@ -63,7 +62,6 @@ struct Accumulator{
 };
 
 struct Evaluator {
-    
     // summations
     std::vector<Accumulator> history{};
     

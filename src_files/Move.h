@@ -26,7 +26,6 @@
 #include <cstdint>
 
 namespace move {
-
 /**
  *
  *
@@ -152,7 +151,6 @@ inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType
 }
 
 inline bool         isDoubledPawnPush   (Move move){
-    
     return getType(move) == DOUBLED_PAWN_PUSH;
 }
 inline bool         isCapture           (Move move){
@@ -173,7 +171,6 @@ std::string toString(const Move& move);
 void        printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {
-    
     private:
     move::Move      moves [256];
     move::MoveScore scores[256];
@@ -189,7 +186,6 @@ class MoveList {
     void       printMoveBits();
     int        getSize() const;
 };
-
 }    // namespace move
 
 #endif    // CHESSCOMPUTER_MOVE_H

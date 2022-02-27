@@ -27,7 +27,6 @@
 #include <string>
 
 namespace bb {
-
 typedef uint64_t U64;
 typedef uint32_t U32;
 typedef int8_t   Square;
@@ -213,7 +212,6 @@ inline Square squareIndex(Rank rank, File file) {
 }
 
 inline Square squareIndex(std::string& str) {
-    
     Rank r = str.at(1) - '1';
     File f = toupper(str.at(0)) - 'A';
     
@@ -445,7 +443,6 @@ inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) {
  * @return
  */
 inline int chebyshevDistance(Square sq1, Square sq2) {
-    
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
@@ -480,7 +477,6 @@ inline int manhattanDistance(Square sq1, Square sq2) {
     
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
-
 }    // namespace bb
 
 #endif    // CHESSCOMPUTER_BITMAP_H

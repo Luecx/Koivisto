@@ -27,7 +27,6 @@ using namespace bb;
 using namespace move;
 
 struct SearchData {
-
     Move     bestMove = 0;
     // Effort spent
     int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};

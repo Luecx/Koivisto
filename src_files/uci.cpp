@@ -73,7 +73,6 @@ void searchAndPrint(TimeManager* p_timeManager) {
  * @param bench
  */
 void uci::mainloop(int argc, char* argv[]) {
-
     attacks::init();
     bb::init();
     nn::init();
@@ -127,7 +126,6 @@ void uci::uci() {
  * processes a single command.
  */
 void uci::processCommand(std::string str) {
-
     // we trim all white spaces on both sides first
     str = trim(str);
 
@@ -142,7 +140,6 @@ void uci::processCommand(std::string str) {
     if (split.at(0) == "uci") {
         uci::uci();
     } else if (split.at(0) == "setoption") {
-
         if (split.size() < 5)
             return;
 
@@ -150,7 +147,6 @@ void uci::processCommand(std::string str) {
         string value = getValue(split, "value");
 
         uci::set_option(name, value);
-
     } else if (split.at(0) == "go") {
         go(split, str);
     } else if (split.at(0) == "stop") {
@@ -174,7 +170,6 @@ void uci::processCommand(std::string str) {
             initLMR();
         }
     } else if (split.at(0) == "position") {
-
         auto fenPos  = str.find("fen");
         auto movePos = str.find("moves");
 
@@ -213,7 +208,6 @@ void uci::processCommand(std::string str) {
  * @param hash
  */
 void uci::go_perft(int depth, bool hash) {
-
     perft_init(hash);
 
     startMeasure();
@@ -300,7 +294,6 @@ void uci::debug(bool mode) {
  * @param moves
  */
 void uci::position_fen(std::string fen, std::string moves) {
-    
     board = Board {fen};
 
     if (moves.empty())
@@ -309,7 +302,6 @@ void uci::position_fen(std::string fen, std::string moves) {
     splitString(moves, mv, ' ');
 
     for (string s : mv) {
-
         string str1 = s.substr(0, 2);
         string str2 = s.substr(2, 4);
         Square s1   = squareIndex(str1);
@@ -321,7 +313,6 @@ void uci::position_fen(std::string fen, std::string moves) {
         MoveType type;
 
         if (s.size() > 4) {
-
             Piece promo = QUEEN;
             switch (s.at(4)) {
                 case 'q': promo = QUEEN; break;
@@ -335,7 +326,6 @@ void uci::position_fen(std::string fen, std::string moves) {
             } else {
                 type = 7 + promo;
             }
-
         } else {
             if ((moving % 8) == KING) {
                 if (abs(s2 - s1) == 2) {
@@ -401,7 +391,6 @@ void uci::quit() {
  * performs a bench
  */
 void uci::bench() {
-
     // positions from Ethereal
     static const char* Benchmarks[] = {
 #include "bench.csv"
@@ -412,7 +401,6 @@ void uci::bench() {
 
     searchObject.disableInfoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
-
         Board b(Benchmarks[i]);
 
         TimeManager manager{};
@@ -453,7 +441,6 @@ void uci::bench() {
  * @param str
  */
 void uci::go(const vector<std::string>& split, const string& str) {
-    
     uci::stop();
     
     // check for perft first since it will not be working with the remaining options
@@ -471,7 +458,6 @@ void uci::go(const vector<std::string>& split, const string& str) {
         || str.find("winc")  != string::npos
         || str.find("binc")  != string::npos
         || str.find("binc")  != string::npos) {
-        
         string wtime_str = getValue(split, "wtime");
         string btime_str = getValue(split, "btime");
         string wincr_str = getValue(split, "winc");
@@ -487,7 +473,6 @@ void uci::go(const vector<std::string>& split, const string& str) {
         timeManager.setMatchTimeLimit(board.getActivePlayer() == WHITE ? wtime : btime,
                                       board.getActivePlayer() == WHITE ? wincr : bincr,
                                       mvtog);
-
     }
     if (str.find("depth") != string::npos) {
         timeManager.setDepthLimit(stoi(getValue(split, "depth")));
@@ -506,5 +491,4 @@ void uci::go(const vector<std::string>& split, const string& str) {
     }
     // start the search
     searchThread = std::thread(searchAndPrint, &timeManager);
-    
 }

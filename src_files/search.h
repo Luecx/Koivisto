@@ -79,13 +79,10 @@ class Search {
     ThreadData*              tds[MAX_THREADS] {};
 
     public:
-//    Search(int hashsize = 16);
-//    virtual ~Search();
-    
     void init(int hashsize);
     void cleanUp();
-    private:
 
+    private:
     U64  totalNodes();
     int  selDepth();
     U64  tbHits();
@@ -107,13 +104,13 @@ class Search {
 
     void           printInfoString(Board* b, Depth d, Score score);
     void           extractPV(Board* b, MoveList* mvList, Depth depth);
-    
-    Move           bestMove(Board* b, TimeManager* timeManager, int threadId=0);
+
+    Move           bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
     Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
                             Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
-    Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
-    Score           probeWDL(Board* board);
-    Move            probeDTZ(Board* board);
+    Score          qSearch (Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
+    Score          probeWDL(Board* board);
+    Move           probeDTZ(Board* board);
 };
 
 extern int                 RAZOR_MARGIN;

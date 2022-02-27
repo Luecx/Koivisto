@@ -48,7 +48,6 @@ struct MatchTimeLimit : public Limit {
 };
 
 class TimeManager {
-
     public:
     DepthLimit     depth_limit      {};
     NodeLimit      node_limit       {};

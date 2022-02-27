@@ -51,7 +51,6 @@ enum {
 
 class moveGen {
     private:
-
     int             stage;
 
     Move            quiets[MAX_QUIET]       = {0};
