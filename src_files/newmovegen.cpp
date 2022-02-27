@@ -53,15 +53,15 @@ Move moveGen::next() {
             stage++;
             if (m_board->isPseudoLegal(m_hashMove))
                 return m_hashMove;
+            else if (m_mode == PV_SEARCH && bigKiller && !sameMove(bigKiller, m_hashMove) && m_board->isPseudoLegal(m_killer1)) {
+                m_killer1 = 0;
+                return bigKiller;
+            }
             // fallthrough
         case GEN_NOISY:
             generateNoisy();
             stage++;
             // fallthrough
-            if (m_mode == PV_SEARCH && bigKiller && !sameMove(bigKiller, m_hashMove) && m_board->isPseudoLegal(m_killer1)) {
-                m_killer1 = 0;
-                return bigKiller;
-            }
         case GET_GOOD_NOISY:
             if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
                 return nextNoisy();
