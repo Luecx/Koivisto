@@ -133,8 +133,12 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     U64 threats = b->getActivePlayer() == WHITE ?
               blackPawnAttacks | blackMinorAttacks | blackRookAttacks
             : whitePawnAttacks | whiteMinorAttacks | whiteRookAttacks;
-
-    sd->mainThreat[ply] = bitscanForward(threats);
+    
+    if(threats){
+        sd->mainThreat[ply] = bitscanForward(threats);
+    }else{
+        sd->mainThreat[ply] = 64;
+    }
 }
 
 void initLMR() {
@@ -153,9 +157,13 @@ void initLMR() {
  * @param b
  * @return
  */
-Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int threadId) {
+Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     UCI_ASSERT(b);
     UCI_ASSERT(timeman);
+    
+    Depth maxDepth = MAX_PLY;
+    if (timeman->depth_limit.enabled)
+        maxDepth = timeman->depth_limit.depth;
 
     // if the main thread calls this function, we need to generate the search data for all the threads
     // first
@@ -195,7 +203,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
         // we will call this function for the other threads which will skip this part and jump
         // straight to the part below
         for (int n = 1; n < threadCount; n++) {
-            this->runningThreads.emplace_back(&Search::bestMove, this, b, maxDepth, timeman, n);
+            this->runningThreads.emplace_back(&Search::bestMove, this, b, timeman, n);
         }
     }
 
@@ -241,7 +249,7 @@ Move Search::bestMove(Board* b, Depth maxDepth, TimeManager* timeman, int thread
             }
         }
         int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
-                                                      [getSquareTo(td->searchData.bestMove)]
+                                                     [getSquareTo  (td->searchData.bestMove)]
                            * 100 / td->nodes;
 
         if (threadId == 0) {
@@ -300,18 +308,19 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     td->nodes++;
 
     // force a stop when enough nodes have been searched
-    if (timeManager->getNodeLimit() <= td->nodes) {
+    if (   timeManager->node_limit.enabled
+        && timeManager->node_limit.nodes <= td->nodes) {
         this->timeManager->stopSearch();
     }
 
     // check if a stop is forced
-    if (timeManager->isForceStopped()) {
+    if (timeManager->force_stop) {
         td->dropOut = true;
         return beta;
     }
 
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock
-    // too often for speed reasons so we only apply this when the depth is larger than 6.
+    // too often for speed reasons, so we only apply this when the depth is larger than 6.
     if ((depth > 6 && !isTimeLeft(&td->searchData))) {
         td->dropOut = true;
         return beta;
@@ -829,7 +838,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // if we are inside a tournament game and at the root and there is only one legal move, no need to
     // search at all.
-    if (timeManager->getMode() == TOURNAMENT && ply == 0 && legalMoves == 1 && td->threadID == 0) {
+    if (   timeManager->match_time_limit.enabled
+        && ply          == 0
+        && legalMoves   == 1
+        && td->threadID == 0) {
+        
         sd->bestMove = bestMove;
         timeManager->stopSearch();
         return staticEval;
