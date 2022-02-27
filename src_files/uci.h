@@ -41,13 +41,8 @@ void mainloop(int argc, char* argv[]);
 
 void processCommand(std::string str);
 
-void go_match(int wtime, int btime, int winc, int binc, int movesToGo, int depth);
 void go_perft(int depth, bool hash);
-void go_depth(int depth);
-void go_nodes(int nodes);
-void go_time(int movetime);
-void go_infinite();
-void go_mate(int depth);
+void go(const std::vector<std::string>& split, const std::string &str);
 
 void stop();
 
