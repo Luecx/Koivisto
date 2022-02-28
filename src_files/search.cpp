@@ -443,6 +443,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+    
     if (!inCheck) {
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][ b->getActivePlayer()];
@@ -458,10 +459,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-
     if (en.zobrist == key >> 32) {
         // adjusting eval
         if (   (en.type == PV_NODE)
@@ -469,8 +466,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             || (en.type  & ALL_NODE && staticEval > en.score)) {
             staticEval = en.score;
         }
-    } 
-
+    }
+    
+    // we check if the evaluation improves across plies.
+    // firstly we need to store the evaluation inside the history tables
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    // next we can compare the evaluation with the evaluation from two plies ago
+    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+    
     // ***********************************************************************************************
     // tablebase probing:
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort
