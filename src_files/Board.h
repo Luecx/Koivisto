@@ -35,7 +35,7 @@ using namespace move;
 
 // we cache see entries. this specifies the amount of hashed total entries.
 // gives approx 3-5 elo
-//#define SEE_CACHE_SIZE 2048
+#define SEE_CACHE_SIZE 2048
 
 // this struct contains information about the cached see entries.
 // this contains zobrist keys and the see-score.
