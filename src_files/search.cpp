@@ -541,7 +541,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // assume that we could achieve beta, so we can return early. Don't do nmp when the oponent
         // has threats or the position or we don't have non-pawn material.
         // *******************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
+        if (staticEval >= beta + (5 > depth ? 30 : 0)
+            && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score =
@@ -650,12 +651,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // if the depth is small enough and we searched enough quiet moves, dont consider this
                 // move
                 // ***********************************************************************************
-                if (mGen->shouldSkip())
-                    continue;
-                
                 if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
                     mGen->skip();
                 }
+                
+                if (mGen->shouldSkip())
+                    continue;
 
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck
@@ -706,7 +707,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             staticExchangeEval = b->staticExchangeEvaluation(m);
         }
 
-        // keep track of the depth we want to extend by
+        // keep track of the depth we want to extend by   
         int extension = 0;
 
         // *******************************************************************************************
