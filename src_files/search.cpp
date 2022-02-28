@@ -744,6 +744,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
+
+        if (ply == 0) {
+            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] /= 2;
+        }
         // doing the move
         b->move(m);
 
