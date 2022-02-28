@@ -544,7 +544,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
-            sd->playedMoves[ply] = 0;
             score =
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
@@ -579,7 +578,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 continue;
 
             b->move(m);
-            sd->playedMoves[ply] = m;
             __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
@@ -784,7 +782,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
-                                           ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
+                                           b->getPreviousMove(2), mainThreat);
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -806,9 +804,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // doing the move
         b->move(m);
-
-        sd->playedMoves[ply] = m;
-
+        
         __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not

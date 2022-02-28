@@ -45,8 +45,6 @@ struct SearchData {
     // threat data
     int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
     Square   mainThreat[MAX_INTERNAL_PLY]                                        = {0};
-    // played moves
-    Move     playedMoves[MAX_INTERNAL_PLY]                                       = {0};
     // eval history across plies
     Score    eval[N_COLORS][MAX_INTERNAL_PLY]                                    = {0};
     bool     sideToReduce;
