@@ -635,10 +635,10 @@ void Board::undoMove_null() {
  * returns the Move which lead to the current position.
  * @return
  */
-Move Board::getPreviousMove() {
-    if (m_boardStatusHistory.empty())
+Move Board::getPreviousMove(Depth ply) {
+    if (m_boardStatusHistory.size() <= ply)
         return 0;
-    return m_boardStatusHistory.back().move;
+    return m_boardStatusHistory[m_boardStatusHistory.size() - ply].move;
 }
 
 /**

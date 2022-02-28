@@ -87,9 +87,6 @@ class Search {
     int  selDepth();
     U64  tbHits();
 
-    bool isTimeLeft(SearchData* sd = nullptr);
-    bool rootTimeLeft(int score);
-
     public:
     SearchOverview overview();
     void           enableInfoStrings();
@@ -102,7 +99,7 @@ class Search {
     void           setHashSize(int hashSize);
     void           stop();
 
-    void           printInfoString(Board* b, Depth d, Score score);
+    void           printInfoString(Board* b, Depth depth, Score score);
     void           extractPV(Board* b, MoveList* mvList, Depth depth);
 
     Move           bestMove(Board* b, TimeManager* timeManager, int threadId = 0);

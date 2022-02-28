@@ -24,7 +24,7 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move followup, S
     } else {
         return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
                + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * th[side][threatSquare][getSqToSqFromCombination(m)]) / 3;
+               + 2 * th [side][threatSquare][getSqToSqFromCombination(m)]) / 3;
     }
 }
 
