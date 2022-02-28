@@ -45,8 +45,8 @@ struct Entry {
     //    ~Entry() = default;
 
     friend ostream& operator<<(ostream& os, const Entry& entry) {
-        os << "zobrist: " << entry.zobrist << " move: " << entry.move << " depth: " << (int) entry.depth
-           << " type: " << (int) entry.type << " score: " << entry.score;
+        os << "zobrist: " << entry.zobrist << " move: " << entry.move << " depth: " << static_cast<int>(entry.depth)
+           << " type: " << static_cast<int>(entry.type) << " score: " << entry.score;
         return os;
     }
 

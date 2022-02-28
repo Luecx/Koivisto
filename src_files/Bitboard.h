@@ -53,10 +53,10 @@ enum Plies{
 };
 
 enum Scores{
-    TB_CURSED_SCORE = (Score)(1),
-    TB_WIN_SCORE    = (Score)((1 << 13) - MAX_INTERNAL_PLY),
-    MAX_MATE_SCORE  = (Score)((1 << 14) - 1),
-    MIN_MATE_SCORE  = (Score)(MAX_MATE_SCORE - MAX_INTERNAL_PLY),
+    TB_CURSED_SCORE = static_cast<Score>(1),
+    TB_WIN_SCORE    = static_cast<Score>((1 << 13) - MAX_INTERNAL_PLY),
+    MAX_MATE_SCORE  = static_cast<Score>((1 << 14) - 1),
+    MIN_MATE_SCORE  = static_cast<Score>(MAX_MATE_SCORE - MAX_INTERNAL_PLY),
     TB_FAILED       = MAX_MATE_SCORE
 };
 

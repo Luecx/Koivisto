@@ -28,27 +28,27 @@ using namespace move;
 void move::printMoveBits(Move move, bool bitInfo) {
     std::cout << " ";
     for (int i = 0; i < 8; i++) {
-        std::cout << (bool) ((move >> (31 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (31 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (23 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (23 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (19 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (19 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (15 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (15 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 6; i++) {
-        std::cout << (bool) ((move >> (11 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (11 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 6; i++) {
-        std::cout << (bool) ((move >> (5 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (5 - i)) & 1UL);
     }
     
     if (bitInfo) {

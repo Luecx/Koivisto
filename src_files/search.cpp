@@ -725,7 +725,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && (   en.type == CUT_NODE
                 || en.type == PV_NODE)) {
             // compute beta cut value
-            betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
+            betaCut = std::min(static_cast<int>(en.score - SE_MARGIN_STATIC - depth * 2), static_cast<int>(beta));
             // get the score from recursive call
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
@@ -1130,7 +1130,7 @@ void           Search::clearHistory() {
 }
 void Search::clearHash() { this->table->clear(); }
 void Search::setThreads(int threads) {
-    int processor_count = (int) std::thread::hardware_concurrency();
+    int processor_count = static_cast<int>(std::thread::hardware_concurrency());
     if (processor_count == 0)
         processor_count = MAX_THREADS;
     if (processor_count < threads)
