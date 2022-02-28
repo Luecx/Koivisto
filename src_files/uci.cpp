@@ -363,7 +363,7 @@ void uci::position_fen(std::string fen, std::string moves) {
         }
         Move m = genMove(s1, s2, type, moving, captured);
 
-        UCI_ASSERT(board->isLegal(m));
+        UCI_ASSERT(board.isLegal(m));
         board.move(m);
     }
 }
