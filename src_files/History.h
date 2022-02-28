@@ -44,7 +44,7 @@ struct SearchData {
     Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
     // threat data
     int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
-    Square   mainThreat[MAX_INTERNAL_PLY]                                        = {0}; 
+    Square   mainThreat[MAX_INTERNAL_PLY]                                        = {0};
     // played moves
     Move     playedMoves[MAX_INTERNAL_PLY]                                       = {0};
     // eval history across plies

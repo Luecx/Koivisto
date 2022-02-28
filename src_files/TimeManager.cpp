@@ -63,12 +63,12 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
 
 void TimeManager::setStartTime() {
     start_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now().time_since_epoch()).count();
+                 std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 int  TimeManager::elapsedTime() const {
-    auto end  = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now().time_since_epoch()).count();
+    auto end   = std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now().time_since_epoch()).count();
     auto diff = end - start_time;
     return diff;
 }
@@ -94,7 +94,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) {
     
     // if we are above the maximum allowed time, stope
     if (    this->move_time_limit.enabled
-            && this->move_time_limit.upper_time_bound < elapsed)
+         && this->move_time_limit.upper_time_bound < elapsed)
         return false;
     
     return true;
@@ -108,11 +108,17 @@ bool TimeManager::rootTimeLeft(int score) {
     int elapsed = elapsedTime();
     
     if(    move_time_limit.enabled
-           && move_time_limit.upper_time_bound < elapsed)
+        && move_time_limit.upper_time_bound < elapsed)
         return false;
     
+    // the score is a value between 0 and 100 where 100 means that
+    // the entire time has been spent looking at the best move.
+    // this indicates that there is most likely just a single best move
+    // which means we could spend less time searching. In case of the score being
+    // 100, we half the time to use. If it's lower than 30, it reaches a maximum of 1.4 times the
+    // original time to use.
     if(    match_time_limit.enabled
-           && match_time_limit.time_to_use *50.0 / std::max(score, 30) < elapsed)
+        && match_time_limit.time_to_use * 50.0 / std::max(score, 30) < elapsed)
         return false;
     
     return true;
