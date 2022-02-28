@@ -203,8 +203,9 @@ class Board {
     // undoes a null-move
     void undoMove_null();
     
-    // returns the previous move which lead to the current position. this is stored within the meta information.
-    Move getPreviousMove();
+    // returns the previous move which lead to the current position.
+    // this is stored within the meta information.
+    Move getPreviousMove(Depth ply = 1);
     
     // computes the static exchange evaluation for a given move. used the cache if defined.
     Score staticExchangeEvaluation(Move m);
@@ -286,6 +287,9 @@ class Board {
     // does the same as getPieceBB() above yet this only returns a single bitboard.
     template<Color color>
     [[nodiscard]] inline U64 getPieceBB(Piece piece) const{return m_piecesBB[color * 8 + piece];}
+    
+    template<Color color, PieceType piece_type>
+    [[nodiscard]] inline U64 getPieceBB() const{return m_piecesBB[color * 8 + piece_type];}
     
     Score evaluate();
 };
