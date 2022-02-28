@@ -89,7 +89,6 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         }
     }
 
-    int i;
     U64 nodes = 0;
 
     if (depth == 0)
@@ -101,7 +100,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     
     //    generations ++;
 
-    for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
+    for (int i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
         Move m = perft_mvlist_buffer[depth]->getMove(i);
         //        checks ++;
 
