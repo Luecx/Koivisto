@@ -914,26 +914,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+
     // we need to write the current score/position into the transposition table if and only if we
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
             table->put(key, highestScore, bestMove, PV_NODE, depth,
                        sd->eval[b->getActivePlayer()][ply]);
-        } else {
-            if (hashMove && en.type == CUT_NODE) {
-                bestMove = en.move;
-            } else if (score == alpha && !sameMove(hashMove, bestMove)) {
-                bestMove = 0;
-            }
-
-            if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
-                table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply]);
-            } else {
-                table->put(key, highestScore, bestMove, ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply]);
-            }
         }
     }
 
