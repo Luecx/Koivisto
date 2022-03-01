@@ -58,6 +58,7 @@ class moveGen {
     Move            searched[MAX_QUIET]     = {0};
     int             quietScores[MAX_QUIET]  = {0};
     int             noisyScores[MAX_NOISY]  = {0};
+    int             noisySee[MAX_NOISY]     = {0};
     int             quietSize;
     int             noisySize;
     int             goodNoisyCount;
@@ -80,7 +81,9 @@ class moveGen {
     int             m_mode;
     
 
-    public: 
+    public:
+    int lastSee;
+
     void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq = 0);
     Move next();
     void addNoisy(Move m);
