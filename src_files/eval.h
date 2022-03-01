@@ -78,11 +78,11 @@ struct Evaluator {
     
     int kingSquareIndex( bb::Square kingSquare, bb::Color kingColor);
     
-    int index( bb::PieceType pieceType,
-               bb::Color pieceColor,
-               bb::Square square,
-               bb::Color view,
-               bb::Square kingSquare);
+    [[nodiscard]] int index( bb::PieceType pieceType,
+                             bb::Color pieceColor,
+                             bb::Square square,
+                             bb::Color view,
+                             bb::Square kingSquare);
     
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,
@@ -102,7 +102,7 @@ struct Evaluator {
     
     void resetAccumulator(Board* board, bb::Color color);
     
-    int evaluate(bb::Color activePlayer, Board* board = nullptr);
+    [[nodiscard]] int evaluate(bb::Color activePlayer, Board* board = nullptr);
 } __attribute__((aligned(128)));
 }    // namespace nn
 

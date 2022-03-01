@@ -28,11 +28,11 @@ class Book {
     public:
     Book() = default;
 
-    void   open(std::string_view path);
+    void                 open(std::string_view path);
 
-    Move   probe(Board&) const;
+    [[nodiscard]] Move   probe(Board&) const;
 
-    size_t size() const { return entries.size(); }
+    [[nodiscard]] size_t size() const { return entries.size(); }
 
     bool   enabled = false;
 

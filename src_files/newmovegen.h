@@ -81,19 +81,20 @@ class moveGen {
     
 
     public: 
-    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq = 0);
-    Move next();
-    void addNoisy(Move m);
-    void addQuiet(Move m);
-    Move nextNoisy();
-    Move nextQuiet();
-    void addSearched(Move m);
-    void generateNoisy();
-    void generateQuiet();
-    void generateEvasions();
-    void updateHistory(int weight);
-    void skip();
-    bool shouldSkip();
+    void               init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode,
+                            Square threatSquare, U64 checkerSq = 0);
+    [[nodiscard]] Move next();
+    void               addNoisy(Move m);
+    void               addQuiet(Move m);
+    [[nodiscard]] Move nextNoisy();
+    [[nodiscard]] Move nextQuiet();
+    void               addSearched(Move m);
+    void               generateNoisy();
+    void               generateQuiet();
+    void               generateEvasions();
+    void               updateHistory(int weight);
+    void               skip();
+    bool               shouldSkip();
 };
 
 #endif

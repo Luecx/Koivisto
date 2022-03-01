@@ -199,58 +199,58 @@ extern U64 seed;
 extern U64  ALL_HASHES[N_PIECES][N_SQUARES];
 
 extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
-inline Rank rankIndex(Square square_index) {
+[[nodiscard]] inline Rank rankIndex(Square square_index) {
     return square_index >> 3;
 }
 
-inline File fileIndex(Square square_index) {
+[[nodiscard]] inline File fileIndex(Square square_index) {
     return square_index & 7;
 }
 
-inline Square squareIndex(Rank rank, File file) {
+[[nodiscard]] inline Square squareIndex(Rank rank, File file) {
     return 8 * rank + file;
 }
 
-inline Square squareIndex(std::string& str) {
+[[nodiscard]] inline Square squareIndex(std::string& str) {
     Rank r = str.at(1) - '1';
     File f = toupper(str.at(0)) - 'A';
     
     return squareIndex(r, f);
 }
 
-inline Diagonal diagonalIndex(const Square& square_index) {
+[[nodiscard]] inline Diagonal diagonalIndex(const Square& square_index) {
     return 7 + rankIndex(square_index) - fileIndex(square_index);
 }
 
-inline AntiDiagonal antiDiagonalIndex(const Square& square_index) {
+[[nodiscard]] inline AntiDiagonal antiDiagonalIndex(const Square& square_index) {
     return rankIndex(square_index) + fileIndex(square_index);
 }
 
-inline Diagonal diagonalIndex(Rank rank, File file) {
+[[nodiscard]] inline Diagonal diagonalIndex(Rank rank, File file) {
     return 7 + rank - file;
 }
 
-inline AntiDiagonal antiDiagonalIndex(Rank rank, File file) {
+[[nodiscard]] inline AntiDiagonal antiDiagonalIndex(Rank rank, File file) {
     return rank + file;
 }
 
-inline Square mirrorVertically(Square square){
+[[nodiscard]] inline Square mirrorVertically(Square square){
     return square ^ 56;
 }
 
-inline Square mirrorHorizontally(Square square){
+[[nodiscard]] inline Square mirrorHorizontally(Square square){
     return square ^ 7;
 }
 
-inline Color getPieceColor(Piece p) {
+[[nodiscard]] inline Color getPieceColor(Piece p) {
     return p & 0x8;
 }
 
-inline PieceType getPieceType(Piece p) {
+[[nodiscard]] inline PieceType getPieceType(Piece p) {
     return p & 0x7;
 }
 
-inline Piece getPiece(Color c, PieceType pt) {
+[[nodiscard]] inline Piece getPiece(Color c, PieceType pt) {
     return c * 8 + pt;
 }
 
@@ -290,46 +290,46 @@ inline void unsetBit(U64& number, Square index) {
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
  */
-inline bool getBit(U64 number, Square index) {
+[[nodiscard]] inline bool getBit(U64 number, Square index) {
     return ((number >> index) & 1ULL) == 1;
 }
 
-inline U64 shiftWest(U64 b) {
+[[nodiscard]] inline U64 shiftWest(U64 b) {
     b = (b >> 1) & NOT_FILE_H_BB;
     return b;
 }
 
-inline U64 shiftEast(U64 b) {
+[[nodiscard]] inline U64 shiftEast(U64 b) {
     b = (b << 1) & NOT_FILE_A_BB;
     return b;
 }
 
-inline U64 shiftSouth(U64 b) {
+[[nodiscard]] inline U64 shiftSouth(U64 b) {
     b = b >> 8;
     return b;
 }
 
-inline U64 shiftNorth(U64 b) {
+[[nodiscard]] inline U64 shiftNorth(U64 b) {
     b = b << 8;
     return b;
 }
 
-inline U64 shiftNorthEast(U64 b) {
+[[nodiscard]] inline U64 shiftNorthEast(U64 b) {
     b = (b << 9) & NOT_FILE_A_BB;
     return b;
 }
 
-inline U64 shiftSouthEast(U64 b) {
+[[nodiscard]] inline U64 shiftSouthEast(U64 b) {
     b = (b >> 7) & NOT_FILE_A_BB;
     return b;
 }
 
-inline U64 shiftSouthWest(U64 b) {
+[[nodiscard]] inline U64 shiftSouthWest(U64 b) {
     b = (b >> 9) & NOT_FILE_H_BB;
     return b;
 }
 
-inline U64 shiftNorthWest(U64 b) {
+[[nodiscard]] inline U64 shiftNorthWest(U64 b) {
     b = (b << 7) & NOT_FILE_H_BB;
     return b;
 }
@@ -339,7 +339,7 @@ inline U64 shiftNorthWest(U64 b) {
  * @param number
  * @return
  */
-inline U64 lsbIsolation(U64 number) {
+[[nodiscard]] inline U64 lsbIsolation(U64 number) {
     return number & -number;
 }
 
@@ -348,7 +348,7 @@ inline U64 lsbIsolation(U64 number) {
  * @param number
  * @return
  */
-inline U64 lsbReset(U64 number) {
+[[nodiscard]] inline U64 lsbReset(U64 number) {
     return number & (number - 1);
 }
 
@@ -356,28 +356,28 @@ inline U64 lsbReset(U64 number) {
  * prints the given bitboard as a bitmap to the standard output stream
  * @param bb
  */
-void       printBitmap(U64 bb);
+void                     printBitmap(U64 bb);
 
 /**
  * initialises the zobrist keys to random values
  */
-void       generateZobristKeys();
+void                     generateZobristKeys();
 
 /**
  * generates some relevant data
  */
-void       generateData();
+void                     generateData();
 
 /**
  * initiates the entries for fancy magic bitboard and zobrist hash values.
  */
-void       init();
+void                     init();
 
 /**
  * generates a random Bitboard
  * @return
  */
-U64        randU64();
+[[nodiscard]] U64        randU64();
 
 /**
  * returns the zobrist hash key for a given piece on a given square.
@@ -385,7 +385,7 @@ U64        randU64();
  * @param sq
  * @return
  */
-inline U64 getHash(Piece piece, Square sq) {
+[[nodiscard]] inline U64 getHash(Piece piece, Square sq) {
     return ALL_HASHES[piece][sq];
 }
 
@@ -394,7 +394,7 @@ inline U64 getHash(Piece piece, Square sq) {
  * @param bb
  * @return
  */
-inline Square bitscanForward(U64 bb) {
+[[nodiscard]] inline Square bitscanForward(U64 bb) {
     //    UCI_ASSERT(bb != 0);
     return __builtin_ctzll(bb);
 }
@@ -404,7 +404,7 @@ inline Square bitscanForward(U64 bb) {
  * @param bb
  * @return
  */
-inline Square bitscanReverse(U64 bb) {
+[[nodiscard]] inline Square bitscanReverse(U64 bb) {
     //    UCI_ASSERT(bb != 0);
     return __builtin_clzll(bb) ^ 63;
 }
@@ -414,7 +414,7 @@ inline Square bitscanReverse(U64 bb) {
  * @param bb
  * @return
  */
-inline int bitCount(U64 bb) {
+[[nodiscard]] inline int bitCount(U64 bb) {
     return __builtin_popcountll(bb);
     //        int counter = 0;
     //        while(bb != 0){
@@ -432,7 +432,7 @@ inline int bitCount(U64 bb) {
  * @param r2
  * @return
  */
-inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) {
+[[nodiscard]] inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) {
     return std::max(std::abs(r2 - r1), std::abs(f2 - f1));
 }
 
@@ -442,7 +442,7 @@ inline int chebyshevDistance(File f1, Rank r1, File f2, Rank r2) {
  * @param sq2
  * @return
  */
-inline int chebyshevDistance(Square sq1, Square sq2) {
+[[nodiscard]] inline int chebyshevDistance(Square sq1, Square sq2) {
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);
@@ -459,7 +459,7 @@ inline int chebyshevDistance(Square sq1, Square sq2) {
  * @param r2
  * @return
  */
-inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) {
+[[nodiscard]] inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) {
     return std::max(std::abs(r2 - r1), std::abs(f2 - f1));
 }
 
@@ -469,7 +469,7 @@ inline int manhattanDistance(File f1, Rank r1, File f2, Rank r2) {
  * @param sq2
  * @return
  */
-inline int manhattanDistance(Square sq1, Square sq2) {
+[[nodiscard]] inline int manhattanDistance(Square sq1, Square sq2) {
     File fI1 = fileIndex(sq1);
     Rank rI1 = rankIndex(sq1);
     File fI2 = fileIndex(sq2);

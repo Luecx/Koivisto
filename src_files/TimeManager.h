@@ -74,7 +74,7 @@ class TimeManager {
      * returns the time elapsed since the constructor call
      * @return
      */
-    int  elapsedTime() const;
+    [[nodiscard]] int  elapsedTime() const;
 
     /**
      * stops the search. this should be considered to check if time is left
@@ -84,14 +84,14 @@ class TimeManager {
     /**
      * returns true if there is enough time left. This is used by the principal variation search.
      */
-    bool isTimeLeft(SearchData* sd = nullptr);
+    [[nodiscard]] bool isTimeLeft(SearchData* sd = nullptr);
 
     /**
      * returns true if there is enough root time. root time is used to increase the depth in between
      * iterative deepening iterations. It ensures that the search will mostly finish its iteration.
      * @return
      */
-    bool rootTimeLeft(int score);
+    [[nodiscard]] bool rootTimeLeft(int score);
 };
 
 #endif    // KOIVISTO_TIMEMANAGER_H

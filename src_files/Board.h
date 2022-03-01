@@ -168,10 +168,10 @@ class Board {
     friend std::ostream& operator<<(std::ostream& os, Board& board);
     
     // returns the fen of the current board
-    std::string fen();
+    [[nodiscard]] std::string fen();
     
     // returns the zobrist key for the current board
-    U64 zobrist();
+    [[nodiscard]] U64 zobrist();
     
     // returns true if the given player is in check.
     bool isInCheck(Color player);
@@ -182,14 +182,14 @@ class Board {
     bool isDraw();
     
     // returns the piece on a given square
-    Piece getPiece(Square sq);
+    [[nodiscard]] Piece getPiece(Square sq);
     
     // changes the active player. not that this does NOT take care of changing the zobrist which is only done
     // during the move(Move m) function.
     void changeActivePlayer();
     
     // returns the active player
-    Color getActivePlayer();
+    [[nodiscard]] Color getActivePlayer();
     
     // given a move object, does the move on the board. computes repetitions etc.
     void move(Move m);
@@ -205,59 +205,59 @@ class Board {
     
     // returns the previous move which lead to the current position.
     // this is stored within the meta information.
-    Move getPreviousMove(Depth ply = 1);
+    [[nodiscard]] Move getPreviousMove(Depth ply = 1);
     
     // computes the static exchange evaluation for a given move. used the cache if defined.
-    Score staticExchangeEvaluation(Move m);
+    [[nodiscard]] Score staticExchangeEvaluation(Move m);
     
     // returns a bitboard of all squares which attack a specific square. mainly used for see.
-    U64 attacksTo(U64 occupied, Square sq);
+    [[nodiscard]] U64 attacksTo(U64 occupied, Square sq);
     
     // returns a bitboard of all attacked squares by a given color
     template<Color attacker>
-    U64 getAttackedSquares();
+    [[nodiscard]] U64 getAttackedSquares();
     
     // returns the least value piece. mainly used for see as well.
-    U64 getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece);
+    [[nodiscard]] U64 getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece);
     
     // returns a map of all absolute pinned pieces. stores the pieces which pin other pieces inside the given bitboard.
     template<Color side>
-    U64 getPinnedPieces(U64& pinners);
+    [[nodiscard]] U64 getPinnedPieces(U64& pinners);
     
     // returns true if the given square is attacked by the attacker
     template<Color attacker>
-    bool isUnderAttack(Square sq);
+    [[nodiscard]] bool isUnderAttack(Square sq);
     
     // returns true if the given square is attacked by the attacker
-    bool isUnderAttack(Square sq, Color attacker);
+    [[nodiscard]] bool isUnderAttack(Square sq, Color attacker);
     
     // returns true if the move gives check
-    bool givesCheck(Move m);
+    [[nodiscard]] bool givesCheck(Move m);
     
     // returns true if the given move is legal. this is the only way to check if a move is legal or not.
     // no legal move generation is implemented so this is also used for perft.
-    bool isLegal(Move m);
+    [[nodiscard]] bool isLegal(Move m);
     
 
     // Checks if the move is likely pseudo-legal. Doesn't cover en-passant, etc.
-    bool isPseudoLegal(Move m);
+    [[nodiscard]] bool isPseudoLegal(Move m);
     
     // returns the castling rights for the given index. note that no square is required but an index.
     // for the indices, look at the start of Board.h
-    bool getCastlingRights(int index);
+    [[nodiscard]] bool getCastlingRights(int index);
     
     // sets the castling rights.  Note that no square is required but an index.
     // for the indices, look at the start of Board.h
     void setCastlingRights(int index, bool val);
     
     // returns how many times this position has occurred in the history of the board.
-    int getCurrentRepetitionCount();
+    [[nodiscard]] int getCurrentRepetitionCount();
     
     // returns the counter for the current 50 move rule.
-    int getCurrent50MoveRuleCount();
+    [[nodiscard]] int getCurrent50MoveRuleCount();
     
     // returns the square to which e.p. is possible.
-    Square getEnPassantSquare();
+    [[nodiscard]] Square getEnPassantSquare();
     
     // one can also set the e.p. square yet this should be avoided.
     void setEnPassantSquare(Square square);
@@ -291,7 +291,7 @@ class Board {
     template<Color color, PieceType piece_type>
     [[nodiscard]] inline U64 getPieceBB() const{return m_piecesBB[color * 8 + piece_type];}
     
-    Score evaluate();
+    [[nodiscard]] Score evaluate();
 };
 
 #endif    // CHESSCOMPUTER_BOARD_H

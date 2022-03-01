@@ -83,37 +83,37 @@ class Search {
     void cleanUp();
 
     private:
-    U64  totalNodes();
-    int  selDepth();
-    U64  tbHits();
+    [[nodiscard]] U64  totalNodes();
+    [[nodiscard]] int  selDepth();
+    [[nodiscard]] U64  tbHits();
 
     public:
-    SearchOverview overview();
-    void           enableInfoStrings();
-    void           disableInfoStrings();
+    [[nodiscard]] SearchOverview overview();
+    void                         enableInfoStrings();
+    void                         disableInfoStrings();
 
-    void           useTableBase(bool val);
-    void           clearHistory();
-    void           clearHash();
-    void           setThreads(int threads);
-    void           setHashSize(int hashSize);
-    void           stop();
+    void                         useTableBase(bool val);
+    void                         clearHistory();
+    void                         clearHash();
+    void                         setThreads(int threads);
+    void                         setHashSize(int hashSize);
+    void                         stop();
 
-    void           printInfoString(Board* b, Depth depth, Score score);
-    void           extractPV(Board* b, MoveList* mvList, Depth depth);
+    void                         printInfoString(Board* b, Depth depth, Score score);
+    void                         extractPV(Board* b, MoveList* mvList, Depth depth);
 
-    Move           bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
-    Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
-                            Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
-    Score          qSearch (Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
-    Score          probeWDL(Board* board);
-    Move           probeDTZ(Board* board);
+    Move                         bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
+    [[nodiscard]] Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
+                                          Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
+    [[nodiscard]] Score          qSearch (Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false);
+    [[nodiscard]] Score          probeWDL(Board* board);
+    [[nodiscard]] Move           probeDTZ(Board* board);
 };
 
-extern int                 RAZOR_MARGIN;
-extern int                 FUTILITY_MARGIN;
-extern int                 SE_MARGIN_STATIC;
-extern int                 LMR_DIV;
+extern int                       RAZOR_MARGIN;
+extern int                       FUTILITY_MARGIN;
+extern int                       SE_MARGIN_STATIC;
+extern int                      LMR_DIV;
 
 void initLMR();
 

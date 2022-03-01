@@ -166,7 +166,7 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * @param occupied
  * @return
  */
-inline bb::U64       lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
+[[nodiscard]] inline bb::U64       lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
     return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index]
                                                 >> (rookShifts[index]))];
 }
@@ -176,7 +176,7 @@ inline bb::U64       lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
  * It returns a bitmap with all attackable squares highlighted including those after the first
  * blockers.
  */
-inline bb::U64 lookUpRookXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
+[[nodiscard]] inline bb::U64 lookUpRookXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
     bb::U64 attacks  = lookUpRookAttacks(index, occupied);
     bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpRookAttacks(index, occupied ^ blockers);
@@ -188,7 +188,7 @@ inline bb::U64 lookUpRookXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 
  * @param occupied
  * @return
  */
-inline bb::U64 lookUpBishopAttacks(bb::Square index, bb::U64 occupied) {
+[[nodiscard]] inline bb::U64 lookUpBishopAttacks(bb::Square index, bb::U64 occupied) {
     return BISHOP_ATTACKS[index][static_cast<int>(
         (occupied & bishopMasks[index]) * bishopMagics[index] >> (bishopShifts[index]))];
 }
@@ -198,7 +198,7 @@ inline bb::U64 lookUpBishopAttacks(bb::Square index, bb::U64 occupied) {
  * It returns a bitmap with all attackable squares highlighted including those after the first
  * blockers.
  */
-inline bb::U64 lookUpBishopXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
+[[nodiscard]] inline bb::U64 lookUpBishopXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
     bb::U64 attacks  = lookUpBishopAttacks(index, occupied);
     bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpBishopAttacks(index, occupied ^ blockers);
