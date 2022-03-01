@@ -436,8 +436,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
         }
     } else {
-        if (inCheck)
+        if (inCheck) {
             staticEval = -MAX_MATE_SCORE + ply;
+            mainThreat = bitscanForward(b->getPieceBB(b->getActivePlayer(), KING));
+        }
         else {
             staticEval = b->evaluate();
         }
