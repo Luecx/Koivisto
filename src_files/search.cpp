@@ -704,7 +704,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         Score staticExchangeEval = 1;
         if (isCapture(m)) {
             staticExchangeEval = mGen->lastSee;
-            if (depth == 1 && staticExchangeEval + sd->eval[b->getActivePlayer()][ply] > beta + 400) return beta;
         }
 
         // keep track of the depth we want to extend by
@@ -1019,7 +1018,10 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // do not consider illegal moves
         if (!b->isLegal(m))
             continue;
-
+        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
+                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
+            > beta)
+            return beta;
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very
