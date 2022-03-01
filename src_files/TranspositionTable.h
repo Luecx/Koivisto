@@ -24,6 +24,7 @@
 #include "Board.h"
 #include "Move.h"
 
+#include <memory>
 #include <ostream>
 #include <stdint.h>
 
@@ -70,10 +71,10 @@ struct Entry {
 
 class TranspositionTable {
     private:
-    NodeAge m_currentAge;
-    bb::U64 m_size;
-    Entry*  m_entries;
-    bb::U64 m_mask;
+    NodeAge                  m_currentAge;
+    bb::U64                  m_size;
+    std::unique_ptr<Entry[]> m_entries;
+    bb::U64                  m_mask;
 
     void init(bb::U64 MB);
 
@@ -83,8 +84,6 @@ class TranspositionTable {
     TranspositionTable(const TranspositionTable& other) = delete;
 
     TranspositionTable& operator=(const TranspositionTable& other) = delete;
-
-    ~TranspositionTable();
 
     [[nodiscard]] Entry get(bb::U64 zobrist) const;
 
