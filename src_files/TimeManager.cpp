@@ -20,6 +20,8 @@
 #include "TimeManager.h"
 #include "UCIAssert.h"
 
+using namespace bb;
+
 TimeManager::TimeManager() {
     this->setStartTime();
 }

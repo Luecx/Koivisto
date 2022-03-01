@@ -24,6 +24,7 @@
 #include "UCIAssert.h"
 
 using namespace bb;
+using namespace move;
 
 float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,

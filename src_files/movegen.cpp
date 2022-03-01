@@ -21,6 +21,9 @@
 
 #include "attacks.h"
 
+using namespace bb;
+using namespace move;
+
 // check if all moves should be generated or only quiet moves
 enum MoveGenConfig{
     GENERATE_ALL,

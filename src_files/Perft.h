@@ -23,7 +23,7 @@
 #include "Bitboard.h"
 #include "TranspositionTable.h"
 
-[[nodiscard]] U64 perft(Board* b, int depth, bool print = true, bool d1 = true, bool hash = false, int ply = 0);
+[[nodiscard]] bb::U64 perft(Board* b, int depth, bool print = true, bool d1 = true, bool hash = false, int ply = 0);
 
 void perft_init(bool hash);
 

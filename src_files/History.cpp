@@ -18,6 +18,9 @@
  ****************************************************************************************************/
 #include "History.h"
 
+using namespace bb;
+using namespace move;
+
 int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];

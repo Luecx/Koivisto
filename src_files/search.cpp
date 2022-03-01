@@ -32,6 +32,8 @@
 #include <thread>
 
 using namespace attacks;
+using namespace bb;
+using namespace move;
 
 int  lmrReductions[256][256];
 

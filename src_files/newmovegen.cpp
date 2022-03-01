@@ -18,7 +18,12 @@
  ****************************************************************************************************/
 #include "newmovegen.h"
 #include "attacks.h"
+
 using namespace attacks;
+using namespace bb;
+using namespace move;
+
+
 static const int piece_values[6] = {
     90, 463, 474, 577, 1359, 0,
 };

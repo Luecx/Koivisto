@@ -25,27 +25,25 @@
 #include "History.h"
 #include "Move.h"
 
-using namespace move;
-using namespace bb;
 
 struct Limit {
     bool enabled = false;
 };
 
 struct DepthLimit : public Limit {
-    Depth depth;
+    bb::Depth depth;
 };
 
 struct NodeLimit : public Limit {
-    U64 nodes;
+    bb::U64 nodes;
 };
 
 struct MoveTimeLimit : public Limit {
-    U64 upper_time_bound;
+    bb::U64 upper_time_bound;
 };
 
 struct MatchTimeLimit : public Limit {
-    U64 time_to_use;
+    bb::U64 time_to_use;
 };
 
 class TimeManager {
@@ -56,17 +54,17 @@ class TimeManager {
     MatchTimeLimit match_time_limit {};
 
     bool           force_stop       {};
-    U64            start_time       {};
+    bb::U64        start_time       {};
 
     TimeManager();
 
-    void setDepthLimit(Depth depth);
+    void setDepthLimit(bb::Depth depth);
     
-    void setNodeLimit(U64 nodes);
+    void setNodeLimit(bb::U64 nodes);
     
-    void setMoveTimeLimit(U64 move_time);
+    void setMoveTimeLimit(bb::U64 move_time);
     
-    void setMatchTimeLimit(U64 time, U64 inc, int moves_to_go);
+    void setMatchTimeLimit(bb::U64 time, bb::U64 inc, int moves_to_go);
     
     void setStartTime();
 

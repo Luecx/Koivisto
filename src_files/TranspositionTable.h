@@ -27,9 +27,6 @@
 #include <ostream>
 #include <stdint.h>
 
-using namespace bb;
-using namespace std;
-using namespace move;
 
 typedef uint8_t NodeType;
 typedef uint8_t NodeAge;
@@ -44,13 +41,13 @@ struct Entry {
     //    Entry() = default;
     //    ~Entry() = default;
 
-    friend ostream& operator<<(ostream& os, const Entry& entry) {
+    friend std::ostream& operator<<(std::ostream& os, const Entry& entry) {
         os << "zobrist: " << entry.zobrist << " move: " << entry.move << " depth: " << static_cast<int>(entry.depth)
            << " type: " << static_cast<int>(entry.type) << " score: " << entry.score;
         return os;
     }
 
-    void set(U32 p_key, Score p_score, Move p_move, NodeType p_type, Depth p_depth, Score p_eval) {
+    void set(bb::U32 p_key, bb::Score p_score, move::Move p_move, NodeType p_type, bb::Depth p_depth, bb::Score p_eval) {
         this->zobrist = p_key;
         this->score   = p_score;
         this->move    = p_move;
@@ -59,29 +56,29 @@ struct Entry {
         this->eval    = p_eval;
     }
 
-    NodeAge getAge() { return getScore(move); }
+    NodeAge getAge() { return move::getScore(move); }
 
-    void setAge(NodeAge p_age) { setScore(move, p_age); }
+    void setAge(NodeAge p_age) { move::setScore(move, p_age); }
 
-    U32      zobrist;    // 32 bit
-    Move     move;       // 32 bit  (using the 8 msb for age)
-    Depth    depth;      // 8 bit
-    NodeType type;       // 8 bit
-    Score    score;      // 16 bit
-    Score    eval;  	 // 16 bit -> 112 bit = 14 byte
+    bb::U32     zobrist;    // 32 bit
+    move::Move  move;       // 32 bit  (using the 8 msb for age)
+    bb::Depth   depth;      // 8 bit
+    NodeType    type;       // 8 bit
+    bb::Score   score;      // 16 bit
+    bb::Score   eval;  	    // 16 bit -> 112 bit = 14 byte
 };
 
 class TranspositionTable {
     private:
     NodeAge m_currentAge;
-    U64     m_size;
+    bb::U64     m_size;
 
-    void init(U64 MB);
+    void init(bb::U64 MB);
 
     public:
     Entry*  m_entries;
-    U64     m_mask;
-    TranspositionTable(U64 mb);
+    bb::U64     m_mask;
+    TranspositionTable(bb::U64 mb);
 
     TranspositionTable(const TranspositionTable& other) = delete;
 
@@ -89,19 +86,19 @@ class TranspositionTable {
 
     ~TranspositionTable();
 
-    Entry get(U64 zobrist);
+    Entry get(bb::U64 zobrist);
 
-    bool put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval);
+    bool put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type, bb::Depth depth, bb::Score eval);
 
     void incrementAge();
 
-    void setSize(U64 mb);
+    void setSize(bb::U64 mb);
 
     void clear();
 
     double usage();
 
-    U64 getSize();
+    bb::U64 getSize();
 };
 
 

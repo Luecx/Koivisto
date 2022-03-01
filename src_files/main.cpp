@@ -20,11 +20,6 @@
 #include "uci.h"
 
 
-using namespace std;
-using namespace bb;
-using namespace move;
-
-
 int main(int argc, char *argv[]) {
     uci::mainloop(argc, argv);
 

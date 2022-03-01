@@ -31,6 +31,10 @@
 #include <string>
 #include <vector>
 
+using namespace bb;
+using namespace move;
+
+
 TimeManager timeManager;
 Board       board{};
 Search      searchObject;
@@ -100,7 +104,7 @@ void uci::mainloop(int argc, char* argv[]) {
     }
 
 
-    while (getline(cin, line)) {
+    while (std::getline(std::cin, line)) {
         uci::processCommand(line);
     }
 }
@@ -145,8 +149,8 @@ void uci::processCommand(std::string str) {
         if (split.size() < 5)
             return;
 
-        string name  = getValue(split, "name");
-        string value = getValue(split, "value");
+        std::string name  = getValue(split, "name");
+        std::string value = getValue(split, "value");
 
         uci::set_option(name, value);
     } else if (split.at(0) == "go") {
@@ -158,32 +162,32 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "debug") {
         uci::debug(getValue(split, "debug") == "on");
     } else if (split.at(0) == "setvalue") {
-        if (str.find("FUTILITY_MARGIN") != string::npos) {
-            FUTILITY_MARGIN = stoi(getValue(split, "FUTILITY_MARGIN"));
+        if (str.find("FUTILITY_MARGIN") != std::string::npos) {
+            FUTILITY_MARGIN = std::stoi(getValue(split, "FUTILITY_MARGIN"));
         }
-        if (str.find("RAZOR_MARGIN") != string::npos) {
-            RAZOR_MARGIN = stoi(getValue(split, "RAZOR_MARGIN"));
+        if (str.find("RAZOR_MARGIN") != std::string::npos) {
+            RAZOR_MARGIN = std::stoi(getValue(split, "RAZOR_MARGIN"));
         }
-        if (str.find("SE_MARGIN_STATIC") != string::npos) {
-            SE_MARGIN_STATIC = stoi(getValue(split, "SE_MARGIN_STATIC"));
+        if (str.find("SE_MARGIN_STATIC") != std::string::npos) {
+            SE_MARGIN_STATIC = std::stoi(getValue(split, "SE_MARGIN_STATIC"));
         }
-        if (str.find("LMR_DIV") != string::npos) {
-            LMR_DIV = stoi(getValue(split, "LMR_DIV"));
+        if (str.find("LMR_DIV") != std::string::npos) {
+            LMR_DIV = std::stoi(getValue(split, "LMR_DIV"));
             initLMR();
         }
     } else if (split.at(0) == "position") {
         auto fenPos  = str.find("fen");
         auto movePos = str.find("moves");
 
-        string moves {};
-        if (movePos != string::npos) {
+        std::string moves {};
+        if (movePos != std::string::npos) {
             moves = str.substr(movePos + 5);
             moves = trim(moves);
         }
 
-        if (fenPos != string::npos) {
-            string fen = str.substr(fenPos + 3);
-            fen        = trim(fen);
+        if (fenPos != std::string::npos) {
+            std::string fen = str.substr(fenPos + 3);
+            fen             = trim(fen);
             uci::position_fen(fen, moves);
         } else {
             uci::position_startpos(moves);
@@ -300,12 +304,12 @@ void uci::position_fen(std::string fen, std::string moves) {
 
     if (moves.empty())
         return;
-    std::vector<string> mv {};
+    std::vector<std::string> mv {};
     splitString(moves, mv, ' ');
 
-    for (string s : mv) {
-        string str1 = s.substr(0, 2);
-        string str2 = s.substr(2, 4);
+    for (std::string s : mv) {
+        std::string str1 = s.substr(0, 2);
+        std::string str2 = s.substr(2, 4);
         Square s1   = squareIndex(str1);
         Square s2   = squareIndex(str2);
 
@@ -442,12 +446,12 @@ void uci::bench() {
  * @param split
  * @param str
  */
-void uci::go(const vector<std::string>& split, const string& str) {
+void uci::go(const std::vector<std::string>& split, const std::string& str) {
     uci::stop();
     
     // check for perft first since it will not be working with the remaining options
-    if (str.find("perft") != string::npos) {
-        uci::go_perft(stoi(getValue(split, "perft")), str.find("hash") != string::npos);
+    if (str.find("perft") != std::string::npos) {
+        uci::go_perft(stoi(getValue(split, "perft")), str.find("hash") != std::string::npos);
         return;
     }
     
@@ -455,16 +459,16 @@ void uci::go(const vector<std::string>& split, const string& str) {
     timeManager = TimeManager();
     // parse match time.
     // check if anything like wtime, btime, winc or binc is given
-    if (   str.find("wtime") != string::npos
-        || str.find("btime") != string::npos
-        || str.find("winc")  != string::npos
-        || str.find("binc")  != string::npos
-        || str.find("binc")  != string::npos) {
-        string wtime_str = getValue(split, "wtime");
-        string btime_str = getValue(split, "btime");
-        string wincr_str = getValue(split, "winc");
-        string bincr_str = getValue(split, "binc");
-        string mvtog_str = getValue(split, "movestogo");
+    if (   str.find("wtime") != std::string::npos
+        || str.find("btime") != std::string::npos
+        || str.find("winc")  != std::string::npos
+        || str.find("binc")  != std::string::npos
+        || str.find("binc")  != std::string::npos) {
+        std::string wtime_str = getValue(split, "wtime");
+        std::string btime_str = getValue(split, "btime");
+        std::string wincr_str = getValue(split, "winc");
+        std::string bincr_str = getValue(split, "binc");
+        std::string mvtog_str = getValue(split, "movestogo");
         
         U64 wtime = (wtime_str.empty()) ? 60000000 : stoi(wtime_str);
         U64 btime = (btime_str.empty()) ? 60000000 : stoi(btime_str);
@@ -476,19 +480,19 @@ void uci::go(const vector<std::string>& split, const string& str) {
                                       board.getActivePlayer() == WHITE ? wincr : bincr,
                                       mvtog);
     }
-    if (str.find("depth") != string::npos) {
+    if (str.find("depth") != std::string::npos) {
         timeManager.setDepthLimit(stoi(getValue(split, "depth")));
     }
-    if (str.find("nodes") != string::npos) {
+    if (str.find("nodes") != std::string::npos) {
         timeManager.setNodeLimit (stoi(getValue(split, "nodes")));
     }
-    if (str.find("movetime") != string::npos) {
+    if (str.find("movetime") != std::string::npos) {
         timeManager.setMoveTimeLimit(stoi(getValue(split, "movetime")));
     }
-    if (str.find("infinite") != string::npos) {
+    if (str.find("infinite") != std::string::npos) {
         // don't do anything since infinite is assumed as default
     }
-    if (str.find("mate") != string::npos) {
+    if (str.find("mate") != std::string::npos) {
         // don't do anything since we don't support it
     }
     // start the search
