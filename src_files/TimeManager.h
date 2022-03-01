@@ -82,14 +82,14 @@ class TimeManager {
     /**
      * returns true if there is enough time left. This is used by the principal variation search.
      */
-    [[nodiscard]] bool isTimeLeft(SearchData* sd = nullptr);
+    [[nodiscard]] bool isTimeLeft(SearchData* sd = nullptr) const;
 
     /**
      * returns true if there is enough root time. root time is used to increase the depth in between
      * iterative deepening iterations. It ensures that the search will mostly finish its iteration.
      * @return
      */
-    [[nodiscard]] bool rootTimeLeft(int score);
+    [[nodiscard]] bool rootTimeLeft(int score) const;
 };
 
 #endif    // KOIVISTO_TIMEMANAGER_H

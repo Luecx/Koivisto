@@ -83,12 +83,12 @@ class Search {
     void cleanUp();
 
     private:
-    [[nodiscard]] bb::U64  totalNodes();
-    [[nodiscard]] int      selDepth();
-    [[nodiscard]] bb::U64  tbHits();
+    [[nodiscard]] bb::U64  totalNodes() const;
+    [[nodiscard]] int      selDepth() const;
+    [[nodiscard]] bb::U64  tbHits() const;
 
     public:
-    [[nodiscard]] SearchOverview overview();
+    [[nodiscard]] SearchOverview overview() const;
     void                         enableInfoStrings();
     void                         disableInfoStrings();
 

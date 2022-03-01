@@ -98,7 +98,7 @@ struct BoardStatus {
         return os;
     }
     
-    inline BoardStatus copy() {
+    inline BoardStatus copy() const {
         BoardStatus b {zobrist, enPassantTarget, castlingRights, fiftyMoveCounter, repetitionCounter, moveCounter,
                        move};
         return b;
@@ -166,28 +166,28 @@ class Board {
     friend std::ostream& operator<<(std::ostream& os, Board& board);
     
     // returns the fen of the current board
-    [[nodiscard]] std::string fen();
+    [[nodiscard]] std::string fen() const;
     
     // returns the zobrist key for the current board
-    [[nodiscard]] bb::U64 zobrist();
+    [[nodiscard]] bb::U64 zobrist() const;
     
     // returns true if the given player is in check.
-    bool isInCheck(bb::Color player);
+    bool isInCheck(bb::Color player) const;
     
     // returns true if the game is a draw by threefold or 50-move rule.
     // does not consider stalemates. this is handled during search as this requires information about each possible
     // move.
-    bool isDraw();
+    bool isDraw() const;
     
     // returns the piece on a given square
-    [[nodiscard]] bb::Piece getPiece(bb::Square sq);
+    [[nodiscard]] bb::Piece getPiece(bb::Square sq) const;
     
     // changes the active player. not that this does NOT take care of changing the zobrist which is only done
     // during the move(move::Move m) function.
     void changeActivePlayer();
     
     // returns the active player
-    [[nodiscard]] bb::Color getActivePlayer();
+    [[nodiscard]] bb::Color getActivePlayer() const;
     
     // given a move object, does the move on the board. computes repetitions etc.
     void move(move::Move m);
@@ -203,31 +203,31 @@ class Board {
     
     // returns the previous move which lead to the current position.
     // this is stored within the meta information.
-    [[nodiscard]] move::Move getPreviousMove(bb::Depth ply = 1);
+    [[nodiscard]] move::Move getPreviousMove(bb::Depth ply = 1) const;
     
     // computes the static exchange evaluation for a given move. used the cache if defined.
-    [[nodiscard]] bb::Score staticExchangeEvaluation(move::Move m);
+    [[nodiscard]] bb::Score staticExchangeEvaluation(move::Move m) const;
     
     // returns a bitboard of all squares which attack a specific square. mainly used for see.
-    [[nodiscard]] bb::U64 attacksTo(bb::U64 occupied, bb::Square sq);
+    [[nodiscard]] bb::U64 attacksTo(bb::U64 occupied, bb::Square sq) const;
     
     // returns a bitboard of all attacked squares by a given color
     template<bb::Color attacker>
-    [[nodiscard]] bb::U64 getAttackedSquares();
+    [[nodiscard]] bb::U64 getAttackedSquares() const;
     
     // returns the least value piece. mainly used for see as well.
-    [[nodiscard]] bb::U64 getLeastValuablePiece(bb::U64 attadef, bb::Score bySide, bb::Piece& piece);
+    [[nodiscard]] bb::U64 getLeastValuablePiece(bb::U64 attadef, bb::Score bySide, bb::Piece& piece) const;
     
     // returns a map of all absolute pinned pieces. stores the pieces which pin other pieces inside the given bitboard.
     template<bb::Color side>
-    [[nodiscard]] bb::U64 getPinnedPieces(bb::U64& pinners);
+    [[nodiscard]] bb::U64 getPinnedPieces(bb::U64& pinners) const;
     
     // returns true if the given square is attacked by the attacker
     template<bb::Color attacker>
-    [[nodiscard]] bool isUnderAttack(bb::Square sq);
+    [[nodiscard]] bool isUnderAttack(bb::Square sq) const;
     
     // returns true if the given square is attacked by the attacker
-    [[nodiscard]] bool isUnderAttack(bb::Square sq, bb::Color attacker);
+    [[nodiscard]] bool isUnderAttack(bb::Square sq, bb::Color attacker) const;
     
     // returns true if the move gives check
     [[nodiscard]] bool givesCheck(move::Move m);
@@ -238,33 +238,36 @@ class Board {
     
 
     // Checks if the move is likely pseudo-legal. Doesn't cover en-passant, etc.
-    [[nodiscard]] bool isPseudoLegal(move::Move m);
+    [[nodiscard]] bool isPseudoLegal(move::Move m) const;
     
     // returns the castling rights for the given index. note that no square is required but an index.
     // for the indices, look at the start of Board.h
-    [[nodiscard]] bool getCastlingRights(int index);
+    [[nodiscard]] bool getCastlingRights(int index) const;
     
     // sets the castling rights.  Note that no square is required but an index.
     // for the indices, look at the start of Board.h
     void setCastlingRights(int index, bool val);
     
     // returns how many times this position has occurred in the history of the board.
-    [[nodiscard]] int getCurrentRepetitionCount();
+    [[nodiscard]] int getCurrentRepetitionCount() const;
     
     // returns the counter for the current 50 move rule.
-    [[nodiscard]] int getCurrent50MoveRuleCount();
+    [[nodiscard]] int getCurrent50MoveRuleCount() const;
     
     // returns the square to which e.p. is possible.
-    [[nodiscard]] bb::Square getEnPassantSquare();
+    [[nodiscard]] bb::Square getEnPassantSquare() const;
     
     // one can also set the e.p. square yet this should be avoided.
     void setEnPassantSquare(bb::Square square);
     
     // returns the entire meta information about the board.
-    [[nodiscard]] inline BoardStatus* getBoardStatus(){ return &m_boardStatusHistory.back();}
+    [[nodiscard]] inline BoardStatus* getBoardStatus() { return &m_boardStatusHistory.back();}
+    
+    // returns the entire meta information about the board.
+    [[nodiscard]] inline const BoardStatus* getBoardStatus() const { return &m_boardStatusHistory.back();}
     
     // returns all occupied squares.
-    [[nodiscard]] inline bb::U64 getOccupiedBB(){return m_occupiedBB;}
+    [[nodiscard]] inline bb::U64 getOccupiedBB() const {return m_occupiedBB;}
     
     // returns all occupied squares by both teams (arrays with 2 entries).
     [[nodiscard]] inline const bb::U64* getTeamOccupiedBB() const {return m_teamOccupiedBB;}
@@ -284,10 +287,10 @@ class Board {
     
     // does the same as getPieceBB() above yet this only returns a single bitboard.
     template<bb::Color color>
-    [[nodiscard]] inline bb::U64 getPieceBB(bb::Piece piece) const{return m_piecesBB[color * 8 + piece];}
+    [[nodiscard]] inline bb::U64 getPieceBB(bb::Piece piece) const {return m_piecesBB[color * 8 + piece];}
     
     template<bb::Color color, bb::PieceType piece_type>
-    [[nodiscard]] inline bb::U64 getPieceBB() const{return m_piecesBB[color * 8 + piece_type];}
+    [[nodiscard]] inline bb::U64 getPieceBB() const {return m_piecesBB[color * 8 + piece_type];}
     
     [[nodiscard]] bb::Score evaluate();
 };

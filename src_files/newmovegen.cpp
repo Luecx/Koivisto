@@ -531,6 +531,6 @@ void moveGen::skip() {
     m_skip = true;
 }
 
-bool moveGen::shouldSkip() {
+bool moveGen::shouldSkip() const {
     return m_skip;
 }

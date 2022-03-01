@@ -187,7 +187,7 @@ Board::Board(Board* board) {
 /**
  * Returns a FEN-representation of the board object which can be used for other engines, and debugging.
  */
-std::string Board::fen() {
+std::string Board::fen() const {
     std::stringstream ss;
     
     // we do it in the same way we read a fen.
@@ -261,12 +261,12 @@ std::string Board::fen() {
  * Returns the zobrist key for the current board.
  * The zobrist-key is stored within the meta information of the board.
  */
-U64 Board::zobrist() { return getBoardStatus()->zobrist; }
+U64 Board::zobrist() const { return getBoardStatus()->zobrist; }
 
 /**
  * Returns true if the given player is in check by the opponent.
  */
-bool Board::isInCheck(Color player) {
+bool Board::isInCheck(Color player) const {
     // we do this by casting rays from the king position and checking if an opponent piece is on those rays
     // which could attack the given ray.
     if (player == WHITE) {
@@ -282,14 +282,14 @@ bool Board::isInCheck(Color player) {
  * which is only given during the search.
  * @return
  */
-bool Board::isDraw() { return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 2; }
+bool Board::isDraw() const { return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 2; }
 
 /**
  * returns the piece which occupies the board at the given index
  * @param sq
  * @return
  */
-Piece Board::getPiece(Square sq) { return m_pieceBoard[sq]; }
+Piece Board::getPiece(Square sq) const { return m_pieceBoard[sq]; }
 
 /**
  * Sets the piece on the given square.
@@ -631,7 +631,7 @@ void Board::undoMove_null() {
  * returns the Move which lead to the current position.
  * @return
  */
-Move Board::getPreviousMove(Depth ply) {
+Move Board::getPreviousMove(Depth ply) const {
     if (m_boardStatusHistory.size() <= ply)
         return 0;
     return m_boardStatusHistory[m_boardStatusHistory.size() - ply].move;
@@ -643,7 +643,7 @@ Move Board::getPreviousMove(Depth ply) {
  * @param attacker
  * @return
  */
-template<Color attacker> U64 Board::getAttackedSquares() {
+template<Color attacker> U64 Board::getAttackedSquares() const {
     U64 att = ZERO;
     
     if (attacker == WHITE) {
@@ -696,7 +696,7 @@ template<Color attacker> U64 Board::getAttackedSquares() {
  * @param piece
  * @return
  */
-U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) {
+U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) const {
     for (piece = PAWN + bySide * 8; piece <= KING + bySide * 8; piece += 1) {
         U64 subset = attadef & m_piecesBB[piece];
         if (subset)
@@ -711,7 +711,7 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) {
  * @param m
  * @return
  */
-Score Board::staticExchangeEvaluation(Move m) {
+Score Board::staticExchangeEvaluation(Move m) const {
 #ifdef SEE_CACHE_SIZE
     U64 zob = zobrist();
     if (seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key == (zob ^ m)) {
@@ -786,7 +786,7 @@ Score Board::staticExchangeEvaluation(Move m) {
  * @param sq
  * @return
  */
-U64 Board::attacksTo(U64 p_occupied, Square sq) {
+U64 Board::attacksTo(U64 p_occupied, Square sq) const {
     U64 sqBB = ONE << sq;
     U64 knights, kings, bishopsQueens, rooksQueens;
     knights     = m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT];
@@ -807,7 +807,7 @@ U64 Board::attacksTo(U64 p_occupied, Square sq) {
  * @param attacker
  * @return
  */
-template<Color attacker> bool Board::isUnderAttack(Square square) {
+template<Color attacker> bool Board::isUnderAttack(Square square) const {
     U64 sqBB = ONE << square;
     
     if constexpr (attacker == WHITE) {
@@ -835,7 +835,7 @@ template<Color attacker> bool Board::isUnderAttack(Square square) {
  * @param attacker
  * @return
  */
-bool Board::isUnderAttack(Square square, Color attacker) {
+bool Board::isUnderAttack(Square square, Color attacker) const {
     if (attacker == WHITE) {
         return isUnderAttack<WHITE>(square);
     } else {
@@ -1063,7 +1063,7 @@ bool Board::isLegal(Move m) {
  * @param m
  * @return
  */
-bool Board::isPseudoLegal(Move m){
+bool Board::isPseudoLegal(Move m) const {
     if (!m)
         return false;
     
@@ -1144,7 +1144,7 @@ bool Board::isPseudoLegal(Move m){
  * @param index
  * @return
  */
-bool Board::getCastlingRights(int index) { return getBit(getBoardStatus()->castlingRights, index); }
+bool Board::getCastlingRights(int index) const { return getBit(getBoardStatus()->castlingRights, index); }
 
 /**
  * enables/disables castling.
@@ -1189,20 +1189,20 @@ void Board::computeNewRepetition() {
  * Returns the amount this position has occurred before.
  * @return
  */
-int Board::getCurrentRepetitionCount() { return getBoardStatus()->repetitionCounter; }
+int Board::getCurrentRepetitionCount() const { return getBoardStatus()->repetitionCounter; }
 
 /**
  * returns the 50-move counter which is used for draw detection.
  * @return
  */
-int Board::getCurrent50MoveRuleCount() { return getBoardStatus()->fiftyMoveCounter / 2; }
+int Board::getCurrent50MoveRuleCount() const { return getBoardStatus()->fiftyMoveCounter / 2; }
 
 /*
  * returns the square to which e.p. is possible.
  * if e.p. is not possible, -1 is returned.
  * @return
  */
-Square Board::getEnPassantSquare() {
+Square Board::getEnPassantSquare() const {
     U64 ePT = getBoardStatus()->enPassantTarget;
     if (ePT == 0) {
         return -1;
@@ -1218,7 +1218,7 @@ Square Board::getEnPassantSquare() {
  * returns the active player which has to do the next move.
  * @return
  */
-Color Board::getActivePlayer() { return m_activePlayer; }
+Color Board::getActivePlayer() const { return m_activePlayer; }
 
 /**
  * writes the board object to the given stream
@@ -1260,7 +1260,7 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
  * @param pinners
  * @return
  */
-template<Color side> U64 Board::getPinnedPieces(U64& pinners) {
+template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
     U64 pinned = 0;
     
     Square kingSq = bitscanForward(getPieceBB(side, KING));

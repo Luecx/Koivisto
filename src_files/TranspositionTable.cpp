@@ -48,7 +48,7 @@ void TranspositionTable::init(bb::U64 MB) {
  * returns the maximum amount of entries that can be stored.
  * @return
  */
-bb::U64 TranspositionTable::getSize() { return m_size; }
+bb::U64 TranspositionTable::getSize() const { return m_size; }
 
 /**
  * constructor which inits the table with a maximum size given by mb.
@@ -79,7 +79,7 @@ void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_s
  * returns a floating value for the amount of values used.
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
-double TranspositionTable::usage() {
+double TranspositionTable::usage() const {
     double used = 0;
     // Thank you Andrew for this idea :)
     for (bb::U64 i = 0; i < 100; i++) {
@@ -97,7 +97,7 @@ double TranspositionTable::usage() {
  * @param zobrist
  * @return
  */
-Entry TranspositionTable::get(bb::U64 zobrist) {
+Entry TranspositionTable::get(bb::U64 zobrist) const {
     bb::U64 index = zobrist & m_mask;
 
     Entry enP = m_entries[index];

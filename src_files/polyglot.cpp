@@ -52,7 +52,7 @@ static uint64_t get_piece_key(bb::Piece p, bb::Square sq)
     return keys_64[64 * convert_piece(p) + sq];
 }
 
-static uint64_t hash_pieces(Board& board)
+static uint64_t hash_pieces(const Board& board)
 {
     uint64_t hash = 0;
     for(int i = 0;i < 64;i++)
@@ -65,7 +65,7 @@ static uint64_t hash_pieces(Board& board)
     return hash;
 }
 
-static uint64_t hash_castle(Board& board)
+static uint64_t hash_castle(const Board& board)
 {
     constexpr int offset = 768;
     uint64_t hash = 0;
@@ -85,7 +85,7 @@ static uint64_t hash_castle(Board& board)
     return hash;
 }
 
-static uint64_t hash_enpassant(Board& board)
+static uint64_t hash_enpassant(const Board& board)
 {
     uint64_t hash = 0;
     constexpr int offset = 772;
@@ -96,7 +96,7 @@ static uint64_t hash_enpassant(Board& board)
     return hash;
 }
 
-static uint64_t hash_turn(Board& board)
+static uint64_t hash_turn(const Board& board)
 {
     if (board.getActivePlayer() == bb::WHITE)
         return keys_64[780];
@@ -104,12 +104,12 @@ static uint64_t hash_turn(Board& board)
     return 0;
 }
 
-static uint64_t make_key(Board& position)
+static uint64_t make_key(const Board& position)
 {
     return hash_pieces(position) ^ hash_castle(position) ^ hash_turn(position) ^ hash_enpassant(position);
 }
 
-static move::Move decode_move(Board& board, uint16_t move)
+static move::Move decode_move(const Board& board, uint16_t move)
 {
     if (!move)
         return 0;
@@ -196,7 +196,7 @@ namespace polyglot {
         }
     }
 
-    move::Move Book::probe(Board& board) const
+    move::Move Book::probe(const Board& board) const
     {
         uint64_t key = make_key(board);
         uint16_t best = 0;

@@ -30,7 +30,7 @@ class Book {
 
     void                       open(std::string_view path);
 
-    [[nodiscard]] move::Move   probe(Board&) const;
+    [[nodiscard]] move::Move   probe(const Board&) const;
 
     [[nodiscard]] size_t       size() const { return entries.size(); }
 

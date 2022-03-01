@@ -21,7 +21,7 @@
 using namespace bb;
 using namespace move;
 
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
+int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) const {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
@@ -44,7 +44,7 @@ void SearchData::setKiller(Move move, Depth ply, Color color) {
 /*
  * Is killer?
  */
-int SearchData::isKiller(Move move, Depth ply, Color color) {
+int SearchData::isKiller(Move move, Depth ply, Color color) const {
     if (sameMove(move, killer[color][ply][0]))
         return 2;
     return sameMove(move, killer[color][ply][1]);
@@ -60,7 +60,7 @@ void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
 /*
  * Is improving
  */
-bool SearchData::isImproving(Score ev, Color color, Depth ply) {
+bool SearchData::isImproving(Score ev, Color color, Depth ply) const {
     if (ply >= 2) {
         return (ev > eval[color][ply - 2]);
     } else {

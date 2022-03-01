@@ -1093,28 +1093,28 @@ void Search::cleanUp() {
         }
     }
 }
-U64 Search::totalNodes() {
+U64 Search::totalNodes() const {
     U64 tn = 0;
     for (int i = 0; i < threadCount; i++) {
         tn += tds[i]->nodes;
     }
     return tn;
 }
-int Search::selDepth() {
+int Search::selDepth() const {
     int maxSd = 0;
     for (int i = 0; i < threadCount; i++) {
         maxSd = std::max(tds[i]->seldepth, maxSd);
     }
     return maxSd;
 }
-U64 Search::tbHits() {
+U64 Search::tbHits() const {
     int th = 0;
     for (int i = 0; i < threadCount; i++) {
         th += tds[i]->tbhits;
     }
     return th;
 }
-SearchOverview Search::overview() { return this->searchOverview; }
+SearchOverview Search::overview() const { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
 void           Search::disableInfoStrings() { this->printInfo = false; }
 void           Search::useTableBase(bool val) { this->useTB = val; }

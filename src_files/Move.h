@@ -187,12 +187,12 @@ class MoveList {
     
     public:
     void                     swap(int i1, int i2);
-    [[nodiscard]] move::Move getMove(int index);
+    [[nodiscard]] move::Move getMove(int index) const;
     void                     clear();
     void                     add(move::Move move);
     void                     scoreMove(int index, MoveScore score);
-    [[nodiscard]] MoveScore  getScore(int index);
-    void                     printMoveBits();
+    [[nodiscard]] MoveScore  getScore(int index) const;
+    void                     printMoveBits() const;
     [[nodiscard]] int        getSize() const;
 };
 }    // namespace move
