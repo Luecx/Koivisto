@@ -53,9 +53,9 @@ class moveGen {
     private:
     int             stage;
 
-    Move            quiets[MAX_QUIET]       = {0};
-    Move            noisy[MAX_NOISY]        = {0};
-    Move            searched[MAX_QUIET]     = {0};
+    move::Move      quiets[MAX_QUIET]       = {0};
+    move::Move      noisy[MAX_NOISY]        = {0};
+    move::Move      searched[MAX_QUIET]     = {0};
     int             quietScores[MAX_QUIET]  = {0};
     int             noisyScores[MAX_NOISY]  = {0};
     int             quietSize;
@@ -68,32 +68,33 @@ class moveGen {
     bool            m_skip;
     Board*          m_board;
     SearchData*     m_sd;
-    Depth           m_ply;
-    Move            m_hashMove;
-    Move            m_killer1;
-    Move            m_killer2;
-    Move            m_previous;
-    Move            m_followup;
-    Square          m_threatSquare;
-    U64             m_checkerSq;
-    Color           c;
+    bb::Depth       m_ply;
+    move::Move      m_hashMove;
+    move::Move      m_killer1;
+    move::Move      m_killer2;
+    move::Move      m_previous;
+    move::Move      m_followup;
+    bb::Square      m_threatSquare;
+    bb::U64         m_checkerSq;
+    bb::Color       c;
     int             m_mode;
     
 
     public: 
-    void init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq = 0);
-    Move next();
-    void addNoisy(Move m);
-    void addQuiet(Move m);
-    Move nextNoisy();
-    Move nextQuiet();
-    void addSearched(Move m);
-    void generateNoisy();
-    void generateQuiet();
-    void generateEvasions();
-    void updateHistory(int weight);
-    void skip();
-    bool shouldSkip();
+    void                     init(SearchData* sd, Board* b, bb::Depth ply, move::Move hashMove, move::Move previous,
+                                  move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
+    [[nodiscard]] move::Move next();
+    void                     addNoisy(move::Move m);
+    void                     addQuiet(move::Move m);
+    [[nodiscard]] move::Move nextNoisy();
+    [[nodiscard]] move::Move nextQuiet();
+    void                     addSearched(move::Move m);
+    void                     generateNoisy();
+    void                     generateQuiet();
+    void                     generateEvasions();
+    void                     updateHistory(int weight);
+    void                     skip();
+    bool                     shouldSkip() const;
 };
 
 #endif

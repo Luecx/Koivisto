@@ -32,6 +32,8 @@
 #include <thread>
 
 using namespace attacks;
+using namespace bb;
+using namespace move;
 
 int  lmrReductions[256][256];
 
@@ -725,7 +727,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && (   en.type == CUT_NODE
                 || en.type == PV_NODE)) {
             // compute beta cut value
-            betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
+            betaCut = std::min(static_cast<int>(en.score - SE_MARGIN_STATIC - depth * 2), static_cast<int>(beta));
             // get the score from recursive call
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
@@ -1091,28 +1093,28 @@ void Search::cleanUp() {
         }
     }
 }
-U64 Search::totalNodes() {
+U64 Search::totalNodes() const {
     U64 tn = 0;
     for (int i = 0; i < threadCount; i++) {
         tn += tds[i]->nodes;
     }
     return tn;
 }
-int Search::selDepth() {
+int Search::selDepth() const {
     int maxSd = 0;
     for (int i = 0; i < threadCount; i++) {
         maxSd = std::max(tds[i]->seldepth, maxSd);
     }
     return maxSd;
 }
-U64 Search::tbHits() {
+U64 Search::tbHits() const {
     int th = 0;
     for (int i = 0; i < threadCount; i++) {
         th += tds[i]->tbhits;
     }
     return th;
 }
-SearchOverview Search::overview() { return this->searchOverview; }
+SearchOverview Search::overview() const { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
 void           Search::disableInfoStrings() { this->printInfo = false; }
 void           Search::useTableBase(bool val) { this->useTB = val; }
@@ -1130,7 +1132,7 @@ void           Search::clearHistory() {
 }
 void Search::clearHash() { this->table->clear(); }
 void Search::setThreads(int threads) {
-    int processor_count = (int) std::thread::hardware_concurrency();
+    int processor_count = static_cast<int>(std::thread::hardware_concurrency());
     if (processor_count == 0)
         processor_count = MAX_THREADS;
     if (processor_count < threads)

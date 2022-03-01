@@ -28,13 +28,13 @@ class Book {
     public:
     Book() = default;
 
-    void   open(std::string_view path);
+    void                       open(std::string_view path);
 
-    Move   probe(Board&) const;
+    [[nodiscard]] move::Move   probe(const Board&) const;
 
-    size_t size() const { return entries.size(); }
+    [[nodiscard]] size_t       size() const { return entries.size(); }
 
-    bool   enabled = false;
+    bool                       enabled = false;
 
     private:
     struct Entry {

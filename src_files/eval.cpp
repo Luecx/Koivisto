@@ -35,8 +35,8 @@ alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
 #define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
-typedef __m512i avx_register_type_16;
-typedef __m512i avx_register_type_32;
+using avx_register_type_16 = __m512i;
+using avx_register_type_32 = __m512i;
 #define avx_madd_epi16(a, b) (_mm512_madd_epi16(a, b))
 #define avx_add_epi32(a, b)  (_mm512_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm512_sub_epi32(a, b))
@@ -44,8 +44,8 @@ typedef __m512i avx_register_type_32;
 #define avx_sub_epi16(a, b)  (_mm512_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm512_max_epi16(a, b))
 #elif defined(__AVX2__) || defined(__AVX__)
-typedef __m256i avx_register_type_16;
-typedef __m256i avx_register_type_32;
+using avx_register_type_16 = __m256i;
+using avx_register_type_32 = __m256i;
 #define avx_madd_epi16(a, b) (_mm256_madd_epi16(a, b))
 #define avx_add_epi32(a, b)  (_mm256_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm256_sub_epi32(a, b))
@@ -53,8 +53,8 @@ typedef __m256i avx_register_type_32;
 #define avx_sub_epi16(a, b)  (_mm256_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm256_max_epi16(a, b))
 #elif defined(__SSE2__)
-typedef __m128i avx_register_type_16;
-typedef __m128i avx_register_type_32;
+using avx_register_type_16 = __m128i ;
+using avx_register_type_32 = __m128i ;
 #define avx_madd_epi16(a, b) (_mm_madd_epi16(a, b))
 #define avx_add_epi32(a, b)  (_mm_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm_sub_epi32(a, b))
@@ -62,8 +62,8 @@ typedef __m128i avx_register_type_32;
 #define avx_sub_epi16(a, b)  (_mm_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm_max_epi16(a, b))
 #elif defined(__ARM_NEON)
-typedef int16x8_t avx_register_type_16;
-typedef int32x4_t avx_register_type_32;
+using avx_register_type_16 = int16x8_t;
+using avx_register_type_32 = int32x4_t;
 #define avx_madd_epi16(a, b) (vpaddq_s32(vmull_s16(vget_low_s16(a),  vget_low_s16(b)), vmull_high_s16(a, b)))
 #define avx_add_epi32(a, b)  (vaddq_s32(a, b))
 #define avx_sub_epi32(a, b)  (vsubq_s32(a, b))
@@ -124,12 +124,12 @@ int nn::Evaluator::index(bb::PieceType pieceType,
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSquareFactor = 64 * 6 * 2;
 
-    const bool kingSide = fileIndex(kingSquare) > 3;
+    const bool kingSide = bb::fileIndex(kingSquare) > 3;
     const int ksIndex = kingSquareIndex(kingSquare, view);
-    Square relativeSquare = view == WHITE ? square : mirrorVertically(square);
+    bb::Square relativeSquare = view == bb::WHITE ? square : bb::mirrorVertically(square);
 
     if (kingSide) {
-        relativeSquare = mirrorHorizontally(relativeSquare);
+        relativeSquare = bb::mirrorHorizontally(relativeSquare);
     }
 
     return relativeSquare
@@ -143,7 +143,7 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
     // requires manual reset
     if (relativeKingSquare > 63) return 0;
 
-    constexpr int indices[N_SQUARES]{
+    constexpr int indices[bb::N_SQUARES]{
             0, 1, 2, 3, 3, 2, 1, 0,
             4, 5, 6, 7, 7, 6, 5, 4,
             8, 9, 10, 11, 11, 10, 9, 8,
@@ -154,8 +154,8 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
             14, 14, 15, 15, 15, 15, 14, 14,
     };
 
-    if (kingColor == BLACK) {
-        relativeKingSquare = mirrorVertically(relativeKingSquare);
+    if (kingColor == bb::BLACK) {
+        relativeKingSquare = bb::mirrorVertically(relativeKingSquare);
     }
     return indices[relativeKingSquare];
 }
@@ -166,8 +166,8 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType,
                                      bb::Square square,
                                      bb::Square wKingSquare,
                                      bb::Square bKingSquare) {
-    setPieceOnSquareAccumulator<value>(WHITE, pieceType, pieceColor, square, wKingSquare);
-    setPieceOnSquareAccumulator<value>(BLACK, pieceType, pieceColor, square, bKingSquare);
+    setPieceOnSquareAccumulator<value>(bb::WHITE, pieceType, pieceColor, square, wKingSquare);
+    setPieceOnSquareAccumulator<value>(bb::BLACK, pieceType, pieceColor, square, bKingSquare);
 }
 
 
@@ -199,24 +199,24 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
 }
 
 void nn::Evaluator::reset(Board *board) {
-    resetAccumulator(board, WHITE);
-    resetAccumulator(board, BLACK);
+    resetAccumulator(board, bb::WHITE);
+    resetAccumulator(board, bb::BLACK);
 }
 
 void nn::Evaluator::resetAccumulator(Board *board, bb::Color color) {
     std::memcpy(history.back().summation[color], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
 
-    Square kingSquare = bitscanForward(board->getPieceBB(color, KING));
+    bb::Square kingSquare = bb::bitscanForward(board->getPieceBB(color, bb::KING));
 
-    for (Color c : {WHITE, BLACK}) {
-        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING}) {
-            U64 bb = board->getPieceBB(c, pt);
+    for (bb::Color c : {bb::WHITE, bb::BLACK}) {
+        for (bb::PieceType pt : {bb::PAWN, bb::KNIGHT, bb::BISHOP, bb::ROOK, bb::QUEEN, bb::KING}) {
+            bb::U64 bb = board->getPieceBB(c, pt);
             while (bb) {
-                Square s = bitscanForward(bb);
+                bb::Square s = bb::bitscanForward(bb);
 
                 setPieceOnSquareAccumulator<true>(color, pt, c, s, kingSquare);
 
-                bb = lsbReset(bb);
+                bb = bb::lsbReset(bb);
             }
         }
     }

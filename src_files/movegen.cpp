@@ -21,6 +21,9 @@
 
 #include "attacks.h"
 
+using namespace bb;
+using namespace move;
+
 // check if all moves should be generated or only quiet moves
 enum MoveGenConfig{
     GENERATE_ALL,
@@ -83,7 +86,7 @@ void generatePawnMoves(
     constexpr Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
     constexpr Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
     
-    const U64 opponents         =  b->getTeamOccupiedBB<them>();
+    const U64 opponents         = b->getTeamOccupiedBB<them>();
     
     const U64 pawns             = b->getPieceBB<us>(PAWN);
     const U64 occupied          = b->getOccupiedBB();

@@ -17,18 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "Bitboard.h"
-#include "Board.h"
-#include "Move.h"
-#include "Verification.h"
 #include "uci.h"
-
-#include <iomanip>
-#include "movegen.h"
-
-using namespace std;
-using namespace bb;
-using namespace move;
 
 
 int main(int argc, char *argv[]) {

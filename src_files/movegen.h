@@ -24,9 +24,9 @@
 #include "History.h"
 #include "Move.h"
 
-void generateMoves          (Board* b, MoveList* mv, Move hashMove = 0, SearchData* sd = nullptr, Depth ply = 0);
-void generateNonQuietMoves  (Board* b, MoveList* mv, Move hashMove = 0, SearchData* sd = nullptr, Depth ply = 0, bool inCheck = 0);
-void generatePerftMoves     (Board* b, MoveList* mv);
+void generateMoves          (Board* b, move::MoveList* mv, move::Move hashMove = 0, SearchData* sd = nullptr, bb::Depth ply = 0);
+void generateNonQuietMoves  (Board* b, move::MoveList* mv, move::Move hashMove = 0, SearchData* sd = nullptr, bb::Depth ply = 0, bool inCheck = 0);
+void generatePerftMoves     (Board* b, move::MoveList* mv);
 
 
 #endif    // KOIVISTO_MOVEGEN_H
