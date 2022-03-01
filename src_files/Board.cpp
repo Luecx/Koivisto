@@ -185,11 +185,6 @@ Board::Board(Board* board) {
 }
 
 /**
- * For the sake of completeness, we provide a destructor which might be filled in the future.
- */
-Board::~Board() {}
-
-/**
  * Returns a FEN-representation of the board object which can be used for other engines, and debugging.
  */
 std::string Board::fen() {

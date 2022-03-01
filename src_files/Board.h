@@ -160,7 +160,7 @@ class Board {
     Board(Board* board);
     
     // for the sake of completeness, we define a destructor which doesnt do anything.
-    virtual ~Board();
+    ~Board() = default;
     
     // appending the board object to a stream. especially useful for debugging aswell as for uci->print
     friend std::ostream& operator<<(std::ostream& os, Board& board);
