@@ -28,8 +28,8 @@
 #include <stdint.h>
 
 
-typedef uint8_t NodeType;
-typedef uint8_t NodeAge;
+using NodeType = uint8_t;
+using NodeAge = uint8_t;
 
 constexpr NodeType PV_NODE  = 0;
 constexpr NodeType CUT_NODE = 1;

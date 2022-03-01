@@ -27,22 +27,22 @@
 #include <string>
 
 namespace bb {
-typedef uint64_t U64;
-typedef uint32_t U32;
-typedef int8_t   Square;
-typedef int8_t   Diagonal;
-typedef int8_t   AntiDiagonal;
-typedef int8_t   Direction;
+using U64 = uint64_t;
+using U32 = uint32_t;
+using Square = int8_t;
+using Diagonal = int8_t;
+using AntiDiagonal = int8_t;
+using Direction = int8_t;
 
-typedef int8_t  File;
-typedef int8_t  Rank;
-typedef int8_t  Piece;
-typedef int8_t  PieceType;
-typedef bool    Color;
+using File = int8_t;
+using Rank = int8_t;
+using Piece = int8_t;
+using PieceType = int8_t;
+using Color = bool;
 
-typedef uint8_t Depth;
-typedef int16_t Score;
-typedef int32_t EvalScore;
+using Depth = uint8_t;
+using Score = int16_t;
+using EvalScore = int32_t;
 
 
 enum Plies{

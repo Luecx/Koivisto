@@ -35,8 +35,8 @@ alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
 #define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
-typedef __m512i avx_register_type_16;
-typedef __m512i avx_register_type_32;
+using avx_register_type_16 = __m512i;
+using avx_register_type_32 = __m512i;
 #define avx_madd_epi16(a, b) (_mm512_madd_epi16(a, b))
 #define avx_add_epi32(a, b)  (_mm512_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm512_sub_epi32(a, b))
@@ -44,8 +44,8 @@ typedef __m512i avx_register_type_32;
 #define avx_sub_epi16(a, b)  (_mm512_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm512_max_epi16(a, b))
 #elif defined(__AVX2__) || defined(__AVX__)
-typedef __m256i avx_register_type_16;
-typedef __m256i avx_register_type_32;
+using avx_register_type_16 = __m256i;
+using avx_register_type_32 = __m256i;
 #define avx_madd_epi16(a, b) (_mm256_madd_epi16(a, b))
 #define avx_add_epi32(a, b)  (_mm256_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm256_sub_epi32(a, b))
@@ -53,8 +53,8 @@ typedef __m256i avx_register_type_32;
 #define avx_sub_epi16(a, b)  (_mm256_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm256_max_epi16(a, b))
 #elif defined(__SSE2__)
-typedef __m128i avx_register_type_16;
-typedef __m128i avx_register_type_32;
+using avx_register_type_16 = __m128i ;
+using avx_register_type_32 = __m128i ;
 #define avx_madd_epi16(a, b) (_mm_madd_epi16(a, b))
 #define avx_add_epi32(a, b)  (_mm_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm_sub_epi32(a, b))
@@ -62,8 +62,8 @@ typedef __m128i avx_register_type_32;
 #define avx_sub_epi16(a, b)  (_mm_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm_max_epi16(a, b))
 #elif defined(__ARM_NEON)
-typedef int16x8_t avx_register_type_16;
-typedef int32x4_t avx_register_type_32;
+using avx_register_type_16 = int16x8_t;
+using avx_register_type_32 = int32x4_t;
 #define avx_madd_epi16(a, b) (vpaddq_s32(vmull_s16(vget_low_s16(a),  vget_low_s16(b)), vmull_high_s16(a, b)))
 #define avx_add_epi32(a, b)  (vaddq_s32(a, b))
 #define avx_sub_epi32(a, b)  (vsubq_s32(a, b))

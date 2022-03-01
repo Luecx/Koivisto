@@ -45,9 +45,9 @@ namespace move {
  * +-------------------------------------
  */
 
-typedef uint32_t Move;
-typedef uint8_t  MoveType;
-typedef uint32_t MoveScore;
+using Move = uint32_t;
+using MoveType = uint8_t;
+using MoveScore = uint32_t;
 
 enum MoveTypes{
     QUIET                    = 0,
