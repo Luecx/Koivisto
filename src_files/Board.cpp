@@ -1107,8 +1107,8 @@ bool Board::isPseudoLegal(Move m) const {
         // skip knights as there are no rays which need to be checked
         // for sliding pieces we only need to validate there is no piece on the squares in between the from and to
         // square
-        case BISHOP:;
-        case ROOK:;
+        case BISHOP:
+        case ROOK:
         case QUEEN:
             // if there is a piece in the way, this move is invalid
             if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
