@@ -71,13 +71,13 @@ struct Entry {
 class TranspositionTable {
     private:
     NodeAge m_currentAge;
-    bb::U64     m_size;
+    bb::U64 m_size;
+    Entry*  m_entries;
+    bb::U64 m_mask;
 
     void init(bb::U64 MB);
 
     public:
-    Entry*  m_entries;
-    bb::U64     m_mask;
     TranspositionTable(bb::U64 mb);
 
     TranspositionTable(const TranspositionTable& other) = delete;
@@ -99,6 +99,8 @@ class TranspositionTable {
     double usage() const;
 
     bb::U64 getSize() const;
+
+    void prefetch(const bb::U64 zobrist) const;
 };
 
 

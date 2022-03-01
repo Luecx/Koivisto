@@ -580,7 +580,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 continue;
 
             b->move(m);
-            __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
+            table->prefetch(b->getBoardStatus()->zobrist);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
@@ -807,7 +807,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // doing the move
         b->move(m);
         
-        __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
+        table->prefetch(b->getBoardStatus()->zobrist);
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
@@ -1041,7 +1041,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         
 
         b->move(m);
-        __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
+        table->prefetch(b->getBoardStatus()->zobrist);
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 

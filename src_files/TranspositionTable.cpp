@@ -159,6 +159,10 @@ void TranspositionTable::incrementAge() {
     }
 }
 
+void TranspositionTable::prefetch(const bb::U64 zobrist) const {
+    __builtin_prefetch(&m_entries[zobrist & m_mask]);
+}
+
 /**
  * returns the maximum TT size in MB
  * @return
