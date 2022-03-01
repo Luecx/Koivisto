@@ -688,7 +688,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // ***************************************************************************************
             if (moveDepth <= 5 + quiet * 3
                 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
                 continue;
         }
 
@@ -704,8 +704,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 1;
-        if (isCapture(m) && (getCapturedPieceType(m)) <= (getMovingPieceType(m))) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
+        if (isCapture(m)) {
+            staticExchangeEval = mGen->lastSee;
+            if (depth == 1 && staticExchangeEval + sd->eval[b->getActivePlayer()][ply] > beta + 400) return beta;
         }
 
         // keep track of the depth we want to extend by
@@ -1021,19 +1022,13 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (!b->isLegal(m))
             continue;
 
-        // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
-            > beta)
-            return beta;
-
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
         Score see =
-            (!inCheck && (isCapture(m) || isPromotion(m))) ? b->staticExchangeEvaluation(m) : 0;
+            (!inCheck && (isCapture(m) || isPromotion(m))) ? mGen->lastSee : 0;
         if (see < 0)
             continue;
         if (see + stand_pat > beta + 200)

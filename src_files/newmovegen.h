@@ -58,6 +58,7 @@ class moveGen {
     move::Move      searched[MAX_QUIET]     = {0};
     int             quietScores[MAX_QUIET]  = {0};
     int             noisyScores[MAX_NOISY]  = {0};
+    int             noisySee[MAX_NOISY]     = {0};
     int             quietSize;
     int             noisySize;
     int             goodNoisyCount;
@@ -80,7 +81,8 @@ class moveGen {
     int             m_mode;
     
 
-    public: 
+    public:
+    int lastSee;
     void                     init(SearchData* sd, Board* b, bb::Depth ply, move::Move hashMove, move::Move previous,
                                   move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
     [[nodiscard]] move::Move next();
