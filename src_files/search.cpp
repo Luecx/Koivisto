@@ -217,12 +217,12 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         this->table->incrementAge();
 
         // for each thread, we will reset the thread data like node counts, tablebase hits etc.
-        for (int i = 0; i < threadCount; i++) {
+        for (size_t i = 0; i < tds.size(); i++) {
             // reseting the thread data
-            this->tds[i]->threadID = i;
-            this->tds[i]->tbhits   = 0;
-            this->tds[i]->nodes    = 0;
-            this->tds[i]->seldepth = 0;
+            this->tds[i].threadID = i;
+            this->tds[i].tbhits   = 0;
+            this->tds[i].nodes    = 0;
+            this->tds[i].seldepth = 0;
         }
 
         // we will call this function for the other threads which will skip this part and jump
@@ -233,7 +233,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     }
 
     // the thread id starts at 0 for the first thread
-    ThreadData* td = this->tds[threadId];
+    ThreadData* td = &this->tds[threadId];
     // initialise the score outside the loop tp keep track of it during iterations.
     // This is required for aspiration windows
     Score score = 0;
@@ -1080,54 +1080,47 @@ void Search::init(int hashsize) {
     table = new TranspositionTable(hashsize);
     initLMR();
 
-    tds[0] = new ThreadData();
+    setThreads(1);
 }
 void Search::cleanUp() {
     delete table;
     table = nullptr;
 
-    for (int i = 0; i < MAX_THREADS; i++) {
-        if (tds[i] != nullptr) {
-            delete tds[i];
-            tds[i] = nullptr;
-        }
-    }
+    tds.clear();
 }
 U64 Search::totalNodes() const {
-    U64 tn = 0;
-    for (int i = 0; i < threadCount; i++) {
-        tn += tds[i]->nodes;
+    U64 total = 0;
+    for (const auto &td : tds) {
+        total += td.nodes;
     }
-    return tn;
+    return total;
 }
 int Search::selDepth() const {
     int maxSd = 0;
-    for (int i = 0; i < threadCount; i++) {
-        maxSd = std::max(tds[i]->seldepth, maxSd);
+    for (const auto &td : tds) {
+        maxSd = std::max(td.seldepth, maxSd);
     }
     return maxSd;
 }
 U64 Search::tbHits() const {
-    int th = 0;
-    for (int i = 0; i < threadCount; i++) {
-        th += tds[i]->tbhits;
+    int total = 0;
+    for (const auto &td : tds) {
+        total += td.tbhits;
     }
-    return th;
+    return total;
 }
 SearchOverview Search::overview() const { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
 void           Search::disableInfoStrings() { this->printInfo = false; }
 void           Search::useTableBase(bool val) { this->useTB = val; }
 void           Search::clearHistory() {
-    for (int i = 0; i < threadCount; i++) {
-        if(this->tds[i] != nullptr) {
-            memset(&this->tds[i]->searchData.th[0][0][0], 0, 2*64*4096*4);
-            memset(&this->tds[i]->searchData.captureHistory[0][0], 0, 2*4096*4);
-            memset(&this->tds[i]->searchData.cmh[0][0][0], 0, 384*2*384*4);
-            memset(&this->tds[i]->searchData.fmh[0][0][0], 0, 384*2*384*4);
-            memset(&this->tds[i]->searchData.killer[0][0][0], 0, 2*257*2*4);
-            memset(&this->tds[i]->searchData.maxImprovement[0][0], 0, 64*64*4); 
-        }
+    for (auto &td : tds) {
+        memset(&td.searchData.th, 0, 2*64*4096*4);
+        memset(&td.searchData.captureHistory, 0, 2*4096*4);
+        memset(&td.searchData.cmh, 0, 384*2*384*4);
+        memset(&td.searchData.fmh, 0, 384*2*384*4);
+        memset(&td.searchData.killer, 0, 2*257*2*4);
+        memset(&td.searchData.maxImprovement, 0, 64*64*4);
     }
 }
 void Search::clearHash() { this->table->clear(); }
@@ -1142,11 +1135,9 @@ void Search::setThreads(int threads) {
     if (threads > MAX_THREADS)
         threads = MAX_THREADS;
     threadCount = threads;
+    tds.clear();
     for (int i = 0; i < threadCount; i++) {
-        if (tds[i] != nullptr){
-            delete tds[i];
-        }
-        tds[i] = new ThreadData(i);
+        tds.emplace_back();
     }
 }
 void Search::setHashSize(int hashSize) {
