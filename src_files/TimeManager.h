@@ -20,6 +20,7 @@
 #ifndef KOIVISTO_TIMEMANAGER_H
 #define KOIVISTO_TIMEMANAGER_H
 
+#include "Bitboard.h"
 #include "Board.h"
 #include "History.h"
 #include "Move.h"

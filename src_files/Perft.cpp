@@ -19,6 +19,7 @@
 #include "Perft.h"
 
 #include "UCIAssert.h"
+#include "Move.h"
 #include "movegen.h"
 
 using namespace std;

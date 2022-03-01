@@ -28,6 +28,8 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <string>
+#include <vector>
 
 TimeManager timeManager;
 Board       board{};
