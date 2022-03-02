@@ -56,7 +56,7 @@ struct Entry {
         this->eval    = p_eval;
     }
 
-    NodeAge getAge() const { return move::getScore(move); }
+    [[nodiscard]] NodeAge getAge() const { return move::getScore(move); }
 
     void setAge(NodeAge p_age) { move::setScore(move, p_age); }
 
@@ -86,7 +86,7 @@ class TranspositionTable {
 
     ~TranspositionTable();
 
-    Entry get(bb::U64 zobrist) const;
+    [[nodiscard]] Entry get(bb::U64 zobrist) const;
 
     bool put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type, bb::Depth depth, bb::Score eval);
 
@@ -96,9 +96,9 @@ class TranspositionTable {
 
     void clear();
 
-    double usage() const;
+    [[nodiscard]] double usage() const;
 
-    bb::U64 getSize() const;
+    [[nodiscard]] bb::U64 getSize() const;
 
     void prefetch(const bb::U64 zobrist) const;
 };

@@ -98,7 +98,7 @@ struct BoardStatus {
         return os;
     }
     
-    inline BoardStatus copy() const {
+    [[nodiscard]] inline BoardStatus copy() const {
         BoardStatus b {zobrist, enPassantTarget, castlingRights, fiftyMoveCounter, repetitionCounter, moveCounter,
                        move};
         return b;
