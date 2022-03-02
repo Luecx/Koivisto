@@ -136,7 +136,7 @@ void uci::processCommand(std::string str) {
     str = trim(str);
 
     // next we need to split the input by spaces.
-    std::vector<std::string> split {};
+    std::vector<std::string> split;
     splitString(str, split, ' ');
 
     if (split.at(0) == "ucinewgame") {
@@ -179,7 +179,7 @@ void uci::processCommand(std::string str) {
         auto fenPos  = str.find("fen");
         auto movePos = str.find("moves");
 
-        std::string moves {};
+        std::string moves;
         if (movePos != std::string::npos) {
             moves = str.substr(movePos + 5);
             moves = trim(moves);
@@ -304,7 +304,7 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
 
     if (moves.empty())
         return;
-    std::vector<std::string> mv {};
+    std::vector<std::string> mv;
     splitString(moves, mv, ' ');
 
     for (std::string s : mv) {

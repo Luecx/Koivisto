@@ -61,7 +61,7 @@ Board::Board(const std::string& fen) {
     this->m_boardStatusHistory.push_back(boardStatus);
     
     // using some string utilties defined in Util.h, we split the fen into parts.
-    std::vector<std::string> split {};
+    std::vector<std::string> split;
     std::string              str {fen};
     str = trim(str);
     findAndReplaceAll(str, "  ", " ");

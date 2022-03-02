@@ -79,7 +79,7 @@ void move::printMoveBits(Move move, bool bitInfo) {
  * @return
  */
 std::string move::toString(const Move& move) {
-    std::string res {};
+    std::string res;
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
     res.append(bb::SQUARE_IDENTIFIER[getSquareTo(move)]);
     if (isPromotion(move)) {
