@@ -20,6 +20,8 @@
 #include "TimeManager.h"
 #include "UCIAssert.h"
 
+using namespace bb;
+
 TimeManager::TimeManager() {
     this->setStartTime();
 }
@@ -77,7 +79,7 @@ void TimeManager::stopSearch() {
     force_stop = true;
 }
 
-bool TimeManager::isTimeLeft(SearchData* sd) {
+bool TimeManager::isTimeLeft(SearchData* sd) const {
     // stop the search if requested
     if (force_stop)
         return false;
@@ -100,7 +102,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) {
     return true;
 }
 
-bool TimeManager::rootTimeLeft(int score) {
+bool TimeManager::rootTimeLeft(int score) const {
     // stop the search if requested
     if (force_stop)
         return false;

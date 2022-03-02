@@ -25,8 +25,8 @@
 using namespace bb;
 
 
-bb::U64 attacks::ROOK_ATTACKS  [bb::N_SQUARES][4096]{};
-bb::U64 attacks::BISHOP_ATTACKS[bb::N_SQUARES][ 512]{};
+U64 attacks::ROOK_ATTACKS  [N_SQUARES][4096]{};
+U64 attacks::BISHOP_ATTACKS[N_SQUARES][ 512]{};
 
 U64 populateMask(U64 mask, U64 index) {
     U64    res = 0;
@@ -70,7 +70,7 @@ void attacks::init() {
 
 
 
-bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
+U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     U64              res {0};
     
     static const U64 topBottom = RANK_1_BB | RANK_8_BB;
@@ -117,14 +117,14 @@ bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ)
     }
 }
 
-bb::U64 attacks::generateRookAttacks(bb::Square square, bb::U64 occupied) {
+U64 attacks::generateRookAttacks(Square square, U64 occupied) {
     return   generateSlidingAttacks(square, NORTH, occupied)
            | generateSlidingAttacks(square, EAST , occupied)
            | generateSlidingAttacks(square, WEST , occupied)
            | generateSlidingAttacks(square, SOUTH, occupied);
 }
 
-bb::U64 attacks::generateBishopAttacks(bb::Square square, bb::U64 occupied) {
+U64 attacks::generateBishopAttacks(Square square, U64 occupied) {
     return   generateSlidingAttacks(square, NORTH_WEST, occupied)
            | generateSlidingAttacks(square, NORTH_EAST, occupied)
            | generateSlidingAttacks(square, SOUTH_WEST, occupied)

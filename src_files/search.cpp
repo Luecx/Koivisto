@@ -32,6 +32,8 @@
 #include <thread>
 
 using namespace attacks;
+using namespace bb;
+using namespace move;
 
 int  lmrReductions[256][256];
 
@@ -686,7 +688,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // ***************************************************************************************
             if (moveDepth <= 5 + quiet * 3
                 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
                 continue;
         }
 
@@ -702,8 +704,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = 1;
-        if (isCapture(m) && (getCapturedPieceType(m)) <= (getMovingPieceType(m))) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
+        if (isCapture(m)) {
+            staticExchangeEval = mGen->lastSee;
+            if (depth == 1 && staticExchangeEval + sd->eval[b->getActivePlayer()][ply] > beta + 400) return beta;
         }
 
         // keep track of the depth we want to extend by
@@ -725,7 +728,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && (   en.type == CUT_NODE
                 || en.type == PV_NODE)) {
             // compute beta cut value
-            betaCut = std::min((int)(en.score - SE_MARGIN_STATIC - depth * 2), (int)beta);
+            betaCut = std::min(static_cast<int>(en.score - SE_MARGIN_STATIC - depth * 2), static_cast<int>(beta));
             // get the score from recursive call
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
@@ -1019,19 +1022,13 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (!b->isLegal(m))
             continue;
 
-        // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
-            > beta)
-            return beta;
-
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
         Score see =
-            (!inCheck && (isCapture(m) || isPromotion(m))) ? b->staticExchangeEvaluation(m) : 0;
+            (!inCheck && (isCapture(m) || isPromotion(m))) ? mGen->lastSee : 0;
         if (see < 0)
             continue;
         if (see + stand_pat > beta + 200)
@@ -1091,28 +1088,28 @@ void Search::cleanUp() {
         }
     }
 }
-U64 Search::totalNodes() {
+U64 Search::totalNodes() const {
     U64 tn = 0;
     for (int i = 0; i < threadCount; i++) {
         tn += tds[i]->nodes;
     }
     return tn;
 }
-int Search::selDepth() {
+int Search::selDepth() const {
     int maxSd = 0;
     for (int i = 0; i < threadCount; i++) {
         maxSd = std::max(tds[i]->seldepth, maxSd);
     }
     return maxSd;
 }
-U64 Search::tbHits() {
+U64 Search::tbHits() const {
     int th = 0;
     for (int i = 0; i < threadCount; i++) {
         th += tds[i]->tbhits;
     }
     return th;
 }
-SearchOverview Search::overview() { return this->searchOverview; }
+SearchOverview Search::overview() const { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
 void           Search::disableInfoStrings() { this->printInfo = false; }
 void           Search::useTableBase(bool val) { this->useTB = val; }
@@ -1130,7 +1127,7 @@ void           Search::clearHistory() {
 }
 void Search::clearHash() { this->table->clear(); }
 void Search::setThreads(int threads) {
-    int processor_count = (int) std::thread::hardware_concurrency();
+    int processor_count = static_cast<int>(std::thread::hardware_concurrency());
     if (processor_count == 0)
         processor_count = MAX_THREADS;
     if (processor_count < threads)

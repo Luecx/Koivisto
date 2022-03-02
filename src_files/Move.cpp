@@ -28,27 +28,27 @@ using namespace move;
 void move::printMoveBits(Move move, bool bitInfo) {
     std::cout << " ";
     for (int i = 0; i < 8; i++) {
-        std::cout << (bool) ((move >> (31 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (31 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (23 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (23 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (19 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (19 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 4; i++) {
-        std::cout << (bool) ((move >> (15 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (15 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 6; i++) {
-        std::cout << (bool) ((move >> (11 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (11 - i)) & 1UL);
     }
     std::cout << " ";
     for (int i = 0; i < 6; i++) {
-        std::cout << (bool) ((move >> (5 - i)) & 1UL);
+        std::cout << static_cast<bool>((move >> (5 - i)) & 1UL);
     }
     
     if (bitInfo) {
@@ -108,7 +108,7 @@ void MoveList::swap(int i1, int i2) {
  * @param index
  * @return
  */
-move::Move MoveList::getMove(int index) {
+move::Move MoveList::getMove(int index) const {
     return moves[index];
 }
 
@@ -146,14 +146,14 @@ void MoveList::scoreMove(int index, MoveScore score) {
 /**
  *
  */
-MoveScore MoveList::getScore(int index) {
+MoveScore MoveList::getScore(int index) const {
     return scores[index];
 }
 
 /**
  * prints the bits of all the moves
  */
-void MoveList::printMoveBits() {
+void MoveList::printMoveBits() const {
     for (int i = 0; i < this->size; i++) {
         move::printMoveBits(getMove(i), false);
     }
