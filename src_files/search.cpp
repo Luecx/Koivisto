@@ -799,6 +799,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
+            if (sd->targetReached && ply == 0 && sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] > sd->spentEffort[getSquareFrom(hashMove)][getSquareTo(hashMove)] / 10) 
+                lmr = 0; 
         }
 
         // doing the move
