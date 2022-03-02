@@ -35,7 +35,7 @@ float phaseValues[N_PIECE_TYPES] {
  * will be used. This might crash if the given fen is illegal in its structure. e.g. not all rows/columns specified.
  * @param fen
  */
-Board::Board(std::string fen) {
+Board::Board(const std::string& fen) {
     // first we set all piece occupancies to zero.
     for (int i = 0; i < N_PIECES; i++) {
         m_piecesBB[i] = 0;

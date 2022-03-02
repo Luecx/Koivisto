@@ -211,7 +211,7 @@ extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
     return 8 * rank + file;
 }
 
-[[nodiscard]] inline Square squareIndex(std::string& str) {
+[[nodiscard]] inline Square squareIndex(const std::string& str) {
     Rank r = str.at(1) - '1';
     File f = toupper(str.at(0)) - 'A';
     

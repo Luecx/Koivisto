@@ -154,7 +154,7 @@ class Board {
     public:
     // the default constructor uses a fen-representation of the board. if nothing is specified, the starting position
     // will be used
-    Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    Board(const std::string& fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     
     // instead of providing the fen, we can directly clone a board object.
     Board(Board* board);
