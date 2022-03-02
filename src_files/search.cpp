@@ -961,6 +961,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     U64         key        = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
+    Move        hashMove   = 0;
 
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
@@ -973,6 +974,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // ***********************************************************************************************
 
     if (en.zobrist == key >> 32) {
+        hashMove = isCapture(en.move) ? en.move : 0;
         if (en.type == PV_NODE) {
             return en.score;
         } else if (en.type == CUT_NODE) {
@@ -1007,7 +1009,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     
     moveGen* mGen   = &td->generators[ply];
-    mGen->init(sd, b, ply, 0, b->getPreviousMove(), b->getPreviousMove(2), Q_SEARCH + inCheck, 0);
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2), Q_SEARCH + inCheck, 0);
 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
