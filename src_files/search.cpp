@@ -375,7 +375,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         //  standard implementation in Koi
         //   Weiss now also has a similar implementation to Koi, but its unclear if it is better than
         //   standard either.
-
         return 8 - (td->nodes & MASK<4>);
     }
 
@@ -505,10 +504,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
     if (!skipMove && !inCheck && !pv) {
-        // **********************************************************************************************************
+        // *******************************************************************************************
         // razoring:
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
-        // **********************************************************************************************************
+        // *******************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) {
@@ -543,7 +542,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // assume that we could achieve beta, so we can return early. Don't do nmp when the oponent
         // has threats or the position or we don't have non-pawn material.
         // *******************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
+        if (staticEval >= beta + std::max(30,depth * depth)
+            && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score =
