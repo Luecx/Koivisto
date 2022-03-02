@@ -50,7 +50,7 @@ std::thread searchThread;
  */
 std::string getValue(const std::vector<std::string>& vec, const std::string& key) {
     int index = 0;
-    for (std::string s : vec) {
+    for (const std::string& s : vec) {
         if (s == key) {
             return vec.at(index + 1);
         }
@@ -149,8 +149,8 @@ void uci::processCommand(std::string str) {
         if (split.size() < 5)
             return;
 
-        std::string name  = getValue(split, "name");
-        std::string value = getValue(split, "value");
+        const std::string name  = getValue(split, "name");
+        const std::string value = getValue(split, "value");
 
         uci::set_option(name, value);
     } else if (split.at(0) == "go") {

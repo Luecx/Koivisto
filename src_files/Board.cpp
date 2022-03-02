@@ -26,7 +26,7 @@
 using namespace bb;
 using namespace move;
 
-float phaseValues[N_PIECE_TYPES] {
+const float phaseValues[N_PIECE_TYPES] {
     0, 1, 1, 2, 4, 0,
 };
 
@@ -195,7 +195,7 @@ std::string Board::fen() const {
     for (Rank n = 7; n >= 0; n--) {
         int counting = 0;
         for (File i = 0; i < 8; i++) {
-            Square s = squareIndex(n, i);
+            const Square s = squareIndex(n, i);
             
             int piece = getPiece(s);
             if (piece == -1) {
@@ -303,7 +303,7 @@ void Board::setPiece(Square sq, Piece piece) {
     m_pieceBoard[sq] = piece;
     
     // we need the square as a bitboard for the occupancy bitboards
-    U64 sqBB = (ONE << sq);
+    const U64 sqBB = (ONE << sq);
     
     // settings the occupancy for the team, the piece and the total occupancy.
     m_piecesBB[piece] |= sqBB;
@@ -334,11 +334,11 @@ void Board::unsetPiece(Square sq) {
     UCI_ASSERT(0 <= sq && sq <= 63);
     
     // we need to know first which piece is contained on the given square.
-    Piece p = getPiece(sq);
+    const Piece p = getPiece(sq);
     
     // similar to setPiece() we need the square as a bitboard for upccancy bitboards.
     // as we need to remove bits from the occupancy bitboards, we use the inverse.
-    U64 sqBB = ~(ONE << sq);
+    const U64 sqBB = ~(ONE << sq);
     
     // update the evaluator
     if constexpr (updateNN){
@@ -371,10 +371,10 @@ void Board::unsetPiece(Square sq) {
 template<bool updateNN>
 void Board::replacePiece(Square sq, Piece piece) {
     // we need to know first which piece will be replaced on the given square.
-    Piece p = getPiece(sq);
+    const Piece p = getPiece(sq);
     
     // similar to setPiece() we need the square as a bitboard for upccancy bitboards.
-    U64 sqBB = (ONE << sq);
+    const U64 sqBB = (ONE << sq);
     
     m_piecesBB[p] &= ~sqBB;                 // unset
     m_piecesBB[piece] |= sqBB;              // set
@@ -424,12 +424,12 @@ void Board::move(Move m) {
         
     this->evaluator.addNewAccumulation();
     
-    Square   sqFrom = getSquareFrom(m);
-    Square   sqTo   = getSquareTo(m);
-    Piece    pFrom  = getMovingPiece(m);
-    MoveType mType  = getType(m);
-    Color    color  = getActivePlayer();
-    int      factor = getActivePlayer() == WHITE ? 1 : -1;
+    const Square   sqFrom = getSquareFrom(m);
+    const Square   sqTo   = getSquareTo(m);
+    const Piece    pFrom  = getMovingPiece(m);
+    const MoveType mType  = getType(m);
+    const Color    color  = getActivePlayer();
+    const int      factor = getActivePlayer() == WHITE ? 1 : -1;
     
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
@@ -566,26 +566,26 @@ void Board::move(Move m) {
  * undoes the last move. Assumes the last move has not been a null move.
  */
 void Board::undoMove() {
-    Move m = getBoardStatus()->move;
+    const Move m = getBoardStatus()->move;
     
     changeActivePlayer();
     
-    Square   sqFrom   = getSquareFrom(m);
-    Square   sqTo     = getSquareTo(m);
-    Piece    pFrom    = getMovingPiece(m);
-    MoveType mType    = getType(m);
-    Piece    captured = getCapturedPiece(m);
-    bool     isCap    = isCapture(m);
-    Color    color    = getActivePlayer();
-    int      factor   = getActivePlayer() == 0 ? 1 : -1;
+    const Square   sqFrom   = getSquareFrom(m);
+    const Square   sqTo     = getSquareTo(m);
+    const Piece    pFrom    = getMovingPiece(m);
+    const MoveType mType    = getType(m);
+    const Piece    captured = getCapturedPiece(m);
+    const bool     isCap    = isCapture(m);
+    const Color    color    = getActivePlayer();
+    const int      factor   = getActivePlayer() == 0 ? 1 : -1;
     
     if (mType == EN_PASSANT) {
         setPiece<false>(sqTo - 8 * factor, (1 - color) * 8);
     }
     
     if (getPieceType(pFrom) == KING && isCastle(m)) {
-        Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
-        Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
+        const Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+        const Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
         setPiece  <false>(rookSquare, ROOK + 8 * color);
         unsetPiece<false>(rookTarget);
     }
@@ -606,14 +606,14 @@ void Board::undoMove() {
  * does a null move.
  */
 void Board::move_null() {
-    BoardStatus* previousStatus = getBoardStatus();
-    BoardStatus  newBoardStatus = {previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
-                                   0ULL,
-                                   previousStatus->castlingRights,
-                                   previousStatus->fiftyMoveCounter + 1,
-                                   1ULL,
-                                   previousStatus->moveCounter + getActivePlayer(),
-                                   0ULL};
+    const BoardStatus* previousStatus = getBoardStatus();
+    const BoardStatus  newBoardStatus = {previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
+                                         0ULL,
+                                         previousStatus->castlingRights,
+                                         previousStatus->fiftyMoveCounter + 1,
+                                         1ULL,
+                                         previousStatus->moveCounter + getActivePlayer(),
+                                         0ULL};
     
     m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
     changeActivePlayer();
@@ -659,28 +659,28 @@ template<Color attacker> U64 Board::getAttackedSquares() const {
     U64 kings(m_piecesBB[KING + 8 * attacker]);
     
     while (knights) {
-        Square s = bitscanForward(knights);
+        const Square s = bitscanForward(knights);
         att |= attacks::KNIGHT_ATTACKS[s];
         knights = lsbReset(knights);
     }
     while (bishops) {
-        Square s = bitscanForward(bishops);
+        const Square s = bitscanForward(bishops);
         att |= attacks::lookUpBishopAttacks(s, m_occupiedBB);
         bishops = lsbReset(bishops);
     }
     while (rooks) {
-        Square s = bitscanForward(rooks);
+        const Square s = bitscanForward(rooks);
         att |= attacks::lookUpRookAttacks(s, m_occupiedBB);
         rooks = lsbReset(rooks);
     }
     while (queens) {
-        Square s = bitscanForward(queens);
+        const Square s = bitscanForward(queens);
         att |= attacks::lookUpRookAttacks(s, m_occupiedBB);
         att |= attacks::lookUpBishopAttacks(s, m_occupiedBB);
         queens = lsbReset(queens);
     }
     while (kings) {
-        Square s = bitscanForward(kings);
+        const Square s = bitscanForward(kings);
         att |= attacks::KING_ATTACKS[s];
         kings = lsbReset(kings);
     }
@@ -698,7 +698,7 @@ template<Color attacker> U64 Board::getAttackedSquares() const {
  */
 U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) const {
     for (piece = PAWN + bySide * 8; piece <= KING + bySide * 8; piece += 1) {
-        U64 subset = attadef & m_piecesBB[piece];
+        const U64 subset = attadef & m_piecesBB[piece];
         if (subset)
             return subset & -subset;    // single bit
     }
@@ -787,7 +787,7 @@ Score Board::staticExchangeEvaluation(Move m) const {
  * @return
  */
 U64 Board::attacksTo(U64 p_occupied, Square sq) const {
-    U64 sqBB = ONE << sq;
+    const U64 sqBB = ONE << sq;
     U64 knights, kings, bishopsQueens, rooksQueens;
     knights     = m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT];
     kings       = m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING];
@@ -808,7 +808,7 @@ U64 Board::attacksTo(U64 p_occupied, Square sq) const {
  * @return
  */
 template<Color attacker> bool Board::isUnderAttack(Square square) const {
-    U64 sqBB = ONE << square;
+    const U64 sqBB = ONE << square;
     
     if constexpr (attacker == WHITE) {
         return (   attacks::lookUpRookAttacks  (square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] |
@@ -852,9 +852,9 @@ bool Board::givesCheck(Move m) {
     int opponentKingPos;
     U64 opponentKing;
     
-    Piece  pFrom  = getMovingPiece(m);
-    Square sqTo   = getSquareTo(m);
-    Square sqFrom = getSquareFrom(m);
+    Piece        pFrom  = getMovingPiece(m);
+    const Square sqTo   = getSquareTo(m);
+    const Square sqFrom = getSquareFrom(m);
     
     if (getActivePlayer() == BLACK) {
         opponentKing    = m_piecesBB[WHITE_KING];
@@ -864,7 +864,7 @@ bool Board::givesCheck(Move m) {
         opponentKingPos = bitscanForward(opponentKing);
     }
     
-    U64 occ = m_occupiedBB;
+    const U64 occ = m_occupiedBB;
     
     // replace the moving piece with the piece to promote to if promotion to detect direct check
     if (isPromotion(m)) {
@@ -875,7 +875,7 @@ bool Board::givesCheck(Move m) {
     // direct check
     switch (getPieceType(pFrom)) {
         case QUEEN: {
-            U64 att = attacks::lookUpBishopAttacks(sqTo, m_occupiedBB) | attacks::lookUpRookAttacks(sqTo, m_occupiedBB);
+            const U64 att = attacks::lookUpBishopAttacks(sqTo, m_occupiedBB) | attacks::lookUpRookAttacks(sqTo, m_occupiedBB);
             //            printBitmap(m_occupiedBB);
             //            printBitmap(att);
             if (att & opponentKing) {
@@ -885,7 +885,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case BISHOP: {
-            U64 att = attacks::lookUpBishopAttacks(sqTo, m_occupiedBB);
+            const U64 att = attacks::lookUpBishopAttacks(sqTo, m_occupiedBB);
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -893,7 +893,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case ROOK: {
-            U64 att = attacks::lookUpRookAttacks(sqTo, m_occupiedBB);
+            const U64 att = attacks::lookUpRookAttacks(sqTo, m_occupiedBB);
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -901,7 +901,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case KNIGHT: {
-            U64 att = attacks::KNIGHT_ATTACKS[sqTo];
+            const U64 att = attacks::KNIGHT_ATTACKS[sqTo];
             if (att & opponentKing) {
                 m_occupiedBB = occ;
                 return true;
@@ -909,7 +909,7 @@ bool Board::givesCheck(Move m) {
             break;
         }
         case PAWN: {
-            U64 toBB = ONE << sqTo;
+            const U64 toBB = ONE << sqTo;
             
             if (getActivePlayer() == WHITE) {
                 if (((shiftNorthEast(toBB) | shiftNorthWest(toBB)) & opponentKing) != 0) {
@@ -1022,11 +1022,11 @@ bool Board::isLegal(Move m) {
         }
     }
     
-    Square sqFrom = getSquareFrom(m);
-    Square sqTo   = getSquareTo(m);
-    bool   isCap  = isCapture(m);
+    const Square sqFrom = getSquareFrom(m);
+    const Square sqTo   = getSquareTo(m);
+    const bool   isCap  = isCapture(m);
     
-    U64 occCopy = m_occupiedBB;
+    const U64 occCopy = m_occupiedBB;
     
     unsetBit(m_occupiedBB, sqFrom);
     setBit(m_occupiedBB, sqTo);
@@ -1068,11 +1068,11 @@ bool Board::isPseudoLegal(Move m) const {
         return false;
     
     // first we extract some information which are definetly required
-    Square sqFrom        = getSquareFrom(m);
-    Square sqTo          = getSquareTo(m);
-    Piece  pieceFrom     = getMovingPiece(m);
-    Color  activePlayer  = getMovingPieceColor(m);
-    bool   isCapture     = move::isCapture(m);
+    const Square sqFrom        = getSquareFrom(m);
+    const Square sqTo          = getSquareTo(m);
+    const Piece  pieceFrom     = getMovingPiece(m);
+    const Color  activePlayer  = getMovingPieceColor(m);
+    const bool   isCapture     = move::isCapture(m);
     
     // check if the piece at the starting square is also the moving piece
     if(getPiece(sqFrom) != pieceFrom) return false;
@@ -1174,9 +1174,9 @@ void Board::setEnPassantSquare(Square square) {
  * as this is only used internally, there is no need to make this public.
  */
 void Board::computeNewRepetition() {
-    int maxChecks = getBoardStatus()->fiftyMoveCounter;
+    const int maxChecks = getBoardStatus()->fiftyMoveCounter;
     
-    int lim = m_boardStatusHistory.size() - 1 - maxChecks;
+    const int lim = m_boardStatusHistory.size() - 1 - maxChecks;
     
     for (int i = m_boardStatusHistory.size() - 3; i >= lim; i -= 2) {
         if (m_boardStatusHistory.at(i).zobrist == getBoardStatus()->zobrist) {
@@ -1203,11 +1203,11 @@ int Board::getCurrent50MoveRuleCount() const { return getBoardStatus()->fiftyMov
  * @return
  */
 Square Board::getEnPassantSquare() const {
-    U64 ePT = getBoardStatus()->enPassantTarget;
+    const U64 ePT = getBoardStatus()->enPassantTarget;
     if (ePT == 0) {
         return -1;
     }
-    int pos = bitscanForward(ePT);
+    const int pos = bitscanForward(ePT);
     if (pos == 64 || pos < 0) {
         return -1;
     }
@@ -1239,7 +1239,7 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
     for (Rank r = 7; r >= 0; r--) {
         for (File f = 0; f <= 7; ++f) {
             // os << squareIndex(r,f);
-            Square sq = bb::squareIndex(r, f);
+            const Square sq = bb::squareIndex(r, f);
             if (board.getPiece(sq) >= 0) {
                 os << " | " << PIECE_IDENTIFER[board.getPiece(bb::squareIndex(r, f))];
             } else {
@@ -1263,7 +1263,7 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
 template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
     U64 pinned = 0;
     
-    Square kingSq = bitscanForward(getPieceBB(side, KING));
+    const Square kingSq = bitscanForward(getPieceBB(side, KING));
     
     constexpr Color them = side ^ 1;
     

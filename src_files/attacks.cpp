@@ -33,7 +33,7 @@ U64 populateMask(U64 mask, U64 index) {
     Square i   = 0;
     
     while (mask) {
-        Square bit = bitscanForward(mask);
+        const Square bit = bitscanForward(mask);
         
         if (getBit(index, i)) {
             setBit(res, bit);
@@ -48,21 +48,21 @@ U64 populateMask(U64 mask, U64 index) {
 
 void attacks::init() {
     for (int n = 0; n < 64; n++) {
-        auto rook_shift = rookShifts[n];
-        auto bish_shift = bishopShifts[n];
+        const auto rook_shift = rookShifts[n];
+        const auto bish_shift = bishopShifts[n];
         
-        U64  rook_entries   = (ONE << (64 - rook_shift));
-        U64  bish_entries   = (ONE << (64 - bish_shift));
+        const U64  rook_entries   = (ONE << (64 - rook_shift));
+        const U64  bish_entries   = (ONE << (64 - bish_shift));
         
         for (U64 i = 0; i < rook_entries; i++) {
-            U64 rel_occ            = populateMask(rookMasks[n], i);
-            int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
+            const U64 rel_occ            = populateMask(rookMasks[n], i);
+            const int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
         
         for (U64 i = 0; i < bish_entries; i++) {
-            U64 rel_occ              = populateMask(bishopMasks[n], i);
-            int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
+            const U64 rel_occ              = populateMask(bishopMasks[n], i);
+            const int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
     }
@@ -94,7 +94,7 @@ U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     while (true) {
         sq += direction;
         
-        U64 currentSq = (U64) 1 << sq;
+        const U64 currentSq = (U64) 1 << sq;
         
         res |= currentSq;
         

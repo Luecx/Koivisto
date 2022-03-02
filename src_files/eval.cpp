@@ -177,10 +177,10 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
                                                 bb::Color pieceColor,
                                                 bb::Square square,
                                                 bb::Square kingSquare) {
-    int idx = index(pieceType, pieceColor, square, side, kingSquare);
+    const int idx = index(pieceType, pieceColor, square, side, kingSquare);
 
-    auto wgt = (avx_register_type_16 *) (inputWeights[idx]);
-    auto sum = (avx_register_type_16 *) (history.back().summation[side]);
+    const auto wgt = (avx_register_type_16 *) (inputWeights[idx]);
+    const auto sum = (avx_register_type_16 *) (history.back().summation[side]);
     if constexpr (value) {
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
             sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
@@ -206,13 +206,13 @@ void nn::Evaluator::reset(Board *board) {
 void nn::Evaluator::resetAccumulator(Board *board, bb::Color color) {
     std::memcpy(history.back().summation[color], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
 
-    bb::Square kingSquare = bb::bitscanForward(board->getPieceBB(color, bb::KING));
+    const bb::Square kingSquare = bb::bitscanForward(board->getPieceBB(color, bb::KING));
 
     for (bb::Color c : {bb::WHITE, bb::BLACK}) {
         for (bb::PieceType pt : {bb::PAWN, bb::KNIGHT, bb::BISHOP, bb::ROOK, bb::QUEEN, bb::KING}) {
             bb::U64 bb = board->getPieceBB(c, pt);
             while (bb) {
-                bb::Square s = bb::bitscanForward(bb);
+                const bb::Square s = bb::bitscanForward(bb);
 
                 setPieceOnSquareAccumulator<true>(color, pt, c, s, kingSquare);
 
@@ -229,12 +229,12 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board *board) {
     }
     constexpr avx_register_type_16 reluBias{};
 
-    auto acc_act = (avx_register_type_16 *) history.back().summation[activePlayer];
-    auto acc_nac = (avx_register_type_16 *) history.back().summation[!activePlayer];
+    const auto acc_act = (avx_register_type_16 *) history.back().summation[activePlayer];
+    const auto acc_nac = (avx_register_type_16 *) history.back().summation[!activePlayer];
 
     // compute the dot product
     avx_register_type_32 res{};
-    auto wgt = (avx_register_type_16 *) (hiddenWeights[0]);
+    const auto wgt = (avx_register_type_16 *) (hiddenWeights[0]);
     for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
         res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_act[i], reluBias), wgt[i]));
     }
@@ -244,7 +244,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board *board) {
     }
 
 
-    auto outp = sumRegisterEpi32(res) + hiddenBias[0];
+    const auto outp = sumRegisterEpi32(res) + hiddenBias[0];
     return outp / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
 }
 
