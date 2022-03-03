@@ -236,7 +236,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     ThreadData* td = this->tds[threadId];
     // initialise the score outside the loop tp keep track of it during iterations.
     // This is required for aspiration windows
-    Score score = 0;
+    Score score     = 0;
+    Score prevScore = 0;
     // we will create a copy of the board object which will be used during search
     // This is relevant as multiple threads can clearly not use the same object.
     // Also, its relevant because if we stop the search even if the search has not finished, the board
@@ -254,6 +255,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // done very quick anyway
         if (depth < 6) {
             score = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, depth, 0, td, 0, 2);
+            prevScore = score;
         } else {
             // initial window size
             Score window = 10;
@@ -288,6 +290,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
                                                      [getSquareTo  (td->searchData.bestMove)]
                            * 100 / td->nodes;
+
+        int evalScore    = prevScore - score;
         
         // print the info string if its the main thread
         if (threadId == 0) {
@@ -295,7 +299,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         }
 
         // if the search finished due to timeout, we also need to stop here
-        if (!this->timeManager->rootTimeLeft(timeManScore))
+        if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
             break;
     }
 

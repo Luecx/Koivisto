@@ -102,13 +102,15 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
     return true;
 }
 
-bool TimeManager::rootTimeLeft(int score) const {
+bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     // stop the search if requested
     if (force_stop)
         return false;
 
-    score = 110 - std::min(score, 90);
+    nodeScore = 110 - std::min(nodeScore, 90);
     
+    evalScore = std::min(std::max(20, 50 + evalScore), 80);
+
     int elapsed = elapsedTime();
     
     if(    move_time_limit.enabled
@@ -122,7 +124,7 @@ bool TimeManager::rootTimeLeft(int score) const {
     // 100, we half the time to use. If it's lower than 30, it reaches a maximum of 1.4 times the
     // original time to use.
     if(    match_time_limit.enabled
-        && match_time_limit.time_to_use * score / 100 < elapsed)
+        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 50 < elapsed)
         return false;
     
     return true;
