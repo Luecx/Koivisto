@@ -107,7 +107,7 @@ bool TimeManager::rootTimeLeft(int score) const {
     if (force_stop)
         return false;
 
-    score = 100 - std::min(score, 85);
+    score = 110 - std::min(score, 90);
     
     int elapsed = elapsedTime();
     
