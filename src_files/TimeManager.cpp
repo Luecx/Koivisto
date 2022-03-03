@@ -53,7 +53,7 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     const double  division = 2;
     
     U64 upperTimeBound = time / 2;
-    U64 timeToUse      = 2 * inc + time / 10;
+    U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
     timeToUse          = std::min(time - inc, timeToUse);
     upperTimeBound     = std::min(time - inc, upperTimeBound);
