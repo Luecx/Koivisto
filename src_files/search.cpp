@@ -735,6 +735,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
                     *lmrFactor = 0;
+                } else {
+                    extension = sd->eval[b->getActivePlayer()][ply] < alpha;
                 }
                 extension++;
             } else if (score >= beta) {
