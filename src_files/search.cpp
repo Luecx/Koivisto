@@ -1018,9 +1018,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     Move        m;
 
     while ((m = mGen->next())) {
-        // do not consider illegal moves
-        if (!b->isLegal(m))
-            continue;
 
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
@@ -1031,6 +1028,11 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             (!inCheck && (isCapture(m) || isPromotion(m))) ? mGen->lastSee : 0;
         if (see < 0)
             continue;
+
+        // do not consider illegal moves
+        if (!b->isLegal(m))
+            continue;
+
         if (see + stand_pat > beta + 200)
             return beta;
         
