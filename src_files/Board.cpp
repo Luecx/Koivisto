@@ -809,6 +809,9 @@ U64 Board::attacksTo(U64 p_occupied, Square sq) const {
  */
 template<Color attacker> bool Board::isUnderAttack(Square square) const {
     U64 sqBB = ONE << square;
+
+    UCI_ASSERT(square < 64)
+    UCI_ASSERT(sqBB)
     
     if constexpr (attacker == WHITE) {
         return (   attacks::lookUpRookAttacks  (square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] |
@@ -1068,74 +1071,143 @@ bool Board::isPseudoLegal(Move m) const {
         return false;
     
     // first we extract some information which are definetly required
-    Square sqFrom        = getSquareFrom(m);
-    Square sqTo          = getSquareTo(m);
-    Piece  pieceFrom     = getMovingPiece(m);
-    Color  activePlayer  = getMovingPieceColor(m);
-    bool   isCapture     = move::isCapture(m);
+    const Square sqFrom        = move::getSquareFrom(m);
+    const Square sqTo          = move::getSquareTo(m);
+    const Piece  pieceFrom     = move::getMovingPiece(m);
+    const Piece  pieceTo       = move::getCapturedPiece(m);
+    const Color  activePlayer  = move::getMovingPieceColor(m);
+    const bool   isCapture     = move::isCapture(m);
     
     // check if the piece at the starting square is also the moving piece
     if(getPiece(sqFrom) != pieceFrom) return false;
     
+    // make sure to only move pieces of the correct color
+    if(getPieceColor(pieceFrom) != getActivePlayer()) return false;
+    
+    // make sure that the piece we capture is also the piece on the square we move to
+    if(move::getType(m) == CAPTURE && pieceTo != getPiece(sqTo)) return false;
+    
+    // don't capture your own pieces
+    if(move::getType(m) == CAPTURE && getPieceColor(pieceTo) == getActivePlayer()) return false;
+    
+    // no capture should also not move to any square where there is a piece
+    if(move::getType(m) != CAPTURE && (pieceTo != 0 || getPiece(sqTo) != -1)) return false;
+    
+    // square from and square to cannot be the same
+    if(sqFrom == sqTo) return false;
+    
+    // check that promotions, or e.p. is only done for pawns
+    if((    isDoubledPawnPush(m)
+         || isPromotion      (m)
+         || isEnPassant      (m)) && getPieceType(pieceFrom) != PAWN) return false;
+    
+    // check that castling moves can only be played by kings
+    if(isCastle(m) && getPieceType(pieceFrom) != KING) return false;
+    
+    // 6 or 7 are illegal
+    if(getType(m) == 6 || getType(m) == 7) return false;
+    
+    // forward direction for pawns
+    Direction forward = (getActivePlayer() == WHITE) ? NORTH : SOUTH;
+    
+    // check piece specific stuff
     switch(getPieceType(pieceFrom)){
         case PAWN:
-            if (isPromotion(m)){
-                // check if the capture flag is right or not.
-                if(isCapture){
-                    return getPiece(sqTo) == getCapturedPiece(m);
-                }else{
-                    // if its not a capture, there should be a -1 at that square
-                    return getPiece(sqTo) == -1;
-                }
+            // normal moves or double pawn pushes must make sure the square in front is empty
+            if (getType(m) == QUIET){
+                if(getPiece(sqFrom + forward) != -1) return false;
+                if(sqFrom + forward != sqTo)         return false;
             }
-            else if (isCapture){
-                if(isEnPassant(m)){
-                    return sqTo == getEnPassantSquare();
-                }else{
-                    // check if the piece captured is actually at the given square
-                    return getPiece(sqTo) == getCapturedPiece(m);
-                }
+            // furthermore double pawn pushes must check the square which is two squares ahead
+            // is empty
+            if (isDoubledPawnPush(m)){
+                // validate that the squares are empty
+                if(getPiece(sqFrom + forward)     != -1) return false;
+                if(getPiece(sqFrom + forward * 2) != -1) return false;
+                if(sqFrom + forward * 2 != sqTo)         return false;
+                
+                // validate that the pawn is on the 2nd rank
+                if(getActivePlayer() == WHITE && rankIndex(sqFrom) != 1 ||
+                   getActivePlayer() == BLACK && rankIndex(sqFrom) != 6) return false;
             }
-            else if (isDoubledPawnPush(m)){
-                // validate that both squares are empty
-                return getPiece(sqTo) == -1 && getPiece(sqTo + 8 * (getActivePlayer() == WHITE ? -1:1)) == -1;
-            }else{
-                // validate that the target square is empty
-                return getPiece(sqTo) == -1;
+            if(isEnPassant(m)){
+                if (sqTo != getEnPassantSquare()) return false;
+                if (getPiece(sqTo - forward) != bb::getPiece(!getActivePlayer(), PAWN)) return false;
+            }
+            if(isCapture){
+                // only allow diagonal captures for pawns in the forward direction
+                if(fileIndex(sqFrom) == 7 && (sqTo == sqFrom + forward + 1)) return false;
+                if(fileIndex(sqFrom) == 0 && (sqTo == sqFrom + forward - 1)) return false;
+                
+                if(    ((sqTo != sqFrom + forward + 1))
+                    && ((sqTo != sqFrom + forward - 1))) return false;
+            }
+            if(isPromotion(m)){
+                // validate that the pawn is on the 2nd rank
+                if(getActivePlayer() == WHITE && rankIndex(sqFrom) != 6 ||
+                   getActivePlayer() == BLACK && rankIndex(sqFrom) != 1) return false;
             }
             break;
-        // skip knights as there are no rays which need to be checked
-        // for sliding pieces we only need to validate there is no piece on the squares in between the from and to
-        // square
+        case KNIGHT:
+            if(~attacks::KNIGHT_ATTACKS[sqFrom] & (ONE << sqTo)) return false;
+            break;
         case BISHOP:
+            // check its on the same diagonal
+            if(    diagonalIndex    (sqFrom) != diagonalIndex    (sqTo)
+                && antiDiagonalIndex(sqFrom) != antiDiagonalIndex(sqTo)){
+                return false;
+            }
+            // check there is no piece in between
+            if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
+            break;
         case ROOK:
+            // check its on the same file or rank
+            if(    fileIndex(sqFrom) != fileIndex(sqTo)
+                && rankIndex(sqFrom) != rankIndex(sqTo)){
+                return false;
+            }
+            // check there is no piece in between
+            if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
+            break;
         case QUEEN:
+            // check its on the same file or rank
+            if(    fileIndex        (sqFrom) != fileIndex        (sqTo)
+                && rankIndex        (sqFrom) != rankIndex        (sqTo)
+                && diagonalIndex    (sqFrom) != diagonalIndex    (sqTo)
+                && antiDiagonalIndex(sqFrom) != antiDiagonalIndex(sqTo)){
+                return false;
+            }
             // if there is a piece in the way, this move is invalid
             if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
-            if (isCapture - (getPiece(sqTo) != -1) != 0) return false;
             break;
         case KING:
             // we only need to check if the castling move is valid.
             // for this we can look into the meta information
             if(isCastle(m)){
                 bool kingSideCastle = sqTo > sqFrom;
-                U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ? 
-                      (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK) 
-                      : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
+                
+                if( kingSideCastle && getType(m) == QUEEN_CASTLE) return false;
+                if(!kingSideCastle && getType(m) == KING_CASTLE ) return false;
+                
+                if(sqTo - sqFrom != 2 &&  kingSideCastle) return false;
+                if(sqFrom - sqTo != 2 && !kingSideCastle) return false;
+                
+                U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ?
+                     (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK)
+                   : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
                 if(canCastleMask == 0 && getCastlingRights(activePlayer * 2 + kingSideCastle)){
                     return true;
                 }
                 // we can exit early as this cannot be a capture
                 return false;
             }
+            // moves which pass more than 1 square are obviously not possible
+            if(~attacks::KING_ATTACKS[sqFrom] & (ONE << sqTo)){
+                return false;
+            }
             break;
     }
-
-    // finally we need to check for the moves if its a capture and if thats the case, that the captured piece is on that
-    // square
-    if (isCapture)
-        return getPiece(sqTo) == getCapturedPiece(m);
-    return getPiece(sqTo) == -1;
+    return true;
 }
 /**
  * returns true if castling for the given index is possible.
