@@ -789,6 +789,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
+            lmr -=  (1 - b->getActivePlayer() == behindNMP && hashMove && en.type == CUT_NODE);
             if (!sd->targetReached) 
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
