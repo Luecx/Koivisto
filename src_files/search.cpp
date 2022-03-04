@@ -933,10 +933,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type == ALL_NODE ? en.oldS : en.score) : 0);
+                           sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type & ALL_NODE ? en.oldS : en.score) : 0);
             } else {
                 table->put(key, highestScore, bestMove, ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type == ALL_NODE ? en.oldS : en.score) : 0);
+                           sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type & ALL_NODE ? en.oldS : en.score) : 0);
             }
         }
     }
