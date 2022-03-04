@@ -548,7 +548,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // has threats or the position or we don't have non-pawn material.
         // *******************************************************************************************
         if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
-            && !hasOnlyPawns(b, b->getActivePlayer())) {
+            && !hasOnlyPawns(b, b->getActivePlayer())  && !(en.zobrist == key >> 32 && en.type & ALL_NODE)) {
             b->move_null();
             score =
                 -pvSearch(b, -beta, 1 - beta,
