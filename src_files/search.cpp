@@ -789,7 +789,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            lmr -= (hashMove && en.type == ALL_NODE && en.oldS != 0);
             if (!sd->targetReached) 
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
@@ -817,6 +816,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
+            extension = 1;
+
+        if (legalMoves == 0 && en.zobrist == key >> 32 && en.type == CUT_NODE && en.oldS != 0 &&  1 - b->getActivePlayer() == behindNMP) 
             extension = 1;
 
         // principal variation search recursion.
