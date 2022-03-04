@@ -594,7 +594,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == ALL_NODE) ? en.score : 0);
                 return betaCut;
             }
         }
@@ -872,7 +872,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == ALL_NODE) ? en.score : 0);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
@@ -922,20 +922,20 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
             table->put(key, highestScore, bestMove, PV_NODE, depth,
-                       sd->eval[b->getActivePlayer()][ply]);
+                       sd->eval[b->getActivePlayer()][ply], 0);
         } else {
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
-            } else if (score == alpha && !sameMove(hashMove, bestMove)) {
+            } else if (score == alpha && !sameMove(hashMove, bestMove), (hashMove && en.type == CUT_NODE) ? en.score : 0) {
                 bestMove = 0;
             }
 
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply]);
+                           sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == CUT_NODE) ? en.score : 0);
             } else {
                 table->put(key, highestScore, bestMove, ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply]);
+                           sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == CUT_NODE) ? en.score : 0);
             }
         }
     }
@@ -1051,7 +1051,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(key, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
+                table->put(key, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat, 0);
                 return score;
             }
             if (score > alpha) {
@@ -1063,7 +1063,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat);
+        table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat, 0);
     return bestScore;
 
     //    return 0;

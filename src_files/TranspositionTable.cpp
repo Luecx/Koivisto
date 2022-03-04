@@ -42,6 +42,8 @@ void TranspositionTable::init(bb::U64 MB) {
     clear();
 
     m_currentAge = 0;
+
+    std::cout << m_size;
 }
 
 /**
@@ -120,13 +122,13 @@ Entry TranspositionTable::get(bb::U64 zobrist) const {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type, bb::Depth depth, bb::Score eval) {
+bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type, bb::Depth depth, bb::Score eval, bb::Score oldScore) {
     bb::U64 index  = zobrist & m_mask;
     Entry* enP = &m_entries[index];
     bb::U32 key    = zobrist >> 32;
 
     if (enP->zobrist == 0) {
-        enP->set(key, score, move, type, depth, eval);
+        enP->set(key, score, move, type, depth, eval, oldScore);
         enP->setAge(m_currentAge);
         return true;
     } else {
@@ -139,7 +141,7 @@ bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, 
         //  Martin (author of Cheng) tested and validated a variable margin.
 
         if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == key && enP->depth <= depth * 2)) {
-            enP->set(key, score, move, type, depth, eval);
+            enP->set(key, score, move, type, depth, eval, oldScore);
             enP->setAge(m_currentAge);
             return true;
         }
