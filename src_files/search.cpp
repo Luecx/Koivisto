@@ -471,7 +471,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (en.zobrist == key >> 32) {
 
         // adjusting eval
-        if (   (en.type == CUT_NODE && staticEval > en.oldS)
+        if (    en.oldS != 0
+            && (en.type == CUT_NODE && staticEval > en.oldS)
             || (en.type  & ALL_NODE && staticEval < en.oldS)) {
             staticEval = en.oldS;
         }
