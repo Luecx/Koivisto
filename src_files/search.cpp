@@ -469,7 +469,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
 
     if (en.zobrist == key >> 32) {
+
         // adjusting eval
+        if (   (en.type == CUT_NODE && staticEval > en.oldS)
+            || (en.type  & ALL_NODE && staticEval < en.oldS)) {
+            staticEval = en.oldS;
+        }
+
         if (   (en.type == PV_NODE)
             || (en.type == CUT_NODE && staticEval < en.score)
             || (en.type  & ALL_NODE && staticEval > en.score)) {
@@ -789,7 +795,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            lmr -= (hashMove && en.type == ALL_NODE && en.oldS != 0);
             if (!sd->targetReached) 
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
