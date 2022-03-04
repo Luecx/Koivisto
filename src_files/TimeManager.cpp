@@ -87,7 +87,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
     int elapsed = elapsedTime();
     
     if (sd != nullptr && this->match_time_limit.enabled) {
-        if (elapsed * 10 < this->match_time_limit.time_to_use) {
+        if (elapsed * 4 < this->match_time_limit.time_to_use) {
             sd->targetReached = false;
         } else {
             sd->targetReached = true;
