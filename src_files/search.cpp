@@ -275,11 +275,11 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
                     window = MIN_MATE_SCORE;
                 // adjust the alpha/beta bound based on which side has failed
                 if (score >= beta) {
-                    beta += window;
+                    beta = score + window;
                     sDepth--;
                 } else if (score <= alpha) {
                     beta = (alpha + beta) / 2;
-                    alpha -= window;
+                    alpha = score - window;
                 } else {
                     break;
                 }
