@@ -124,7 +124,7 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     // 100, we half the time to use. If it's lower than 30, it reaches a maximum of 1.4 times the
     // original time to use.
     if(    match_time_limit.enabled
-        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 65 < elapsed)
+        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 60 < elapsed)
         return false;
     
     return true;
