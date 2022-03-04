@@ -818,7 +818,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
-        if (legalMoves == 0 && en.zobrist == key >> 32 && en.type == CUT_NODE && en.oldS != 0 &&  1 - b->getActivePlayer() == behindNMP) 
+        if (legalMoves == 0 && en.zobrist == key >> 32 && en.type == CUT_NODE && en.oldS != 0) 
             extension = 1;
 
         // principal variation search recursion.
