@@ -594,7 +594,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == ALL_NODE) ? en.score : 0);
+                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type == CUT_NODE ? en.oldS : en.score) : 0);
                 return betaCut;
             }
         }
@@ -873,7 +873,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == ALL_NODE) ? en.score : 0);
+                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type == CUT_NODE ? en.oldS : en.score) : 0);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
@@ -933,10 +933,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == CUT_NODE) ? en.score : 0);
+                           sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type == ALL_NODE ? en.oldS : en.score) : 0);
             } else {
                 table->put(key, highestScore, bestMove, ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply], (hashMove && en.type == CUT_NODE) ? en.score : 0);
+                           sd->eval[b->getActivePlayer()][ply], en.zobrist == key >> 32 ? (en.type == ALL_NODE ? en.oldS : en.score) : 0);
             }
         }
     }
