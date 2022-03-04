@@ -42,8 +42,6 @@ void TranspositionTable::init(bb::U64 MB) {
     clear();
 
     m_currentAge = 0;
-
-    std::cout << m_size;
 }
 
 /**
