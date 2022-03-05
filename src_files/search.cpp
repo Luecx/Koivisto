@@ -780,7 +780,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
-        if (legalMoves > 0 && depth > 2 && !singular && b->getActivePlayer() == behindNMP)
+        if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
         // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
@@ -841,10 +841,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
 
             if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension + singular,
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search
             if (score > alpha && score < beta)
-                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension + singular, ply + ONE_PLY,
                                   td, 0, behindNMP);    // re-search
         }
 
