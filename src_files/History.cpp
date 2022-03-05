@@ -31,6 +31,13 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move followup, S
     }
 }
 
+void SearchData::updateMainHistory(bool c, Move m, int weight) {
+        th[c][64][getSqToSqFromCombination(m)] +=
+                    + weight
+                    - weight * th[c][64][getSqToSqFromCombination(m)]
+                    / 512;
+}
+
 /*
  * Set killer
  */

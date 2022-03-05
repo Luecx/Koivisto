@@ -50,6 +50,8 @@ struct SearchData {
 
     int      getHistories(move::Move m, bb::Color side, move::Move previous, move::Move followup, bb::Square threatSquare) const;
 
+    void     updateMainHistory(bool c, move::Move m, int weight);
+
     void     setKiller(move::Move move, bb::Depth ply, bb::Color color);
 
     int      isKiller(move::Move move, bb::Depth ply, bb::Color color) const;

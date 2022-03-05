@@ -458,6 +458,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply > 0 && b->getPreviousMove() != 0) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
+                sd->updateMainHistory(!b->getActivePlayer(), b->getPreviousMove(), std::min(50, std::max(-50, 20 + improvement)));
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())]
                                   [getSquareTo  (b->getPreviousMove())] = improvement;
             }
