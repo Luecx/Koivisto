@@ -871,7 +871,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // beta -cutoff
         if (score >= beta) {
-            sd->noHashMove[ply] = m;
+            if (getSquareTo(m) != getSquareTo(b->getPreviousMove()))
+                sd->noHashMove[ply] = m;
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
