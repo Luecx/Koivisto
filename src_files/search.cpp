@@ -462,7 +462,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                   [getSquareTo  (b->getPreviousMove())] = improvement;
             }
         }
-        if (ply > 1 && enemyThreats && !sd->threatCount[ply - 2][!b->getActivePlayer()]) {
+        if (ply > 1 && enemyThreats && sd->eval[b->getActivePlayer()][ply - 2] > -1000 &&  !sd->threatCount[ply - 2][!b->getActivePlayer()]) {
             if (lmrFactor != nullptr) {
                 depth += *lmrFactor;
                 *lmrFactor = 0;
