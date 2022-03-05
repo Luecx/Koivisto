@@ -645,10 +645,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = b->givesCheck(m);
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
-            Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
-
             if (quiet) {
                 quiets++;
                 // ***********************************************************************************
@@ -684,17 +683,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     continue;
                 }
             }
-
-            // ***************************************************************************************
-            // static exchange evaluation pruning (see pruning):
-            // if the depth we are going to search the move at is small enough and the static exchange
-            // evaluation for the given move is very negative, dont consider this quiet move as well.
-            // ***************************************************************************************
-            if (moveDepth <= 5 + quiet * 3
-                && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
-                continue;
         }
+        
+        // ***************************************************************************************
+        // static exchange evaluation pruning (see pruning):
+        // if the depth we are going to search the move at is small enough and the static exchange
+        // evaluation for the given move is very negative, dont consider this quiet move as well.
+        // ***************************************************************************************
+        if (moveDepth <= 5 + quiet * 3
+            && highestScore > -MIN_MATE_SCORE
+            && (getCapturedPieceType(m)) < (getMovingPieceType(m))
+            && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+            continue;
 
         // dont search illegal moves
         if (!b->isLegal(m)) {
