@@ -879,7 +879,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            mGen->updateHistory(depth + (staticEval < alpha));
+            mGen->updateHistory(depth + (staticEval < alpha || (en.zobrist == key >> 32 && en.type == ALL_NODE)));
 
             return highestScore;
         }
