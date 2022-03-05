@@ -139,7 +139,9 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize][0] = &m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)];
+    quietScores[quietSize][1] = &m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)];
+    quietScores[quietSize++][2] = &m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)];
 }
 
 Move moveGen::nextNoisy() {
@@ -172,12 +174,17 @@ Move moveGen::nextQuiet() {
         return next();
     }
     int bestQuiet = quiet_index;
+    int bestQuietSscore = *quietScores[quiet_index][0] + *quietScores[quiet_index][1] + *quietScores[quiet_index][2];
     for (int i = quiet_index + 1; i < quietSize; i++) {
-        if (quietScores[i] > quietScores[bestQuiet])
+        if (*quietScores[i][0] + *quietScores[i][1] + *quietScores[i][2] > bestQuietSscore) {
             bestQuiet = i;
+            bestQuietSscore = *quietScores[i][0] + *quietScores[i][1] + *quietScores[i][2];
+        }
     }
     Move m = quiets[bestQuiet];
-    quietScores[bestQuiet]  = quietScores[quiet_index];
+    quietScores[bestQuiet][0]  = quietScores[quiet_index][0];
+    quietScores[bestQuiet][1]  = quietScores[quiet_index][1];
+    quietScores[bestQuiet][2]  = quietScores[quiet_index][2];
     quiets[bestQuiet]       = quiets[quiet_index++];
     return m;
 }
