@@ -139,10 +139,6 @@ void moveGen::addQuiet(Move m) {
 }
 
 Move moveGen::nextNoisy() {
-    if (m_skip) {
-        lastSee = noisySee[noisy_index];
-        return noisy[noisy_index++];
-    }
     int bestNoisy = noisy_index;
     for (int i = noisy_index + 1; i < noisySize; i++) {
         if (noisyScores[i] > noisyScores[bestNoisy])
