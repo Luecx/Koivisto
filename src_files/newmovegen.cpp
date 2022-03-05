@@ -89,10 +89,6 @@ Move moveGen::next() {
                 return m_killer2;
             // fallthrough
         case GEN_QUIET:
-            if (shouldSkip()) {
-                stage = GET_BAD_NOISY;
-                return next();
-            }
             generateQuiet();
             stage++;
             // fallthrough
@@ -341,6 +337,8 @@ void moveGen::generateQuiet() {
     // Pawn
     U64 pawnPushes = pawnsCenter & ~relative_rank_8_bb;
     U64 attacks = pawnPushes;
+    if (m_skip)
+        attacks &= m_checkerSq;
     while (attacks) {
         target = bitscanForward(attacks);
         addQuiet(genMove(target - forward, target, QUIET, movingPiece));
@@ -348,6 +346,8 @@ void moveGen::generateQuiet() {
     }
         
     attacks = (c == WHITE ? shiftNorth(pawnPushes) : shiftSouth(pawnPushes)) & relative_rank_4_bb & ~occupied;
+    if (m_skip)
+        attacks &= m_checkerSq;
     while (attacks) {
         target = bitscanForward(attacks);
         addQuiet(genMove(target - forward * 2, target, DOUBLED_PAWN_PUSH, movingPiece));
@@ -355,7 +355,7 @@ void moveGen::generateQuiet() {
     }
 
 
-    if (pawns & relative_rank_7_bb) {
+    if (!m_skip && pawns & relative_rank_7_bb) {
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -405,7 +405,8 @@ void moveGen::generateQuiet() {
             }
             attacks &= ~friendly;
             attacks &= ~opponents;
-
+            if (m_skip)
+                attacks &= m_checkerSq;
             while(attacks){
                 target = bitscanForward(attacks);
                 addQuiet(genMove(square, target, QUIET, movingPiece));
@@ -416,6 +417,8 @@ void moveGen::generateQuiet() {
         }
     }
     
+    if (m_skip)
+        return; 
     
     // King
     movingPiece = KING + c * 8;
