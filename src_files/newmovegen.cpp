@@ -32,7 +32,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_sd            = sd;
     m_board         = b;
     m_ply           = ply;
-    m_hashMove      = hashMove;
+    m_hashMove      = hashMove ? hashMove : sd->noHashMove[ply];
     m_previous      = previous;
     m_followup      = followup;
     m_mode          = mode;

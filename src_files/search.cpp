@@ -507,6 +507,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // reset killer of granchildren
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    sd->noHashMove[ply + 1]                      = 0;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -870,6 +871,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // beta -cutoff
         if (score >= beta) {
+            sd->noHashMove[ply] = m;
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);

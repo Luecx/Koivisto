@@ -39,6 +39,7 @@ struct SearchData {
     int      fmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
     move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                 = {0};
+    move::Move     noHashMove[bb::MAX_INTERNAL_PLY + 1]                                              = {0};
     // threat data
     int      threatCount[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                         = {0};
     bb::Square   mainThreat[bb::MAX_INTERNAL_PLY]                                                    = {0};
