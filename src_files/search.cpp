@@ -628,6 +628,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
                PV_SEARCH, mainThreat,
                *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+        
+    // prune quiet moves that are unlikely to improve alpha
+    if (!inCheck
+        && depth <= 7
+        && depth * FUTILITY_MARGIN + 100
+         + sd->eval[b->getActivePlayer()][ply]
+         < alpha)
+        mGen->skip();
+
+
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
