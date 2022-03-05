@@ -709,6 +709,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // compute the static exchange evaluation if the move is a capture
         Score staticExchangeEval = isCapture(m) ? mGen->lastSee : 1;
 
+        if (depth == 1 && staticExchangeEval > 100 && !inCheck && !enemyThreats)
+            mGen->skip();
+
         // keep track of the depth we want to extend by
         int extension = 0;
 
