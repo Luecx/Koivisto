@@ -669,9 +669,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
                                + moveDepth * FUTILITY_MARGIN + 100
                                + sd->eval[b->getActivePlayer()][ply]
-                           < alpha)
-                    continue;
-
+                           < alpha) {
+                            mGen->skip();
+                            continue;
+                           }
                 // ***********************************************************************************
                 // history pruning:
                 // if the history score for a move is really bad at low depth, dont consider this
