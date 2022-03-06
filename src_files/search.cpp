@@ -638,7 +638,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // loop over all moves in the movelist
     while ((m = mGen->next())) {
         // if the move is the move we want to skip, skip this move (used for extensions)
-        if (sameMove(m, skipMove))
+        if (sameMove(m, skipMove) || (skipMove && sd->isKiller(m, ply, b->getActivePlayer())))
             continue;
 
         // check if the move gives check and/or its promoting
