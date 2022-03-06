@@ -32,6 +32,7 @@ constexpr int MAX_HIST  = 512;
 
 enum {
     PV_SEARCH,
+    SHALLOW_SEARCH,
     Q_SEARCH,
     Q_SEARCHCHECK,
 };
@@ -57,6 +58,8 @@ class moveGen {
     move::Move      noisy[MAX_NOISY]            = {0};
     move::Move      searched[MAX_QUIET]         = {0};
     int*            quietScores[MAX_QUIET][3]   = {0};
+    int             shallowScores[MAX_QUIET]    = {0};
+    int             test[MAX_QUIET][2]          = {0};
 
     int             noisyScores[MAX_NOISY]      = {0};
     int             noisySee[MAX_NOISY]         = {0};
@@ -90,6 +93,7 @@ class moveGen {
     void                     addNoisy(move::Move m);
     void                     addQuiet(move::Move m);
     [[nodiscard]] move::Move nextNoisy();
+    [[nodiscard]] move::Move shallowQuiet();
     [[nodiscard]] move::Move nextQuiet();
     void                     addSearched(move::Move m);
     void                     generateNoisy();

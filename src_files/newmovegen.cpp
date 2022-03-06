@@ -97,8 +97,11 @@ Move moveGen::next() {
             stage++;
             // fallthrough
         case GET_QUIET:
-            if (quiet_index < quietSize)
+            if (quiet_index < quietSize) {
+                if (m_mode == SHALLOW_SEARCH)
+                    return shallowQuiet();
                 return nextQuiet();
+            }
             stage++;
             // fallthrough
         case GET_BAD_NOISY:
@@ -138,6 +141,11 @@ void moveGen::addNoisy(Move m) {
 void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
+    if (m_mode == SHALLOW_SEARCH) {
+        quiets[quietSize] = m;
+        shallowScores[quietSize] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+        return;
+    }
     quiets[quietSize] = m;
     quietScores[quietSize][0] = &m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)];
     quietScores[quietSize][1] = &m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)];
@@ -159,6 +167,30 @@ Move moveGen::nextNoisy() {
     noisySee[bestNoisy]     = noisySee[noisy_index];
     noisyScores[bestNoisy]  = noisyScores[noisy_index];
     noisy[bestNoisy]        = noisy[noisy_index++];
+    return m;
+}
+
+Move moveGen::shallowQuiet() {
+    std::cout << "ASNASDASD";
+    if (m_skip) {
+        for (int i = quiet_index; i < quietSize; i++) {
+            if ((m_checkerSq & (ONE << getSquareTo(quiets[i])))) {
+                quiet_index = i;
+                return quiets[quiet_index++];
+            }
+        }
+        stage++;
+        return next();
+    }
+    int bestQuiet = quiet_index;
+    for (int i = quiet_index + 1; i < quietSize; i++) {
+        if (shallowScores[i] > shallowScores[bestQuiet]) {
+            bestQuiet = i;
+        }
+    }
+    Move m = quiets[bestQuiet];
+    shallowScores[bestQuiet] = shallowScores[quiet_index];
+    quiets[bestQuiet]       = quiets[quiet_index++];
     return m;
 }
 
