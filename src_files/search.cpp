@@ -625,8 +625,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
     
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
-               PV_SEARCH, mainThreat,
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2), depth > 5 ? PV_SEARCH : SHALLOW_SEARCH, mainThreat,
                *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
@@ -745,7 +744,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     return score;
             }
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(),
-                       b->getPreviousMove(2), PV_SEARCH, mainThreat,
+                       b->getPreviousMove(2), depth > 5 ? PV_SEARCH : SHALLOW_SEARCH, mainThreat,
                        *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
             m = mGen->next();
         }

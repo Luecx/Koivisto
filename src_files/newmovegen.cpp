@@ -72,8 +72,11 @@ Move moveGen::next() {
                 m_killer1 = 0;
                 m_killer2 = 0;
                 generateEvasions();
-                if (quiet_index < quietSize)
+                if (quiet_index < quietSize) {
+                    if (m_mode == SHALLOW_SEARCH)
+                        return shallowQuiet();
                     return nextQuiet();
+                }
                 return 0;
             }
             stage++;
@@ -143,7 +146,7 @@ void moveGen::addQuiet(Move m) {
         return;
     if (m_mode == SHALLOW_SEARCH) {
         quiets[quietSize] = m;
-        shallowScores[quietSize] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+        shallowScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
         return;
     }
     quiets[quietSize] = m;
@@ -171,7 +174,6 @@ Move moveGen::nextNoisy() {
 }
 
 Move moveGen::shallowQuiet() {
-    std::cout << "ASNASDASD";
     if (m_skip) {
         for (int i = quiet_index; i < quietSize; i++) {
             if ((m_checkerSq & (ONE << getSquareTo(quiets[i])))) {
