@@ -59,8 +59,7 @@ class moveGen {
     move::Move      searched[MAX_QUIET]         = {0};
     int*            quietScores[MAX_QUIET][3]   = {0};
     int             shallowScores[MAX_QUIET]    = {0};
-    int             test[MAX_QUIET][2]          = {0};
-
+    
     int             noisyScores[MAX_NOISY]      = {0};
     int             noisySee[MAX_NOISY]         = {0};
     int             quietSize;
