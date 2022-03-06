@@ -805,6 +805,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
+        if (enemyThreats && depth <= 7 && hashMove && legalMoves == 0 && b->getActivePlayer() == behindNMP) {
+            extension = 1;
+        }
+
         // doing the move
         b->move(m);
         
