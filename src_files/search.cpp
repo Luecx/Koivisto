@@ -277,6 +277,17 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
                 if (score >= beta) {
                     beta += window;
                     sDepth--;
+                    // compute a score which puts the nodes we spent looking at the best move
+                    // in relation to all the nodes searched so far (only thread local)
+                    int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
+                                                                [getSquareTo  (td->searchData.bestMove)]
+                                    * 100 / td->nodes;
+
+                    int evalScore    = prevScore - score;
+
+                    // if the search finished due to timeout, we also need to stop here
+                    if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
+                        break;
                 } else if (score <= alpha) {
                     beta = (alpha + beta) / 2;
                     alpha -= window;
