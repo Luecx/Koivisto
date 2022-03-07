@@ -409,7 +409,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score       staticEval;
     Score       ownThreats    = 0;
     Score       enemyThreats  = 0;
-    Square      mainThreat    = 0;
+    Square      mainThreat    = 64;
 
     // ***********************************************************************************************
     // transposition table probing:
