@@ -286,7 +286,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
                     int evalScore    = prevScore - score;
 
                     // if the search finished due to timeout, we also need to stop here
-                    if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
+                    if (sDepth < depth - 1 && !this->timeManager->rootTimeLeft(timeManScore, evalScore))
                         break;
                 } else if (score <= alpha) {
                     beta = (alpha + beta) / 2;
