@@ -291,9 +291,9 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
                                                      [getSquareTo  (td->searchData.bestMove)]
                            * 100 / td->nodes;
 
-        int evalScore    = (prevScore - score);
+        int evalScore    = prevScore - score;
         
-        prevScore = score;
+        prevScore = prevScore / 2 + score / 2;
         
         // print the info string if its the main thread
         if (threadId == 0) {
