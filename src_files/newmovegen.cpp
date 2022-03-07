@@ -122,7 +122,7 @@ Move moveGen::next() {
 void moveGen::addNoisy(Move m) {
     if (sameMove(m_hashMove, m))
         return;
-    int score   = m_mode ? m_board->staticExchangeEvaluation(m) : (getCapturedPieceType(m) < getMovingPieceType(m) ? m_board->staticExchangeEvaluation(m) : 1);
+    int score   = m_board->staticExchangeEvaluation(m);
     noisySee[noisySize] = score;
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];
     if (score >= 0) {
