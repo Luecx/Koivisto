@@ -1003,15 +1003,13 @@ bool Board::isLegal(Move m) {
         opponentRookBitboard   = m_piecesBB[WHITE_ROOK];
         opponentBishopBitboard = m_piecesBB[WHITE_BISHOP];
     }
-    
-    Square sqFrom = getSquareFrom(m);
 
     if (isEnPassant(m)) {
-        unsetBit(m_occupiedBB, sqFrom);
+        this->move(m);
         bool isOk =
             (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
             && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
-        setBit(m_occupiedBB, sqFrom);
+        this->undoMove();
         
         return isOk;
     } else if (isCastle(m)) {
@@ -1027,6 +1025,7 @@ bool Board::isLegal(Move m) {
         }
     }
     
+    Square sqFrom = getSquareFrom(m);
     Square sqTo   = getSquareTo(m);
     bool   isCap  = isCapture(m);
     
