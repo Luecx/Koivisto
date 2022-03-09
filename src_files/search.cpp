@@ -584,7 +584,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
     
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    Square      okingSq    = bitscanForward(b->getPieceBB(b->getActivePlayer(), KING));
     U64         occupiedBB = b->getOccupiedBB();
     U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
                            | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
