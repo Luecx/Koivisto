@@ -621,6 +621,8 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     this->changeActivePlayer();
     this->computeNewRepetition();
 }
+template void Board::move<false>(Move m, TranspositionTable* table);
+template void Board::move<true >(Move m, TranspositionTable* table);
 
 /**
  * undoes the last move. Assumes the last move has not been a null move.
