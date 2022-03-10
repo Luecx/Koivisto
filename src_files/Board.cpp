@@ -19,6 +19,7 @@
 
 
 #include "attacks.h"
+#include "TranspositionTable.h"
 #include "Board.h"
 
 #include "UCIAssert.h"
@@ -297,7 +298,7 @@ Piece Board::getPiece(Square sq) const { return m_pieceBoard[sq]; }
  * @param sq
  * @param piece
  */
-template<bool updateNN>
+template<bool updateNN, bool updateZobrist>
 void Board::setPiece(Square sq, Piece piece) {
     // first we set the piece on the piece board
     m_pieceBoard[sq] = piece;
@@ -320,8 +321,10 @@ void Board::setPiece(Square sq, Piece piece) {
     }
 
     // also adjust the zobrist key
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(piece, sq);
+    if constexpr (updateZobrist) {
+        BoardStatus* st = getBoardStatus();
+        st->zobrist ^= getHash(piece, sq);
+    }
 }
 
 /**
@@ -329,7 +332,7 @@ void Board::setPiece(Square sq, Piece piece) {
  * Deals with zobrist-keys.
  * @param sq
  */
-template<bool updateNN>
+template<bool updateNN, bool updateZobrist>
 void Board::unsetPiece(Square sq) {
     UCI_ASSERT(0 <= sq && sq <= 63);
     
@@ -353,10 +356,10 @@ void Board::unsetPiece(Square sq) {
     m_occupiedBB &= sqBB;
     
     // also adjust the zobrist key
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(p, sq);
-    
-    
+    if constexpr (updateZobrist) {
+        BoardStatus* st = getBoardStatus();
+        st->zobrist ^= getHash(p, sq);  
+    }
     
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
@@ -368,9 +371,11 @@ void Board::unsetPiece(Square sq) {
  * @param sq
  * @param piece
  */
-template<bool updateNN>
+template<bool updateNN, bool updateZobrist>
 void Board::replacePiece(Square sq, Piece piece) {
-    // we need to know first which piece will be replaced on the given square.
+    UCI_ASSERT(0 <= sq && sq <= 63);
+    
+    // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);
     
     // similar to setPiece() we need the square as a bitboard for upccancy bitboards.
@@ -382,8 +387,10 @@ void Board::replacePiece(Square sq, Piece piece) {
     m_teamOccupiedBB[piece / 8] |= sqBB;    // set
     
     // also adjust the zobrist key
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
+    if constexpr (updateZobrist) {
+        BoardStatus* st = getBoardStatus();
+        st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+    }
     
     // update the evaluator
     if constexpr (updateNN){
@@ -400,6 +407,46 @@ void Board::replacePiece(Square sq, Piece piece) {
 }
 
 /**
+ * Sets the hash for piece on the given square.
+ * Deals with zobrist-keys.
+ * @param sq
+ * @param piece
+ */
+void Board::setPieceHash(Square sq, Piece piece) {
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= getHash(piece, sq);
+}
+
+/**
+ * Unsets the hash for piece on the given square.
+ * Deals with zobrist-keys.
+ * @param sq
+ */
+void Board::unsetPieceHash(Square sq) {
+    UCI_ASSERT(0 <= sq && sq <= 63);
+    
+    // we need to know first which piece is contained on the given square.
+    Piece p = getPiece(sq);
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= getHash(p, sq);  
+}
+
+/**
+ * Replaces the hash for piece on the given square with the given new piece.
+ * Deals with zobrist-keys.
+ * @param sq
+ * @param piece
+ */
+void Board::replacePieceHash(Square sq, Piece piece) {
+    UCI_ASSERT(0 <= sq && sq <= 63);
+    
+    // we need to know first which piece is contained on the given square.
+    Piece p = getPiece(sq);
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+}
+
+/**
  * changes the active player. This does not deal with the zobrist key so this function
  * should usually not be used.
  */
@@ -410,7 +457,7 @@ void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
  * Computes repetition counters as well as updating the zobrist key.
  * @param m
  */
-void Board::move(Move m) {
+template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     BoardStatus* previousStatus = getBoardStatus();
     BoardStatus  newBoardStatus = {previousStatus->zobrist,           // zobrist will be changed later
                                   0ULL,                              // reset en passant. might be set later
@@ -549,18 +596,33 @@ void Board::move(Move m) {
     m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
     
     // doing the initial move
-    this->unsetPiece(sqFrom);
+    this->unsetPieceHash(sqFrom);
     
     
     if (mType != EN_PASSANT && isCapture(m)) {
-        this->replacePiece(sqTo, pFrom);
+        this->replacePieceHash(sqTo, pFrom);
     } else {
-        this->setPiece(sqTo, pFrom);
+        this->setPieceHash(sqTo, pFrom);
+    }
+
+    if constexpr (prefetch)
+        __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist & table->m_mask]);
+
+    // doing the initial move
+    this->unsetPiece<true, false>(sqFrom);
+    
+    
+    if (mType != EN_PASSANT && isCapture(m)) {
+        this->replacePiece<true, false>(sqTo, pFrom);
+    } else {
+        this->setPiece<true, false>(sqTo, pFrom);
     }
     
     this->changeActivePlayer();
     this->computeNewRepetition();
 }
+template void Board::move<false>(Move m, TranspositionTable* table);
+template void Board::move<true >(Move m, TranspositionTable* table);
 
 /**
  * undoes the last move. Assumes the last move has not been a null move.
