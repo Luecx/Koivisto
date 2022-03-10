@@ -5,10 +5,12 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE SRCS src_files/*.c src_files/*.cpp src_files/*.h)
 
-add_executable(Koivisto ${SRCS})
+add_executable(Koivisto ${SRCS} src_files/defs.h)
 add_definitions(-DEVALFILE=\"../networks/default.net\")
-add_definitions(-DMINOR_VERSION=18)
+add_definitions(-DMINOR_VERSION=19)
 add_definitions(-DMAJOR_VERSION=7)
+add_definitions(-DSUPPORT_TABLEBASES)
+add_definitions(-DSUPPORT_INCBIN)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")

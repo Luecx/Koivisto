@@ -20,6 +20,7 @@
 #ifndef CHESSCOMPUTER_UTIL_CPP
 #define CHESSCOMPUTER_UTIL_CPP
 
+#include <sstream>
 #include "Util.h"
 
 /**

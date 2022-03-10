@@ -1,11 +1,17 @@
-CC       = g++
-SRC      = *.cpp syzygy/tbprobe.c
-LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-FOLDER   = bin/
-ROOT     = ../
+# --------------------------- COMPILERS ---------------------------------
+CXX      = g++
+EMCC	 = emcc
+# ----------------------------- SOURCE  ---------------------------------
+SRC_CXX  = $(wildcard *.cpp */*.cpp */*/*.cpp */*/*/*.cpp)
+SRC_C	 = $(wildcard *.c */*.c */*/*.c */*/*/*.c)
+# ----------------------------- PATHS ---------------------------------
+_THIS    := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+_ROOT	 := $(_THIS)/..
+_OUT     := $(_ROOT)/bin/
+# ------------------------------ EXE ------------------------------------
 NAME     = Koivisto
-EVALFILE = $(ROOT)networks/default.net
-EXE      = $(ROOT)$(FOLDER)$(NAME)_$(MAJOR).$(MINOR)
+EVALFILE = $(_ROOT)/networks/default.net
+EXE      = $(_OUT)$(NAME)_$(MAJOR).$(MINOR)
 MINOR    = 19
 MAJOR    = 7
 ifeq ($(OS),Windows_NT)
@@ -16,39 +22,73 @@ else
     SUFFIX := 
 endif
 
-WFLAGS = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
-CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -march=native
+LIBS     = -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+
+########################################################################################################################
+#--------------------------------------------- FLAGS    ---------------------------------------------------------------#
+########################################################################################################################
+
+WFLAGS = -std=c++17
+CFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto
 RFLAGS = -O3 $(WFLAGS) -DNDEBUG -flto -static
 PFLAGS = -O0 $(WFLAGS) -DNDEBUG -p -pg
 DFLAGS = -O0 $(WFLAGS) -g
 
+
+# ------------------------------- vector extensions ----------------------------------------------
 POPCNTFLAGS = -DUSE_POPCNT -msse3 -mpopcnt
 PEXTFLAGS   = $(POPCNTFLAGS) -DUSE_PEXT -mbmi2
 SSEFLAGS    = $(POPCNTFLAGS) -msse -msse4.1 -mssse3 -msse2
 AVX2FLAGS   = $(SSEFLAGS) -mavx2
 AVX512FLAGS = $(AVX2FLAGS) -mavx512f -mavx512bw -mavx512dq
-OPENMPFLAGS = -fopenmp
 NATIVEFLAGS = -march=native
 
-MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
+# ------------------------------- Emscripten ---------------------------------------------
+EMS_SHELL_FILE	 = ../resources/emscripten/html_template/shell_minimal.html
+EMS_SHELL_FILE_C = --shell-file $(EMS_SHELL_FILE)
+EMS_MEMORY		 = -s TOTAL_MEMORY=1073741824
+EMS_THREADS 	 = -s PROXY_TO_PTHREAD
+EMS_KEEPALIVE	 = -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
+EMS_SIMD		 = -msimd128
+EMS_MAKROS		 = $(EMS_SHELL_FILE_C) $(EMS_MEMORY) $(EMS_THREADS) $(EMS_KEEPALIVE) $(EMS_SIMD)
 
+# ------------------------------- Makros ----------------------------------------------
+VERSION_MAKRO    = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
+ENABLE_TB_MAKRO  = -DSUPPORT_TABLEBASES
+EVALFILE_MAKRO   = -DEVALFILE=\"$(EVALFILE)\"
+
+FULL_MAKRO 		 = $(VERSION_MAKRO) $(ENABLE_TB_MAKRO) $(EVALFILE_MAKRO)
+
+########################################################################################################################
+#--------------------------------------------- TARGETS  ---------------------------------------------------------------#
+########################################################################################################################
+
+PYTHON_WRITE_WEIGHTS = python incbin/adjustweightsource.py $(EVALFILE)
+PYTHON_RESET_WEIGHTS = python incbin/adjustweightsource.py incbin
 
 openbench: updateNetwork
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -o $(EXE)
+	$(CXX) $(CFLAGS) $(SRC_CXX) $(SRC_C) $(FULL_MAKRO) $(LIBS) $(NATIVEFLAGS) -o $(EXE)
+
+emscripten: updateNetwork
+	$(PYTHON_WRITE_WEIGHTS)
+	$(EMCC) $(CFLAGS) $(SRC_CXX) $(EMS_MAKROS) $(VERSION_MAKRO) $(LIBS) $(AVX2FLAGS) -o $(EXE).html
+	$(PYTHON_RESET_WEIGHTS)
 
 native: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
-    
+	$(CXX) $(CFLAGS) $(SRC_CXX) $(SRC_C) $(FULL_MAKRO) $(LIBS) $(NATIVEFLAGS) -o $(EXE)-x64-$(PREFIX)-native$(SUFFIX)
+
 release: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
-	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX512FLAGS) -o $(EXE)-x64-$(PREFIX)-avx512$(SUFFIX)
-	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-avx2$(SUFFIX)
-	$(CC) $(RFLAGS) $(SRC) $(MAKROS) $(LIBS) $(SSEFLAGS) -o $(EXE)-x64-$(PREFIX)-sse2$(SUFFIX)
+	$(CC) $(RFLAGS) $(SRC_CXX) $(SRC_C) $(FULL_MAKRO) $(LIBS) $(AVX512FLAGS) -o $(EXE)-x64-$(PREFIX)-avx512$(SUFFIX)
+	$(CC) $(RFLAGS) $(SRC_CXX) $(SRC_C) $(FULL_MAKRO) $(LIBS) $(AVX2FLAGS) -o $(EXE)-x64-$(PREFIX)-avx2$(SUFFIX)
+	$(CC) $(RFLAGS) $(SRC_CXX) $(SRC_C) $(FULL_MAKRO) $(LIBS) $(SSEFLAGS) -o $(EXE)-x64-$(PREFIX)-sse2$(SUFFIX)
 
-updateNetwork:
+updateNetwork: resetweights
 ifeq ($(EVALFILE),$(ROOT)networks/default.net)
 	git -C .. submodule update --init
 endif
 
+resetweights:
+	$(PYTHON_RESET_WEIGHTS)
 

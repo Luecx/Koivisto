@@ -27,7 +27,10 @@
 #include "movegen.h"
 #include "newmovegen.h"
 #include "polyglot.h"
+#include "defs.h"
+#ifdef SUPPORT_TABLEBASES
 #include "syzygy/tbprobe.h"
+#endif
 
 #include <thread>
 
@@ -1250,6 +1253,7 @@ void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
 Score Search::probeWDL(Board* board) {
     UCI_ASSERT(board);
 
+#ifdef SUPPORT_TABLEBASES
     if (!useTB)
         return MAX_MATE_SCORE;
     // we cannot prove the tables if there are too many pieces on the board
@@ -1297,6 +1301,9 @@ Score Search::probeWDL(Board* board) {
     }
     // if none of them above happened, act as if the result failed.
     return TB_FAILED;
+#else
+    return MAX_MATE_SCORE;
+#endif
 }
 
 /**
@@ -1307,6 +1314,7 @@ Score Search::probeWDL(Board* board) {
 Move Search::probeDTZ(Board* board) {
     UCI_ASSERT(board);
     
+#ifdef SUPPORT_TABLEBASES
     if (!useTB)
         return 0;
     
@@ -1401,8 +1409,10 @@ Move Search::probeDTZ(Board* board) {
             }
         }
     }
-
     return 0;
+#else
+    return 0;
+#endif
 }
 
 ThreadData::ThreadData(int threadId) : threadID(threadId) {}

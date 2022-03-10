@@ -23,13 +23,19 @@
 #include "search.h"
 #include "UCIAssert.h"
 
-#include "syzygy/tbprobe.h"
-
 #include <fstream>
 #include <iostream>
 #include <thread>
 #include <string>
 #include <vector>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
+
+#ifdef SUPPORT_TABLEBASES
+#include "syzygy/tbprobe.h"
+#endif
 
 using namespace bb;
 using namespace move;
@@ -80,8 +86,8 @@ void searchAndPrint(TimeManager* p_timeManager) {
  */
 void uci::mainloop(int argc, char* argv[]) {
     attacks::init();
-    bb::init();
     nn::init();
+    bb::init();
     searchObject = {};
     searchObject.init(16);
 
@@ -126,7 +132,18 @@ void uci::uci() {
     std::cout << "uciok" << std::endl;
 }
 
-
+// function which could be kept alive for emscripten based workers
+#ifdef __EMSCRIPTEN__
+#ifdef __cplusplus
+extern "C" {
+#endif
+EMSCRIPTEN_KEEPALIVE void processEMSCommand(std::string str){
+    uci::processCommand(str);
+}
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 /**
  * processes a single command.
@@ -205,6 +222,7 @@ void uci::processCommand(std::string str) {
     }
 }
 
+
 /**
  * parses the uci command: go perft [depth].
  * It is also possible to specify the hash usage like: go perft 6 hash.
@@ -249,19 +267,6 @@ void uci::set_option(std::string& name, std::string& value) {
     if (name == "Hash") {
         searchObject.setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
-        if (value.empty())
-            return;
-
-        char path[value.length()];
-        strcpy(path, value.c_str());
-        tb_init(path);
-
-        std::cout << "using syzygy table with " << TB_LARGEST << " pieces" << std::endl;
-
-        /*
-         * only use TB if loading was successful
-         */
-        searchObject.useTableBase(TB_LARGEST > 0);
     } else if (name == "Threads") {
         int count           = stoi(value);
         searchObject.setThreads(count);

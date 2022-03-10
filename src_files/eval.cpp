@@ -21,15 +21,12 @@
 
 #include "Board.h"
 #include "UCIAssert.h"
+#include "weights.txt"
 
-#define INCBIN_STYLE INCBIN_STYLE_CAMEL
-
-#include "incbin/incbin.h"
-
-alignas(ALIGNMENT) int16_t nn::inputWeights[INPUT_SIZE][HIDDEN_SIZE];
+alignas(ALIGNMENT) int16_t nn::inputWeights [INPUT_SIZE ][HIDDEN_SIZE];
 alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-alignas(ALIGNMENT) int16_t nn::inputBias[HIDDEN_SIZE];
-alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
+alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
+alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
 #define INPUT_WEIGHT_MULTIPLIER  (64)
 #define HIDDEN_WEIGHT_MULTIPLIER (512)
@@ -72,7 +69,6 @@ using avx_register_type_32 = int32x4_t;
 #define avx_max_epi16(a, b)  (vmaxq_s16(a, b))
 #endif
 
-INCBIN(Eval, EVALFILE);
 
 inline int32_t sumRegisterEpi32(avx_register_type_32 &reg) {
     // first summarize in case of avx512 registers into one 256 bit register
@@ -102,16 +98,17 @@ inline int32_t sumRegisterEpi32(avx_register_type_32 &reg) {
 #endif
 }
 
+
 void nn::init() {
     int memoryIndex = 0;
-    std::memcpy(inputWeights, &gEvalData[memoryIndex], INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));
+    std::memcpy(nn::inputWeights, &gEvalData[memoryIndex], INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));
     memoryIndex += INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t);
-    std::memcpy(inputBias, &gEvalData[memoryIndex], HIDDEN_SIZE * sizeof(int16_t));
+    std::memcpy(nn::inputBias, &gEvalData[memoryIndex], HIDDEN_SIZE * sizeof(int16_t));
     memoryIndex += HIDDEN_SIZE * sizeof(int16_t);
 
-    std::memcpy(hiddenWeights, &gEvalData[memoryIndex], HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t));
+    std::memcpy(nn::hiddenWeights, &gEvalData[memoryIndex], HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t));
     memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
-    std::memcpy(hiddenBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(int32_t));
+    std::memcpy(nn::hiddenBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(int32_t));
     memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
 }
 
@@ -120,12 +117,12 @@ int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Square square,
                          bb::Color view,
                          bb::Square kingSquare) {
-    constexpr int pieceTypeFactor = 64;
+    constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSquareFactor = 64 * 6 * 2;
 
     const bool kingSide = bb::fileIndex(kingSquare) > 3;
-    const int ksIndex = kingSquareIndex(kingSquare, view);
+    const int ksIndex   = kingSquareIndex(kingSquare, view);
     bb::Square relativeSquare = view == bb::WHITE ? square : bb::mirrorVertically(square);
 
     if (kingSide) {
@@ -242,8 +239,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board *board) {
         res = avx_add_epi32(res,
                             avx_madd_epi16(avx_max_epi16(acc_nac[i], reluBias), wgt[i + HIDDEN_SIZE / STRIDE_16_BIT]));
     }
-
-
+    
     auto outp = sumRegisterEpi32(res) + hiddenBias[0];
     return outp / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
 }

@@ -1,0 +1,3 @@
+#include "incbin/incbin.h"
+#define INCBIN_STYLE INCBIN_STYLE_CAMEL
+INCBIN(Eval, EVALFILE);
