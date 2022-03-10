@@ -12,7 +12,7 @@ _OUT     := $(_ROOT)/bin/
 NAME     = Koivisto
 EVALFILE = $(_ROOT)/networks/default.net
 EXE      = $(_OUT)$(NAME)_$(MAJOR).$(MINOR)
-MINOR    = 19
+MINOR    = 20
 MAJOR    = 7
 ifeq ($(OS),Windows_NT)
     PREFIX := windows
