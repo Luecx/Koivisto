@@ -137,47 +137,6 @@ void initLMR() {
     }
 }
 
-//void computeLMR(SearchData* sd, Board* board, int legalMoves, Move hashMove, bool pv, Depth depth, Depth ply, Move m, Score see){
-//
-//    // compute the lmr based on the depth, the amount of legal moves etc.
-//    // we dont want to reduce if its the first move we search, or a capture with a positive see
-//    // score or if the depth is too small. furthermore no queen promotions are reduced
-//    Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2
-//                 || (isCapture(m) && see > 0)
-//                 || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
-//                    ? 0
-//                    : lmrReductions[depth][legalMoves];
-//
-//    // increase reduction if we are behind a null move, depending on which side we are looking at.
-//    // this is a sound reduction in theory.
-//    if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
-//        lmr++;
-//
-//    // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
-//    // etc. Most conditions are standard and should be considered self explanatory.
-//    if (lmr) {
-//        int history = sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(),
-//                                       ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
-//        lmr         = lmr - history / 150;
-//        lmr += !isImproving;
-//        lmr -= pv;
-//        if (!sd->targetReached)
-//            lmr++;
-//        if (sd->isKiller(m, ply, board->getActivePlayer()))
-//            lmr--;
-//        if (sd->reduce && sd->sideToReduce != board->getActivePlayer())
-//            lmr++;
-//        if (lmr > MAX_PLY) {
-//            lmr = 0;
-//        }
-//        if (lmr > depth - 2) {
-//            lmr = depth - 2;
-//        }
-//        if (history > 256*(2-isCapture(m)))
-//            lmr = 0;
-//    }
-//}
-
 /**
  * returns the best move for the given board.
  * the search will stop if either the max depth is reached.
@@ -625,7 +584,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
     
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
-    U64         kingCBB    = *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq];
+    U64         occupiedBB = b->getOccupiedBB();
+    U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
+                           | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
+                           | KNIGHT_ATTACKS[kingSq];
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
                PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.

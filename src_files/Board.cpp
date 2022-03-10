@@ -1003,7 +1003,7 @@ bool Board::isLegal(Move m) {
         opponentRookBitboard   = m_piecesBB[WHITE_ROOK];
         opponentBishopBitboard = m_piecesBB[WHITE_BISHOP];
     }
-    
+
     if (isEnPassant(m)) {
         this->move(m);
         bool isOk =
