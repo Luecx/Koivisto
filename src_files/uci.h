@@ -36,7 +36,7 @@
 #include <unistd.h>
 
 namespace uci{
-void mainloop(int argc, char* argv[]);
+void init();
 
 void processCommand(std::string str);
 

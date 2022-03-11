@@ -44,14 +44,13 @@ AVX512FLAGS = $(AVX2FLAGS) -mavx512f -mavx512bw -mavx512dq
 NATIVEFLAGS = -march=native
 
 # ------------------------------- Emscripten ---------------------------------------------
-EMS_SHELL_FILE	 = ../resources/emscripten/html_template/shell_minimal.html
-EMS_SHELL_FILE_C = --shell-file $(EMS_SHELL_FILE)
-EMS_MEMORY		 = -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=71303168 -s MAXIMUM_MEMORY=1073741824
-EMS_THREADS 	 = -s PROXY_TO_PTHREAD -s PTHREAD_POOL_SIZE=1
+EMS_MEMORY		 = -s TOTAL_MEMORY=1073741824
+EMS_THREADS 	 = -s PROXY_TO_PTHREAD
 EMS_KEEPALIVE	 = -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
 EMS_SIMD		 = -msimd128
-EMS_ENV			 = -s EXPORT_NAME="Koivisto" -s ENVIRONMENT=web,worker,node --pre-js pre.js
-EMS_MAKROS		 = $(EMS_SHELL_FILE_C) $(EMS_MEMORY) $(EMS_ENV) $(EMS_THREADS) $(EMS_KEEPALIVE) $(EMS_SIMD)
+EMS_ENVIRONMENT  = -s MODULARIZE=1 -s EXPORT_NAME=Koivisto -s ENVIRONMENT=web,worker
+EMS_PREAMBLE     =  --pre-js web_preamble.js
+EMS_MAKROS		 = $(EMS_MEMORY) $(EMS_THREADS) $(EMS_KEEPALIVE) $(EMS_SIMD) $(EMS_ENVIRONMENT) $(EMS_PREAMBLE)
 
 # ------------------------------- Makros ----------------------------------------------
 VERSION_MAKRO    = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
@@ -72,7 +71,7 @@ openbench: updateNetwork
 
 emscripten: updateNetwork
 	$(PYTHON_WRITE_WEIGHTS)
-	$(EMCC) $(CFLAGS) $(SRC_CXX) $(EMS_MAKROS) $(VERSION_MAKRO) $(LIBS) $(AVX2FLAGS) -o Koivisto.js
+	$(EMCC) $(CFLAGS) $(SRC_CXX) $(EMS_MAKROS) $(VERSION_MAKRO) $(LIBS) $(AVX2FLAGS) -o $(EXE).js
 	$(PYTHON_RESET_WEIGHTS)
 
 native: updateNetwork
