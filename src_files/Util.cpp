@@ -107,7 +107,7 @@ std::vector<std::string>& splitString(const std::string& txt, std::vector<std::s
  * @return
  */
 std::string loadingBar(int count, int max, const std::string& msg) {
-    std::stringstream ss {};
+    std::stringstream ss;
     double            p = count / (double) max;
 
     ss << static_cast<int>(100 * p) << "% [";

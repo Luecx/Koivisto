@@ -48,9 +48,9 @@ std::thread searchThread;
  * @param key
  * @return
  */
-std::string getValue(const std::vector<std::string>& vec, std::string key) {
+std::string getValue(const std::vector<std::string>& vec, const std::string& key) {
     int index = 0;
-    for (std::string s : vec) {
+    for (const std::string& s : vec) {
         if (s == key) {
             return vec.at(index + 1);
         }
@@ -136,7 +136,7 @@ void uci::processCommand(std::string str) {
     str = trim(str);
 
     // next we need to split the input by spaces.
-    std::vector<std::string> split {};
+    std::vector<std::string> split;
     splitString(str, split, ' ');
 
     if (split.at(0) == "ucinewgame") {
@@ -149,8 +149,8 @@ void uci::processCommand(std::string str) {
         if (split.size() < 5)
             return;
 
-        std::string name  = getValue(split, "name");
-        std::string value = getValue(split, "value");
+        const std::string name  = getValue(split, "name");
+        const std::string value = getValue(split, "value");
 
         uci::set_option(name, value);
     } else if (split.at(0) == "go") {
@@ -179,7 +179,7 @@ void uci::processCommand(std::string str) {
         auto fenPos  = str.find("fen");
         auto movePos = str.find("moves");
 
-        std::string moves {};
+        std::string moves;
         if (movePos != std::string::npos) {
             moves = str.substr(movePos + 5);
             moves = trim(moves);
@@ -245,7 +245,7 @@ void uci::stop() {
  * @param name
  * @param value
  */
-void uci::set_option(std::string& name, std::string& value) {
+void uci::set_option(const std::string& name, const std::string& value) {
     if (name == "Hash") {
         searchObject.setHashSize(stoi(value));
     } else if (name == "SyzygyPath") {
@@ -299,12 +299,12 @@ void uci::debug(bool mode) {
  * @param fen
  * @param moves
  */
-void uci::position_fen(std::string fen, std::string moves) {
+void uci::position_fen(const std::string& fen, const std::string& moves) {
     board = Board {fen};
 
     if (moves.empty())
         return;
-    std::vector<std::string> mv {};
+    std::vector<std::string> mv;
     splitString(moves, mv, ' ');
 
     for (std::string s : mv) {
@@ -381,7 +381,7 @@ void uci::position_fen(std::string fen, std::string moves) {
  * @param fen
  * @param moves
  */
-void uci::position_startpos(std::string moves) {
+void uci::position_startpos(const std::string& moves) {
     uci::position_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves);
 }
 

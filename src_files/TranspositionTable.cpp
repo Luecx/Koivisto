@@ -40,7 +40,7 @@ void TranspositionTable::init(bb::U64 MB) {
     m_size /= 2;
     m_mask = m_size - 1;
 
-    m_entries = (Entry*) (calloc(m_size, sizeof(Entry)));
+    m_entries = std::make_unique<Entry[]>(m_size);
     clear();
 
     m_currentAge = 0;
@@ -59,23 +59,20 @@ bb::U64 TranspositionTable::getSize() const { return m_size; }
 TranspositionTable::TranspositionTable(bb::U64 mb) { init(mb); }
 
 /**
- * destructor which deletes the table.
- */
-TranspositionTable::~TranspositionTable() { free(m_entries); }
-
-/**
  * clears the content and enlarges the table if possibles to a maximum size of mb
  * @param mb
  */
 void TranspositionTable::setSize(bb::U64 mb) {
-    free(m_entries);
     init(mb);
 }
 
 /**
  * clears the content and sets all entries to 0.
  */
-void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_size); }
+void TranspositionTable::clear() {
+    if (m_entries)
+        std::memset(m_entries.get(), 0, sizeof(Entry) * m_size);
+}
 
 /**
  * returns a floating value for the amount of values used.
@@ -159,6 +156,10 @@ void TranspositionTable::incrementAge() {
     if (TranspositionTable::m_currentAge == 255) {
         TranspositionTable::m_currentAge = 0;
     }
+}
+
+void TranspositionTable::prefetch(const bb::U64 zobrist) const {
+    __builtin_prefetch(&m_entries[zobrist & m_mask]);
 }
 
 /**
