@@ -19,6 +19,8 @@
 
 #include "TranspositionTable.h"
 
+#include <cstring>
+
 /**
  * inits the table to the given size.
  * Calculates the amount of entries that can fit.

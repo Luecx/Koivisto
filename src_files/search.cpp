@@ -545,7 +545,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!b->isLegal(m))
                 continue;
 
-            b->move(m);
+            b->move<true>(m, table);
             __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
@@ -770,9 +770,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // doing the move
-        b->move(m);
-        
-        __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
+        b->move<true>(m, table);
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
@@ -999,8 +997,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             return beta;
         
 
-        b->move(m);
-        __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
+        b->move<true>(m, table);
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
@@ -1202,7 +1199,7 @@ void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
             return;
 
         mvList->add(mov);
-        b->move(en.move);
+        b->move<true>(en.move, table);
 
         extractPV(b, mvList, depth - 1);
         b->undoMove();
