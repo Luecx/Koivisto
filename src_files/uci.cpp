@@ -29,10 +29,6 @@
 #include <string>
 #include <vector>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#endif
-
 #ifdef SUPPORT_TABLEBASES
 #include "syzygy/tbprobe.h"
 #endif
@@ -84,7 +80,7 @@ void searchAndPrint(TimeManager* p_timeManager) {
  * deallocate arrays.
  * @param bench
  */
-void uci::mainloop(int argc, char* argv[]) {
+void uci::init() {
     attacks::init();
     nn::init();
     bb::init();
@@ -98,21 +94,6 @@ void uci::mainloop(int argc, char* argv[]) {
     board = new Board();
 
     std::atexit(uci::quit);
-    std::string line;
-
-    // read given commands from shell
-    for(int i = 1; i < argc; i++){
-        processCommand(argv[i]);
-        // OB requires us to give an exit command once the bench command is given
-        if( strcmp(argv[i], "bench") == 0) {
-            processCommand("exit");
-        }
-    }
-
-
-    while (std::getline(std::cin, line)) {
-        uci::processCommand(line);
-    }
 }
 
 /**
@@ -131,19 +112,6 @@ void uci::uci() {
 
     std::cout << "uciok" << std::endl;
 }
-
-// function which could be kept alive for emscripten based workers
-#ifdef __EMSCRIPTEN__
-#ifdef __cplusplus
-extern "C" {
-#endif
-EMSCRIPTEN_KEEPALIVE void processEMSCommand(std::string str){
-    uci::processCommand(str);
-}
-#ifdef __cplusplus
-}
-#endif
-#endif
 
 /**
  * processes a single command.
@@ -215,9 +183,9 @@ void uci::processCommand(std::string str) {
         nn::Evaluator evaluator{};
         evaluator.reset(&board);
         std::cout << "eval=" << evaluator.evaluate(board.getActivePlayer()) << std::endl;
-    } else if (split.at(0) == "bench"){
+    } else if (split.at(0) == "bench") {
         bench();
-    } else if (split.at(0) == "exit" || split.at(0) == "quit"){
+    } else if (split.at(0) == "exit" || split.at(0) == "quit") {
         exit(0);
     }
 }

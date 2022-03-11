@@ -19,9 +19,39 @@
 
 #include "uci.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
 
 int main(int argc, char *argv[]) {
-    uci::mainloop(argc, argv);
+    uci::init();
+#ifndef __EMSCRIPTEN__
+    std::string line;
+    // read given commands from shell
+    for(int i = 1; i < argc; i++){
+        uci::processCommand(argv[i]);
+        // OB requires us to give an exit command once the bench command is given
+        if( strcmp(argv[i], "bench") == 0) {
+            uci::processCommand("exit");
+        }
+    }
 
+    while (std::getline(std::cin, line)) {
+        uci::processCommand(line);
+    }
+#endif
     return 0;
 }
+
+#ifdef __EMSCRIPTEN__
+#ifdef __cplusplus
+extern "C" {
+#endif
+EMSCRIPTEN_KEEPALIVE void processCommand(const char *str){
+    std::string command(str);
+    uci::processCommand(command);
+}
+#ifdef __cplusplus
+}
+#endif
+#endif
