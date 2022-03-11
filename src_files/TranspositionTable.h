@@ -21,13 +21,11 @@
 #define CHESSCOMPUTER_HASHMAP_H
 
 #include "Bitboard.h"
-#include "Board.h"
 #include "Move.h"
 
 #include <memory>
 #include <ostream>
 #include <stdint.h>
-
 
 using NodeType = uint8_t;
 using NodeAge = uint8_t;

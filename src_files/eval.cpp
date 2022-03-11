@@ -31,8 +31,8 @@ alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 alignas(ALIGNMENT) int16_t nn::inputBias[HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
 
-#define INPUT_WEIGHT_MULTIPLIER  (128)
-#define HIDDEN_WEIGHT_MULTIPLIER (256)
+#define INPUT_WEIGHT_MULTIPLIER  (64)
+#define HIDDEN_WEIGHT_MULTIPLIER (512)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;

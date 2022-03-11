@@ -137,47 +137,6 @@ void initLMR() {
     }
 }
 
-//void computeLMR(SearchData* sd, Board* board, int legalMoves, Move hashMove, bool pv, Depth depth, Depth ply, Move m, Score see){
-//
-//    // compute the lmr based on the depth, the amount of legal moves etc.
-//    // we dont want to reduce if its the first move we search, or a capture with a positive see
-//    // score or if the depth is too small. furthermore no queen promotions are reduced
-//    Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2
-//                 || (isCapture(m) && see > 0)
-//                 || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
-//                    ? 0
-//                    : lmrReductions[depth][legalMoves];
-//
-//    // increase reduction if we are behind a null move, depending on which side we are looking at.
-//    // this is a sound reduction in theory.
-//    if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
-//        lmr++;
-//
-//    // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
-//    // etc. Most conditions are standard and should be considered self explanatory.
-//    if (lmr) {
-//        int history = sd->getHistories(m, board->getActivePlayer(), board->getPreviousMove(),
-//                                       ply > 1 ? sd->playedMoves[ply - 2] : 0, mainThreat);
-//        lmr         = lmr - history / 150;
-//        lmr += !isImproving;
-//        lmr -= pv;
-//        if (!sd->targetReached)
-//            lmr++;
-//        if (sd->isKiller(m, ply, board->getActivePlayer()))
-//            lmr--;
-//        if (sd->reduce && sd->sideToReduce != board->getActivePlayer())
-//            lmr++;
-//        if (lmr > MAX_PLY) {
-//            lmr = 0;
-//        }
-//        if (lmr > depth - 2) {
-//            lmr = depth - 2;
-//        }
-//        if (history > 256*(2-isCapture(m)))
-//            lmr = 0;
-//    }
-//}
-
 /**
  * returns the best move for the given board.
  * the search will stop if either the max depth is reached.
@@ -236,7 +195,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     ThreadData* td = &this->tds[threadId];
     // initialise the score outside the loop tp keep track of it during iterations.
     // This is required for aspiration windows
-    Score score = 0;
+    Score score     = 0;
+    Score prevScore = 0;
     // we will create a copy of the board object which will be used during search
     // This is relevant as multiple threads can clearly not use the same object.
     // Also, its relevant because if we stop the search even if the search has not finished, the board
@@ -254,6 +214,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // done very quick anyway
         if (depth < 6) {
             score = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, depth, 0, td, 0, 2);
+            prevScore = score;
         } else {
             // initial window size
             Score window = 10;
@@ -288,6 +249,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
                                                      [getSquareTo  (td->searchData.bestMove)]
                            * 100 / td->nodes;
+
+        int evalScore    = prevScore - score;
         
         // print the info string if its the main thread
         if (threadId == 0) {
@@ -295,7 +258,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         }
 
         // if the search finished due to timeout, we also need to stop here
-        if (!this->timeManager->rootTimeLeft(timeManScore))
+        if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
             break;
     }
 
@@ -579,8 +542,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!b->isLegal(m))
                 continue;
 
-            b->move(m);
-            table->prefetch(b->getBoardStatus()->zobrist);
+            b->move<true>(m, table);
+            __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 
@@ -621,9 +584,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
     
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
+    U64         occupiedBB = b->getOccupiedBB();
+    U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
+                           | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
+                           | KNIGHT_ATTACKS[kingSq];
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
-               PV_SEARCH, mainThreat,
-               *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+               PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
@@ -638,7 +604,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             continue;
 
         // check if the move gives check and/or its promoting
-        bool givesCheck  = b->givesCheck(m);
+        bool givesCheck  = ((ONE << getSquareTo(m)) & kingCBB) ? b->givesCheck(m) : 0;
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
@@ -688,7 +654,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // ***************************************************************************************
             if (moveDepth <= 5 + quiet * 3
                 && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && b->staticExchangeEvaluation(m) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+                && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
                 continue;
         }
 
@@ -703,10 +669,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // compute the static exchange evaluation if the move is a capture
-        Score staticExchangeEval = 1;
-        if (isCapture(m) && (getCapturedPieceType(m)) <= (getMovingPieceType(m))) {
-            staticExchangeEval = b->staticExchangeEvaluation(m);
-        }
+        Score staticExchangeEval = isCapture(m) ? mGen->lastSee : 1;
 
         // keep track of the depth we want to extend by
         int extension = 0;
@@ -744,8 +707,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     return score;
             }
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(),
-                       b->getPreviousMove(2), PV_SEARCH, mainThreat,
-                       *BISHOP_ATTACKS[kingSq] | *ROOK_ATTACKS[kingSq] | KNIGHT_ATTACKS[kingSq]);
+                       b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
             m = mGen->next();
         }
         // *******************************************************************************************
@@ -805,9 +767,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // doing the move
-        b->move(m);
-        
-        table->prefetch(b->getBoardStatus()->zobrist);
+        b->move<true>(m, table);
 
         // adjust the extension policy for checks. we could use the givesCheck value but it has not
         // been validated to work 100%
@@ -1021,27 +981,20 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (!b->isLegal(m))
             continue;
 
-        // if the move seems to be really good just return beta.
-        if (+see_piece_vals[(getPieceType(getCapturedPiece(m)))]
-                - see_piece_vals[getPieceType(getMovingPiece(m))] - 300 + stand_pat
-            > beta)
-            return beta;
-
         // *******************************************************************************************
         // static exchange evaluation pruning (see pruning):
         // if the depth is small enough and the static exchange evaluation for the given move is very
         // negative, dont consider this quiet move as well.
         // *******************************************************************************************
         Score see =
-            (!inCheck && (isCapture(m) || isPromotion(m))) ? b->staticExchangeEvaluation(m) : 0;
+            (!inCheck && (isCapture(m) || isPromotion(m))) ? mGen->lastSee : 0;
         if (see < 0)
             continue;
         if (see + stand_pat > beta + 200)
             return beta;
         
 
-        b->move(m);
-        table->prefetch(b->getBoardStatus()->zobrist);
+        b->move<true>(m, table);
 
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
 
@@ -1234,7 +1187,7 @@ void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
             return;
 
         mvList->add(mov);
-        b->move(en.move);
+        b->move<true>(en.move, table);
 
         extractPV(b, mvList, depth - 1);
         b->undoMove();

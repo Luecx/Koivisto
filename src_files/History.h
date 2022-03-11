@@ -35,7 +35,7 @@ struct SearchData {
     int      th[bb::N_COLORS][bb::N_SQUARES + 1][bb::N_SQUARES * bb::N_SQUARES]                      = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
     int      cmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES] = {0};
-    // killer history
+    // followup move history
     int      fmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES] = {0};
     // kill table, +2 used to make sure we can always reset +2
     move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                 = {0};

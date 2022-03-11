@@ -122,8 +122,8 @@ Move moveGen::next() {
 void moveGen::addNoisy(Move m) {
     if (sameMove(m_hashMove, m))
         return;
-    int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
-              - 1 : m_board->staticExchangeEvaluation(m);
+    int score   = m_board->staticExchangeEvaluation(m);
+    noisySee[noisySize] = score;
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];
     if (score >= 0) {
         score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
@@ -143,14 +143,18 @@ void moveGen::addQuiet(Move m) {
 }
 
 Move moveGen::nextNoisy() {
-    if (m_skip)
+    if (m_skip) {
+        lastSee = noisySee[noisy_index];
         return noisy[noisy_index++];
+    }
     int bestNoisy = noisy_index;
     for (int i = noisy_index + 1; i < noisySize; i++) {
         if (noisyScores[i] > noisyScores[bestNoisy])
             bestNoisy = i;
     }
-    Move m = noisy[bestNoisy];
+    Move m  = noisy[bestNoisy];
+    lastSee = noisySee[bestNoisy];
+    noisySee[bestNoisy]     = noisySee[noisy_index];
     noisyScores[bestNoisy]  = noisyScores[noisy_index];
     noisy[bestNoisy]        = noisy[noisy_index++];
     return m;

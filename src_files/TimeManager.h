@@ -89,7 +89,7 @@ class TimeManager {
      * iterative deepening iterations. It ensures that the search will mostly finish its iteration.
      * @return
      */
-    [[nodiscard]] bool rootTimeLeft(int score) const;
+    [[nodiscard]] bool rootTimeLeft(int nodeScore, int evalScore) const;
 };
 
 #endif    // KOIVISTO_TIMEMANAGER_H

@@ -19,6 +19,7 @@
 
 
 #include "attacks.h"
+#include "TranspositionTable.h"
 #include "Board.h"
 
 #include "UCIAssert.h"
@@ -297,7 +298,7 @@ Piece Board::getPiece(Square sq) const { return m_pieceBoard[sq]; }
  * @param sq
  * @param piece
  */
-template<bool updateNN>
+template<bool updateNN, bool updateZobrist>
 void Board::setPiece(Square sq, Piece piece) {
     // first we set the piece on the piece board
     m_pieceBoard[sq] = piece;
@@ -320,8 +321,10 @@ void Board::setPiece(Square sq, Piece piece) {
     }
 
     // also adjust the zobrist key
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(piece, sq);
+    if constexpr (updateZobrist) {
+        BoardStatus* st = getBoardStatus();
+        st->zobrist ^= getHash(piece, sq);
+    }
 }
 
 /**
@@ -329,7 +332,7 @@ void Board::setPiece(Square sq, Piece piece) {
  * Deals with zobrist-keys.
  * @param sq
  */
-template<bool updateNN>
+template<bool updateNN, bool updateZobrist>
 void Board::unsetPiece(Square sq) {
     UCI_ASSERT(0 <= sq && sq <= 63);
     
@@ -353,10 +356,10 @@ void Board::unsetPiece(Square sq) {
     m_occupiedBB &= sqBB;
     
     // also adjust the zobrist key
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(p, sq);
-    
-    
+    if constexpr (updateZobrist) {
+        BoardStatus* st = getBoardStatus();
+        st->zobrist ^= getHash(p, sq);  
+    }
     
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
@@ -368,9 +371,11 @@ void Board::unsetPiece(Square sq) {
  * @param sq
  * @param piece
  */
-template<bool updateNN>
+template<bool updateNN, bool updateZobrist>
 void Board::replacePiece(Square sq, Piece piece) {
-    // we need to know first which piece will be replaced on the given square.
+    UCI_ASSERT(0 <= sq && sq <= 63);
+    
+    // we need to know first which piece is contained on the given square.
     const Piece p = getPiece(sq);
     
     // similar to setPiece() we need the square as a bitboard for upccancy bitboards.
@@ -382,8 +387,10 @@ void Board::replacePiece(Square sq, Piece piece) {
     m_teamOccupiedBB[piece / 8] |= sqBB;    // set
     
     // also adjust the zobrist key
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
+    if constexpr (updateZobrist) {
+        BoardStatus* st = getBoardStatus();
+        st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+    }
     
     // update the evaluator
     if constexpr (updateNN){
@@ -391,12 +398,52 @@ void Board::replacePiece(Square sq, Piece piece) {
                                           bitscanForward(m_piecesBB[WHITE_KING]),
                                           bitscanForward(m_piecesBB[BLACK_KING]));
         evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq,
-                                          bitscanForward(m_piecesBB[WHITE_KING]),
-                                          bitscanForward(m_piecesBB[BLACK_KING]));
+                                         bitscanForward(m_piecesBB[WHITE_KING]),
+                                         bitscanForward(m_piecesBB[BLACK_KING]));
     }
 
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
+}
+
+/**
+ * Sets the hash for piece on the given square.
+ * Deals with zobrist-keys.
+ * @param sq
+ * @param piece
+ */
+void Board::setPieceHash(Square sq, Piece piece) {
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= getHash(piece, sq);
+}
+
+/**
+ * Unsets the hash for piece on the given square.
+ * Deals with zobrist-keys.
+ * @param sq
+ */
+void Board::unsetPieceHash(Square sq) {
+    UCI_ASSERT(0 <= sq && sq <= 63);
+    
+    // we need to know first which piece is contained on the given square.
+    Piece p = getPiece(sq);
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= getHash(p, sq);  
+}
+
+/**
+ * Replaces the hash for piece on the given square with the given new piece.
+ * Deals with zobrist-keys.
+ * @param sq
+ * @param piece
+ */
+void Board::replacePieceHash(Square sq, Piece piece) {
+    UCI_ASSERT(0 <= sq && sq <= 63);
+    
+    // we need to know first which piece is contained on the given square.
+    Piece p = getPiece(sq);
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
 }
 
 /**
@@ -410,16 +457,16 @@ void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
  * Computes repetition counters as well as updating the zobrist key.
  * @param m
  */
-void Board::move(Move m) {
+template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     BoardStatus* previousStatus = getBoardStatus();
     BoardStatus  newBoardStatus = {previousStatus->zobrist,           // zobrist will be changed later
-                                   0ULL,                              // reset en passant. might be set later
-                                   previousStatus->castlingRights,    // copy meta. might be changed
-                                   previousStatus->fiftyMoveCounter
-                                   + 1,    // increment fifty move counter. might be reset
-                                   1ULL,       // set rep to 1 (no rep)
-                                   previousStatus->moveCounter + getActivePlayer(),    // increment move counter
-                                   m};
+                                  0ULL,                              // reset en passant. might be set later
+                                  previousStatus->castlingRights,    // copy meta. might be changed
+                                  previousStatus->fiftyMoveCounter
+                                      + 1,    // increment fifty move counter. might be reset
+                                  1ULL,       // set rep to 1 (no rep)
+                                  previousStatus->moveCounter + getActivePlayer(),    // increment move counter
+                                  m};
     
         
     this->evaluator.addNewAccumulation();
@@ -462,8 +509,8 @@ void Board::move(Move m) {
             newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
         }
             
-            // promotions are handled differently because the new piece at the target square is not the piece that initially
-            // moved.
+        // promotions are handled differently because the new piece at the target square is not the piece that initially
+        // moved.
         else if (isPromotion(m)) {
             // we handle this case seperately so we return after this finished.
             m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
@@ -529,7 +576,7 @@ void Board::move(Move m) {
         return;
     }
         
-        // revoke castling rights if rook moves and it is on the initial square
+    // revoke castling rights if rook moves and it is on the initial square
     else if (getPieceType(pFrom) == ROOK) {
         if (color == WHITE) {
             if (sqFrom == A1) {
@@ -549,18 +596,33 @@ void Board::move(Move m) {
     m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
     
     // doing the initial move
-    this->unsetPiece(sqFrom);
+    this->unsetPieceHash(sqFrom);
     
     
     if (mType != EN_PASSANT && isCapture(m)) {
-        this->replacePiece(sqTo, pFrom);
+        this->replacePieceHash(sqTo, pFrom);
     } else {
-        this->setPiece(sqTo, pFrom);
+        this->setPieceHash(sqTo, pFrom);
+    }
+
+    if constexpr (prefetch)
+        __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist & table->m_mask]);
+
+    // doing the initial move
+    this->unsetPiece<true, false>(sqFrom);
+    
+    
+    if (mType != EN_PASSANT && isCapture(m)) {
+        this->replacePiece<true, false>(sqTo, pFrom);
+    } else {
+        this->setPiece<true, false>(sqTo, pFrom);
     }
     
     this->changeActivePlayer();
     this->computeNewRepetition();
 }
+template void Board::move<false>(Move m, TranspositionTable* table);
+template void Board::move<true >(Move m, TranspositionTable* table);
 
 /**
  * undoes the last move. Assumes the last move has not been a null move.
@@ -745,7 +807,7 @@ Score Board::staticExchangeEvaluation(Move m) const {
     // pawns, kings, knights
     
     U64 attadef =
-            (fixed | ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens)));
+        (fixed | ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens)));
     
     if (isCapture(m))
         gain[d] = see_piece_vals[getPieceType(capturedPiece)];
@@ -809,10 +871,13 @@ U64 Board::attacksTo(U64 p_occupied, Square sq) const {
  */
 template<Color attacker> bool Board::isUnderAttack(Square square) const {
     const U64 sqBB = ONE << square;
+
+    UCI_ASSERT(square < 64)
+    UCI_ASSERT(sqBB)
     
     if constexpr (attacker == WHITE) {
         return (   attacks::lookUpRookAttacks  (square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] |
-                                                                         m_piecesBB[WHITE_ROOK]))  != 0
+                                                                    m_piecesBB[WHITE_ROOK]))  != 0
                || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[WHITE_QUEEN] |
                                                                          m_piecesBB[WHITE_BISHOP]))!= 0
                || (attacks::KNIGHT_ATTACKS[square]                    &  m_piecesBB[WHITE_KNIGHT]) != 0
@@ -820,7 +885,7 @@ template<Color attacker> bool Board::isUnderAttack(Square square) const {
                || ((shiftSouthEast(sqBB) | shiftSouthWest(sqBB))      &  m_piecesBB[WHITE_PAWN])   != 0;
     } else {
         return (  attacks::lookUpRookAttacks   (square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] |
-                                                                         m_piecesBB[BLACK_ROOK]))  != 0
+                                                                    m_piecesBB[BLACK_ROOK]))  != 0
                || (attacks::lookUpBishopAttacks(square, m_occupiedBB) & (m_piecesBB[BLACK_QUEEN] |
                                                                          m_piecesBB[BLACK_BISHOP]))!= 0
                || (attacks::KNIGHT_ATTACKS[square]                    &  m_piecesBB[BLACK_KNIGHT]) != 0
@@ -953,7 +1018,7 @@ bool Board::givesCheck(Move m) {
             return true;
         }
     }
-        
+    
     // en passant
     else if (isEnPassant(m)) {
         if (getActivePlayer() == WHITE) {
@@ -1000,12 +1065,12 @@ bool Board::isLegal(Move m) {
         opponentRookBitboard   = m_piecesBB[WHITE_ROOK];
         opponentBishopBitboard = m_piecesBB[WHITE_BISHOP];
     }
-    
+
     if (isEnPassant(m)) {
         this->move(m);
         bool isOk =
-                 (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
-                 && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
+            (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
+            && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
         this->undoMove();
         
         return isOk;
@@ -1068,75 +1133,154 @@ bool Board::isPseudoLegal(Move m) const {
         return false;
     
     // first we extract some information which are definetly required
-    const Square sqFrom        = getSquareFrom(m);
-    const Square sqTo          = getSquareTo(m);
-    const Piece  pieceFrom     = getMovingPiece(m);
-    const Color  activePlayer  = getMovingPieceColor(m);
+    const Square sqFrom        = move::getSquareFrom(m);
+    const Square sqTo          = move::getSquareTo(m);
+    const Piece  pieceFrom     = move::getMovingPiece(m);
+    const Piece  pieceTo       = move::getCapturedPiece(m);
+    const Color  activePlayer  = move::getMovingPieceColor(m);
     const bool   isCapture     = move::isCapture(m);
     
     // check if the piece at the starting square is also the moving piece
     if(getPiece(sqFrom) != pieceFrom) return false;
     
+    // make sure to only move pieces of the correct color
+    if(getPieceColor(pieceFrom) != getActivePlayer()) return false;
+    
+    // make sure that the piece we capture is also the piece on the square we move to
+    if((isCapture && !isEnPassant(m)) && pieceTo != getPiece(sqTo)) return false;
+    
+    // don't capture your own pieces
+    if((isCapture && !isEnPassant(m)) && getPieceColor(pieceTo) == getActivePlayer()) return false;
+    
+    // no capture should also not move to any square where there is a piece
+    if(!(isCapture && !isEnPassant(m)) && (pieceTo != 0 || getPiece(sqTo) != -1)) return false;
+    
+    // square from and square to cannot be the same
+    if(sqFrom == sqTo) return false;
+    
+    // check that promotions, or e.p. is only done for pawns
+    if((    isDoubledPawnPush(m)
+         || isPromotion      (m)
+         || isEnPassant      (m)) && getPieceType(pieceFrom) != PAWN) return false;
+    
+    // check that castling moves can only be played by kings
+    if(isCastle(m) && getPieceType(pieceFrom) != KING) return false;
+    
+    // 6 or 7 are illegal
+    if(getType(m) == 6 || getType(m) == 7) return false;
+    
+    // forward direction for pawns
+    Direction forward = (getActivePlayer() == WHITE) ? NORTH : SOUTH;
+    
+    // check piece specific stuff
     switch(getPieceType(pieceFrom)){
         case PAWN:
-            if (isPromotion(m)){
-                // check if the capture flag is right or not.
-                if(isCapture){
-                    return getPiece(sqTo) == getCapturedPiece(m);
-                }else{
-                    // if its not a capture, there should be a -1 at that square
-                    return getPiece(sqTo) == -1;
-                }
+            // normal moves or double pawn pushes must make sure the square in front is empty
+            if (getType(m) == QUIET){
+                if(getPiece(sqFrom + forward) != -1) return false;
+                if(sqFrom + forward != sqTo)         return false;
+                if(getActivePlayer() == WHITE && rankIndex(sqFrom) >= 6 ||
+                    getActivePlayer() == BLACK && rankIndex(sqFrom) <= 1) return false;
             }
-            else if (isCapture){
-                if(isEnPassant(m)){
-                    return sqTo == getEnPassantSquare();
-                }else{
-                    // check if the piece captured is actually at the given square
-                    return getPiece(sqTo) == getCapturedPiece(m);
-                }
+            // furthermore double pawn pushes must check the square which is two squares ahead
+            // is empty
+            if (isDoubledPawnPush(m)){
+                // validate that the squares are empty
+                if(getPiece(sqFrom + forward)     != -1) return false;
+                if(getPiece(sqFrom + forward * 2) != -1) return false;
+                if(sqFrom + forward * 2 != sqTo)         return false;
+                
+                // validate that the pawn is on the 2nd rank
+                if(getActivePlayer() == WHITE && rankIndex(sqFrom) != 1 ||
+                    getActivePlayer() == BLACK && rankIndex(sqFrom) != 6) return false;
             }
-            else if (isDoubledPawnPush(m)){
-                // validate that both squares are empty
-                return getPiece(sqTo) == -1 && getPiece(sqTo + 8 * (getActivePlayer() == WHITE ? -1:1)) == -1;
+            if(isEnPassant(m)){
+                if (sqTo != getEnPassantSquare()) return false;
+                if (getPiece(sqTo - forward) != bb::getPiece(!getActivePlayer(), PAWN)) return false;
+            }
+            if(isCapture){
+                // only allow diagonal captures for pawns in the forward direction
+                if(fileIndex(sqFrom) == 7 && (sqTo == sqFrom + forward + 1)) return false;
+                if(fileIndex(sqFrom) == 0 && (sqTo == sqFrom + forward - 1)) return false;
+                
+                if(    ((sqTo != sqFrom + forward + 1))
+                    && ((sqTo != sqFrom + forward - 1))) return false;
+            }
+            
+            if(isPromotion(m)){
+                // validate that the pawn is on the 2nd rank
+                if(getActivePlayer() == WHITE && rankIndex(sqFrom) != 6 ||
+                    getActivePlayer() == BLACK && rankIndex(sqFrom) != 1) return false;
+                if(getActivePlayer() == WHITE && rankIndex(sqTo  ) != 7 ||
+                    getActivePlayer() == BLACK && rankIndex(sqTo  ) != 0) return false;
+                if(!isCapture && sqTo != sqFrom + forward) return false;
             }else{
-                // validate that the target square is empty
-                return getPiece(sqTo) == -1;
+                if(getActivePlayer() == WHITE && rankIndex(sqFrom) >= 6 ||
+                    getActivePlayer() == BLACK && rankIndex(sqFrom) <= 1) return false;
             }
             break;
-        // skip knights as there are no rays which need to be checked
-        // for sliding pieces we only need to validate there is no piece on the squares in between the from and to
-        // square
+        case KNIGHT:
+            if(~attacks::KNIGHT_ATTACKS[sqFrom] & (ONE << sqTo)) return false;
+            break;
         case BISHOP:
+            // check its on the same diagonal
+            if(    diagonalIndex    (sqFrom) != diagonalIndex    (sqTo)
+                && antiDiagonalIndex(sqFrom) != antiDiagonalIndex(sqTo)){
+                return false;
+            }
+            // check there is no piece in between
+            if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
+            break;
         case ROOK:
+            // check its on the same file or rank
+            if(    fileIndex(sqFrom) != fileIndex(sqTo)
+                && rankIndex(sqFrom) != rankIndex(sqTo)){
+                return false;
+            }
+            // check there is no piece in between
+            if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
+            break;
         case QUEEN:
+            // check its on the same file or rank
+            if(    fileIndex        (sqFrom) != fileIndex        (sqTo)
+                && rankIndex        (sqFrom) != rankIndex        (sqTo)
+                && diagonalIndex    (sqFrom) != diagonalIndex    (sqTo)
+                && antiDiagonalIndex(sqFrom) != antiDiagonalIndex(sqTo)){
+                return false;
+            }
             // if there is a piece in the way, this move is invalid
             if((IN_BETWEEN_SQUARES[sqFrom][sqTo] & m_occupiedBB) != 0) return false;
-            if (isCapture - (getPiece(sqTo) != -1) != 0) return false;
             break;
         case KING:
             // we only need to check if the castling move is valid.
             // for this we can look into the meta information
             if(isCastle(m)){
                 bool kingSideCastle = sqTo > sqFrom;
-                U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ? 
-                      (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK) 
-                      : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
+                
+                if( kingSideCastle && getType(m) == QUEEN_CASTLE) return false;
+                if(!kingSideCastle && getType(m) == KING_CASTLE ) return false;
+                
+                if(sqTo - sqFrom != 2 &&  kingSideCastle) return false;
+                if(sqFrom - sqTo != 2 && !kingSideCastle) return false;
+                
+                U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ?
+                                                                          (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK)
+                                                                          : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
                 if(canCastleMask == 0 && getCastlingRights(activePlayer * 2 + kingSideCastle)){
                     return true;
                 }
                 // we can exit early as this cannot be a capture
                 return false;
             }
+            // moves which pass more than 1 square are obviously not possible
+            if(~attacks::KING_ATTACKS[sqFrom] & (ONE << sqTo)){
+                return false;
+            }
             break;
     }
-
-    // finally we need to check for the moves if its a capture and if thats the case, that the captured piece is on that
-    // square
-    if (isCapture)
-        return getPiece(sqTo) == getCapturedPiece(m);
-    return getPiece(sqTo) == -1;
+    return true;
 }
+
 /**
  * returns true if castling for the given index is possible.
  * For a reference to the indexing, check Board.h
@@ -1290,10 +1434,10 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 
 Score Board::evaluate(){
     float phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(getPieceBB()[WHITE_PAWN] | getPieceBB()[BLACK_PAWN])
-         - phaseValues[1] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
-         - phaseValues[2] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
-         - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
-         - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
-         / 24.0f;
+                   - phaseValues[1] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
+                   - phaseValues[2] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
+                   - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
+                   - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
+                  / 24.0f;
     return (2.0f - phase) * 0.8f * (this->evaluator.evaluate(this->getActivePlayer()) + 10);
 }

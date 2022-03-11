@@ -50,10 +50,10 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     UCI_ASSERT(moves_to_go >= 0);
     
     constexpr U64 overhead = 50;
-    const double  division = moves_to_go + 1;
+    const double  division = 2;
     
-    U64 upperTimeBound = (int(time / division) * 3 + std::min(time * 0.9 + inc, inc * 3.0) - 25);
-    U64 timeToUse      = upperTimeBound / 3;
+    U64 upperTimeBound = time / 2;
+    U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
     timeToUse          = std::min(time - inc, timeToUse);
     upperTimeBound     = std::min(time - inc, upperTimeBound);
@@ -102,11 +102,15 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
     return true;
 }
 
-bool TimeManager::rootTimeLeft(int score) const {
+bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     // stop the search if requested
     if (force_stop)
         return false;
+
+    nodeScore = 110 - std::min(nodeScore, 90);
     
+    evalScore = std::min(std::max(50, 50 + evalScore), 80);
+
     int elapsed = elapsedTime();
     
     if(    move_time_limit.enabled
@@ -120,7 +124,7 @@ bool TimeManager::rootTimeLeft(int score) const {
     // 100, we half the time to use. If it's lower than 30, it reaches a maximum of 1.4 times the
     // original time to use.
     if(    match_time_limit.enabled
-        && match_time_limit.time_to_use * 50.0 / std::max(score, 30) < elapsed)
+        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 65 < elapsed)
         return false;
     
     return true;
