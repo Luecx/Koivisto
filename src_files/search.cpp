@@ -543,7 +543,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 continue;
 
             b->move<true>(m, table);
-            __builtin_prefetch(&table->m_entries[b->getBoardStatus()->zobrist & table->m_mask]);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
 

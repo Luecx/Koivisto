@@ -606,7 +606,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     }
 
     if constexpr (prefetch)
-        __builtin_prefetch(&table->m_entries[getBoardStatus()->zobrist & table->m_mask]);
+        table->prefetch(getBoardStatus()->zobrist);
 
     // doing the initial move
     this->unsetPiece<true, false>(sqFrom);
