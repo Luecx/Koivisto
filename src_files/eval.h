@@ -63,7 +63,7 @@ struct Accumulator{
 
 struct Evaluator {
     // summations
-    std::vector<Accumulator> history{};
+    std::vector<Accumulator> history;
     
     alignas(ALIGNMENT) int16_t activation[HIDDEN_DSIZE] {};
     alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE ] {};

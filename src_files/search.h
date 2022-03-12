@@ -36,6 +36,7 @@
 #include <string>
 #include <tgmath.h>
 #include <thread>
+#include <vector>
 
 #define MAX_THREADS 256
 
@@ -76,7 +77,7 @@ class Search {
     bool                     useTB     = false;
     bool                     printInfo = true;
 
-    ThreadData*              tds[MAX_THREADS] {};
+    std::vector<ThreadData>  tds;
 
     public:
     void init(int hashsize);

@@ -211,9 +211,9 @@ extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
     return 8 * rank + file;
 }
 
-[[nodiscard]] inline Square squareIndex(std::string& str) {
-    Rank r = str.at(1) - '1';
-    File f = toupper(str.at(0)) - 'A';
+[[nodiscard]] inline Square squareIndex(const std::string& str) {
+    const Rank r = str.at(1) - '1';
+    const File f = toupper(str.at(0)) - 'A';
     
     return squareIndex(r, f);
 }
@@ -443,10 +443,10 @@ void                     init();
  * @return
  */
 [[nodiscard]] inline int chebyshevDistance(Square sq1, Square sq2) {
-    File fI1 = fileIndex(sq1);
-    Rank rI1 = rankIndex(sq1);
-    File fI2 = fileIndex(sq2);
-    Rank rI2 = rankIndex(sq2);
+    const File fI1 = fileIndex(sq1);
+    const Rank rI1 = rankIndex(sq1);
+    const File fI2 = fileIndex(sq2);
+    const Rank rI2 = rankIndex(sq2);
     
     return chebyshevDistance(fI1, rI1, fI2, rI2);
 }
@@ -470,10 +470,10 @@ void                     init();
  * @return
  */
 [[nodiscard]] inline int manhattanDistance(Square sq1, Square sq2) {
-    File fI1 = fileIndex(sq1);
-    Rank rI1 = rankIndex(sq1);
-    File fI2 = fileIndex(sq2);
-    Rank rI2 = rankIndex(sq2);
+    const File fI1 = fileIndex(sq1);
+    const Rank rI1 = rankIndex(sq1);
+    const File fI2 = fileIndex(sq2);
+    const Rank rI2 = rankIndex(sq2);
     
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
