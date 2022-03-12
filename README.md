@@ -54,3 +54,10 @@ make release
 #### MacOS
 
 We do not provide binaries for MacOS yet. 
+
+## Tests
+Testing is done with the [Catch2](https://github.com/catchorg/Catch2) library and can be found in the 'tests' directory. Compile by using:
+```
+cd tests
+make
+```
