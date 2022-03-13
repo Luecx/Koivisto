@@ -36,6 +36,7 @@ using namespace bb;
 using namespace move;
 
 int  lmrReductions[256][256];
+bool isPrime      [1024];
 
 int  RAZOR_MARGIN     = 243;
 int  FUTILITY_MARGIN  = 68;
@@ -129,11 +130,21 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     }
 }
 
+bool isPrimeCheck(int number){
+    for(int i = 2; i <= sqrt(number); i++){
+        if(number % i == 0) return false;
+    }
+    return true;
+}
+
 void initLMR() {
     for (int d = 0; d < 256; d++){
         for (int m = 0; m < 256; m++){
             lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
         }
+    }
+    for(int i = 0; i < 1024; i++){
+        isPrime[i] = isPrimeCheck(i);
     }
 }
 
@@ -679,6 +690,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // node turns out to be singular. Also standard multi-cut.
         // *******************************************************************************************
         if (depth >= 8
+            && !isPrime[abs(staticEval)]
             && !skipMove
             && !inCheck
             &&  sameMove(m, hashMove)
