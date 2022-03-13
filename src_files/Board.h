@@ -22,6 +22,7 @@
 #include "Bitboard.h"
 #include "Move.h"
 #include "Util.h"
+#include "TranspositionTable.h"
 #include "eval.h"
 #include "vector"
 
@@ -98,7 +99,7 @@ struct BoardStatus {
         return os;
     }
     
-    inline BoardStatus copy() const {
+    [[nodiscard]] inline BoardStatus copy() const {
         BoardStatus b {zobrist, enPassantTarget, castlingRights, fiftyMoveCounter, repetitionCounter, moveCounter,
                        move};
         return b;
@@ -140,21 +141,31 @@ class Board {
     void computeNewRepetition();
     
     // sets the piece on a given square. considers zobrist-key and all relevant fields.
-    template<bool updateNN=true>
+    template<bool updateNN=true, bool updateZobrist=true>
     void setPiece(bb::Square sq, bb::Piece piece);
     
     // unsets the piece on a given square. considers zobrist-key and all relevant fields.
-    template<bool updateNN=true>
+    template<bool updateNN=true, bool updateZobrist=true>
     void unsetPiece(bb::Square sq);
     
     // replaces the piece on a given square. considers zobrist-key and all relevant fields.
-    template<bool updateNN=true>
+    template<bool updateNN=true, bool updateZobrist=true>
     void replacePiece(bb::Square sq, bb::Piece piece);
+
+    // sets the piece on a given square. considers zobrist-key and all relevant fields.
+    void setPieceHash(bb::Square sq, bb::Piece piece);
+    
+    // unsets the piece on a given square. considers zobrist-key and all relevant fields.
+    void unsetPieceHash(bb::Square sq);
+    
+    // replaces the piece on a given square. considers zobrist-key and all relevant fields.
+    void replacePieceHash(bb::Square sq, bb::Piece piece);
+    
     
     public:
     // the default constructor uses a fen-representation of the board. if nothing is specified, the starting position
     // will be used
-    Board(std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    Board(const std::string& fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     
     // instead of providing the fen, we can directly clone a board object.
     Board(Board* board);
@@ -190,7 +201,8 @@ class Board {
     [[nodiscard]] bb::Color getActivePlayer() const;
     
     // given a move object, does the move on the board. computes repetitions etc.
-    void move(move::Move m);
+    template<bool prefetch=false>
+    void move(move::Move m, TranspositionTable* table = nullptr);
     
     // undoes the last move. does not require the move as the move is stored within the meta information.
     void undoMove();

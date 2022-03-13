@@ -51,8 +51,8 @@ void generateData() {
             setBit(occ, n);
             setBit(occ, i);
 
-            Direction r    = i - n;
-            Direction sign = r / abs(r);
+            const Direction r    = i - n;
+            const Direction sign = r / abs(r);
 
             if (rankIndex(n) == rankIndex(i)) {
                 m = attacks::generateSlidingAttacks(n, EAST * sign, occ);

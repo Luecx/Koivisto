@@ -21,12 +21,11 @@
 #define CHESSCOMPUTER_HASHMAP_H
 
 #include "Bitboard.h"
-#include "Board.h"
 #include "Move.h"
 
+#include <memory>
 #include <ostream>
 #include <stdint.h>
-
 
 using NodeType = uint8_t;
 using NodeAge = uint8_t;
@@ -56,7 +55,7 @@ struct Entry {
         this->eval    = p_eval;
     }
 
-    NodeAge getAge() const { return move::getScore(move); }
+    [[nodiscard]] NodeAge getAge() const { return move::getScore(move); }
 
     void setAge(NodeAge p_age) { move::setScore(move, p_age); }
 
@@ -70,23 +69,21 @@ struct Entry {
 
 class TranspositionTable {
     private:
-    NodeAge m_currentAge;
-    bb::U64     m_size;
+    NodeAge                  m_currentAge;
+    bb::U64                  m_size;
+    std::unique_ptr<Entry[]> m_entries;
+    bb::U64                  m_mask;
 
     void init(bb::U64 MB);
 
     public:
-    Entry*  m_entries;
-    bb::U64     m_mask;
     TranspositionTable(bb::U64 mb);
 
     TranspositionTable(const TranspositionTable& other) = delete;
 
     TranspositionTable& operator=(const TranspositionTable& other) = delete;
 
-    ~TranspositionTable();
-
-    Entry get(bb::U64 zobrist) const;
+    [[nodiscard]] Entry get(bb::U64 zobrist) const;
 
     bool put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type, bb::Depth depth, bb::Score eval);
 
@@ -96,9 +93,11 @@ class TranspositionTable {
 
     void clear();
 
-    double usage() const;
+    [[nodiscard]] double usage() const;
 
-    bb::U64 getSize() const;
+    [[nodiscard]] bb::U64 getSize() const;
+
+    void prefetch(const bb::U64 zobrist) const;
 };
 
 

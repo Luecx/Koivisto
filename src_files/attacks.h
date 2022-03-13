@@ -177,8 +177,8 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * blockers.
  */
 [[nodiscard]] inline bb::U64 lookUpRookXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
-    bb::U64 attacks  = lookUpRookAttacks(index, occupied);
-    bb::U64 blockers = opponent & attacks;
+    const bb::U64 attacks  = lookUpRookAttacks(index, occupied);
+    const bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpRookAttacks(index, occupied ^ blockers);
 }
 
@@ -199,8 +199,8 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * blockers.
  */
 [[nodiscard]] inline bb::U64 lookUpBishopXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
-    bb::U64 attacks  = lookUpBishopAttacks(index, occupied);
-    bb::U64 blockers = opponent & attacks;
+    const bb::U64 attacks  = lookUpBishopAttacks(index, occupied);
+    const bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpBishopAttacks(index, occupied ^ blockers);
 }
 }

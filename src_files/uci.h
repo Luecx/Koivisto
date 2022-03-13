@@ -41,11 +41,11 @@ void mainloop(int argc, char* argv[]);
 void processCommand(std::string str);
 
 void go_perft(int depth, bool hash);
-void go(const std::vector<std::string>& split, const std::string &str);
+void go(const std::vector<std::string>& split, const std::string& str);
 
 void stop();
 
-void set_option(std::string& name, std::string& value);
+void set_option(const std::string& name, const std::string& value);
 
 void isReady();
 
@@ -53,8 +53,8 @@ void debug(bool mode);
 
 void uci();
 
-void position_fen(std::string fen, std::string moves);
-void position_startpos(std::string moves);
+void position_fen(const std::string& fen, const std::string& moves);
+void position_startpos(const std::string& moves);
 
 void bench();
 
