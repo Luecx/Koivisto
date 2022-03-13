@@ -690,7 +690,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // node turns out to be singular. Also standard multi-cut.
         // *******************************************************************************************
         if (depth >= 8
-            && !isPrime[abs(staticEval)]
+            && !isPrime[std::min(1023,abs(staticEval))]
             && !skipMove
             && !inCheck
             &&  sameMove(m, hashMove)
