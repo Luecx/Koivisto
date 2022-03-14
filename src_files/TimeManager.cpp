@@ -48,19 +48,19 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     UCI_ASSERT(time >= 0);
     UCI_ASSERT(inc >= 0);
     UCI_ASSERT(moves_to_go >= 0);
-    
-    constexpr U64 overhead = 50;
-    const double  division = 2;
-    
-    U64 upperTimeBound = time / 2;
+
+    const U64    overhead = inc == 0 ? 50 : 0;
+    const double division = 2;
+
+    U64 upperTimeBound = time / division;
     U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
-    timeToUse          = std::min(time - inc, timeToUse);
-    upperTimeBound     = std::min(time - inc, upperTimeBound);
+    timeToUse          = std::min(time - overhead - inc, timeToUse);
+    upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
     
     this->setMoveTimeLimit(upperTimeBound);
-    this->match_time_limit.time_to_use      = timeToUse;
-    this->match_time_limit.enabled          = true;
+    this->match_time_limit.time_to_use = timeToUse;
+    this->match_time_limit.enabled     = true;
 }
 
 void TimeManager::setStartTime() {
@@ -68,7 +68,7 @@ void TimeManager::setStartTime() {
                  std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-int  TimeManager::elapsedTime() const {
+bb::U64 TimeManager::elapsedTime() const {
     auto end   = std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now().time_since_epoch()).count();
     auto diff = end - start_time;
@@ -84,7 +84,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
     if (force_stop)
         return false;
     
-    int elapsed = elapsedTime();
+    U64 elapsed = elapsedTime();
     
     if (sd != nullptr && this->match_time_limit.enabled) {
         if (elapsed * 10 < this->match_time_limit.time_to_use) {
@@ -108,10 +108,9 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
         return false;
 
     nodeScore = 110 - std::min(nodeScore, 90);
-    
     evalScore = std::min(std::max(50, 50 + evalScore), 80);
 
-    int elapsed = elapsedTime();
+    U64 elapsed = elapsedTime();
     
     if(    move_time_limit.enabled
         && move_time_limit.upper_time_bound < elapsed)
