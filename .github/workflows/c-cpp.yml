@@ -2,37 +2,68 @@ name: C/C++ CI
 
 on:
   push:
-  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
-  build:
+  Ubuntu:
+    runs-on: ubuntu-20.04
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [g++-9]
+        target: [openbench, native, release]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: make
-      working-directory: ./src_files/
-      run:
-        make EXE=../bin/Koivisto
-    - name: run and validate bench
-      working-directory: ./bin/
-      run: |
-        ./Koivisto bench > bench.txt
-        commit="${{ github.event.head_commit.message }}"
-        echo $commit
-        if [[ $commit == *"Bench:"* || $commit == *"bench:"* ]]; then
-          printf "$commit" > message.txt
-          line=$(grep -i bench: message.txt)
-          bench=$(echo $line | sed 's/[^0-9]*//g')
-          exBen=$(grep -i OVERALL: bench.txt | awk -F'[^0-9]+' '{ print $2 }')
-          if [[ $exBen == $bench ]]; then
-            echo "benches do match"
-          else
-            echo "benches do not match"
-            exit 64
-          fi
-        else
-          echo "Did not find bench"
-        exit 64
-        fi
+      - uses: actions/checkout@v2
+
+      - name: Create build
+        run: |
+         cd src_files
+         make ${{ matrix.target }} CXX=${{ matrix.compiler }} EXE=../bin/Koivisto
+
+      - name: Check bench matches commit message
+        if: matrix.target == 'openbench'
+        run: |
+          cd bin
+          commit_bench=$(git show --summary | grep -o "bench: [0-9]*" | awk '{ print $NF }')
+          ./Koivisto bench > bench.txt
+          actual_bench=$(grep -i OVERALL: bench.txt | awk -F'[^0-9]+' '{ print $2 }')
+          if [[ "$actual_bench" != "$commit_bench" ]]; then echo "Incorrect bench, got '$actual_bench' expected '$commit_bench'" && exit 1; fi
+
+  Windows:
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
+        config:
+          - { system: mingw64, package: x86_64-gcc, compiler: g++ }
+        target: [openbench, native, release]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.config.system}}
+          install: mingw-w64-${{matrix.config.package}} make git
+
+      - name: Add compiler to $PATH env
+        shell: bash
+        run: echo "PATH=$PATH:/c/msys64/${{ matrix.config.system }}/bin" >> $GITHUB_ENV
+
+      - name: Create build
+        shell: msys2 {0}
+        run: |
+         cd src_files
+         make ${{ matrix.target }} CXX=${{ matrix.config.compiler }} EXE=../bin/Koivisto
+
+      - name: Check bench matches commit message
+        if: matrix.target == 'openbench'
+        shell: msys2 {0}
+        run: |
+          cd bin
+          commit_bench=$(git show --summary | grep -o "bench: [0-9]*" | awk '{ print $NF }')
+          ./Koivisto bench > bench.txt
+          actual_bench=$(grep -i OVERALL: bench.txt | awk -F'[^0-9]+' '{ print $2 }')
+          if [[ "$actual_bench" != "$commit_bench" ]]; then echo "Incorrect bench, got '$actual_bench' expected '$commit_bench'" && exit 1; fi
