@@ -221,8 +221,6 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             // lower and upper bounds
             Score alpha  = score - window;
             Score beta   = score + window;
-            // Idea of reducing depth on fail high from Houdini.
-            // http://www.talkchess.com/forum3/viewtopic.php?t=45624.
             Depth sDepth = depth;
             // widen the window as long as time is left
             while (this->timeManager->isTimeLeft()) {
@@ -491,12 +489,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
 
-
-        // *******************************************************************************************
-        // threat pruning:
-        // if the static evaluation is already above beta at depth 1 and we have strong threats, asume
-        // that we can atleast achieve beta
-        // *******************************************************************************************
         if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
             return beta;
 
@@ -709,13 +701,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                        b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
             m = mGen->next();
         }
-        // *******************************************************************************************
-        // kk reductions:
-        // we reduce more/less depending on which side we are currently looking at. The idea behind
-        // this is probably quite similar to the cutnode stuff found in stockfish, altough the
-        // implementation is quite different and it also is different functionally. Stockfish type
-        // cutnode stuff has not gained in Koivisto, while this has.
-        // *******************************************************************************************
+
         if (pv) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce       = false;
@@ -741,8 +727,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
-        // depending on if lmr is used, we adjust the lmr score using history scores and kk-reductions
-        // etc. Most conditions are standard and should be considered self explanatory.
         if (lmr) {
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                            b->getPreviousMove(2), mainThreat);
@@ -768,8 +752,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // doing the move
         b->move<true>(m, table);
 
-        // adjust the extension policy for checks. we could use the givesCheck value but it has not
-        // been validated to work 100%
+        // adjust the extension policy for checks.
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
@@ -781,7 +764,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
-            // kk reduction logic.
             if (ply == 0 && lmr) {
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
@@ -789,7 +771,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
-            // more kk reduction logic.
             if (pv)
                 sd->reduce = true;
             if (ply == 0) {
@@ -1022,8 +1003,6 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (bestMove)
         table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat);
     return bestScore;
-
-    //    return 0;
 }
 
 void Search::init(int hashsize) {

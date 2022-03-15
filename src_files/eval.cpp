@@ -26,10 +26,10 @@
 
 #include "incbin/incbin.h"
 
-alignas(ALIGNMENT) int16_t nn::inputWeights[INPUT_SIZE][HIDDEN_SIZE];
+alignas(ALIGNMENT) int16_t nn::inputWeights [ INPUT_SIZE][HIDDEN_SIZE];
 alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-alignas(ALIGNMENT) int16_t nn::inputBias[HIDDEN_SIZE];
-alignas(ALIGNMENT) int32_t nn::hiddenBias[OUTPUT_SIZE];
+alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
+alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 
 #define INPUT_WEIGHT_MULTIPLIER  (64)
 #define HIDDEN_WEIGHT_MULTIPLIER (512)
@@ -118,15 +118,14 @@ void nn::init() {
 int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color pieceColor,
                          bb::Square square,
-                         bb::Color view,
-                         bb::Square kingSquare) {
-    constexpr int pieceTypeFactor = 64;
+                         bb::Color view, bb::Square kingSquare) {
+    constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSquareFactor = 64 * 6 * 2;
 
-    const bool kingSide = bb::fileIndex(kingSquare) > 3;
-    const int ksIndex = kingSquareIndex(kingSquare, view);
-    bb::Square relativeSquare = view == bb::WHITE ? square : bb::mirrorVertically(square);
+    const bool    kingSide         = bb::fileIndex(kingSquare) > 3;
+    const int     ksIndex          = kingSquareIndex(kingSquare, view);
+    bb::Square    relativeSquare   = view == bb::WHITE ? square : bb::mirrorVertically(square);
 
     if (kingSide) {
         relativeSquare = bb::mirrorHorizontally(relativeSquare);
@@ -144,10 +143,10 @@ int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color king
     if (relativeKingSquare > 63) return 0;
 
     constexpr int indices[bb::N_SQUARES]{
-            0, 1, 2, 3, 3, 2, 1, 0,
-            4, 5, 6, 7, 7, 6, 5, 4,
-            8, 9, 10, 11, 11, 10, 9, 8,
-            8, 9, 10, 11, 11, 10, 9, 8,
+             0,  1,  2,  3,  3,  2,  1,  0,
+             4,  5,  6,  7,  7,  6,  5,  4,
+             8,  9, 10, 11, 11, 10,  9,  8,
+             8,  9, 10, 11, 11, 10,  9,  8,
             12, 12, 13, 13, 13, 13, 12, 12,
             12, 12, 13, 13, 13, 13, 12, 12,
             14, 14, 15, 15, 15, 15, 14, 14,
