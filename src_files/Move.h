@@ -84,14 +84,6 @@ enum MoveShifts{
 template<uint8_t N>
 constexpr uint32_t MASK = (1ULL << N) - 1;
 
-static_assert(MASK<0> == 0x0);
-static_assert(MASK<1> == 0x1);
-static_assert(MASK<2> == 0x3);
-static_assert(MASK<8> == 0xFF);
-static_assert(MASK<16> == 0xFFFF);
-static_assert(MASK<24> == 0xFFFFFF);
-static_assert(MASK<32> == 0xFFFFFFFF);
-
 inline bool sameMove(const Move& m1, const Move& m2) {
     // toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
     return ((m1 ^ m2) & MASK<24>) == 0;

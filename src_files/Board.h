@@ -31,18 +31,6 @@
 #include <stdio.h>
 #include <string>
 
-
-// we cache see entries. this specifies the amount of hashed total entries.
-// gives approx 3-5 elo
-//#define SEE_CACHE_SIZE 2048
-
-// this struct contains information about the cached see entries.
-// this contains zobrist keys and the see-score.
-struct seeCacheEntry {
-    bb::U64   key;
-    bb::Score score;
-};
-
 enum CastlingRights{
     WHITE_QUEENSIDE_CASTLING,
     WHITE_KINGSIDE_CASTLING,
@@ -115,13 +103,6 @@ class Board {
     bb::U64 m_teamOccupiedBB[bb::N_COLORS];
     // furthermore we keep track of all the squares occupied. mainly used for move generation.
     bb::U64 m_occupiedBB;
-    
-    // for caching see entries, we allocate an array.
-    // note that this might be very slow if a lot of board objects are requires (e.g. tuning).
-    // thats when the cache should be disabled.
-#ifdef SEE_CACHE_SIZE
-    struct seeCacheEntry seeCache[SEE_CACHE_SIZE] {};
-#endif
     
     // store an evaluator which can be efficiently updated
     nn::Evaluator evaluator{};

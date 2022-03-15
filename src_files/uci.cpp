@@ -84,11 +84,14 @@ void uci::mainloop(int argc, char* argv[]) {
     nn::init();
     searchObject = {};
     searchObject.init(16);
-
-
-    std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
+    
+    
+    std::cout << "Koivisto "
+              << MAJOR_VERSION << "."
+              << MINOR_VERSION
+              << " by K. Kahre, F. Eggers"
               << std::endl;
-
+    
     board = new Board();
 
     std::atexit(uci::quit);
@@ -102,8 +105,7 @@ void uci::mainloop(int argc, char* argv[]) {
             processCommand("exit");
         }
     }
-
-
+    
     while (std::getline(std::cin, line)) {
         uci::processCommand(line);
     }
