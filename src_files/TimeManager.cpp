@@ -50,13 +50,15 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     UCI_ASSERT(moves_to_go >= 0);
 
     const U64    overhead = inc == 0 ? 50 : 0;
-    const double division = 2;
+    const double division = inc == 0 ? 2  : 3;
 
+    time -= overhead;
+    
     U64 upperTimeBound = time / division;
     U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
-    timeToUse          = std::min(time - overhead - inc, timeToUse);
-    upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
+    timeToUse          = std::max(10ULL, std::min(time - overhead - inc, timeToUse));
+    upperTimeBound     = std::max(10ULL, std::min(time - overhead - inc, upperTimeBound));
     
     this->setMoveTimeLimit(upperTimeBound);
     this->match_time_limit.time_to_use = timeToUse;
