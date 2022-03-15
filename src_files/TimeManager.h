@@ -72,7 +72,7 @@ class TimeManager {
      * returns the time elapsed since the constructor call
      * @return
      */
-    [[nodiscard]] int  elapsedTime() const;
+    [[nodiscard]] bb::U64 elapsedTime() const;
 
     /**
      * stops the search. this should be considered to check if time is left

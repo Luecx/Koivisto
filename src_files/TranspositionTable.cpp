@@ -119,7 +119,8 @@ Entry TranspositionTable::get(bb::U64 zobrist) const {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type, bb::Depth depth, bb::Score eval) {
+bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type,
+                             bb::Depth depth, bb::Score eval) {
     bb::U64 index  = zobrist & m_mask;
     Entry* enP = &m_entries[index];
     bb::U32 key    = zobrist >> 32;
@@ -130,14 +131,17 @@ bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, 
         return true;
     } else {
         //  on enP->depth < depth * 2:
-        //  The idea behind this replacement scheme is to allow faster searches of subtrees by allowing more localized 
-        //  search results to be stored in the TT. A hard replacement scheme has been tested on another engine, and has 
-        //  been shown to be worse (there is a limit to how great of a depth override should occur).
+        //  The idea behind this replacement scheme is to allow faster searches of subtrees by
+        //  allowing more localized search results to be stored in the TT. A hard replacement scheme
+        //  has been tested on another engine, and has been shown to be worse (there is a limit to how
+        //  great of a depth override should occur).
 
-        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however they use a static margin. 
-        //  Martin (author of Cheng) tested and validated a variable margin.
-
-        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == key && enP->depth <= depth * 2)) {
+        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however
+        //  they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
+        if (   enP->getAge() != m_currentAge
+            || type == PV_NODE
+            || (enP->type    != PV_NODE && enP->depth <= depth)
+            || (enP->zobrist == key     && enP->depth <= depth * 2)) {
             enP->set(key, score, move, type, depth, eval);
             enP->setAge(m_currentAge);
             return true;

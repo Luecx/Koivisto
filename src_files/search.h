@@ -53,19 +53,19 @@ struct ThreadData {
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
     ThreadData();
 
-    ThreadData(int threadId);
+    explicit ThreadData(int threadId);
 } __attribute__((aligned(4096)));
 
 /**
  * used to store information about a search
  */
 struct SearchOverview {
-    int   nodes;
-    bb::Score score;
-    int   depth;
-    int   time;
-    move::Move  move;
-};
+    int        nodes;
+    bb::Score  score;
+    int        depth;
+    int        time;
+    move::Move move;
+} __attribute__((aligned(32)));
 
 class Search {
     int                      threadCount = 1;
@@ -84,38 +84,42 @@ class Search {
     void cleanUp();
 
     private:
-    [[nodiscard]] bb::U64  totalNodes() const;
-    [[nodiscard]] int      selDepth() const;
-    [[nodiscard]] bb::U64  tbHits() const;
+    [[nodiscard]] bb::U64 totalNodes() const;
+    [[nodiscard]] int     selDepth() const;
+    [[nodiscard]] bb::U64 tbHits() const;
 
     public:
     [[nodiscard]] SearchOverview overview() const;
-    void                         enableInfoStrings();
-    void                         disableInfoStrings();
+    // enable / disable info strings
+    void enableInfoStrings();
+    void disableInfoStrings();
 
-    void                         useTableBase(bool val);
-    void                         clearHistory();
-    void                         clearHash();
-    void                         setThreads(int threads);
-    void                         setHashSize(int hashSize);
-    void                         stop();
+    void useTableBase(bool val);
+    void clearHistory();
+    void clearHash();
+    void setThreads(int threads);
+    void setHashSize(int hashSize);
+    void stop();
 
-    void                         printInfoString(Board* b, bb::Depth depth, bb::Score score);
-    void                         extractPV(Board* b, move::MoveList* mvList, bb::Depth depth);
+    void printInfoString(Board* b, bb::Depth depth, bb::Score score);
+    void extractPV(Board* b, move::MoveList* mvList, bb::Depth depth);
 
-    move::Move                   bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
-    [[nodiscard]] bb::Score      pvSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth depth, bb::Depth ply, ThreadData* sd,
-                                          move::Move skipMove, int behindNMP, bb::Depth* lmrFactor = nullptr);
-    [[nodiscard]] bb::Score      qSearch (Board* b, bb::Score alpha, bb::Score beta, bb::Depth ply, ThreadData* sd, bool inCheck = false);
-    [[nodiscard]] bb::Score      probeWDL(Board* board);
-    [[nodiscard]] move::Move     probeDTZ(Board* board);
+    // basic move functions
+    move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
+    [[nodiscard]] bb::Score  pvSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth depth,
+                                      bb::Depth ply, ThreadData* sd, move::Move skipMove,
+                                      int behindNMP, bb::Depth* lmrFactor = nullptr);
+    [[nodiscard]] bb::Score  qSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth ply,
+                                     ThreadData* sd, bool inCheck = false);
+    [[nodiscard]] bb::Score  probeWDL(Board* board);
+    [[nodiscard]] move::Move probeDTZ(Board* board);
 };
 
-extern int                       RAZOR_MARGIN;
-extern int                       FUTILITY_MARGIN;
-extern int                       SE_MARGIN_STATIC;
-extern int                       LMR_DIV;
+extern int RAZOR_MARGIN;
+extern int FUTILITY_MARGIN;
+extern int SE_MARGIN_STATIC;
+extern int LMR_DIV;
 
-void initLMR();
+void       initLMR();
 
 #endif    // KOIVISTO_SEARCH_H
