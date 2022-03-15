@@ -73,23 +73,6 @@ void searchAndPrint(TimeManager* p_timeManager) {
 }
 
 /**
- * ascii art shown at startup
- */
-void printVersionAndAuthors(){
-    std::cout << R"(                                                                          )" << "\n";
-    std::cout << R"(                       \¯¯¯¯¯\      /¯¯¯¯¯/     by K. Kahre, F. Eggers    )" << "\n";
-    std::cout << R"(                        ¯¯¯\  \    /  /¯¯¯                                )" << "\n";
-    std::cout << R"(    |¯| /¯/   /¯¯¯¯\   |¯|  \  \  /  /  |¯|  /¯¯¯¯|  |¯¯¯¯¯¯¯|   /¯¯¯¯\   )" << "\n";
-    std::cout << R"(    | |/ /   | |¯¯| |  | |   \  \/  /   | |  | |¯¯   ¯¯¯| |¯¯¯  | |¯¯| |  )" << "\n";
-    std::cout << R"(    |   |    | |  | |  | |    \    /    | |  \___ \     | |     | |  | |  )" << "\n";
-    std::cout << R"(    | |\ \   | |__| |  | |     \  /     | |   __| |     | |     | |__| |  )" << "\n";
-    std::cout << R"(    |_| \_\   \____/   |_|      \/      |_|  |____/     |_|      \____/   )" << "\n";
-    std::cout <<   "                                                                    "
-              << MAJOR_VERSION << "."
-              << MINOR_VERSION << std::endl;
-}
-
-/**
  * the Main loop for received inputs from the user. Prints information about the engine (version,
  * authors) and continues reading the lines until 'quit' is parsed which will shut down the engine and
  * deallocate arrays.
@@ -101,9 +84,14 @@ void uci::mainloop(int argc, char* argv[]) {
     nn::init();
     searchObject = {};
     searchObject.init(16);
-
-    printVersionAndAuthors();
-
+    
+    
+    std::cout << "Koivisto "
+              << MAJOR_VERSION << "."
+              << MINOR_VERSION
+              << " by K. Kahre, F. Eggers"
+              << std::endl;
+    
     board = new Board();
 
     std::atexit(uci::quit);
