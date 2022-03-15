@@ -59,8 +59,8 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     U64 upperTimeBound = time / division;
     U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
-    timeToUse          = std::max(static_cast<U64>(10), std::min(time - overhead - inc, timeToUse));
-    upperTimeBound     = std::max(static_cast<U64>(10), std::min(time - overhead - inc, upperTimeBound));
+    timeToUse          = std::min(time - overhead - inc, timeToUse);
+    upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
     
     this->setMoveTimeLimit(upperTimeBound);
     this->match_time_limit.time_to_use = timeToUse;
