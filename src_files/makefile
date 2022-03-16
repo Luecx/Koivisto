@@ -44,7 +44,7 @@ AVX512FLAGS = $(AVX2FLAGS) -mavx512f -mavx512bw -mavx512dq
 NATIVEFLAGS = -march=native
 
 # ------------------------------- Emscripten ---------------------------------------------
-EMS_MEMORY		 = -s TOTAL_MEMORY=1073741824
+EMS_MEMORY		 = -s TOTAL_MEMORY=4294967296 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=33554432
 EMS_THREADS 	 = -s PROXY_TO_PTHREAD
 EMS_KEEPALIVE	 = -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
 EMS_SIMD		 = -msimd128

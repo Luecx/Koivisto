@@ -170,4 +170,10 @@ void TranspositionTable::prefetch(const bb::U64 zobrist) const {
  * returns the maximum TT size in MB
  * @return
  */
-int maxTTSize() { return (bb::ONE << (32 - 20)) * sizeof(Entry); }
+int maxTTSize() {
+#ifdef __EMSCRIPTEN__
+    return 2048;
+#else
+    return (bb::ONE << (32 - 20)) * sizeof(Entry);
+#endif
+}
