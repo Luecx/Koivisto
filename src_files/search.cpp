@@ -989,7 +989,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(key, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
+                table->put(key, bestScore, m, ttNodeType, ONE_PLY, stand_pat);
                 return score;
             }
             if (score > alpha) {
