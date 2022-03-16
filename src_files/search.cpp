@@ -485,7 +485,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // *******************************************************************************************
         if (   depth        <= 7
             && enemyThreats <  2
-            && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
+            && staticEval   >= beta - 7 + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
 
