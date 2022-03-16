@@ -7,8 +7,8 @@ file(GLOB_RECURSE SRCS src_files/*.c src_files/*.cpp src_files/*.h)
 
 add_executable(Koivisto ${SRCS} src_files/defs.h)
 add_definitions(-DEVALFILE=\"../networks/default.net\")
-add_definitions(-DMINOR_VERSION=19)
-add_definitions(-DMAJOR_VERSION=7)
+add_definitions(-DMINOR_VERSION=0)
+add_definitions(-DMAJOR_VERSION=8)
 add_definitions(-DSUPPORT_TABLEBASES)
 add_definitions(-DSUPPORT_INCBIN)
 

@@ -774,12 +774,6 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) const 
  * @return
  */
 Score Board::staticExchangeEvaluation(Move m) const {
-#ifdef SEE_CACHE_SIZE
-    U64 zob = zobrist();
-    if (seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key == (zob ^ m)) {
-        return seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score;
-    }
-#endif
     
     Square sqFrom         = getSquareFrom(m);
     Square sqTo           = getSquareTo(m);
@@ -835,10 +829,6 @@ Score Board::staticExchangeEvaluation(Move m) const {
         gain[d - 1] = -(-gain[d - 1] > gain[d] ? -gain[d - 1] : gain[d]);
     }
 
-#ifdef SEE_CACHE_SIZE
-    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].score = gain[0];
-    seeCache[(zob ^ m) & (SEE_CACHE_SIZE - 1)].key   = zob ^ m;
-#endif
     return gain[0];
 }
 
@@ -1179,8 +1169,8 @@ bool Board::isPseudoLegal(Move m) const {
             if (getType(m) == QUIET){
                 if(getPiece(sqFrom + forward) != -1) return false;
                 if(sqFrom + forward != sqTo)         return false;
-                if(getActivePlayer() == WHITE && rankIndex(sqFrom) >= 6 ||
-                    getActivePlayer() == BLACK && rankIndex(sqFrom) <= 1) return false;
+                if((getActivePlayer() == WHITE && rankIndex(sqFrom) >= 6) ||
+                   (getActivePlayer() == BLACK && rankIndex(sqFrom) <= 1)) return false;
             }
             // furthermore double pawn pushes must check the square which is two squares ahead
             // is empty
@@ -1191,8 +1181,8 @@ bool Board::isPseudoLegal(Move m) const {
                 if(sqFrom + forward * 2 != sqTo)         return false;
                 
                 // validate that the pawn is on the 2nd rank
-                if(getActivePlayer() == WHITE && rankIndex(sqFrom) != 1 ||
-                    getActivePlayer() == BLACK && rankIndex(sqFrom) != 6) return false;
+                if((getActivePlayer() == WHITE && rankIndex(sqFrom) != 1) ||
+                   (getActivePlayer() == BLACK && rankIndex(sqFrom) != 6)) return false;
             }
             if(isEnPassant(m)){
                 if (sqTo != getEnPassantSquare()) return false;
@@ -1209,14 +1199,14 @@ bool Board::isPseudoLegal(Move m) const {
             
             if(isPromotion(m)){
                 // validate that the pawn is on the 2nd rank
-                if(getActivePlayer() == WHITE && rankIndex(sqFrom) != 6 ||
-                    getActivePlayer() == BLACK && rankIndex(sqFrom) != 1) return false;
-                if(getActivePlayer() == WHITE && rankIndex(sqTo  ) != 7 ||
-                    getActivePlayer() == BLACK && rankIndex(sqTo  ) != 0) return false;
+                if((getActivePlayer() == WHITE && rankIndex(sqFrom) != 6) ||
+                   (getActivePlayer() == BLACK && rankIndex(sqFrom) != 1)) return false;
+                if((getActivePlayer() == WHITE && rankIndex(sqTo  ) != 7) ||
+                   (getActivePlayer() == BLACK && rankIndex(sqTo  ) != 0)) return false;
                 if(!isCapture && sqTo != sqFrom + forward) return false;
             }else{
-                if(getActivePlayer() == WHITE && rankIndex(sqFrom) >= 6 ||
-                    getActivePlayer() == BLACK && rankIndex(sqFrom) <= 1) return false;
+                if((getActivePlayer() == WHITE && rankIndex(sqFrom) >= 6) ||
+                   (getActivePlayer() == BLACK && rankIndex(sqFrom) <= 1)) return false;
             }
             break;
         case KNIGHT:
@@ -1264,8 +1254,8 @@ bool Board::isPseudoLegal(Move m) const {
                 if(sqFrom - sqTo != 2 && !kingSideCastle) return false;
                 
                 U64  canCastleMask  = m_occupiedBB & (activePlayer == WHITE ?
-                                                                          (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK)
-                                                                          : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
+                     (kingSideCastle ? CASTLING_WHITE_KINGSIDE_MASK : CASTLING_WHITE_QUEENSIDE_MASK)
+                   : (kingSideCastle ? CASTLING_BLACK_KINGSIDE_MASK : CASTLING_BLACK_QUEENSIDE_MASK));
                 if(canCastleMask == 0 && getCastlingRights(activePlayer * 2 + kingSideCastle)){
                     return true;
                 }
@@ -1439,5 +1429,5 @@ Score Board::evaluate(){
                    - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
                    - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
                   / 24.0f;
-    return (2.0f - phase) * 0.8f * (this->evaluator.evaluate(this->getActivePlayer()) + 10);
+    return (2.0f - phase) * 0.8f * (this->evaluator.evaluate(this->getActivePlayer()));
 }
