@@ -817,8 +817,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!isCapture(m) && !isPromotion)
                 sd->setKiller(m, ply, b->getActivePlayer());
 
+            int weight = std::max(std::min(depth * depth + std::min(alpha - staticEval, 50), 256), 0);
             // update history scores
-            mGen->updateHistory(depth + (staticEval < alpha));
+            mGen->updateHistory(weight);
 
             return highestScore;
         }

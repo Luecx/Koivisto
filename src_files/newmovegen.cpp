@@ -475,7 +475,6 @@ void moveGen::generateEvasions() {
 }
 
 void moveGen::updateHistory(int weight) {
-    weight          = std::min(weight * weight + 5 * weight, 256);
     Move bestMove   = searched[searched_index - 1];    
 
     if (isCapture(bestMove)) {
