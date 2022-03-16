@@ -24,6 +24,7 @@
 #include "UCIAssert.h"
 
 #include "syzygy/tbprobe.h"
+#include "movegen.h"
 
 #include <fstream>
 #include <iostream>
@@ -202,6 +203,13 @@ void uci::processCommand(std::string str) {
         std::cout << "eval=" << evaluator.evaluate(board.getActivePlayer()) << std::endl;
     } else if (split.at(0) == "bench"){
         bench();
+    } else if (split.at(0) == "scoremoves"){
+        std::string infile  = getValue(split, "infile");
+        std::string outfile = getValue(split, "outfile");
+        std::string depth   = getValue(split, "depth");
+        std::string count   = getValue(split, "count");
+        
+        uci::scoremoves(infile, outfile, std::stoi(depth), std::stoi(count));
     } else if (split.at(0) == "exit" || split.at(0) == "quit"){
         exit(0);
     }
@@ -499,4 +507,54 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
     }
     // start the search
     searchThread = std::thread(searchAndPrint, &timeManager);
+}
+void uci::scoremoves(std::string& infile, std::string& outfile, int depth, int count) {
+    
+    // open the infile
+    std::ifstream inf(infile);
+    int processed = 0;
+    if (inf.is_open()) {
+        // if opening was successful continue
+        std::string line;
+        
+        // create the out file
+        std::ofstream outf;
+        outf.open (outfile, std::fstream::app);
+        
+        while (std::getline(inf, line) && (--count >= 0)) {
+            // using printf() in all tests for consistency
+//            *board = Board(line);
+            uci::position_fen(line,"");
+            MoveList moves{};
+            generatePerftMoves(&board, &moves);
+            
+            outf << board.fen();
+            
+            for(int i = 0; i < moves.getSize(); i++){
+                Move m = moves.getMove(i);
+
+                if(board.isLegal(m)){
+                    board.move(m);
+
+                    TimeManager timeManager{};
+                    timeManager.setDepthLimit(depth);
+
+                    searchObject.disableInfoStrings();
+                    searchObject.bestMove(&board, &timeManager);
+                    SearchOverview overview = searchObject.overview();
+
+                    outf << "," << toString(m) << ":" << -overview.score;
+
+                    board.undoMove();
+                }
+            }
+            if(processed ++ % 1000 == 0){
+                std::cout << "\r" << (processed - 1) << " FENs processed" << std::flush;
+            }
+            outf << "\n";
+        }
+        
+        outf.close();
+        inf.close();
+    }
 }

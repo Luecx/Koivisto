@@ -58,6 +58,8 @@ void position_startpos(const std::string& moves);
 
 void bench();
 
+void scoremoves(std::string& infile, std::string& outfile, int depth, int count);
+
 void quit();
 }
 
