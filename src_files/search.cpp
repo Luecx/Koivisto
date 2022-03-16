@@ -708,6 +708,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (legalMoves == 0) {
                 sd->reduce = true;
             }
+        } else if (depth < 8
+               && !skipMove
+               && !inCheck
+               && !isCapture(hashMove)
+               &&  sameMove(m, hashMove)
+               &&  ply >  0
+               &&  sd->eval[b->getActivePlayer()][ply] < alpha - 50
+               &&  en.type == CUT_NODE) {
+            extension = 1;
         }
 
         U64   nodeCount = td->nodes;
