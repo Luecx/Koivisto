@@ -700,6 +700,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(),
                        b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
             m = mGen->next();
+        } else if (sameMove(m, hashMove)
+                && en.type == CUT_NODE) {
+            if (lmrFactor != nullptr) {
+                extension= *lmrFactor;
+            }
         }
 
         if (pv) {
