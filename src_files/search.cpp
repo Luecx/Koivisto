@@ -700,6 +700,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(),
                        b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
             m = mGen->next();
+        } else if (depth < 8
+               && !skipMove
+               && !inCheck
+               &&  sameMove(m, hashMove)
+               &&  ply > 0
+               &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
+               &&  (en.type == CUT_NODE 
+                 || en.type == PV_NODE)) {
+            extension = 1;
         }
 
         if (pv) {
@@ -708,14 +717,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (legalMoves == 0) {
                 sd->reduce = true;
             }
-        } else if (depth < 8
-               && !skipMove
-               && !inCheck
-               &&  sameMove(m, hashMove)
-               &&  ply > 0
-               &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
-               &&  en.type == CUT_NODE) {
-            extension = 1;
         }
 
         U64   nodeCount = td->nodes;
