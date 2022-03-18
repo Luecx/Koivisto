@@ -705,6 +705,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                && !inCheck
                &&  sameMove(m, hashMove)
                &&  ply > 0
+               &&  en.score >= beta
                &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
                &&  en.type == CUT_NODE) {
             extension = 1;
