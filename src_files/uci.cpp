@@ -369,8 +369,15 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
                 }
             }
         }
-        Move m = genMove(s1, s2, type, moving, captured);
+        
+        Move m;
+        if(captured < 0){
+            m = genMove(s1, s2, type, moving);
+        }else{
+            m = genMove(s1, s2, type, moving, captured);
+        }
 
+        UCI_ASSERT(board.isPseudoLegal(m));
         UCI_ASSERT(board.isLegal(m));
         board.move(m);
     }
@@ -478,9 +485,12 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
         U64 bincr = (bincr_str.empty()) ?        0 : stoi(bincr_str);
         int mvtog = (mvtog_str.empty()) ?       20 : stoi(mvtog_str);
         
+        Move prev_move   = board.getPreviousMove();
+        Move ponder_move = searchObject.overview().ponder_move;
+        
         timeManager.setMatchTimeLimit(board.getActivePlayer() == WHITE ? wtime : btime,
                                       board.getActivePlayer() == WHITE ? wincr : bincr,
-                                      mvtog);
+                                      mvtog, sameMove(prev_move, ponder_move) && prev_move != 0);
     }
     if (str.find("depth") != std::string::npos) {
         timeManager.setDepthLimit(stoi(getValue(split, "depth")));

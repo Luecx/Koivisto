@@ -44,7 +44,7 @@ void TimeManager::setMoveTimeLimit  (U64 move_time) {
     this->move_time_limit.upper_time_bound = move_time;
     this->move_time_limit.enabled          = true;
 }
-void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
+void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go, bool ponder_move_played) {
     UCI_ASSERT(time >= 0);
     UCI_ASSERT(inc >= 0);
     UCI_ASSERT(moves_to_go >= 0);
@@ -61,6 +61,11 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     
     timeToUse          = std::min(time - overhead - inc, timeToUse);
     upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
+    
+    if(ponder_move_played){
+        timeToUse      *= 0.8;
+        upperTimeBound *= 0.8;
+    }
     
     this->setMoveTimeLimit(upperTimeBound);
     this->match_time_limit.time_to_use = timeToUse;

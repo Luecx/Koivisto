@@ -278,7 +278,13 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         this->searchOverview.score = score;
         this->searchOverview.time  = timeman->elapsedTime();
         this->searchOverview.move  = best;
-
+        
+        // get the ponder move
+        MoveList pv_list{};
+        extractPV(&searchBoard, &pv_list, 2);
+        if(pv_list.getSize() >= 2){
+            this->searchOverview.ponder_move = pv_list.getMove(1);
+        }
         // return the best move if it's the main thread
         return best;
     }

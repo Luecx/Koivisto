@@ -64,7 +64,7 @@ class TimeManager {
     
     void setMoveTimeLimit(bb::U64 move_time);
     
-    void setMatchTimeLimit(bb::U64 time, bb::U64 inc, int moves_to_go);
+    void setMatchTimeLimit(bb::U64 time, bb::U64 inc, int moves_to_go, bool ponder_move_played=false);
     
     void setStartTime();
 

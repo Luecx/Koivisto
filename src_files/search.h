@@ -65,6 +65,7 @@ struct SearchOverview {
     int        depth;
     int        time;
     move::Move move;
+    move::Move ponder_move;
 } __attribute__((aligned(32)));
 
 class Search {
