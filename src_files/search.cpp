@@ -134,7 +134,7 @@ U64 getNewThreats(Board* b, move::Move m) {
     const U64    occupied = b->getOccupiedBB();
     const Square sqTo     = getSquareTo(m);
     const Square sqFrom   = getSquareFrom(m);
-    const Color  color    = !b->getActivePlayer();
+    const Color  color    = b->getActivePlayer();
 
     U64    attacks        = 0;
     U64 sqBB              = ONE << sqTo; 
