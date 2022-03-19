@@ -31,7 +31,7 @@
 #include <vector>
 
 
-#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
+#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16 * 2)
 #define HIDDEN_SIZE    (512)
 #define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
 #define OUTPUT_SIZE    (1)
@@ -58,7 +58,9 @@ extern int32_t hiddenBias   [OUTPUT_SIZE];
 void init();
 
 struct Accumulator{
-    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
+    alignas(ALIGNMENT) int16_t summation[bb::N_COLORS][HIDDEN_SIZE] {};
+    int piece_count_bucket =
+        0;    // accumulator taken from the upper half each (piece count > 20) or piece_count <= 20
 };
 
 struct Evaluator {
@@ -82,7 +84,8 @@ struct Evaluator {
                              bb::Color pieceColor,
                              bb::Square square,
                              bb::Color view,
-                             bb::Square kingSquare);
+                             bb::Square kingSquare,
+                             int piece_bucket_index);
     
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,
@@ -97,7 +100,9 @@ struct Evaluator {
                                      bb::Color pieceColor,
                                      bb::Square square,
                                      bb::Square kingSquare);
-
+    
+    void setPieceCountBucket(int bucket);
+    
     void reset(Board* board);
     
     void resetAccumulator(Board* board, bb::Color color);

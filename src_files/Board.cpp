@@ -597,8 +597,6 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     
     // doing the initial move
     this->unsetPieceHash(sqFrom);
-    
-    
     if (mType != EN_PASSANT && isCapture(m)) {
         this->replacePieceHash(sqTo, pFrom);
     } else {
@@ -610,12 +608,14 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
 
     // doing the initial move
     this->unsetPiece<true, false>(sqFrom);
-    
-    
     if (mType != EN_PASSANT && isCapture(m)) {
         this->replacePiece<true, false>(sqTo, pFrom);
     } else {
         this->setPiece<true, false>(sqTo, pFrom);
+    }
+    
+    if(isCapture(m) && bitCount(m_occupiedBB) == 20){
+        evaluator.reset(this);
     }
     
     this->changeActivePlayer();

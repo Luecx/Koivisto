@@ -118,10 +118,13 @@ void nn::init() {
 int nn::Evaluator::index(bb::PieceType pieceType,
                          bb::Color pieceColor,
                          bb::Square square,
-                         bb::Color view, bb::Square kingSquare) {
-    constexpr int pieceTypeFactor  = 64;
-    constexpr int pieceColorFactor = 64 * 6;
-    constexpr int kingSquareFactor = 64 * 6 * 2;
+                         bb::Color view,
+                         bb::Square kingSquare,
+                         int piece_bucket_index) {
+    constexpr int pieceTypeFactor   = 64;
+    constexpr int pieceColorFactor  = 64 * 6;
+    constexpr int kingSquareFactor  = 64 * 6 * 2;
+    constexpr int pieceBucketFactor = 64 * 6 * 2 * 16;
 
     const bool    kingSide         = bb::fileIndex(kingSquare) > 3;
     const int     ksIndex          = kingSquareIndex(kingSquare, view);
@@ -132,9 +135,10 @@ int nn::Evaluator::index(bb::PieceType pieceType,
     }
 
     return relativeSquare
-           + pieceType * pieceTypeFactor
+           + pieceType            * pieceTypeFactor
            + (pieceColor == view) * pieceColorFactor
-           + ksIndex * kingSquareFactor;
+           + ksIndex              * kingSquareFactor
+           + piece_bucket_index   * pieceBucketFactor;
 }
 
 int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
@@ -176,7 +180,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
                                                 bb::Color pieceColor,
                                                 bb::Square square,
                                                 bb::Square kingSquare) {
-    const int idx = index(pieceType, pieceColor, square, side, kingSquare);
+    const int idx = index(pieceType, pieceColor, square, side, kingSquare, history.back().piece_count_bucket);
 
     const auto wgt = (avx_register_type_16 *) (inputWeights[idx]);
     const auto sum = (avx_register_type_16 *) (history.back().summation[side]);
@@ -198,6 +202,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side,
 }
 
 void nn::Evaluator::reset(Board *board) {
+    history.back().piece_count_bucket = bb::bitCount(board->getOccupiedBB()) > 20 ? 1:0;
     resetAccumulator(board, bb::WHITE);
     resetAccumulator(board, bb::BLACK);
 }
@@ -262,6 +267,9 @@ void nn::Evaluator::popAccumulation() {
 void nn::Evaluator::clearHistory() {
     this->history.clear();
     this->history.push_back(Accumulator{});
+}
+void nn::Evaluator::setPieceCountBucket(int bucket) {
+    this->history.back().piece_count_bucket = bucket;
 }
 
 template
