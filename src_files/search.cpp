@@ -182,9 +182,6 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             this->tds[i].tbhits   = 0;
             this->tds[i].nodes    = 0;
             this->tds[i].seldepth = 0;
-            for (uint16_t& len : this->tds[i].pvLen) {
-                len = 0;
-            }
         }
 
         // we will call this function for the other threads which will skip this part and jump
@@ -213,6 +210,9 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // start the main iterative deepening loop
     Depth depth;
     for (depth = 1; depth <= maxDepth; depth++) {
+        for (uint16_t& len : td->pvLen) {
+            len = 0;
+        }
         // do not use aspiration windows if we are in the first few operations since they will be
         // done very quick anyway
         if (depth < 6) {
@@ -823,12 +823,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             bestNodeCount = td->nodes - nodeCount;
         }
 
-        // we consider this seperate to having a new best score for simplicity
-        if (score > alpha) {
-            // increase alpha
-            alpha = score;
-        }
-
         // beta -cutoff
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
@@ -843,6 +837,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->updateHistory(depth + (staticEval < alpha));
 
             return highestScore;
+        }
+
+        // we consider this seperate to having a new best score for simplicity
+        if (score > alpha) {
+            // increase alpha
+            alpha = score;
         }
 
         // if this loop finished, we can increment the legal move counter by one which is important
