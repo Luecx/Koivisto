@@ -129,6 +129,38 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     }
 }
 
+U64 getNewThreats(Board* b, move::Move m) {
+    const Piece  p        = getMovingPieceType(m);
+    const U64    occupied = b->getOccupiedBB();
+    const Square sqTo     = getSquareTo(m);
+    const Square sqFrom   = getSquareFrom(m);
+    const Color  color    = b->getActivePlayer();
+
+    U64    attacks        = 0;
+    U64 sqBB              = ONE << sqTo; 
+
+    switch (p) {
+        case QUEEN:
+            return 0;
+        case ROOK:
+            attacks = lookUpRookAttacks(sqTo, occupied) & ~lookUpRookAttacks(sqFrom, occupied);
+            return attacks & (b->getPieceBB(!color, QUEEN));
+        case BISHOP:
+            attacks = lookUpBishopAttacks(sqTo, occupied) & ~lookUpBishopAttacks(sqFrom, occupied);
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK));
+        case KNIGHT:
+            attacks = KNIGHT_ATTACKS[sqTo];
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK));
+        case PAWN:
+            attacks = color == WHITE ?
+                                     shiftNorthEast(sqBB) | shiftNorthWest(sqBB) :
+                                     shiftSouthEast(sqBB) | shiftSouthWest(sqBB);
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT));
+        case KING:
+            return 0;
+    }
+}
+
 void initLMR() {
     for (int d = 0; d < 256; d++){
         for (int m = 0; m < 256; m++){
@@ -747,6 +779,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
