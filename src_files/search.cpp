@@ -182,6 +182,9 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             this->tds[i].tbhits   = 0;
             this->tds[i].nodes    = 0;
             this->tds[i].seldepth = 0;
+            for (uint16_t& len : this->tds[i].pvLen) {
+                len = 0;
+            }
         }
 
         // we will call this function for the other threads which will skip this part and jump
@@ -251,8 +254,9 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         int evalScore    = prevScore - score;
         
         // print the info string if its the main thread
+        std::cout << td->pvLen[0] << std::endl;
         if (threadId == 0) {
-            this->printInfoString(&printBoard, depth, score);
+            this->printInfoString(depth, score, td->pv[0], td->pvLen[0]);
         }
 
         // if the search finished due to timeout, we also need to stop here
@@ -812,7 +816,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->bestMove = m;
                 alpha        = highestScore;
             }
+            if (pv || (ply == 0 && legalMoves == 0)) {
+                td->pv[ply][0] = m;
+                memcpy(&td->pv[ply][1], &td->pv[ply + 1][0], sizeof(move::Move) * td->pvLen[ply + 1]);
+                td->pvLen[ply] = td->pvLen[ply + 1] + 1;
+            }
             bestNodeCount = td->nodes - nodeCount;
+        }
+
+        // we consider this seperate to having a new best score for simplicity
+        if (score > alpha) {
+            // increase alpha
+            alpha = score;
         }
 
         // beta -cutoff
@@ -829,12 +844,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->updateHistory(depth + (staticEval < alpha));
 
             return highestScore;
-        }
-
-        // we consider this seperate to having a new best score for simplicity
-        if (score > alpha) {
-            // increase alpha
-            alpha = score;
         }
 
         // if this loop finished, we can increment the legal move counter by one which is important
@@ -1087,8 +1096,7 @@ void Search::stop() {
     if (timeManager)
         timeManager->stopSearch();
 }
-void Search::printInfoString(Board* b, Depth depth, Score score) {
-    UCI_ASSERT(b);
+void Search::printInfoString(Depth depth, Score score, Move* pv, uint16_t pvLen) {
 
     if (!printInfo)
         return;
@@ -1121,15 +1129,12 @@ void Search::printInfoString(Board* b, Depth depth, Score score) {
               << " time "           << timeManager->elapsedTime()
               << " hashfull "       << static_cast<int>(table->usage() * 1000);
 
-    // extract the pv. Create a movelist first which will contain the pv
-    MoveList em{};
-    extractPV(b, &em, sel_depth);
     // print "pv" to shell
     std::cout << " pv";
     // go through each move
-    for (int i = 0; i < em.getSize(); i++) {
+    for (int i = 0; i < pvLen; i++) {
         // transform move to a string and append it
-        std::cout << " " << toString(em.getMove(i));
+        std::cout << " " << toString(pv[i]);
     }
     // new line
     std::cout << std::endl;

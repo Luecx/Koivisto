@@ -51,6 +51,9 @@ struct ThreadData {
     bool       dropOut  = false;
     SearchData searchData {};
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
+    move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
+    uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
+
     ThreadData();
 
     explicit ThreadData(int threadId);
@@ -101,7 +104,7 @@ class Search {
     void setHashSize(int hashSize);
     void stop();
 
-    void printInfoString(Board* b, bb::Depth depth, bb::Score score);
+    void printInfoString(bb::Depth depth, bb::Score score, move::Move* pv, uint16_t pvLen);
     void extractPV(Board* b, move::MoveList* mvList, bb::Depth depth);
 
     // basic move functions
