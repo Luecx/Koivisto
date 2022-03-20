@@ -254,7 +254,6 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         int evalScore    = prevScore - score;
         
         // print the info string if its the main thread
-        std::cout << td->pvLen[0] << std::endl;
         if (threadId == 0) {
             this->printInfoString(depth, score, td->pv[0], td->pvLen[0]);
         }
