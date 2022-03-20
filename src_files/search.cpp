@@ -815,7 +815,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->bestMove = m;
                 alpha        = highestScore;
             }
-            if (pv || (ply == 0 && legalMoves == 0)) {
+            if (pv && td->threadID == 0) {
                 td->pv[ply][0] = m;
                 memcpy(&td->pv[ply][1], &td->pv[ply + 1][0], sizeof(move::Move) * td->pvLen[ply + 1]);
                 td->pvLen[ply] = td->pvLen[ply + 1] + 1;
@@ -1138,52 +1138,6 @@ void Search::printInfoString(Depth depth, Score score, Move* pv, uint16_t pvLen)
     // new line
     std::cout << std::endl;
 }
-void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
-    UCI_ASSERT(b);
-    UCI_ASSERT(mvList);
-
-    if (depth <= 0)
-        return;
-
-    U64   zob = b->zobrist();
-    Entry en  = table->get(zob);
-    if (en.zobrist == zob >> 32 && en.type == PV_NODE) {
-        // extract the move from the table
-        Move     mov = en.move;
-
-        // get a movelist which can be used to store all pseudo legal moves
-        MoveList mvStorage;
-        // extract pseudo legal moves
-        generatePerftMoves(b, &mvStorage);
-
-        bool moveContained = false;
-        // check if the move is actually valid for the position
-        for (int i = 0; i < mvStorage.getSize(); i++) {
-            // get the current move
-            Move stor = mvStorage.getMove(i);
-            
-            // check if the move is part of the move list
-            if (sameMove(stor, mov)) {
-                moveContained = true;
-            }
-        }
-
-        // return if the move doesnt exist for this board
-        if (!moveContained)
-            return;
-
-        // check if its also legal
-        if (!b->isLegal(mov))
-            return;
-
-        mvList->add(mov);
-        b->move<true>(en.move, table);
-
-        extractPV(b, mvList, depth - 1);
-        b->undoMove();
-    }
-}
-
 /**
  * probes the wdl tables if tablebases can be used.
  */
