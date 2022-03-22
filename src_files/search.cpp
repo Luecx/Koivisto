@@ -430,7 +430,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
             }
         }
-        if (depth <= 2 && std::max(staticEval, en.score) > beta + 25 && b->givesCheck(hashMove)) {
+        if (depth <= 2 && staticEval > beta + 25 && b->givesCheck(hashMove)) {
             return beta;
         }
     } else {
