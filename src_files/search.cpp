@@ -743,6 +743,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         } else if (depth < 8
                && !skipMove
                && !inCheck
+               &&  b->getActivePlayer() == behindNMP
                &&  sameMove(m, hashMove)
                &&  ply > 0
                &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
@@ -843,6 +844,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (ply == 0 && (timeManager->isTimeLeft() || depth <= 2) && td->threadID == 0) {
                 // Store bestMove for bestMove
                 sd->bestMove = m;
+
                 alpha        = highestScore;
             }
             bestNodeCount = td->nodes - nodeCount;
