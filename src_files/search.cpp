@@ -441,7 +441,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (!inCheck) {
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][ b->getActivePlayer()];
-        enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
+        enemyThreats = (hashMove && en.type == CUT_NODE) ? 0 : sd->threatCount[ply][!b->getActivePlayer()]; 
         mainThreat   = sd->mainThreat [ply];
         
         if (ply > 0 && b->getPreviousMove() != 0) {
