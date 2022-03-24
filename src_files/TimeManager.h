@@ -25,7 +25,6 @@
 #include "History.h"
 #include "Move.h"
 
-
 struct Limit {
     bool enabled = false;
 };
@@ -48,24 +47,24 @@ struct MatchTimeLimit : public Limit {
 
 class TimeManager {
     public:
-    DepthLimit     depth_limit      {};
-    NodeLimit      node_limit       {};
-    MoveTimeLimit  move_time_limit  {};
+    DepthLimit     depth_limit {};
+    NodeLimit      node_limit {};
+    MoveTimeLimit  move_time_limit {};
     MatchTimeLimit match_time_limit {};
 
-    bool           force_stop       {};
-    bb::U64        start_time       {};
+    bool           force_stop {};
+    bb::U64        start_time {};
 
     TimeManager();
 
     void setDepthLimit(bb::Depth depth);
-    
+
     void setNodeLimit(bb::U64 nodes);
-    
+
     void setMoveTimeLimit(bb::U64 move_time);
-    
+
     void setMatchTimeLimit(bb::U64 time, bb::U64 inc, int moves_to_go);
-    
+
     void setStartTime();
 
     /**

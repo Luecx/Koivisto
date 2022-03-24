@@ -50,7 +50,7 @@
 class Board;
 
 namespace nn {
-extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
+extern int16_t inputWeights [INPUT_SIZE ][HIDDEN_SIZE ];
 extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 extern int16_t inputBias    [HIDDEN_SIZE];
 extern int32_t hiddenBias   [OUTPUT_SIZE];
@@ -73,8 +73,6 @@ struct Evaluator {
     void addNewAccumulation();
     
     void popAccumulation();
-    
-    void clearHistory();
     
     int kingSquareIndex( bb::Square kingSquare, bb::Color kingColor);
     

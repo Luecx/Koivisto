@@ -24,58 +24,57 @@
 
 using namespace bb;
 
-
+// clang-format off
 U64 attacks::ROOK_ATTACKS  [N_SQUARES][4096]{};
 U64 attacks::BISHOP_ATTACKS[N_SQUARES][ 512]{};
+// clang-format on
 
 U64 populateMask(U64 mask, U64 index) {
     U64    res = 0;
     Square i   = 0;
-    
+
     while (mask) {
         const Square bit = bitscanForward(mask);
-        
+
         if (getBit(index, i)) {
             setBit(res, bit);
         }
-        
+
         mask = lsbReset(mask);
         i++;
     }
-    
+
     return res;
 }
 
 void attacks::init() {
     for (int n = 0; n < 64; n++) {
-        const auto rook_shift = rookShifts[n];
-        const auto bish_shift = bishopShifts[n];
-        
-        const U64  rook_entries   = (ONE << (64 - rook_shift));
-        const U64  bish_entries   = (ONE << (64 - bish_shift));
-        
+        const auto rook_shift   = rookShifts[n];
+        const auto bish_shift   = bishopShifts[n];
+
+        const U64  rook_entries = (ONE << (64 - rook_shift));
+        const U64  bish_entries = (ONE << (64 - bish_shift));
+
         for (U64 i = 0; i < rook_entries; i++) {
-            const U64 rel_occ            = populateMask(rookMasks[n], i);
-            const int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
+            const U64 rel_occ      = populateMask(rookMasks[n], i);
+            const int index        = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
-        
+
         for (U64 i = 0; i < bish_entries; i++) {
-            const U64 rel_occ              = populateMask(bishopMasks[n], i);
-            const int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
+            const U64 rel_occ        = populateMask(bishopMasks[n], i);
+            const int index          = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
     }
 }
 
-
-
 U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     U64              res {0};
-    
+
     static const U64 topBottom = RANK_1_BB | RANK_8_BB;
     static const U64 leftRight = FILE_A_BB | FILE_H_BB;
-    
+
     if ((1ULL << sq) & RANK_1_BB && direction < -2) {
         return res;
     }
@@ -90,14 +89,14 @@ U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
         && (direction == EAST || direction == SOUTH_EAST || direction == NORTH_EAST)) {
         return res;
     }
-    
+
     while (true) {
         sq += direction;
-        
+
         const U64 currentSq = (U64) 1 << sq;
-        
+
         res |= currentSq;
-        
+
         if (occ & currentSq) {
             return res;
         }
@@ -118,17 +117,19 @@ U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
 }
 
 U64 attacks::generateRookAttacks(Square square, U64 occupied) {
+    // clang-format off
     return   generateSlidingAttacks(square, NORTH, occupied)
            | generateSlidingAttacks(square, EAST , occupied)
            | generateSlidingAttacks(square, WEST , occupied)
            | generateSlidingAttacks(square, SOUTH, occupied);
+    // clang-format on
 }
 
 U64 attacks::generateBishopAttacks(Square square, U64 occupied) {
+    // clang-format off
     return   generateSlidingAttacks(square, NORTH_WEST, occupied)
            | generateSlidingAttacks(square, NORTH_EAST, occupied)
            | generateSlidingAttacks(square, SOUTH_WEST, occupied)
            | generateSlidingAttacks(square, SOUTH_EAST, occupied);
+    // clang-format on
 }
-
-

@@ -18,10 +18,9 @@
  ****************************************************************************************************/
 #include "Perft.h"
 
-#include "UCIAssert.h"
 #include "Move.h"
+#include "UCIAssert.h"
 #include "movegen.h"
-
 
 move::MoveList**    perft_mvlist_buffer;
 TranspositionTable* perft_tt;
@@ -93,10 +92,9 @@ bb::U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     if (depth == 0)
         return 1;
 
-    
-//    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
+    //    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
     generatePerftMoves(b, perft_mvlist_buffer[depth]);
-    
+
     //    generations ++;
 
     for (int i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {

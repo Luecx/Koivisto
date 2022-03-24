@@ -18,77 +18,78 @@
  ****************************************************************************************************/
 
 #include "TimeManager.h"
+
 #include "UCIAssert.h"
 
 using namespace bb;
 
-TimeManager::TimeManager() {
-    this->setStartTime();
-}
+TimeManager::TimeManager() { this->setStartTime(); }
 
-void TimeManager::setDepthLimit     (Depth depth) {
+void TimeManager::setDepthLimit(Depth depth) {
     UCI_ASSERT(depth >= 0);
-    
+
     this->depth_limit.depth   = depth;
     this->depth_limit.enabled = true;
 }
-void TimeManager::setNodeLimit      (U64 nodes) {
+void TimeManager::setNodeLimit(U64 nodes) {
     UCI_ASSERT(nodes >= 0);
-    
+
     this->node_limit.nodes   = nodes;
     this->node_limit.enabled = true;
 }
-void TimeManager::setMoveTimeLimit  (U64 move_time) {
+void TimeManager::setMoveTimeLimit(U64 move_time) {
     UCI_ASSERT(move_time >= 0);
-    
+
     this->move_time_limit.upper_time_bound = move_time;
     this->move_time_limit.enabled          = true;
 }
-void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
+void TimeManager::setMatchTimeLimit(U64 time, U64 inc, int moves_to_go) {
     UCI_ASSERT(time >= 0);
     UCI_ASSERT(inc >= 0);
     UCI_ASSERT(moves_to_go >= 0);
-    
+
     const U64    overhead = inc == 0 ? 50 : 0;
     const double division = 2;
-    
-    if(time < 1000 && inc == 0){
+
+    if (time < 1000 && inc == 0) {
         time = time * 0.7;
     }
-    
+
     U64 upperTimeBound = time / division;
     U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
-    
+
     timeToUse          = std::min(time - overhead - inc, timeToUse);
     upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
-    
+
     this->setMoveTimeLimit(upperTimeBound);
     this->match_time_limit.time_to_use = timeToUse;
     this->match_time_limit.enabled     = true;
 }
 void TimeManager::setStartTime() {
+    // clang-format off
     start_time = std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now().time_since_epoch()).count();
+    // clang-format on
 }
 
 bb::U64 TimeManager::elapsedTime() const {
+    // clang-format off
     auto end   = std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now().time_since_epoch()).count();
+    // clang-format on
     auto diff = end - start_time;
     return diff;
 }
 
-void TimeManager::stopSearch() {
-    force_stop = true;
-}
+void TimeManager::stopSearch() { force_stop = true; }
 
 bool TimeManager::isTimeLeft(SearchData* sd) const {
     // stop the search if requested
     if (force_stop)
         return false;
-    
+
     U64 elapsed = elapsedTime();
-    
+
     if (sd != nullptr && this->match_time_limit.enabled) {
         if (elapsed * 10 < this->match_time_limit.time_to_use) {
             sd->targetReached = false;
@@ -96,12 +97,14 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
             sd->targetReached = true;
         }
     }
-    
+
+    // clang-format off
     // if we are above the maximum allowed time, stope
     if (    this->move_time_limit.enabled
          && this->move_time_limit.upper_time_bound < elapsed)
         return false;
-    
+    // clang-format on
+
     return true;
 }
 
@@ -110,11 +113,12 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     if (force_stop)
         return false;
 
-    nodeScore = 110 - std::min(nodeScore, 90);
-    evalScore = std::min(std::max(50, 50 + evalScore), 80);
+    nodeScore   = 110 - std::min(nodeScore, 90);
+    evalScore   = std::min(std::max(50, 50 + evalScore), 80);
 
     U64 elapsed = elapsedTime();
-    
+
+    // clang-format off
     if(    move_time_limit.enabled
         && move_time_limit.upper_time_bound < elapsed)
         return false;
@@ -128,6 +132,7 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     if(    match_time_limit.enabled
         && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 65 < elapsed)
         return false;
-    
+    // clang-format on
+
     return true;
 }

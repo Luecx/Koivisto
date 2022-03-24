@@ -25,11 +25,11 @@
 #include <iomanip>
 #include <iostream>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
-constexpr char const*     ws_t = " \t\n\r\f\v";
+constexpr char const* ws_t = " \t\n\r\f\v";
 
 /**
  * trim from end of string (right)
@@ -37,7 +37,7 @@ constexpr char const*     ws_t = " \t\n\r\f\v";
  * @param t
  * @return
  */
-std::string&              rtrim(std::string& s, const char* t = ws_t);
+std::string& rtrim(std::string& s, const char* t = ws_t);
 
 /**
  * trim from beginning of string (left)
@@ -45,7 +45,7 @@ std::string&              rtrim(std::string& s, const char* t = ws_t);
  * @param t
  * @return
  */
-std::string&              ltrim(std::string& s, const char* t = ws_t);
+std::string& ltrim(std::string& s, const char* t = ws_t);
 
 /**
  * trim from both ends of string (right then left)
@@ -53,7 +53,7 @@ std::string&              ltrim(std::string& s, const char* t = ws_t);
  * @param t
  * @return
  */
-std::string&              trim(std::string& s, const char* t = ws_t);
+std::string& trim(std::string& s, const char* t = ws_t);
 
 /**
  * returns a loading bar as a string. Usually used together with '\r'.
@@ -62,7 +62,7 @@ std::string&              trim(std::string& s, const char* t = ws_t);
  * @param msg
  * @return
  */
-std::string               loadingBar(int count, int max, const std::string& msg);
+std::string loadingBar(int count, int max, const std::string& msg);
 
 /**
  * https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
@@ -71,7 +71,8 @@ std::string               loadingBar(int count, int max, const std::string& msg)
  * @param replaceStr
  * @return
  */
-std::string&              findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr);
+std::string& findAndReplaceAll(std::string& data, const std::string& toSearch,
+                               const std::string& replaceStr);
 
 /**
  * splits the string into subparts at the specified char.
@@ -80,18 +81,19 @@ std::string&              findAndReplaceAll(std::string& data, const std::string
  * @param ch
  * @return
  */
-std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch);
+std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs,
+                                      char ch);
 
 /**
  * starts the time measurement.
  * Note that this Tool is not used during search but rather for internal profilings and debugging.
  */
-void                      startMeasure();
+void startMeasure();
 
 /**
  * stops the time measurement and returns the elapsed milliseconds.
  * @return
  */
-int                       stopMeasure();
+int stopMeasure();
 
 #endif    // CHESSCOMPUTER_UTIL_H

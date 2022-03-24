@@ -20,10 +20,10 @@
 #ifndef KOIVISTO_NEWMOVEGEN_H
 #define KOIVISTO_NEWMOVEGEN_H
 
+#include "Bitboard.h"
 #include "Board.h"
 #include "History.h"
 #include "Move.h"
-#include "Bitboard.h"
 
 constexpr int MAX_QUIET = 128;
 constexpr int MAX_NOISY = 32;
@@ -51,40 +51,39 @@ enum {
 
 class moveGen {
     private:
-    int             stage;
+    int         stage;
 
-    move::Move      quiets[MAX_QUIET]       = {0};
-    move::Move      noisy[MAX_NOISY]        = {0};
-    move::Move      searched[MAX_QUIET]     = {0};
-    int             quietScores[MAX_QUIET]  = {0};
-    int             noisyScores[MAX_NOISY]  = {0};
-    int             noisySee[MAX_NOISY]     = {0};
-    int             quietSize;
-    int             noisySize;
-    int             goodNoisyCount;
-    int             noisy_index;
-    int             quiet_index;
-    int             searched_index;
-    
-    bool            m_skip;
-    Board*          m_board;
-    SearchData*     m_sd;
-    bb::Depth       m_ply;
-    move::Move      m_hashMove;
-    move::Move      m_killer1;
-    move::Move      m_killer2;
-    move::Move      m_previous;
-    move::Move      m_followup;
-    bb::Square      m_threatSquare;
-    bb::U64         m_checkerSq;
-    bb::Color       c;
-    int             m_mode;
-    
+    move::Move  quiets[MAX_QUIET]      = {0};
+    move::Move  noisy[MAX_NOISY]       = {0};
+    move::Move  searched[MAX_QUIET]    = {0};
+    int         quietScores[MAX_QUIET] = {0};
+    int         noisyScores[MAX_NOISY] = {0};
+    int         noisySee[MAX_NOISY]    = {0};
+    int         quietSize;
+    int         noisySize;
+    int         goodNoisyCount;
+    int         noisy_index;
+    int         quiet_index;
+    int         searched_index;
+
+    bool        m_skip;
+    Board*      m_board;
+    SearchData* m_sd;
+    bb::Depth   m_ply;
+    move::Move  m_hashMove;
+    move::Move  m_killer1;
+    move::Move  m_killer2;
+    move::Move  m_previous;
+    move::Move  m_followup;
+    bb::Square  m_threatSquare;
+    bb::U64     m_checkerSq;
+    bb::Color   c;
+    int         m_mode;
 
     public:
-    int lastSee;
-    void                     init(SearchData* sd, Board* b, bb::Depth ply, move::Move hashMove, move::Move previous,
-                                  move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
+    int  lastSee;
+    void init(SearchData* sd, Board* b, bb::Depth ply, move::Move hashMove, move::Move previous,
+              move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
     [[nodiscard]] move::Move next();
     void                     addNoisy(move::Move m);
     void                     addQuiet(move::Move m);

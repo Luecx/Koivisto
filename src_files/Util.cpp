@@ -59,7 +59,8 @@ std::string& trim(std::string& s, const char* t) { return ltrim(rtrim(s, t), t);
  * @param replaceStr
  * @return
  */
-std::string& findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr) {
+std::string& findAndReplaceAll(std::string& data, const std::string& toSearch,
+                               const std::string& replaceStr) {
     // Get the first occurrence
     size_t pos = data.find(toSearch);
 
@@ -80,7 +81,8 @@ std::string& findAndReplaceAll(std::string& data, const std::string& toSearch, c
  * @param ch
  * @return
  */
-std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch) {
+std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs,
+                                      char ch) {
     size_t pos        = txt.find(ch);
     size_t initialPos = 0;
     strs.clear();

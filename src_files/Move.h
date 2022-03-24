@@ -20,7 +20,6 @@
 #ifndef CHESSCOMPUTER_MOVE_H
 #define CHESSCOMPUTER_MOVE_H
 
-
 #include "Bitboard.h"
 
 #include <cstdint>
@@ -45,11 +44,11 @@ namespace move {
  * +-------------------------------------
  */
 
-using Move = uint32_t;
-using MoveType = uint8_t;
+using Move      = uint32_t;
+using MoveType  = uint8_t;
 using MoveScore = uint32_t;
 
-enum MoveTypes{
+enum MoveTypes {
     QUIET                    = 0,
     DOUBLED_PAWN_PUSH        = 1,
     KING_CASTLE              = 2,
@@ -72,7 +71,7 @@ enum MoveTypeMasks {
     SPECIAL_MASK   = 0x3,
 };
 
-enum MoveShifts{
+enum MoveShifts {
     SHIFT_FROM           = 0,
     SHIFT_TO             = 6,
     SHIFT_TYPE           = 16,
@@ -81,22 +80,23 @@ enum MoveShifts{
     SHIFT_SCORE_INFO     = 24,
 };
 
-template<uint8_t N>
-constexpr uint32_t MASK = (1ULL << N) - 1;
+template<uint8_t N> constexpr uint32_t MASK = (1ULL << N) - 1;
 
+// checks if two move are the same. only looks at the relevant 24 bits
 inline bool sameMove(const Move& m1, const Move& m2) {
     // toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
     return ((m1 ^ m2) & MASK<24>) == 0;
 }
-inline void setScore(      Move& move, const int moveScore) {
+inline void setScore(Move& move, const int moveScore) {
     move = (move & ~(MASK<8> << SHIFT_SCORE_INFO));    // clearing
     move |= (moveScore << SHIFT_SCORE_INFO);
 }
-inline int  getScore(const Move& move) { return (move >> SHIFT_SCORE_INFO); }
+inline int getScore(const Move& move) { return (move >> SHIFT_SCORE_INFO); }
 
-inline int getPieceSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK<10>;}
+// clang-format off
+inline int getPieceSqToCombination    (const Move& move) {return (move >> SHIFT_TO) & MASK<10>;}
 inline int getPieceTypeSqToCombination(const Move& move) {return (move >> SHIFT_TO) & MASK<9>;}
-inline int getSqToSqFromCombination(const Move& move) {return move & MASK<12>;}
+inline int getSqToSqFromCombination   (const Move& move) {return move & MASK<12>;}
 
 inline bb::Square    getSquareFrom          (const Move& move) { return ((move >> SHIFT_FROM) & MASK<6>); }
 inline bb::Square    getSquareTo            (const Move& move) { return ((move >> SHIFT_TO) & MASK<6>); }
@@ -106,8 +106,9 @@ inline bb::PieceType getMovingPieceType     (const Move& move) { return ((move >
 inline bb::Piece     getCapturedPiece       (const Move& move) { return ((move >> SHIFT_CAPTURED_PIECE) & MASK<4>); }
 inline bb::PieceType getCapturedPieceType   (const Move& move) { return ((move >> SHIFT_CAPTURED_PIECE) & MASK<3>); }
 inline bb::Color     getMovingPieceColor    (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & 0x8);}
-inline bb::Piece     getPromotionPiece      (const Move& move){ return ((move & 0x30000) >> SHIFT_TYPE) + getMovingPiece(move) + 1; }
-inline bb::Piece     getPromotionPieceType  (const Move& move){ return ((move & 0x30000) >> SHIFT_TYPE) + 1; }
+inline bb::Piece     getPromotionPiece      (const Move& move) { return ((move & 0x30000) >> SHIFT_TYPE) + getMovingPiece(move) + 1; }
+inline bb::Piece     getPromotionPieceType  (const Move& move) { return ((move & 0x30000) >> SHIFT_TYPE) + 1; }
+
 inline void setSquareFrom   (Move& move, const bb::Square from) {
     // move = (move & ~(MASK_6 << SHIFT_FROM));  //clearing
     move |= (from << SHIFT_FROM);
@@ -128,9 +129,10 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
     // move = (move & ~(MASK_6 << SHIFT_CAPTURED_PIECE));  //clearing
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
+// clang-format on
 
-[[nodiscard]] inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type,
-                                  const bb::Piece &movingPiece){
+[[nodiscard]] inline Move genMove(const bb::Square& from, const bb::Square& to, const MoveType& type,
+                                  const bb::Piece& movingPiece) {
     Move m {0};
     setSquareFrom(m, from);
     setSquareTo(m, to);
@@ -138,19 +140,20 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
     setMovingPiece(m, movingPiece);
     return m;
 }
-[[nodiscard]] inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type,
-                                  const bb::Piece &movingPiece, const bb::Piece &capturedPiece){
+[[nodiscard]] inline Move genMove(const bb::Square& from, const bb::Square& to, const MoveType& type,
+                                  const bb::Piece& movingPiece, const bb::Piece& capturedPiece) {
     Move m {0};
-    
+
     setSquareFrom(m, from);
     setSquareTo(m, to);
     setType(m, type);
     setMovingPiece(m, movingPiece);
     setCapturedPiece(m, capturedPiece);
-    
+
     return m;
 }
 
+// clang-format off
 [[nodiscard]] inline bool         isDoubledPawnPush   (Move move){
     return getType(move) == DOUBLED_PAWN_PUSH;
 }
@@ -167,16 +170,17 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
 [[nodiscard]] inline bool         isPromotion         (Move move){
     return move & 0x80000;
 }
+// clang-format on
 
 [[nodiscard]] std::string toString(const Move& move);
 void                      printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {
     private:
-    move::Move      moves [256];
+    move::Move      moves[256];
     move::MoveScore scores[256];
     int             size;
-    
+
     public:
     void                     swap(int i1, int i2);
     [[nodiscard]] move::Move getMove(int index) const;

@@ -16,13 +16,13 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-
 #ifndef KOIVISTO_ATTACKS_H
 #define KOIVISTO_ATTACKS_H
 
 #include "Bitboard.h"
 
-namespace attacks{
+namespace attacks {
+// clang-format off
 constexpr bb::U64 bishopMasks[] {
     0x0040201008040200ULL, 0x0000402010080400ULL, 0x0000004020100a00ULL, 0x0000000040221400ULL,
     0x0000000002442800ULL, 0x0000000204085000ULL, 0x0000020408102000ULL, 0x0002040810204000ULL,
@@ -132,6 +132,7 @@ constexpr bb::U64 KING_ATTACKS[] {
     0x3828380000000000ULL, 0x7050700000000000ULL, 0xe0a0e00000000000ULL, 0xc040c00000000000ULL,
     0x0203000000000000ULL, 0x0507000000000000ULL, 0x0a0e000000000000ULL, 0x141c000000000000ULL,
     0x2838000000000000ULL, 0x5070000000000000ULL, 0xa0e0000000000000ULL, 0x40c0000000000000ULL};
+
 constexpr bb::U64 KNIGHT_ATTACKS[] {
     0x0000000000020400ULL, 0x0000000000050800ULL, 0x00000000000a1100ULL, 0x0000000000142200ULL,
     0x0000000000284400ULL, 0x0000000000508800ULL, 0x0000000000a01000ULL, 0x0000000000402000ULL,
@@ -158,6 +159,7 @@ void init();
 bb::U64 generateSlidingAttacks(bb::Square sq, bb::Direction direction, bb::U64 occ);
 bb::U64 generateRookAttacks   (bb::Square sq, bb::U64 occupied);
 bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
+// clang-format on
 
 /**
  * looks up the rook attack for a rook on the given square.
@@ -166,7 +168,7 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * @param occupied
  * @return
  */
-[[nodiscard]] inline bb::U64       lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
+[[nodiscard]] inline bb::U64 lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
     return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index]
                                                 >> (rookShifts[index]))];
 }
@@ -176,7 +178,8 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * It returns a bitmap with all attackable squares highlighted including those after the first
  * blockers.
  */
-[[nodiscard]] inline bb::U64 lookUpRookXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
+[[nodiscard]] inline bb::U64 lookUpRookXRayAttack(bb::Square index, bb::U64 occupied,
+                                                  bb::U64 opponent) {
     const bb::U64 attacks  = lookUpRookAttacks(index, occupied);
     const bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpRookAttacks(index, occupied ^ blockers);
@@ -198,11 +201,12 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * It returns a bitmap with all attackable squares highlighted including those after the first
  * blockers.
  */
-[[nodiscard]] inline bb::U64 lookUpBishopXRayAttack(bb::Square index, bb::U64 occupied, bb::U64 opponent) {
+[[nodiscard]] inline bb::U64 lookUpBishopXRayAttack(bb::Square index, bb::U64 occupied,
+                                                    bb::U64 opponent) {
     const bb::U64 attacks  = lookUpBishopAttacks(index, occupied);
     const bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpBishopAttacks(index, occupied ^ blockers);
 }
-}
+}    // namespace attacks
 
 #endif    // KOIVISTO_ATTACKS_H

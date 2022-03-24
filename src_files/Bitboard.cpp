@@ -18,14 +18,16 @@
  ****************************************************************************************************/
 
 #include "Bitboard.h"
+
 #include "attacks.h"
 
 namespace bb {
-U64 ALL_HASHES[N_PIECES][N_SQUARES] = {};
+// clang-format off
+U64 ALL_HASHES        [N_PIECES] [N_SQUARES] = {};
 U64 IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
+// clang-format on
 
-U64 seed = 1293812938;
-
+U64  seed = 1293812938;
 
 void init() {
     generateZobristKeys();
@@ -71,16 +73,16 @@ void generateData() {
     }
 }
 
-
 void generateZobristKeys() {
     for (int i = 0; i < 6; i++) {
         for (int n = 0; n < 64; n++) {
-            ALL_HASHES[i][n]     = randU64();
+            // clang-format off
+            ALL_HASHES[i    ][n] = randU64();
             ALL_HASHES[i + 8][n] = randU64();
+            // clang-format on
         }
     }
 }
-
 
 void printBitmap(U64 bb) {
     for (int i = 7; i >= 0; i--) {
@@ -95,4 +97,4 @@ void printBitmap(U64 bb) {
     }
     std::cout << "\n";
 }
-}
+}    // namespace bb

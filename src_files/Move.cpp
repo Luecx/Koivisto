@@ -50,7 +50,7 @@ void move::printMoveBits(Move move, bool bitInfo) {
     for (int i = 0; i < 6; i++) {
         std::cout << static_cast<bool>((move >> (5 - i)) & 1UL);
     }
-    
+
     if (bitInfo) {
         std::cout << "\n";
         std::cout << "|        |    |    |    |      |      squareFrom\n"
@@ -86,7 +86,7 @@ std::string move::toString(const Move& move) {
         char chr = tolower(bb::PIECE_IDENTIFER[getPromotionPiece(move)]);
         res.push_back(chr);
     }
-    
+
     return res;
 }
 
@@ -97,7 +97,7 @@ void MoveList::swap(int i1, int i2) {
     Move m1      = moves[i1];
     moves[i1]    = moves[i2];
     moves[i2]    = m1;
-    
+
     MoveScore s1 = scores[i1];
     scores[i1]   = scores[i2];
     scores[i2]   = s1;
@@ -108,32 +108,24 @@ void MoveList::swap(int i1, int i2) {
  * @param index
  * @return
  */
-move::Move MoveList::getMove(int index) const {
-    return moves[index];
-}
+move::Move MoveList::getMove(int index) const { return moves[index]; }
 
 /**
  * removes all moves
  */
-void MoveList::clear() {
-    size = 0;
-}
+void MoveList::clear() { size = 0; }
 
 /**
  * adds a move
  * @param move
  */
-void MoveList::add(Move move) {
-    moves[size++] = move;
-}
+void MoveList::add(Move move) { moves[size++] = move; }
 
 /**
  * returns the amount of stored moves
  * @return
  */
-int MoveList::getSize() const {
-    return size;
-}
+int MoveList::getSize() const { return size; }
 
 /**
  * assigns the score to the move at the given index
@@ -146,9 +138,7 @@ void MoveList::scoreMove(int index, MoveScore score) {
 /**
  *
  */
-MoveScore MoveList::getScore(int index) const {
-    return scores[index];
-}
+MoveScore MoveList::getScore(int index) const { return scores[index]; }
 
 /**
  * prints the bits of all the moves

@@ -27,32 +27,31 @@
 #include <string>
 
 namespace bb {
-using U64 = uint64_t;
-using U32 = uint32_t;
-using Square = int8_t;
-using Diagonal = int8_t;
+using U64          = uint64_t;
+using U32          = uint32_t;
+using Square       = int8_t;
+using Diagonal     = int8_t;
 using AntiDiagonal = int8_t;
-using Direction = int8_t;
+using Direction    = int8_t;
 
-using File = int8_t;
-using Rank = int8_t;
-using Piece = int8_t;
-using PieceType = int8_t;
-using Color = bool;
+using File         = int8_t;
+using Rank         = int8_t;
+using Piece        = int8_t;
+using PieceType    = int8_t;
+using Color        = bool;
 
-using Depth = uint8_t;
-using Score = int16_t;
-using EvalScore = int32_t;
+using Depth        = uint8_t;
+using Score        = int16_t;
+using EvalScore    = int32_t;
 
-
-enum Plies{
+enum Plies {
     ONE_PLY          = 1,
     MAX_PLY          = 128,
     MAX_PVSEARCH_PLY = 235,
     MAX_INTERNAL_PLY = 255,
 };
 
-enum Scores{
+enum Scores {
     TB_CURSED_SCORE = static_cast<Score>(1),
     TB_WIN_SCORE    = static_cast<Score>((1 << 13) - MAX_INTERNAL_PLY),
     MAX_MATE_SCORE  = static_cast<Score>((1 << 14) - 1),
@@ -60,23 +59,19 @@ enum Scores{
     TB_FAILED       = MAX_MATE_SCORE
 };
 
-enum Colors{
-    WHITE,
-    BLACK,
-    N_COLORS = 2
-};
+enum Colors { WHITE, BLACK, N_COLORS = 2 };
 
-enum PieceTypes{
-    PAWN   = 0,
-    KNIGHT = 1,
-    BISHOP = 2,
-    ROOK   = 3,
-    QUEEN  = 4,
-    KING   = 5,
+enum PieceTypes {
+    PAWN          = 0,
+    KNIGHT        = 1,
+    BISHOP        = 2,
+    ROOK          = 3,
+    QUEEN         = 4,
+    KING          = 5,
     N_PIECE_TYPES = 6
 };
 
-enum Pieces{
+enum Pieces {
     WHITE_PAWN   = 0,
     WHITE_KNIGHT = 1,
     WHITE_BISHOP = 2,
@@ -91,7 +86,7 @@ enum Pieces{
     BLACK_KING   = 13,
     N_PIECES     = 14
 };
-
+// clang-format off
 enum Squares{
     A1,B1,C1,D1,E1,F1,G1,H1,
     A2,B2,C2,D2,E2,F2,G2,H2,
@@ -103,43 +98,23 @@ enum Squares{
     A8,B8,C8,D8,E8,F8,G8,H8,
     N_SQUARES = 64
 };
+// clang-format on
 
-enum Directions{
-    NORTH      =  8,
-    SOUTH      = -8,
-    WEST       = -1,
-    EAST       =  1,
-    NORTH_WEST =  7,
-    NORTH_EAST =  9,
-    SOUTH_WEST = -9,
-    SOUTH_EAST = -7,
+enum Directions {
+    NORTH        = 8,
+    SOUTH        = -8,
+    WEST         = -1,
+    EAST         = 1,
+    NORTH_WEST   = 7,
+    NORTH_EAST   = 9,
+    SOUTH_WEST   = -9,
+    SOUTH_EAST   = -7,
     N_DIRECTIONS = 8
 };
 
-enum Ranks{
-    RANK_1,
-    RANK_2,
-    RANK_3,
-    RANK_4,
-    RANK_5,
-    RANK_6,
-    RANK_7,
-    RANK_8,
-    N_RANKS = 8
-};
+enum Ranks { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, N_RANKS = 8 };
 
-enum Files{
-    FILE_A,
-    FILE_B,
-    FILE_C,
-    FILE_D,
-    FILE_E,
-    FILE_F,
-    FILE_G,
-    FILE_H,
-    N_FILES = 8
-};
-
+enum Files { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, N_FILES = 8 };
 
 constexpr char const* SQUARE_IDENTIFIER[] {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -148,12 +123,13 @@ constexpr char const* SQUARE_IDENTIFIER[] {
     "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 };
 
-constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K',' ' ,' ','p', 'n', 'b', 'r', 'q', 'k'};
+constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K', ' ',
+                                  ' ', 'p', 'n', 'b', 'r', 'q', 'k'};
 
+constexpr U64  ONE  = 1ULL;
+constexpr U64  ZERO = 0ULL;
 
-constexpr U64 ONE  = 1ULL;
-constexpr U64 ZERO = 0ULL;
-
+// file bitboards
 constexpr U64 FILE_H_BB = 0x8080808080808080ULL;
 constexpr U64 FILE_G_BB = FILE_H_BB >> 1;
 constexpr U64 FILE_F_BB = FILE_H_BB >> 2;
@@ -163,6 +139,7 @@ constexpr U64 FILE_C_BB = FILE_H_BB >> 5;
 constexpr U64 FILE_B_BB = FILE_H_BB >> 6;
 constexpr U64 FILE_A_BB = FILE_H_BB >> 7;
 
+// rank bitboards
 constexpr U64 RANK_1_BB = 0x00000000000000FFULL;
 constexpr U64 RANK_2_BB = RANK_1_BB << 8;
 constexpr U64 RANK_3_BB = RANK_1_BB << 16;
@@ -172,16 +149,16 @@ constexpr U64 RANK_6_BB = RANK_1_BB << 40;
 constexpr U64 RANK_7_BB = RANK_1_BB << 48;
 constexpr U64 RANK_8_BB = RANK_1_BB << 56;
 
+// used for shifting
 constexpr U64 NOT_FILE_A_BB = ~FILE_A_BB;
 constexpr U64 NOT_FILE_H_BB = ~FILE_H_BB;
-constexpr U64 NOT_RANK_1_BB = ~RANK_1_BB;
-constexpr U64 NOT_RANK_8_BB = ~RANK_8_BB;
 
+// squares for move generation and only white or black squares
 constexpr U64 OUTER_SQUARES_BB = 0xFF818181818181FFULL;
 constexpr U64 WHITE_SQUARES_BB = 0x55AA55AA55AA55AAULL;
 constexpr U64 BLACK_SQUARES_BB = ~WHITE_SQUARES_BB;
 
-
+// castling masks
 constexpr U64 CASTLING_WHITE_QUEENSIDE_MASK = 0x000000000000000EULL;
 constexpr U64 CASTLING_WHITE_KINGSIDE_MASK  = 0x0000000000000060ULL;
 constexpr U64 CASTLING_BLACK_QUEENSIDE_MASK = CASTLING_WHITE_QUEENSIDE_MASK << (7 * 8);
@@ -193,28 +170,25 @@ constexpr U64 CASTLING_WHITE_KINGSIDE_SAFE  = CASTLING_WHITE_QUEENSIDE_SAFE << 2
 constexpr U64 CASTLING_BLACK_QUEENSIDE_SAFE = CASTLING_WHITE_QUEENSIDE_SAFE << (7 * 8);
 constexpr U64 CASTLING_BLACK_KINGSIDE_SAFE  = CASTLING_WHITE_KINGSIDE_SAFE << (7 * 8);
 
+// seed for rng
 extern U64 seed;
 
-
-extern U64  ALL_HASHES[N_PIECES][N_SQUARES];
-
+// zobrist hashes as well as inbetween squares for sliding pieces
+// clang-format off
+extern U64  ALL_HASHES        [N_PIECES ][N_SQUARES];
 extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
-[[nodiscard]] inline Rank rankIndex(Square square_index) {
-    return square_index >> 3;
-}
+// clang-format on
 
-[[nodiscard]] inline File fileIndex(Square square_index) {
-    return square_index & 7;
-}
+[[nodiscard]] inline Rank   rankIndex(Square square_index) { return square_index >> 3; }
 
-[[nodiscard]] inline Square squareIndex(Rank rank, File file) {
-    return 8 * rank + file;
-}
+[[nodiscard]] inline File   fileIndex(Square square_index) { return square_index & 7; }
+
+[[nodiscard]] inline Square squareIndex(Rank rank, File file) { return 8 * rank + file; }
 
 [[nodiscard]] inline Square squareIndex(const std::string& str) {
     const Rank r = str.at(1) - '1';
     const File f = toupper(str.at(0)) - 'A';
-    
+
     return squareIndex(r, f);
 }
 
@@ -226,33 +200,19 @@ extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
     return rankIndex(square_index) + fileIndex(square_index);
 }
 
-[[nodiscard]] inline Diagonal diagonalIndex(Rank rank, File file) {
-    return 7 + rank - file;
-}
+[[nodiscard]] inline Diagonal     diagonalIndex(Rank rank, File file) { return 7 + rank - file; }
 
-[[nodiscard]] inline AntiDiagonal antiDiagonalIndex(Rank rank, File file) {
-    return rank + file;
-}
+[[nodiscard]] inline AntiDiagonal antiDiagonalIndex(Rank rank, File file) { return rank + file; }
 
-[[nodiscard]] inline Square mirrorVertically(Square square){
-    return square ^ 56;
-}
+[[nodiscard]] inline Square       mirrorVertically(Square square) { return square ^ 56; }
 
-[[nodiscard]] inline Square mirrorHorizontally(Square square){
-    return square ^ 7;
-}
+[[nodiscard]] inline Square       mirrorHorizontally(Square square) { return square ^ 7; }
 
-[[nodiscard]] inline Color getPieceColor(Piece p) {
-    return p & 0x8;
-}
+[[nodiscard]] inline Color        getPieceColor(Piece p) { return p & 0x8; }
 
-[[nodiscard]] inline PieceType getPieceType(Piece p) {
-    return p & 0x7;
-}
+[[nodiscard]] inline PieceType    getPieceType(Piece p) { return p & 0x7; }
 
-[[nodiscard]] inline Piece getPiece(Color c, PieceType pt) {
-    return c * 8 + pt;
-}
+[[nodiscard]] inline Piece        getPiece(Color c, PieceType pt) { return c * 8 + pt; }
 
 /**
  * toggles the bit
@@ -260,9 +220,7 @@ extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
  */
-inline void toggleBit(U64& number, Square index) {
-    number ^= (1ULL << index);
-}
+inline void toggleBit(U64& number, Square index) { number ^= (1ULL << index); }
 
 /**
  * set the bit
@@ -270,9 +228,7 @@ inline void toggleBit(U64& number, Square index) {
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
  */
-inline void setBit(U64& number, Square index) {
-    number |= (1ULL << index);
-}
+inline void setBit(U64& number, Square index) { number |= (1ULL << index); }
 
 /**
  * unset the bit
@@ -280,9 +236,7 @@ inline void setBit(U64& number, Square index) {
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
  */
-inline void unsetBit(U64& number, Square index) {
-    number &= ~(1ULL << index);
-}
+inline void unsetBit(U64& number, Square index) { number &= ~(1ULL << index); }
 
 /**
  * get the bit
@@ -290,11 +244,9 @@ inline void unsetBit(U64& number, Square index) {
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
  */
-[[nodiscard]] inline bool getBit(U64 number, Square index) {
-    return ((number >> index) & 1ULL) == 1;
-}
+[[nodiscard]] inline bool getBit(U64 number, Square index) { return ((number >> index) & 1ULL) == 1; }
 
-[[nodiscard]] inline U64 shiftWest(U64 b) {
+[[nodiscard]] inline U64  shiftWest(U64 b) {
     b = (b >> 1) & NOT_FILE_H_BB;
     return b;
 }
@@ -339,45 +291,41 @@ inline void unsetBit(U64& number, Square index) {
  * @param number
  * @return
  */
-[[nodiscard]] inline U64 lsbIsolation(U64 number) {
-    return number & -number;
-}
+[[nodiscard]] inline U64 lsbIsolation(U64 number) { return number & -number; }
 
 /**
  * resets the lsb in the given number and returns the result.
  * @param number
  * @return
  */
-[[nodiscard]] inline U64 lsbReset(U64 number) {
-    return number & (number - 1);
-}
+[[nodiscard]] inline U64 lsbReset(U64 number) { return number & (number - 1); }
 
 /**
  * prints the given bitboard as a bitmap to the standard output stream
  * @param bb
  */
-void                     printBitmap(U64 bb);
+void printBitmap(U64 bb);
 
 /**
  * initialises the zobrist keys to random values
  */
-void                     generateZobristKeys();
+void generateZobristKeys();
 
 /**
  * generates some relevant data
  */
-void                     generateData();
+void generateData();
 
 /**
  * initiates the entries for fancy magic bitboard and zobrist hash values.
  */
-void                     init();
+void init();
 
 /**
  * generates a random Bitboard
  * @return
  */
-[[nodiscard]] U64        randU64();
+[[nodiscard]] U64 randU64();
 
 /**
  * returns the zobrist hash key for a given piece on a given square.
@@ -385,9 +333,7 @@ void                     init();
  * @param sq
  * @return
  */
-[[nodiscard]] inline U64 getHash(Piece piece, Square sq) {
-    return ALL_HASHES[piece][sq];
-}
+[[nodiscard]] inline U64 getHash(Piece piece, Square sq) { return ALL_HASHES[piece][sq]; }
 
 /**
  * returns the index of the LSB
@@ -447,7 +393,7 @@ void                     init();
     const Rank rI1 = rankIndex(sq1);
     const File fI2 = fileIndex(sq2);
     const Rank rI2 = rankIndex(sq2);
-    
+
     return chebyshevDistance(fI1, rI1, fI2, rI2);
 }
 
@@ -474,7 +420,7 @@ void                     init();
     const Rank rI1 = rankIndex(sq1);
     const File fI2 = fileIndex(sq2);
     const Rank rI2 = rankIndex(sq2);
-    
+
     return manhattanDistance(fI1, rI1, fI2, rI2);
 }
 }    // namespace bb

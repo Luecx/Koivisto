@@ -38,7 +38,7 @@ void TranspositionTable::init(bb::U64 MB) {
     }
 
     m_size /= 2;
-    m_mask = m_size - 1;
+    m_mask    = m_size - 1;
 
     m_entries = std::make_unique<Entry[]>(m_size);
     clear();
@@ -62,9 +62,7 @@ TranspositionTable::TranspositionTable(bb::U64 mb) { init(mb); }
  * clears the content and enlarges the table if possibles to a maximum size of mb
  * @param mb
  */
-void TranspositionTable::setSize(bb::U64 mb) {
-    init(mb);
-}
+void TranspositionTable::setSize(bb::U64 mb) { init(mb); }
 
 /**
  * clears the content and sets all entries to 0.
@@ -99,7 +97,7 @@ double TranspositionTable::usage() const {
 Entry TranspositionTable::get(bb::U64 zobrist) const {
     bb::U64 index = zobrist & m_mask;
 
-    Entry enP = m_entries[index];
+    Entry   enP   = m_entries[index];
 
     return enP;
 }
@@ -121,23 +119,24 @@ Entry TranspositionTable::get(bb::U64 zobrist) const {
  */
 bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type,
                              bb::Depth depth, bb::Score eval) {
-    bb::U64 index  = zobrist & m_mask;
-    Entry* enP = &m_entries[index];
-    bb::U32 key    = zobrist >> 32;
+    bb::U64 index = zobrist & m_mask;
+    Entry*  enP   = &m_entries[index];
+    bb::U32 key   = zobrist >> 32;
 
     if (enP->zobrist == 0) {
         enP->set(key, score, move, type, depth, eval);
         enP->setAge(m_currentAge);
         return true;
     } else {
-        //  on enP->depth < depth * 2:
-        //  The idea behind this replacement scheme is to allow faster searches of subtrees by
-        //  allowing more localized search results to be stored in the TT. A hard replacement scheme
-        //  has been tested on another engine, and has been shown to be worse (there is a limit to how
-        //  great of a depth override should occur).
+        // on enP->depth < depth * 2:
+        // The idea behind this replacement scheme is to allow faster searches of subtrees by
+        // allowing more localized search results to be stored in the TT. A hard replacement scheme
+        // has been tested on another engine, and has been shown to be worse (there is a limit to how
+        // great of a depth override should occur).
 
-        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however
-        //  they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
+        // This idea of replacement can be found in many strong engines (SF and Ethereal), however
+        // they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
+        // clang-format off
         if (   enP->getAge() != m_currentAge
             || type == PV_NODE
             || (enP->type    != PV_NODE && enP->depth <= depth)
@@ -146,6 +145,7 @@ bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, 
             enP->setAge(m_currentAge);
             return true;
         }
+        // clang-format on
     }
 
     return false;

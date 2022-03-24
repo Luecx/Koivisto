@@ -18,25 +18,24 @@
  ****************************************************************************************************/
 
 #include "uci.h"
+
+#include "UCIAssert.h"
 #include "attacks.h"
 #include "polyglot.h"
 #include "search.h"
-#include "UCIAssert.h"
-
 #include "syzygy/tbprobe.h"
 
 #include <fstream>
 #include <iostream>
-#include <thread>
 #include <string>
+#include <thread>
 #include <vector>
 
 using namespace bb;
 using namespace move;
 
-
 TimeManager timeManager;
-Board       board{};
+Board       board {};
 Search      searchObject;
 std::thread searchThread;
 
@@ -84,28 +83,24 @@ void uci::mainloop(int argc, char* argv[]) {
     nn::init();
     searchObject = {};
     searchObject.init(16);
-    
-    
-    std::cout << "Koivisto "
-              << MAJOR_VERSION << "."
-              << MINOR_VERSION
-              << " by K. Kahre, F. Eggers"
+
+    std::cout << "Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << " by K. Kahre, F. Eggers"
               << std::endl;
-    
+
     board = new Board();
 
     std::atexit(uci::quit);
     std::string line;
 
     // read given commands from shell
-    for(int i = 1; i < argc; i++){
+    for (int i = 1; i < argc; i++) {
         processCommand(argv[i]);
         // OB requires us to give an exit command once the bench command is given
-        if( strcmp(argv[i], "bench") == 0) {
+        if (strcmp(argv[i], "bench") == 0) {
             processCommand("exit");
         }
     }
-    
+
     while (std::getline(std::cin, line)) {
         uci::processCommand(line);
     }
@@ -114,7 +109,8 @@ void uci::mainloop(int argc, char* argv[]) {
 /**
  * Parses the uci command: uci
  * Displays engine version and the authors.
- * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive further commands.
+ * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive
+ * further commands.
  */
 void uci::uci() {
     std::cout << "id name Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
@@ -127,8 +123,6 @@ void uci::uci() {
 
     std::cout << "uciok" << std::endl;
 }
-
-
 
 /**
  * processes a single command.
@@ -178,8 +172,8 @@ void uci::processCommand(std::string str) {
             initLMR();
         }
     } else if (split.at(0) == "position") {
-        auto fenPos  = str.find("fen");
-        auto movePos = str.find("moves");
+        auto        fenPos  = str.find("fen");
+        auto        movePos = str.find("moves");
 
         std::string moves;
         if (movePos != std::string::npos) {
@@ -197,12 +191,12 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "print") {
         std::cout << board << std::endl;
     } else if (split.at(0) == "eval") {
-        nn::Evaluator evaluator{};
+        nn::Evaluator evaluator {};
         evaluator.reset(&board);
         std::cout << "eval=" << evaluator.evaluate(board.getActivePlayer()) << std::endl;
-    } else if (split.at(0) == "bench"){
+    } else if (split.at(0) == "bench") {
         bench();
-    } else if (split.at(0) == "exit" || split.at(0) == "quit"){
+    } else if (split.at(0) == "exit" || split.at(0) == "quit") {
         exit(0);
     }
 }
@@ -265,7 +259,7 @@ void uci::set_option(const std::string& name, const std::string& value) {
          */
         searchObject.useTableBase(TB_LARGEST > 0);
     } else if (name == "Threads") {
-        int count           = stoi(value);
+        int count = stoi(value);
         searchObject.setThreads(count);
     } else if (name == "OwnBook") {
         polyglot::book.enabled = (value == "true");
@@ -296,8 +290,8 @@ void uci::debug(bool mode) {
 
 /**
  * parses the uci command: position fen [fen] moves [m1, m2,...]
- * If the fen is not specified, the start position will be used which can also be invoked using 'startpos' instead of
- * fen ...
+ * If the fen is not specified, the start position will be used which can also be invoked using
+ * 'startpos' instead of fen ...
  * @param fen
  * @param moves
  */
@@ -310,15 +304,15 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
     splitString(moves, mv, ' ');
 
     for (std::string s : mv) {
-        std::string str1 = s.substr(0, 2);
-        std::string str2 = s.substr(2, 4);
-        Square s1   = squareIndex(str1);
-        Square s2   = squareIndex(str2);
+        std::string str1     = s.substr(0, 2);
+        std::string str2     = s.substr(2, 4);
+        Square      s1       = squareIndex(str1);
+        Square      s2       = squareIndex(str2);
 
-        Piece moving   = board.getPiece(s1);
-        Piece captured = board.getPiece(s2);
+        Piece       moving   = board.getPiece(s1);
+        Piece       captured = board.getPiece(s2);
 
-        MoveType type;
+        MoveType    type;
 
         if (s.size() > 4) {
             Piece promo = QUEEN;
@@ -378,8 +372,8 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
 
 /**
  * parses the uci command: position fen [fen] moves [m1, m2,...]
- * If the fen is not specified, the start position will be used which can also be invoked using 'startpos' instead of
- * fen ...
+ * If the fen is not specified, the start position will be used which can also be invoked using
+ * 'startpos' instead of fen ...
  * @param fen
  * @param moves
  */
@@ -409,9 +403,9 @@ void uci::bench() {
 
     searchObject.disableInfoStrings();
     for (int i = 0; strcmp(Benchmarks[i], ""); i++) {
-        Board b(Benchmarks[i]);
+        Board       b(Benchmarks[i]);
 
-        TimeManager manager{};
+        TimeManager manager {};
         manager.setDepthLimit(13);
         searchObject.bestMove(&b, &manager);
         SearchOverview overview = searchObject.overview();
@@ -427,7 +421,8 @@ void uci::bench() {
         searchObject.clearHash();
         searchObject.clearHistory();
     }
-    printf("OVERALL: %39d nodes %8d nps\n", static_cast<int>(nodes), static_cast<int>(1000.0f * nodes / (time + 1)));
+    printf("OVERALL: %39d nodes %8d nps\n", static_cast<int>(nodes),
+           static_cast<int>(1000.0f * nodes / (time + 1)));
     std::cout << std::flush;
     searchObject.enableInfoStrings();
 }
@@ -450,6 +445,7 @@ void uci::bench() {
  */
 void uci::go(const std::vector<std::string>& split, const std::string& str) {
     uci::stop();
+    // clang-format off
     
     // check for perft first since it will not be working with the remaining options
     if (str.find("perft") != std::string::npos) {
@@ -499,4 +495,5 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
     }
     // start the search
     searchThread = std::thread(searchAndPrint, &timeManager);
+    // clang-format on
 }

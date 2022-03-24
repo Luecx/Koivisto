@@ -21,15 +21,18 @@
 using namespace bb;
 using namespace move;
 
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) const {
+int SearchData::getHistories(Move m, Color side, Move previous, Move followup,
+                             Square threatSquare) const {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
+        // clang-format off
         auto fmh_value = (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side]
                                              [getPieceTypeSqToCombination(m)] : 0);
         auto cmh_value = cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)];
         auto th_vaue   = th[side][threatSquare][getSqToSqFromCombination(m)];
         return (2 * fmh_value + 2 * cmh_value + 2 * th_vaue) / 3;
+        // clang-format on
     }
 }
 
@@ -55,9 +58,7 @@ int SearchData::isKiller(Move move, Depth ply, Color color) const {
 /*
  * Set historic eval
  */
-void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
-    eval[color][ply] = ev;
-}
+void SearchData::setHistoricEval(Score ev, Color color, Depth ply) { eval[color][ply] = ev; }
 
 /*
  * Is improving

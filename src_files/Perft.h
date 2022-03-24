@@ -19,16 +19,17 @@
 #ifndef CHESSCOMPUTER_PERFT_H
 #define CHESSCOMPUTER_PERFT_H
 
-#include "Board.h"
 #include "Bitboard.h"
+#include "Board.h"
 #include "TranspositionTable.h"
 
-[[nodiscard]] bb::U64 perft(Board* b, int depth, bool print = true, bool d1 = true, bool hash = false, int ply = 0);
+[[nodiscard]] bb::U64 perft(Board* b, int depth, bool print = true, bool d1 = true, bool hash = false,
+                            int ply = 0);
 
-void perft_init(bool hash);
+void                  perft_init(bool hash);
 
-void perft_cleanUp();
+void                  perft_cleanUp();
 
-void perft_res();
+void                  perft_res();
 
 #endif    // CHESSCOMPUTER_PERFT_H
