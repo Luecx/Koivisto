@@ -131,15 +131,17 @@ void moveGen::addNoisy(Move m) {
     } else {
         score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
     }
+    if(getMovingPieceType(m) == KING) score /= 5;
     noisy[noisySize] = m;
     noisyScores[noisySize++] = score;
+    
 }
 
 void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare) * ((getMovingPieceType(m) == KING) ? 0.25:1);
 }
 
 Move moveGen::nextNoisy() {
