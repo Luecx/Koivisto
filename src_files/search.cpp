@@ -744,6 +744,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->reduce = true;
             }
         } else if (depth < 8
+               && depth > 2
                && !skipMove
                && !inCheck
                &&  sameMove(m, hashMove)
