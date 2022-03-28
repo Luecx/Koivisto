@@ -50,20 +50,65 @@
 class Board;
 
 namespace nn {
+
+struct Evaluator;
+
 extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
 extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 extern int16_t inputBias    [HIDDEN_SIZE];
 extern int32_t hiddenBias   [OUTPUT_SIZE];
 
+// initialise and load the weights
 void init();
 
-struct Accumulator{
-    alignas(ALIGNMENT) int16_t summation [bb::N_COLORS][HIDDEN_SIZE]{};
-};
+// computes the index for a piece (piece type) and its color on the specified square
+// also takes the view from with we view at the board as well as the king square of the view side
+[[nodiscard]] int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square,
+                        bb::Color view, bb::Square kingSquare);
+// the index is based on a king bucketing system. the relevant king bucket can be retrieved using
+// the function below
+[[nodiscard]] int kingSquareIndex(bb::Square kingSquare, bb::Color kingColor);
+
+// the accumulator which is used as the first hidden layer of the network.
+// it is updated efficiently and contains the accumulated weights for whites and black pov.
+struct Accumulator {
+    alignas(ALIGNMENT) int16_t summation[bb::N_COLORS][HIDDEN_SIZE] {};
+} __attribute__((aligned(2048)));
+
+// the entry is used within the accumulator table (see below) to retrieve an accumulator which
+// requires as little updates as possible from the position given to the evaluator.
+// for computing the difference, we store the piece occupancy which resulted in that specific position
+struct AccumulatorTableEntry {
+    bb::U64     piece_occ[bb::N_COLORS][bb::N_PIECE_TYPES] {};
+    Accumulator accumulator {};
+} __attribute__((aligned(128)));
+
+// this is used incase a king moves
+// without the table we would need to fully recompute
+// with the table, we are able to look into the table and get a potential similar position
+// which requires fewer updates than a full reset
+// The Table has 32 AccumulatorTableEntries. The 32 is chosen because we have 16 king buckets
+// which might be mirrored --> 2 * 16 = 32. Depending on the resulting king bucket index and its
+// half we choose the table entry. The AccumulatorTableEntry contains the accumulator which features
+// white and blacks point of view. Depending on which king moved, we look and potentially copy that
+// specific accumulator. Since the position from whites or blacks pov may be different, we need
+// to also index based on the king color. This results in 50% of the accumulator content not being
+// used but is the fastest solution.
+struct AccumulatorTable {
+    AccumulatorTableEntry entries[bb::N_COLORS][32] {};
+
+    // sets the specific accumulator to store the specified accumulator
+    void put(bb::Color view, Board* board, Accumulator& accumulator);
+    
+    void use(bb::Color view, Board* board, Evaluator& evaluator);
+    
+    void reset();
+} __attribute__((aligned(128)));
 
 struct Evaluator {
     // summations
     std::vector<Accumulator> history;
+    AccumulatorTable accumulator_table{};
     
     alignas(ALIGNMENT) int16_t activation[HIDDEN_DSIZE] {};
     alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE ] {};
@@ -76,13 +121,7 @@ struct Evaluator {
     
     void clearHistory();
     
-    int kingSquareIndex( bb::Square kingSquare, bb::Color kingColor);
     
-    [[nodiscard]] int index( bb::PieceType pieceType,
-                             bb::Color pieceColor,
-                             bb::Square square,
-                             bb::Color view,
-                             bb::Square kingSquare);
     
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,

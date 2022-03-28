@@ -265,7 +265,7 @@ inline void toggleBit(U64& number, Square index) {
 }
 
 /**
- * set the bit
+ * put the bit
  * @param number    number to manipulate
  * @param index     index of bit starting at the LST
  * @return          the manipulated number
@@ -410,7 +410,7 @@ void                     init();
 }
 
 /**
- * returns the amount of set bits in the given bitboard.
+ * returns the amount of put bits in the given bitboard.
  * @param bb
  * @return
  */

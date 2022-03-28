@@ -562,9 +562,8 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         }
         
         // check if it crossed squares
-        if(     evaluator.kingSquareIndex(sqTo, color) !=
-                evaluator.kingSquareIndex(sqFrom, color)
-            ||  isCastle(m)
+        if(     nn::kingSquareIndex(sqTo, color) !=
+                nn::kingSquareIndex(sqFrom, color)
             ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
             this->evaluator.resetAccumulator(this, color);
         }

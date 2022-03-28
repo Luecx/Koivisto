@@ -115,10 +115,8 @@ void nn::init() {
     memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
 }
 
-int nn::Evaluator::index(bb::PieceType pieceType,
-                         bb::Color pieceColor,
-                         bb::Square square,
-                         bb::Color view, bb::Square kingSquare) {
+int nn::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color view,
+              bb::Square kingSquare) {
     constexpr int pieceTypeFactor  = 64;
     constexpr int pieceColorFactor = 64 * 6;
     constexpr int kingSquareFactor = 64 * 6 * 2;
@@ -131,32 +129,110 @@ int nn::Evaluator::index(bb::PieceType pieceType,
         relativeSquare = bb::mirrorHorizontally(relativeSquare);
     }
 
-    return relativeSquare
-           + pieceType * pieceTypeFactor
-           + (pieceColor == view) * pieceColorFactor
+    return relativeSquare + pieceType * pieceTypeFactor + (pieceColor == view) * pieceColorFactor
            + ksIndex * kingSquareFactor;
 }
 
-int nn::Evaluator::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
+int nn::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
     // return zero if there is no king on the board yet ->
     // requires manual reset
-    if (relativeKingSquare > 63) return 0;
+    if (relativeKingSquare > 63)
+        return 0;
 
-    constexpr int indices[bb::N_SQUARES]{
-             0,  1,  2,  3,  3,  2,  1,  0,
-             4,  5,  6,  7,  7,  6,  5,  4,
-             8,  9, 10, 11, 11, 10,  9,  8,
-             8,  9, 10, 11, 11, 10,  9,  8,
-            12, 12, 13, 13, 13, 13, 12, 12,
-            12, 12, 13, 13, 13, 13, 12, 12,
-            14, 14, 15, 15, 15, 15, 14, 14,
-            14, 14, 15, 15, 15, 15, 14, 14,
+    constexpr int indices[bb::N_SQUARES] {
+        0,  1,  2,  3,  3,  2,  1,  0,  4,  5,  6,  7,  7,  6,  5,  4,  8,  9,  10, 11, 11, 10,
+        9,  8,  8,  9,  10, 11, 11, 10, 9,  8,  12, 12, 13, 13, 13, 13, 12, 12, 12, 12, 13, 13,
+        13, 13, 12, 12, 14, 14, 15, 15, 15, 15, 14, 14, 14, 14, 15, 15, 15, 15, 14, 14,
     };
 
     if (kingColor == bb::BLACK) {
         relativeKingSquare = bb::mirrorVertically(relativeKingSquare);
     }
     return indices[relativeKingSquare];
+}
+
+void nn::AccumulatorTable::put(bb::Color view, Board* board, nn::Accumulator& accumulator) {
+    const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
+    const bool       king_side = bb::fileIndex(king_sq) > 3;
+    const int        ks_index  = kingSquareIndex(king_sq, view);
+
+    // use a different entry if the king crossed the half but it would technically
+    // still be within the same bucket
+    const int entry_idx = king_side * 16 + ks_index;
+
+    // get the entry
+    AccumulatorTableEntry& entry = entries[view][entry_idx];
+
+    // store the accumulator data
+    std::memcpy(entry.accumulator.summation[view], accumulator.summation[view],
+                sizeof(int16_t) * HIDDEN_SIZE);
+
+    // store the piece data
+    for (bb::Color c : {bb::WHITE, bb::BLACK}) {
+        for (bb::PieceType pt : {bb::PAWN, bb::KNIGHT, bb::BISHOP, bb::ROOK, bb::QUEEN, bb::KING}) {
+            bb::U64 bb             = board->getPieceBB(c, pt);
+            entry.piece_occ[c][pt] = bb;
+        }
+    }
+}
+
+void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& evaluator) {
+    const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
+    const bool       king_side = bb::fileIndex(king_sq) > 3;
+    const int        ks_index  = kingSquareIndex(king_sq, view);
+
+    // use a different entry if the king crossed the half but it would technically
+    // still be within the same bucket
+    const int entry_idx = king_side * 16 + ks_index;
+
+    // get the entry
+    AccumulatorTableEntry& entry = entries[view][entry_idx];
+    
+    // first retrieve the accumulator from the table and put that into the evaluator
+    std::memcpy(evaluator.history.back().summation[view],
+                entry.accumulator.summation[view], sizeof(int16_t) * HIDDEN_SIZE);
+    
+    // go through each piece and compute the difference.
+    for (bb::Color c : {bb::WHITE, bb::BLACK}) {
+        for (bb::PieceType pt : {bb::PAWN, bb::KNIGHT, bb::BISHOP, bb::ROOK, bb::QUEEN, bb::KING}) {
+
+            // get the piece bb from the board and the stored entry and compute the
+            // squares which need to be set/unset based on that
+            bb::U64 board_bb = board->getPieceBB(c, pt);
+            bb::U64 entry_bb = entry.piece_occ[c][pt];
+
+            bb::U64 to_set   = board_bb & ~entry_bb;
+            bb::U64 to_unset = entry_bb & ~board_bb;
+            // as a reference: to_keep = board_bb ^ entry_bb
+
+            // go through both sets and call the evaluator to update the accumulator
+            while (to_set) {
+                bb::Square sq = bb::bitscanForward(to_set);
+                evaluator.setPieceOnSquareAccumulator<true>(view, pt, c, sq, king_sq);
+                to_set        = bb::lsbReset(to_set);
+            }
+
+            while (to_unset) {
+                bb::Square sq = bb::bitscanForward(to_unset);
+                evaluator.setPieceOnSquareAccumulator<false>(view, pt, c, sq, king_sq);
+                to_unset = bb::lsbReset(to_unset);
+            }
+        }
+    }
+    // this set has most likely been done on a reset. its handy to just put the new state
+    // into the table
+    put(view, board, evaluator.history.back());
+}
+
+void nn::AccumulatorTable::reset() {
+    // clearing will erase all information from the table and reset every entry to an empty board.
+    // This will require the accumulators to be initialised to the bias
+    for (bb::Color c : {bb::WHITE, bb::BLACK}) {
+        for (int s = 0; s < 32; s++) {
+            std::memcpy(entries[c][s].accumulator.summation[c], inputBias,
+                        sizeof(int16_t) * HIDDEN_SIZE);
+        }
+    }
 }
 
 template<bool value>
@@ -203,22 +279,7 @@ void nn::Evaluator::reset(Board *board) {
 }
 
 void nn::Evaluator::resetAccumulator(Board *board, bb::Color color) {
-    std::memcpy(history.back().summation[color], inputBias, sizeof(int16_t) * HIDDEN_SIZE);
-
-    const bb::Square kingSquare = bb::bitscanForward(board->getPieceBB(color, bb::KING));
-
-    for (bb::Color c : {bb::WHITE, bb::BLACK}) {
-        for (bb::PieceType pt : {bb::PAWN, bb::KNIGHT, bb::BISHOP, bb::ROOK, bb::QUEEN, bb::KING}) {
-            bb::U64 bb = board->getPieceBB(c, pt);
-            while (bb) {
-                const bb::Square s = bb::bitscanForward(bb);
-
-                setPieceOnSquareAccumulator<true>(color, pt, c, s, kingSquare);
-
-                bb = bb::lsbReset(bb);
-            }
-        }
-    }
+    accumulator_table.use(color, board, *this);
 }
 
 
@@ -249,6 +310,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board *board) {
 
 nn::Evaluator::Evaluator() {
     this->history.push_back(Accumulator{});
+    this->accumulator_table.reset();
 }
 
 void nn::Evaluator::addNewAccumulation() {
