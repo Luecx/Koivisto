@@ -41,6 +41,9 @@ struct SearchData {
     move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                 = {0};
     // threat data
     int      threatCount[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                         = {0};
+    int64_t      pawn_attacks[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                        = {0};
+    int64_t      minor_attacks[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                       = {0};
+    int64_t      rook_attacks[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                        = {0};
     bb::Square   mainThreat[bb::MAX_INTERNAL_PLY]                                                    = {0};
     // eval history across plies
     bb::Score    eval[bb::N_COLORS][bb::MAX_INTERNAL_PLY]                                            = {0};

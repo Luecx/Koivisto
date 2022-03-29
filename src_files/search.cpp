@@ -101,6 +101,10 @@ U64 getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
         k = lsbReset(k);
     }
 
+    sd->pawn_attacks[ply][color]  = pawn_attacks;
+    sd->minor_attacks[ply][color] = minor_attacks;
+    sd->rook_attacks[ply][color]  = rook_attacks;
+
     // mask pawn attacks only to minor and major pieces
     pawn_attacks  &= opp_major | opp_minor;
     minor_attacks &= opp_major;
@@ -615,7 +619,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                            | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
                            | KNIGHT_ATTACKS[kingSq];
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
-               PV_SEARCH, mainThreat, kingCBB);
+               depth > 2 ? PV_SEARCH : SHALLOW_PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;

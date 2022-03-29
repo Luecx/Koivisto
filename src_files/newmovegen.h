@@ -34,6 +34,7 @@ enum {
     PV_SEARCH,
     Q_SEARCH,
     Q_SEARCHCHECK,
+    SHALLOW_PV_SEARCH,
 };
 
 enum {
@@ -77,6 +78,9 @@ class moveGen {
     move::Move      m_followup;
     bb::Square      m_threatSquare;
     bb::U64         m_checkerSq;
+    bb::U64         m_pawnMask;
+    bb::U64         m_minorMask;
+    bb::U64         m_rookMask;
     bb::Color       c;
     int             m_mode;
     

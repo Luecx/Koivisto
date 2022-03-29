@@ -49,6 +49,14 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_killer2       = m_sd->killer[c][m_ply][1];
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
+    m_pawnMask      = 0;
+    m_minorMask     = 0;
+    m_rookMask      = 0;
+    if (m_mode == SHALLOW_PV_SEARCH) {
+        m_pawnMask      = sd->pawn_attacks[ply][!c];
+        m_minorMask     = sd->minor_attacks[ply][!c];
+        m_rookMask      = sd->rook_attacks[ply][!c];
+    }
 }
 
 Move moveGen::next() {
@@ -63,7 +71,7 @@ Move moveGen::next() {
             stage++;
             // fallthrough
         case GET_GOOD_NOISY:
-            if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
+            if (noisy_index < (m_mode == Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
                 return nextNoisy();
             if (m_mode == Q_SEARCH)
                 return 0;
@@ -388,19 +396,27 @@ void moveGen::generateQuiet() {
             switch (p) {
                 case KNIGHT:
                     attacks = KNIGHT_ATTACKS[square];
+                    if (SHALLOW_PV_SEARCH)
+                        attacks &= ~m_pawnMask;
                     break;
                 case BISHOP:
                     attacks =
                         lookUpBishopAttacks  (square, occupied);
+                    if (SHALLOW_PV_SEARCH)
+                        attacks &= ~m_pawnMask;
                     break;
                 case ROOK:
                     attacks =
                         lookUpRookAttacks    (square,occupied);
+                    if (SHALLOW_PV_SEARCH)
+                        attacks &= ~m_pawnMask | ~m_minorMask;
                     break;
                 case QUEEN:
                     attacks =
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
+                    if (SHALLOW_PV_SEARCH)
+                        attacks &= ~m_pawnMask | ~m_minorMask | ~m_rookMask;
                     break;
             }
             attacks &= ~friendly;
