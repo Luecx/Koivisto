@@ -1048,9 +1048,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         }
     }
 
-    // store the current position inside the transposition table
-    if (bestMove)
-        table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat);
+    table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat);
+    
     return bestScore;
 }
 
