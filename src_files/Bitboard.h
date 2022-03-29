@@ -410,7 +410,7 @@ void                     init();
 }
 
 /**
- * returns the amount of set bits in the given bitboard.
+ * returns the amount of se bits in the given bitboard.
  * @param bb
  * @return
  */

@@ -129,6 +129,38 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     }
 }
 
+U64 getNewThreats(Board* b, move::Move m) {
+    const Piece  p        = getMovingPieceType(m);
+    const U64    occupied = b->getOccupiedBB();
+    const Square sqTo     = getSquareTo(m);
+    const Square sqFrom   = getSquareFrom(m);
+    const Color  color    = b->getActivePlayer();
+
+    U64    attacks        = 0;
+    U64 sqBB              = ONE << sqTo; 
+
+    switch (p) {
+        case QUEEN:
+            return 0;
+        case ROOK:
+            attacks = lookUpRookAttacks(sqTo, occupied) & ~lookUpRookAttacks(sqFrom, occupied);
+            return attacks & (b->getPieceBB(!color, QUEEN));
+        case BISHOP:
+            attacks = lookUpBishopAttacks(sqTo, occupied) & ~lookUpBishopAttacks(sqFrom, occupied);
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK));
+        case KNIGHT:
+            attacks = KNIGHT_ATTACKS[sqTo];
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK));
+        case PAWN:
+            attacks = color == WHITE ?
+                                     shiftNorthEast(sqBB) | shiftNorthWest(sqBB) :
+                                     shiftSouthEast(sqBB) | shiftSouthWest(sqBB);
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT));
+        case KING:
+            return 0;
+    }
+}
+
 void initLMR() {
     for (int d = 0; d < 256; d++){
         for (int m = 0; m < 256; m++){
@@ -210,6 +242,9 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // start the main iterative deepening loop
     Depth depth;
     for (depth = 1; depth <= maxDepth; depth++) {
+        for (uint16_t& len : td->pvLen) {
+            len = 0;
+        }
         // do not use aspiration windows if we are in the first few operations since they will be
         // done very quick anyway
         if (depth < 6) {
@@ -252,7 +287,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         
         // print the info string if its the main thread
         if (threadId == 0) {
-            this->printInfoString(&printBoard, depth, score);
+            this->printInfoString(depth, score, td->pv[0], td->pvLen[0]);
         }
 
         // if the search finished due to timeout, we also need to stop here
@@ -747,6 +782,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -811,6 +847,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // Store bestMove for bestMove
                 sd->bestMove = m;
                 alpha        = highestScore;
+            }
+            if (pv && td->threadID == 0) {
+                td->pv[ply][0] = m;
+                memcpy(&td->pv[ply][1], &td->pv[ply + 1][0], sizeof(move::Move) * td->pvLen[ply + 1]);
+                td->pvLen[ply] = td->pvLen[ply + 1] + 1;
             }
             bestNodeCount = td->nodes - nodeCount;
         }
@@ -1087,8 +1128,7 @@ void Search::stop() {
     if (timeManager)
         timeManager->stopSearch();
 }
-void Search::printInfoString(Board* b, Depth depth, Score score) {
-    UCI_ASSERT(b);
+void Search::printInfoString(Depth depth, Score score, Move* pv, uint16_t pvLen) {
 
     if (!printInfo)
         return;
@@ -1121,65 +1161,16 @@ void Search::printInfoString(Board* b, Depth depth, Score score) {
               << " time "           << timeManager->elapsedTime()
               << " hashfull "       << static_cast<int>(table->usage() * 1000);
 
-    // extract the pv. Create a movelist first which will contain the pv
-    MoveList em{};
-    extractPV(b, &em, sel_depth);
     // print "pv" to shell
     std::cout << " pv";
     // go through each move
-    for (int i = 0; i < em.getSize(); i++) {
+    for (int i = 0; i < pvLen; i++) {
         // transform move to a string and append it
-        std::cout << " " << toString(em.getMove(i));
+        std::cout << " " << toString(pv[i]);
     }
     // new line
     std::cout << std::endl;
 }
-void Search::extractPV(Board* b, MoveList* mvList, Depth depth) {
-    UCI_ASSERT(b);
-    UCI_ASSERT(mvList);
-
-    if (depth <= 0)
-        return;
-
-    U64   zob = b->zobrist();
-    Entry en  = table->get(zob);
-    if (en.zobrist == zob >> 32 && en.type == PV_NODE) {
-        // extract the move from the table
-        Move     mov = en.move;
-
-        // get a movelist which can be used to store all pseudo legal moves
-        MoveList mvStorage;
-        // extract pseudo legal moves
-        generatePerftMoves(b, &mvStorage);
-
-        bool moveContained = false;
-        // check if the move is actually valid for the position
-        for (int i = 0; i < mvStorage.getSize(); i++) {
-            // get the current move
-            Move stor = mvStorage.getMove(i);
-            
-            // check if the move is part of the move list
-            if (sameMove(stor, mov)) {
-                moveContained = true;
-            }
-        }
-
-        // return if the move doesnt exist for this board
-        if (!moveContained)
-            return;
-
-        // check if its also legal
-        if (!b->isLegal(mov))
-            return;
-
-        mvList->add(mov);
-        b->move<true>(en.move, table);
-
-        extractPV(b, mvList, depth - 1);
-        b->undoMove();
-    }
-}
-
 /**
  * probes the wdl tables if tablebases can be used.
  */
