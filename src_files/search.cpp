@@ -657,7 +657,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
                                + moveDepth * FUTILITY_MARGIN + 100
                                + sd->eval[b->getActivePlayer()][ply]
-                           < alpha)
+                           < alpha
+                    && !getNewThreats(b, m))
                     continue;
 
                 // ***********************************************************************************
