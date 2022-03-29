@@ -633,6 +633,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = ((ONE << getSquareTo(m)) & kingCBB) ? b->givesCheck(m) : 0;
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        bool prune       = false;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
@@ -645,33 +646,39 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // move
                 // ***********************************************************************************
                 if (mGen->shouldSkip())
-                    continue;
+                    prune = true;
                 
-                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
+                if (!prune && depth <= 7 && quiets >= lmp[isImproving][depth]) {
                     mGen->skip();
                 }
 
                 // prune quiet moves that are unlikely to improve alpha
-                if (!inCheck
+                if (!prune 
+                    && !inCheck
                     && moveDepth <= 7
                     && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
                                + moveDepth * FUTILITY_MARGIN + 100
                                + sd->eval[b->getActivePlayer()][ply]
-                           < alpha
-                    && !getNewThreats(b, m))
-                    continue;
+                           < alpha)
+                    prune = true;
 
                 // ***********************************************************************************
                 // history pruning:
                 // if the history score for a move is really bad at low depth, dont consider this
                 // move.
                 // ***********************************************************************************
-                if (!inCheck
+                if (!prune
+                    && !inCheck
                     && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                         b->getPreviousMove(2), mainThreat)
                            < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                    prune = true;
+                }
+
+                if (prune && !getNewThreats(b, m)) {
                     continue;
                 }
+
             }
 
             // ***************************************************************************************
