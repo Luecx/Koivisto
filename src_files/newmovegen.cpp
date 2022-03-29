@@ -396,27 +396,23 @@ void moveGen::generateQuiet() {
             switch (p) {
                 case KNIGHT:
                     attacks = KNIGHT_ATTACKS[square];
-                    if (SHALLOW_PV_SEARCH)
-                        attacks &= ~(m_pawnMask);
+                    attacks &= ~(m_pawnMask);
                     break;
                 case BISHOP:
                     attacks =
                         lookUpBishopAttacks  (square, occupied);
-                    if (SHALLOW_PV_SEARCH)
-                        attacks &= ~(m_pawnMask);
+                    attacks &= ~(m_pawnMask);
                     break;
                 case ROOK:
                     attacks =
                         lookUpRookAttacks    (square,occupied);
-                    if (SHALLOW_PV_SEARCH)
-                        attacks &= ~(m_pawnMask | m_minorMask);
+                    attacks &= ~(m_pawnMask | m_minorMask);
                     break;
                 case QUEEN:
                     attacks =
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
-                    if (SHALLOW_PV_SEARCH)
-                        attacks &= ~(m_pawnMask | m_minorMask | m_rookMask);
+                    attacks &= ~(m_pawnMask | m_minorMask | m_rookMask);
                     break;
             }
             attacks &= ~friendly;

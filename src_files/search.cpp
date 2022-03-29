@@ -619,7 +619,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                            | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
                            | KNIGHT_ATTACKS[kingSq];
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
-               depth > 2 ? PV_SEARCH : SHALLOW_PV_SEARCH, mainThreat, kingCBB);
+               depth > 2 - 2 * inCheck ? PV_SEARCH : SHALLOW_PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;
@@ -837,6 +837,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         b->undoMove();
 
         if (ply == 0) {
+            //std::cout << toString(m) << std::endl;
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
