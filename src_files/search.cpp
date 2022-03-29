@@ -675,7 +675,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     prune = true;
                 }
 
-                if (prune && !getNewThreats(b, m)) {
+                if (prune && (depth < 2 || !getNewThreats(b, m))) {
                     continue;
                 }
 
