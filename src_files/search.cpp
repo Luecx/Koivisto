@@ -155,7 +155,7 @@ U64 getNewThreats(Board* b, move::Move m) {
             attacks = color == WHITE ?
                                      shiftNorthEast(sqBB) | shiftNorthWest(sqBB) :
                                      shiftSouthEast(sqBB) | shiftSouthWest(sqBB);
-            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT));
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT) | b->getPieceBB(!color, PAWN));
         case KING:
             return 0;
     }
