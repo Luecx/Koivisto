@@ -727,10 +727,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 extension++;
             } else if (score >= beta) {
                 return score;
-            } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
-                if (score >= beta)
-                    return score;
             }
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(),
                        b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
