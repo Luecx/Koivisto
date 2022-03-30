@@ -735,14 +735,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->init(sd, b, ply, hashMove, b->getPreviousMove(),
                        b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
             m = mGen->next();
-        }
-
-        if (pv) {
-            sd->sideToReduce = !b->getActivePlayer();
-            sd->reduce       = false;
-            if (legalMoves == 0) {
-                sd->reduce = true;
-            }
         } else if (depth < 8
                && !skipMove
                && !inCheck
@@ -780,8 +772,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
-            if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
-                lmr++;
             lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
                 lmr = 0;
@@ -808,19 +798,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
-            if (ply == 0 && lmr) {
-                sd->reduce       = true;
-                sd->sideToReduce = !b->getActivePlayer();
-            }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
-            if (pv)
-                sd->reduce = true;
-            if (ply == 0) {
-                sd->sideToReduce = b->getActivePlayer();
-            }
-
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search

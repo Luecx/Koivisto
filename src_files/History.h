@@ -44,8 +44,6 @@ struct SearchData {
     bb::Square   mainThreat[bb::MAX_INTERNAL_PLY]                                                    = {0};
     // eval history across plies
     bb::Score    eval[bb::N_COLORS][bb::MAX_INTERNAL_PLY]                                            = {0};
-    bool     sideToReduce;
-    bool     reduce;
     bool     targetReached                                                                           = 1;
 
     [[nodiscard]] int  getHistories(move::Move m, bb::Color side, move::Move previous, move::Move followup, bb::Square threatSquare) const;
