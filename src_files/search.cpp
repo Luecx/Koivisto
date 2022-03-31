@@ -727,12 +727,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 extension++;
             } else if (score >= beta) {
                 b->move<true>(sd->skipMoveKiller, table);
-                score = -pvSearch(b, -beta, -beta + 1, depth - 2, ply + 1, td, 0, behindNMP);
+                score = -pvSearch(b, -beta, -beta + 1, depth - 3, ply + 1, td, 0, behindNMP);
                 b->undoMove();
                 if (score >= beta)
                     return score;
             } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, depth - 2, ply, td, m, behindNMP);
+                b->move<true>(sd->skipMoveKiller, table);
+                score = -pvSearch(b, -beta, -beta + 1, depth - 3, ply + 1, td, 0, behindNMP);
+                b->undoMove();
                 if (score >= beta)
                     return score;
             }
