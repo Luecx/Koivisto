@@ -34,7 +34,7 @@ enum {
     PV_SEARCH,
     Q_SEARCH,
     Q_SEARCHCHECK,
-    SHALLOW_PV_SEARCH,
+    PV_SEARCH_THREATS,
 };
 
 enum {
@@ -91,7 +91,7 @@ class moveGen {
                                   move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
     [[nodiscard]] move::Move next();
     void                     addNoisy(move::Move m);
-    void                     addQuiet(move::Move m);
+    void                     addQuiet(move::Move m, int offset = 0);
     [[nodiscard]] move::Move nextNoisy();
     [[nodiscard]] move::Move nextQuiet();
     void                     addSearched(move::Move m);

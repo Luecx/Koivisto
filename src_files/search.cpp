@@ -618,8 +618,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
                            | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
                            | KNIGHT_ATTACKS[kingSq];
-    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
-               depth > 2 - 2 * inCheck ? PV_SEARCH : SHALLOW_PV_SEARCH, mainThreat, kingCBB);
+    mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2), 
+                inCheck ? PV_SEARCH : PV_SEARCH_THREATS, mainThreat, kingCBB);
     // count the legal and quiet moves.
     int         legalMoves      = 0;
     int         quiets          = 0;

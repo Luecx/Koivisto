@@ -52,7 +52,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_pawnMask      = 0;
     m_minorMask     = 0;
     m_rookMask      = 0;
-    if (m_mode == SHALLOW_PV_SEARCH) {
+    if (m_mode == PV_SEARCH_THREATS) {
         m_pawnMask      = sd->pawn_attacks[ply][!c];
         m_minorMask     = sd->minor_attacks[ply][!c];
         m_rookMask      = sd->rook_attacks[ply][!c];
@@ -143,11 +143,11 @@ void moveGen::addNoisy(Move m) {
     noisyScores[noisySize++] = score;
 }
 
-void moveGen::addQuiet(Move m) {
+void moveGen::addQuiet(Move m, int offset) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare) - offset;
 }
 
 Move moveGen::nextNoisy() {
@@ -389,30 +389,36 @@ void moveGen::generateQuiet() {
     // Piece
     for(Piece p = KNIGHT; p <= QUEEN; p++){
         U64 pieceOcc    = m_board->getPieceBB(c, p);
-        movingPiece = p + 8 * c;
+        movingPiece     = p + 8 * c;
         while(pieceOcc){
-            Square square = bitscanForward(pieceOcc);
-            attacks   = ZERO;
+            Square square   = bitscanForward(pieceOcc);
+            attacks         = ZERO;
+            U64 offsetMask  = 0;
+            int offset      = 0;
             switch (p) {
                 case KNIGHT:
-                    attacks = KNIGHT_ATTACKS[square];
-                    attacks &= ~(m_pawnMask);
+                    attacks     = KNIGHT_ATTACKS[square];
+                    offsetMask  = m_pawnMask;
+                    offset      = 163;
                     break;
                 case BISHOP:
-                    attacks =
+                    attacks     =
                         lookUpBishopAttacks  (square, occupied);
-                    attacks &= ~(m_pawnMask);
+                    offsetMask  = m_pawnMask;
+                    offset      = 163;
                     break;
                 case ROOK:
-                    attacks =
+                    attacks     =
                         lookUpRookAttacks    (square,occupied);
-                    attacks &= ~(m_pawnMask | m_minorMask);
+                    offsetMask  = m_pawnMask | m_minorMask;
+                    offset      = 250;
                     break;
                 case QUEEN:
-                    attacks =
+                    attacks     =
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
-                    attacks &= ~(m_pawnMask | m_minorMask | m_rookMask);
+                    offsetMask  = m_pawnMask | m_minorMask | m_rookMask;
+                    offset      = 450;
                     break;
             }
             attacks &= ~friendly;
@@ -420,7 +426,7 @@ void moveGen::generateQuiet() {
 
             while(attacks){
                 target = bitscanForward(attacks);
-                addQuiet(genMove(square, target, QUIET, movingPiece));
+                addQuiet(genMove(square, target, QUIET, movingPiece), offsetMask & (ONE << target) ? offset : 0);
                 
                 attacks = lsbReset(attacks);
             }
