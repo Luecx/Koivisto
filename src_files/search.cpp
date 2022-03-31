@@ -795,6 +795,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // prune quiet moves that are unlikely to improve alpha
         if (!inCheck && quiet
+            && ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE
             && depth - lmr - ONE_PLY <= 6
             && (depth - lmr - ONE_PLY) * FUTILITY_MARGIN + 100
              + sd->eval[b->getActivePlayer()][ply]
