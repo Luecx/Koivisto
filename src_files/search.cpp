@@ -629,6 +629,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(m, skipMove))
             continue;
 
+        if (pv && td->threadID == 0)
+            td->pvLen[ply + 1] = 0;
+
         // check if the move gives check and/or its promoting
         bool givesCheck  = ((ONE << getSquareTo(m)) & kingCBB) ? b->givesCheck(m) : 0;
         bool isPromotion = move::isPromotion(m);
