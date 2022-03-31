@@ -655,7 +655,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck
                     && depth <= 7
                     && depth * FUTILITY_MARGIN
-                                 + sd->eval[b->getActivePlayer()][ply]
+                                 + sd->eval[b->getActivePlayer()][ply] + 50
                                  < alpha)
                     continue;
 
