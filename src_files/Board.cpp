@@ -1422,7 +1422,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    constexpr float evaluation_mg_scalar = 2;
+    constexpr float evaluation_mg_scalar = 1.66;
     constexpr float evaluation_eg_scalar = 1.07;
     
     float phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(getPieceBB()[WHITE_PAWN] | getPieceBB()[BLACK_PAWN])
