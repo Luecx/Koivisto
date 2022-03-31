@@ -917,11 +917,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         } else {
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
-            } else if (score == alpha && !sameMove(hashMove, bestMove)) {
+            } else if (highestScore == alpha && !sameMove(hashMove, bestMove)) {
                 bestMove = 0;
             }
 
-            if (depth > 7 && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+            if (depth > 7 && bestMove && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
                            sd->eval[b->getActivePlayer()][ply]);
             } else {
