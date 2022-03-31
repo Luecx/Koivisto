@@ -726,9 +726,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 }
                 extension++;
             } else if (score >= beta) {
-                return score;
+                b->move<true>(sd->skipMoveKiller, table);
+                score = -pvSearch(b, -beta, -beta + 1, depth - 2, ply + 1, td, 0, behindNMP);
+                b->undoMove();
+                if (score >= beta)
+                    return score;
             } else if (en.score >= beta) {
-                score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
+                score = pvSearch(b, beta - 1, beta, depth - 2, ply, td, m, behindNMP);
                 if (score >= beta)
                     return score;
             }
@@ -865,6 +869,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
                 sd->setKiller(m, ply, b->getActivePlayer());
+
+            if (skipMove)
+                sd->skipMoveKiller = m;
 
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
