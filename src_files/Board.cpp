@@ -1431,6 +1431,9 @@ Score Board::evaluate(){
                    - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
                    - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
                   / 24.0f;
+    
+    phase *= 25.0f/((float)std::max(25, getCurrent50MoveRuleCount()));
+
     return (+          evaluation_mg_scalar
             - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
            * (this->evaluator.evaluate(this->getActivePlayer()));
