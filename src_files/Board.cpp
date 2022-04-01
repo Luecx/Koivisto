@@ -1322,6 +1322,7 @@ void Board::computeNewRepetition() {
     for (int i = m_boardStatusHistory.size() - 3; i >= lim; i -= 2) {
         if (m_boardStatusHistory.at(i).zobrist == getBoardStatus()->zobrist) {
             getBoardStatus()->repetitionCounter = m_boardStatusHistory.at(i).repetitionCounter + 1;
+            return;
         }
     }
 }
