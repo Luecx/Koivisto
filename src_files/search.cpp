@@ -796,7 +796,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
-        if (isCapture(m) && sd->eval[b->getActivePlayer()][ply] > beta)
+        if (isCapture(m) && sd->eval[b->getActivePlayer()][ply] > beta && mGen->lastSee == 0)
             extension = 1;
 
         // doing the move
