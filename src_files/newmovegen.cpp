@@ -49,6 +49,9 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_killer2       = m_sd->killer[c][m_ply][1];
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
+    m_cmh           = &sd->cmh[getPieceTypeSqToCombination(previous)][c][0];
+    m_fmh           = &sd->fmh[followup ? getPieceTypeSqToCombination(followup) : 384][c][0];
+    m_th            = &sd->th[c][m_threatSquare][0];
 }
 
 Move moveGen::next() {
@@ -139,7 +142,9 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize++] = m_th[getSqToSqFromCombination(m)] 
+                             + m_cmh[getPieceTypeSqToCombination(m)] 
+                             + m_fmh[getPieceTypeSqToCombination(m)];
 }
 
 Move moveGen::nextNoisy() {
