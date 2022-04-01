@@ -614,6 +614,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
                            | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
                            | KNIGHT_ATTACKS[kingSq];
+    Square      kingSq2    = bitscanForward(b->getPieceBB(b->getActivePlayer(), KING));
+    U64         kingCBB2   = attacks::lookUpBishopAttacks(kingSq2, occupiedBB) 
+                           | attacks::lookUpRookAttacks(kingSq2, occupiedBB)
+                           | b->getPieceBB(b->getActivePlayer(), KING);
+    bool        legalCheck = inCheck
+                          || (attacks::lookUpBishopAttacks(kingSq2, 0) & (b->getPieceBB(!b->getActivePlayer(), BISHOP) | b->getPieceBB(!b->getActivePlayer(), QUEEN))) 
+                          || (attacks::lookUpRookAttacks(kingSq2, 0) & (b->getPieceBB(!b->getActivePlayer(), ROOK) | b->getPieceBB(!b->getActivePlayer(), QUEEN)));
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
                PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.
@@ -688,7 +695,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         // dont search illegal moves
-        if (!b->isLegal(m)) {
+        if ((legalCheck || getMovingPieceType(m) == KING) 
+         && (inCheck | isEnPassant(m) | (kingCBB2 & (ONE << getSquareFrom(m)))) 
+         && !b->isLegal(m)) {
             quiets -= quiet;
             continue;
         }
