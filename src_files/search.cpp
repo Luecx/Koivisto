@@ -785,7 +785,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
-            lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -795,6 +794,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
+
+        if (getNewThreats(b, m))
+            extension = 1;
 
         // doing the move
         b->move<true>(m, table);
