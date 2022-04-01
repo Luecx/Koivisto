@@ -38,6 +38,9 @@ enum CastlingRights{
     BLACK_KINGSIDE_CASTLING,
 };
 
+extern float evaluation_eg_winning_pawns_scalar;
+extern float evaluation_mg_winning_pawns_scalar;
+
 // zobrist key for white/black to move
 constexpr bb::U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
 

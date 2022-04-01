@@ -1421,14 +1421,15 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
     return pinned;
 }
 
+// scalings (reduction) of the eval based on missing pawns for the winning side
+float evaluation_eg_winning_pawns_scalar = 0.05;
+float evaluation_mg_winning_pawns_scalar = 0.02;
+
 Score Board::evaluate(){
     // scalings for the evaluation based on phase
     constexpr float evaluation_mg_scalar               = 1.66;
     constexpr float evaluation_eg_scalar               = 1.07;
 
-    // scalings (reduction) of the eval based on missing pawns for the winning side
-    constexpr float evaluation_eg_winning_pawns_scalar = 0.0361755;
-    constexpr float evaluation_mg_winning_pawns_scalar = 0.0164777;
     
     // clang-format off
     float phase = (24.0f
