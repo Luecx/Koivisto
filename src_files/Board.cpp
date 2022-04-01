@@ -1422,17 +1422,39 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    constexpr float evaluation_mg_scalar = 1.66;
-    constexpr float evaluation_eg_scalar = 1.07;
+    // scalings for the evaluation based on phase
+    constexpr float evaluation_mg_scalar               = 1.66;
+    constexpr float evaluation_eg_scalar               = 1.07;
+
+    // scalings (reduction) of the eval based on missing pawns for the winning side
+    constexpr float evaluation_eg_winning_pawns_scalar = 0.0361755;
+    constexpr float evaluation_mg_winning_pawns_scalar = 0.0164777;
     
-    float phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(getPieceBB()[WHITE_PAWN] | getPieceBB()[BLACK_PAWN])
-                   - phaseValues[1] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
-                   - phaseValues[2] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
-                   - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
-                   - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
-                  / 24.0f;
-    return (+          evaluation_mg_scalar
-            - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
-           * (this->evaluator.evaluate(this->getActivePlayer()));
-    
+    // clang-format off
+    float phase = (24.0f
+              + phaseValues[5]
+              - phaseValues[0] * bitCount(getPieceBB()[WHITE_PAWN  ] | getPieceBB()[BLACK_PAWN  ])
+              - phaseValues[1] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
+              - phaseValues[2] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
+              - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
+              - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
+            / 24.0f;
+    // clang-format on
+
+    auto  interpolate    = [](float a, float b, float x) { return a - x * (a - b); };
+
+    // get the raw evaluation
+    float raw_evaluation = this->evaluator.evaluate(this->getActivePlayer());
+
+    // adjust the evaluation based on pawn counts of the winning side and phase
+    bb::Color winning_side       = raw_evaluation > 0 ? getActivePlayer() : !getActivePlayer();
+    auto      winning_pawn_count = bitCount(getPieceBB(winning_side, PAWN));
+    float     pawn_weight =
+        interpolate(evaluation_mg_winning_pawns_scalar, evaluation_eg_winning_pawns_scalar, phase);
+
+    // compute all the final scalars
+    float phase_scaling  = interpolate(evaluation_mg_scalar, evaluation_eg_scalar, phase);
+    float pawn_reduction = pawn_weight * std::max(0.0f, (8.0f - winning_pawn_count));
+
+    return phase_scaling * (1 - pawn_reduction) * raw_evaluation;
 }
