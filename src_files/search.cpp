@@ -766,26 +766,30 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                      || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
-                              : lmrReductions[depth][legalMoves];
+                              : 1;
+
+        int lmrShift = 0;
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
-            lmr++;
+            lmrShift += 1;
 
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
+            int history  = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                            b->getPreviousMove(2), mainThreat);
-            lmr         = lmr - history / 150;
-            lmr += !isImproving;
-            lmr -= pv;
+            lmrShift    = lmr - history / 150;
+            lmrShift    += !isImproving;
+            lmrShift    -= pv;
             if (!sd->targetReached) 
-                lmr++;
+                lmrShift += 1;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
-                lmr--;
+                lmrShift -= 1;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
-                lmr++;
-            lmr -= bitCount(getNewThreats(b, m));
+                lmrShift += 1;
+            lmrShift     -= bitCount(getNewThreats(b, m));
+            lmrShift     = std::max(-legalMoves, 2 * lmrShift);
+            lmr = lmrReductions[depth][legalMoves + lmrShift];
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
