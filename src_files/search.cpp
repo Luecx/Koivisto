@@ -778,7 +778,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (lmr) {
             int history  = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                            b->getPreviousMove(2), mainThreat);
-            lmrShift    = lmr - history / 150;
+            lmrShift    -= history / 150;
             lmrShift    += !isImproving;
             lmrShift    -= pv;
             if (!sd->targetReached) 
