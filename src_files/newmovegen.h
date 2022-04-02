@@ -75,6 +75,9 @@ class moveGen {
     move::Move      m_killer2;
     move::Move      m_previous;
     move::Move      m_followup;
+    int*            m_th;
+    int*            m_cmh;
+    int*            m_fmh;
     bb::Square      m_threatSquare;
     bb::U64         m_checkerSq;
     bb::Color       c;
