@@ -189,6 +189,11 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // if the main thread calls this function, we need to generate the search data for all the threads
     // first
     if (threadId == 0) {
+        
+        // store the time manager locally
+        // also dtz probing will use the time manager
+        this->timeManager = timeman;
+        
         // if there is a dtz move available, do not start any threads or search at all. just do the
         // dtz move
         Move dtzMove = this->probeDTZ(b);
@@ -200,10 +205,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             if (bookmove)
                 return bookmove;
         }
-
-        // if no dtz move has been found, set the time manager so that the search can be stopped
-        this->timeManager = timeman;
-
+        
         // we need to reset the hash between searches
         this->table->incrementAge();
 
