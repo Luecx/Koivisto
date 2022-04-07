@@ -42,7 +42,7 @@ int  FUTILITY_MARGIN  = 68;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 267;
 
-int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
+int  lmp[2][9]        = {{0, 2, 3, 5, 8, 12, 17, 23, 30}, {0, 3, 6, 9, 12, 18, 28, 40, 50}};
 
 /**
  * =================================================================================
@@ -652,7 +652,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (mGen->shouldSkip())
                     continue;
                 
-                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets >= lmp[isImproving][depth + (1 - b->getActivePlayer() == behindNMP)]) {
                     mGen->skip();
                 }
 
