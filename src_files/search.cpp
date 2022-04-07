@@ -250,7 +250,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // do not use aspiration windows if we are in the first few operations since they will be
         // done very quick anyway
         if (depth < 6) {
-            score = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, depth, 0, td, 0, 2);
+            score = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, depth, 0, td, 0, 0);
             prevScore = score;
         } else {
             // initial window size
@@ -542,7 +542,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
-                          ply + ONE_PLY, td, 0, !b->getActivePlayer());
+                          ply + ONE_PLY, td, 0, behindNMP + b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
                 return score;
@@ -772,7 +772,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
-        if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
+        if (legalMoves > 0 && depth > 2 && 1 - 2 * b->getActivePlayer() * behindNMP < 0)
             lmr++;
 
         if (lmr) {
@@ -819,7 +819,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
-                              td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
+                              td, 0, lmr != 0 ? behindNMP + !b->getActivePlayer() : behindNMP, &lmr);
             if (pv)
                 sd->reduce = true;
             if (ply == 0) {
