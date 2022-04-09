@@ -25,16 +25,15 @@
 using namespace bb;
 
 
-bb::U64 attacks::ROOK_ATTACKS  [bb::N_SQUARES][4096]{};
-bb::U64 attacks::BISHOP_ATTACKS[bb::N_SQUARES][ 512]{};
+U64 attacks::ROOK_ATTACKS  [N_SQUARES][4096]{};
+U64 attacks::BISHOP_ATTACKS[N_SQUARES][ 512]{};
 
 U64 populateMask(U64 mask, U64 index) {
-    
     U64    res = 0;
     Square i   = 0;
     
     while (mask) {
-        Square bit = bitscanForward(mask);
+        const Square bit = bitscanForward(mask);
         
         if (getBit(index, i)) {
             setBit(res, bit);
@@ -49,21 +48,21 @@ U64 populateMask(U64 mask, U64 index) {
 
 void attacks::init() {
     for (int n = 0; n < 64; n++) {
-        auto rook_shift = rookShifts[n];
-        auto bish_shift = bishopShifts[n];
+        const auto rook_shift = rookShifts[n];
+        const auto bish_shift = bishopShifts[n];
         
-        U64  rook_entries   = (ONE << (64 - rook_shift));
-        U64  bish_entries   = (ONE << (64 - bish_shift));
+        const U64  rook_entries   = (ONE << (64 - rook_shift));
+        const U64  bish_entries   = (ONE << (64 - bish_shift));
         
-        for (int i = 0; i < rook_entries; i++) {
-            U64 rel_occ            = populateMask(rookMasks[n], i);
-            int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
+        for (U64 i = 0; i < rook_entries; i++) {
+            const U64 rel_occ            = populateMask(rookMasks[n], i);
+            const int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
         
-        for (int i = 0; i < bish_entries; i++) {
-            U64 rel_occ              = populateMask(bishopMasks[n], i);
-            int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
+        for (U64 i = 0; i < bish_entries; i++) {
+            const U64 rel_occ              = populateMask(bishopMasks[n], i);
+            const int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
     }
@@ -71,8 +70,7 @@ void attacks::init() {
 
 
 
-bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
-    
+U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ) {
     U64              res {0};
     
     static const U64 topBottom = RANK_1_BB | RANK_8_BB;
@@ -96,7 +94,7 @@ bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ)
     while (true) {
         sq += direction;
         
-        U64 currentSq = (U64) 1 << sq;
+        const U64 currentSq = (U64) 1 << sq;
         
         res |= currentSq;
         
@@ -119,14 +117,14 @@ bb::U64 attacks::generateSlidingAttacks(Square sq, Direction direction, U64 occ)
     }
 }
 
-bb::U64 attacks::generateRookAttacks(bb::Square square, bb::U64 occupied) {
+U64 attacks::generateRookAttacks(Square square, U64 occupied) {
     return   generateSlidingAttacks(square, NORTH, occupied)
            | generateSlidingAttacks(square, EAST , occupied)
            | generateSlidingAttacks(square, WEST , occupied)
            | generateSlidingAttacks(square, SOUTH, occupied);
 }
 
-bb::U64 attacks::generateBishopAttacks(bb::Square square, bb::U64 occupied) {
+U64 attacks::generateBishopAttacks(Square square, U64 occupied) {
     return   generateSlidingAttacks(square, NORTH_WEST, occupied)
            | generateSlidingAttacks(square, NORTH_EAST, occupied)
            | generateSlidingAttacks(square, SOUTH_WEST, occupied)

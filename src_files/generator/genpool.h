@@ -2,6 +2,7 @@
 #ifdef GENERATOR
 #pragma once
 #include "game.h"
+#include "../Move.h"
 
 #include <array>
 #include <atomic>

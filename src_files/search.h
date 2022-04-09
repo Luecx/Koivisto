@@ -36,6 +36,7 @@
 #include <string>
 #include <tgmath.h>
 #include <thread>
+#include <vector>
 
 #define MAX_THREADS 256
 
@@ -44,27 +45,30 @@
  */
 struct ThreadData {
     int        threadID = 0;
-    U64        nodes    = 0;
+    bb::U64    nodes    = 0;
     int        seldepth = 0;
     int        tbhits   = 0;
     bool       dropOut  = false;
     SearchData searchData {};
-    moveGen    generators[MAX_INTERNAL_PLY] {};
+    moveGen    generators[bb::MAX_INTERNAL_PLY] {};
+    move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
+    uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
+
     ThreadData();
 
-    ThreadData(int threadId);
+    explicit ThreadData(int threadId);
 } __attribute__((aligned(4096)));
 
 /**
  * used to store information about a search
  */
 struct SearchOverview {
-    int   nodes;
-    Score score;
-    int   depth;
-    int   time;
-    Move  move;
-};
+    int        nodes;
+    bb::Score  score;
+    int        depth;
+    int        time;
+    move::Move move;
+} __attribute__((aligned(32)));
 
 class Search {
     int                      threadCount = 1;
@@ -76,52 +80,49 @@ class Search {
     bool                     useTB     = false;
     bool                     printInfo = true;
 
-    ThreadData*              tds[MAX_THREADS] {};
+    std::vector<ThreadData>  tds;
 
     public:
-//    Search(int hashsize = 16);
-//    virtual ~Search();
-    
     void init(int hashsize);
     void cleanUp();
+
     private:
-
-    U64  totalNodes();
-    int  selDepth();
-    U64  tbHits();
-
-    bool isTimeLeft(SearchData* sd = nullptr);
-    bool rootTimeLeft(int score);
+    [[nodiscard]] bb::U64 totalNodes() const;
+    [[nodiscard]] int     selDepth() const;
+    [[nodiscard]] bb::U64 tbHits() const;
 
     public:
-    SearchOverview overview();
-    void           enableInfoStrings();
-    void           disableInfoStrings();
+    [[nodiscard]] SearchOverview overview() const;
+    // enable / disable info strings
+    void enableInfoStrings();
+    void disableInfoStrings();
 
-    void           useTableBase(bool val);
-    void           clearHistory();
-    void           clearHash();
-    void           setThreads(int threads);
-    void           setHashSize(int hashSize);
-    void           stop();
+    void useTableBase(bool val);
+    void clearHistory();
+    void clearHash();
+    void setThreads(int threads);
+    void setHashSize(int hashSize);
+    void stop();
 
-    void           printInfoString(Board* b, Depth d, Score score);
-    void           extractPV(Board* b, MoveList* mvList, Depth depth);
-    
-    Move           bestMove(Board* b, Depth maxDepth, TimeManager* timeManager, int threadId=0);
-    Score          pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply, ThreadData* sd,
-                            Move skipMove, int behindNMP, Depth* lmrFactor = nullptr);
-    Score           qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* sd, bool inCheck = false, bool useHash=true);
-    Score           qSearch(Board* b);
-    Score           probeWDL(Board* board);
-    Move            probeDTZ(Board* board);
+    void printInfoString(bb::Depth depth, bb::Score score, move::Move* pv, uint16_t pvLen);
+
+    // basic move functions
+    bb::Score                qSearch(Board* b);
+    move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
+    [[nodiscard]] bb::Score  pvSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth depth,
+                                      bb::Depth ply, ThreadData* sd, move::Move skipMove,
+                                      int behindNMP, bb::Depth* lmrFactor = nullptr);
+    [[nodiscard]] bb::Score  qSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth ply,
+                                     ThreadData* sd, bool inCheck = false, bool useHash = true);
+    [[nodiscard]] bb::Score  probeWDL(Board* board);
+    [[nodiscard]] move::Move probeDTZ(Board* board);
 };
 
-extern int                 RAZOR_MARGIN;
-extern int                 FUTILITY_MARGIN;
-extern int                 SE_MARGIN_STATIC;
-extern int                 LMR_DIV;
+extern int RAZOR_MARGIN;
+extern int FUTILITY_MARGIN;
+extern int SE_MARGIN_STATIC;
+extern int LMR_DIV;
 
-void initLMR();
+void       initLMR();
 
 #endif    // KOIVISTO_SEARCH_H

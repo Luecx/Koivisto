@@ -26,7 +26,6 @@
 #include <cstdint>
 
 namespace move {
-
 /**
  *
  *
@@ -46,9 +45,9 @@ namespace move {
  * +-------------------------------------
  */
 
-typedef uint32_t Move;
-typedef uint8_t  MoveType;
-typedef uint32_t MoveScore;
+using Move = uint32_t;
+using MoveType = uint8_t;
+using MoveScore = uint32_t;
 
 enum MoveTypes{
     QUIET                    = 0,
@@ -83,7 +82,7 @@ enum MoveShifts{
 };
 
 template<uint8_t N>
-constexpr uint32_t MASK = (1 << N) - 1;
+constexpr uint32_t MASK = (1ULL << N) - 1;
 
 inline bool sameMove(const Move& m1, const Move& m2) {
     // toggle all bits in m1 by m2 and check if no bits are toggled in the least significant 24 bits
@@ -130,7 +129,8 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
     move |= (capturedPiece << SHIFT_CAPTURED_PIECE);
 }
 
-inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece){
+[[nodiscard]] inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type,
+                                  const bb::Piece &movingPiece){
     Move m {0};
     setSquareFrom(m, from);
     setSquareTo(m, to);
@@ -138,8 +138,8 @@ inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType
     setMovingPiece(m, movingPiece);
     return m;
 }
-inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type, const bb::Piece &movingPiece,
-                    const bb::Piece &capturedPiece){
+[[nodiscard]] inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType&type,
+                                  const bb::Piece &movingPiece, const bb::Piece &capturedPiece){
     Move m {0};
     
     setSquareFrom(m, from);
@@ -151,45 +151,42 @@ inline Move genMove(const bb::Square &from, const bb::Square &to, const MoveType
     return m;
 }
 
-inline bool         isDoubledPawnPush   (Move move){
-    
+[[nodiscard]] inline bool         isDoubledPawnPush   (Move move){
     return getType(move) == DOUBLED_PAWN_PUSH;
 }
-inline bool         isCapture           (Move move){
+[[nodiscard]] inline bool         isCapture           (Move move){
     return move & 0x40000;
 }
-inline bool         isCastle            (Move move){
+[[nodiscard]] inline bool         isCastle            (Move move){
     MoveType t = getType(move);
     return t == KING_CASTLE || t == QUEEN_CASTLE;
 }
-inline bool         isEnPassant         (Move move){
+[[nodiscard]] inline bool         isEnPassant         (Move move){
     return getType(move) == EN_PASSANT;
 }
-inline bool         isPromotion         (Move move){
+[[nodiscard]] inline bool         isPromotion         (Move move){
     return move & 0x80000;
 }
 
-std::string toString(const Move& move);
-void        printMoveBits(Move move, bool bitInfo = true);
+[[nodiscard]] std::string toString(const Move& move);
+void                      printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {
-    
     private:
     move::Move      moves [256];
     move::MoveScore scores[256];
     int             size;
     
     public:
-    void       swap(int i1, int i2);
-    move::Move getMove(int index);
-    void       clear();
-    void       add(move::Move move);
-    void       scoreMove(int index, MoveScore score);
-    MoveScore  getScore(int index);
-    void       printMoveBits();
-    int        getSize() const;
+    void                     swap(int i1, int i2);
+    [[nodiscard]] move::Move getMove(int index) const;
+    void                     clear();
+    void                     add(move::Move move);
+    void                     scoreMove(int index, MoveScore score);
+    [[nodiscard]] MoveScore  getScore(int index) const;
+    void                     printMoveBits() const;
+    [[nodiscard]] int        getSize() const;
 };
-
 }    // namespace move
 
 #endif    // CHESSCOMPUTER_MOVE_H

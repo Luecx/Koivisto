@@ -18,7 +18,12 @@
  ****************************************************************************************************/
 #include "newmovegen.h"
 #include "attacks.h"
+
 using namespace attacks;
+using namespace bb;
+using namespace move;
+
+
 static const int piece_values[6] = {
     90, 463, 474, 577, 1359, 0,
 };
@@ -44,6 +49,9 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_killer2       = m_sd->killer[c][m_ply][1];
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
+    m_cmh           = &sd->cmh[getPieceTypeSqToCombination(previous)][c][0];
+    m_fmh           = &sd->fmh[followup ? getPieceTypeSqToCombination(followup) : 384][c][0];
+    m_th            = &sd->th[c][m_threatSquare][0];
 }
 
 Move moveGen::next() {
@@ -117,8 +125,8 @@ Move moveGen::next() {
 void moveGen::addNoisy(Move m) {
     if (sameMove(m_hashMove, m))
         return;
-    int score   = (isPromotion(m) && (getPromotionPieceType(m) != QUEEN)) ? 
-              - 1 : m_board->staticExchangeEvaluation(m);
+    int score   = m_board->staticExchangeEvaluation(m);
+    noisySee[noisySize] = score;
     int mvvLVA  = piece_values[(getCapturedPieceType(m))];
     if (score >= 0) {
         score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
@@ -134,18 +142,24 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    quietScores[quietSize++] = m_th[getSqToSqFromCombination(m)] 
+                             + m_cmh[getPieceTypeSqToCombination(m)] 
+                             + m_fmh[getPieceTypeSqToCombination(m)];
 }
 
 Move moveGen::nextNoisy() {
-    if (m_skip)
+    if (m_skip) {
+        lastSee = noisySee[noisy_index];
         return noisy[noisy_index++];
+    }
     int bestNoisy = noisy_index;
     for (int i = noisy_index + 1; i < noisySize; i++) {
         if (noisyScores[i] > noisyScores[bestNoisy])
             bestNoisy = i;
     }
-    Move m = noisy[bestNoisy];
+    Move m  = noisy[bestNoisy];
+    lastSee = noisySee[bestNoisy];
+    noisySee[bestNoisy]     = noisySee[noisy_index];
     noisyScores[bestNoisy]  = noisyScores[noisy_index];
     noisy[bestNoisy]        = noisy[noisy_index++];
     return m;
@@ -178,7 +192,6 @@ void moveGen::addSearched(Move m) {
 }
 
 void moveGen::generateNoisy() {
-    
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
     
@@ -227,7 +240,6 @@ void moveGen::generateNoisy() {
     }
  
     if (pawns & relative_rank_7_bb) {
-        
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -275,7 +287,6 @@ void moveGen::generateNoisy() {
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
                     break;
-                
             }
             attacks &= ~friendly & opponents;
 
@@ -309,7 +320,6 @@ void moveGen::generateNoisy() {
 }
 
 void moveGen::generateQuiet() {
-    
     const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
     const U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
         
@@ -351,7 +361,6 @@ void moveGen::generateQuiet() {
 
 
     if (pawns & relative_rank_7_bb) {
-        
         attacks = pawnsCenter & relative_rank_8_bb;
         while (attacks) {
             target = bitscanForward(attacks);
@@ -398,7 +407,6 @@ void moveGen::generateQuiet() {
                         lookUpBishopAttacks  (square, occupied) |
                         lookUpRookAttacks    (square, occupied);
                     break;
-                
             }
             attacks &= ~friendly;
             attacks &= ~opponents;
@@ -439,9 +447,7 @@ void moveGen::generateQuiet() {
                 && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
                 addQuiet(genMove(E1, G1, KING_CASTLE, WHITE_KING));
             }
-            
         } else {
-        
             if (m_board->getCastlingRights(BLACK_QUEENSIDE_CASTLING) && m_board->getPiece(A8) == BLACK_ROOK
                 && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
                 addQuiet(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
@@ -456,7 +462,6 @@ void moveGen::generateQuiet() {
 }
 
 void moveGen::generateEvasions() {
-    
     const U64 occupied  = m_board->getOccupiedBB();
     Square target;
     Piece movingPiece   = KING + c * 8;
@@ -475,7 +480,6 @@ void moveGen::generateEvasions() {
 }
 
 void moveGen::updateHistory(int weight) {
-
     weight          = std::min(weight * weight + 5 * weight, 256);
     Move bestMove   = searched[searched_index - 1];    
 
@@ -536,6 +540,6 @@ void moveGen::skip() {
     m_skip = true;
 }
 
-bool moveGen::shouldSkip() {
+bool moveGen::shouldSkip() const {
     return m_skip;
 }

@@ -259,7 +259,6 @@ inline uint64_t bswap64(uint64_t x) {
 
 int main()
 {
-
 #if BYTE_ORDER == LITTLE_ENDIAN
 printf("little endian\n");
 #endif

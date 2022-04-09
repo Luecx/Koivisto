@@ -19,11 +19,11 @@
 #include "Perft.h"
 
 #include "UCIAssert.h"
+#include "Move.h"
 #include "movegen.h"
 
-using namespace std;
 
-MoveList**          perft_mvlist_buffer;
+move::MoveList**    perft_mvlist_buffer;
 TranspositionTable* perft_tt;
 
 /**
@@ -34,10 +34,10 @@ void perft_init(bool hash) {
     if (hash)
         perft_tt = new TranspositionTable(512);
 
-    perft_mvlist_buffer = new MoveList*[100];
+    perft_mvlist_buffer = new move::MoveList*[100];
 
     for (int i = 0; i < 100; i++) {
-        perft_mvlist_buffer[i] = new MoveList();
+        perft_mvlist_buffer[i] = new move::MoveList();
     }
 }
 
@@ -45,7 +45,6 @@ void perft_init(bool hash) {
  * called at the end of the program.
  */
 void perft_cleanUp() {
-
     if (perft_tt != nullptr)
         delete perft_tt;
 
@@ -73,12 +72,11 @@ void perft_res() {}
  * @param ply internally for the ply
  * @return
  */
-U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
+bb::U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     UCI_ASSERT(b);
 
-    U64 zob = ZERO;
+    bb::U64 zob = bb::ZERO;
     if (hash) {
-
         if (ply == 0) {
             perft_tt->clear();
         }
@@ -90,8 +88,7 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         }
     }
 
-    int i;
-    U64 nodes = 0;
+    bb::U64 nodes = 0;
 
     if (depth == 0)
         return 1;
@@ -102,9 +99,8 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     
     //    generations ++;
 
-    for (i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
-
-        Move m = perft_mvlist_buffer[depth]->getMove(i);
+    for (int i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
+        move::Move m = perft_mvlist_buffer[depth]->getMove(i);
         //        checks ++;
 
         if (!b->isLegal(m)) {
@@ -114,10 +110,9 @@ U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         if (d1 && depth == 1) {
             nodes += 1;
         } else {
-            
             b->move(m);
 
-            U64 np = perft(b, depth - 1, false, d1, hash, ply + 1);
+            bb::U64 np = perft(b, depth - 1, false, d1, hash, ply + 1);
 
             if (print) {
                 std::cout << move::toString(m) << " " << np << std::endl;

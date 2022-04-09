@@ -20,64 +20,59 @@
 #include "Bitboard.h"
 #include "attacks.h"
 
-using namespace bb;
+namespace bb {
+U64 ALL_HASHES[N_PIECES][N_SQUARES] = {};
+U64 IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
 
-U64 bb::ALL_HASHES[N_PIECES][N_SQUARES] = {};
-U64 bb::IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
-
-U64 bb::seed = 1293812938;
+U64 seed = 1293812938;
 
 
-void bb::init() {
-    
+void init() {
     generateZobristKeys();
     generateData();
 }
 
-U64 bb::randU64() {
+U64 randU64() {
     seed ^= seed << 13;
     seed ^= seed >> 7;
     seed ^= seed << 17;
     return seed;
 }
 
-void bb::generateData() {
-    
+void generateData() {
     // in between squares
     for (Square n = A1; n <= H8; n++) {
         for (Square i = A1; i <= H8; i++) {
             if (i == n)
                 continue;
-            
+
             U64 m   = ZERO;
             U64 occ = ZERO;
             setBit(occ, n);
             setBit(occ, i);
-            
-            Direction r = i - n;
-            Direction sign = r / abs(r);
-            
-            if        (rankIndex(n) == rankIndex(i)) {
-                m = attacks::generateSlidingAttacks(n, EAST       * sign, occ);
+
+            const Direction r    = i - n;
+            const Direction sign = r / abs(r);
+
+            if (rankIndex(n) == rankIndex(i)) {
+                m = attacks::generateSlidingAttacks(n, EAST * sign, occ);
             } else if (fileIndex(n) == fileIndex(i)) {
-                m = attacks::generateSlidingAttacks(n, NORTH      * sign, occ);
+                m = attacks::generateSlidingAttacks(n, NORTH * sign, occ);
             } else if (diagonalIndex(n) == diagonalIndex(i)) {
                 m = attacks::generateSlidingAttacks(n, NORTH_EAST * sign, occ);
             } else if (antiDiagonalIndex(n) == antiDiagonalIndex(i)) {
                 m = attacks::generateSlidingAttacks(n, NORTH_WEST * sign, occ);
             }
-            
+
             m &= ~occ;
-            
+
             IN_BETWEEN_SQUARES[n][i] = m;
         }
     }
-    
 }
 
 
-void bb::generateZobristKeys() {
-    
+void generateZobristKeys() {
     for (int i = 0; i < 6; i++) {
         for (int n = 0; n < 64; n++) {
             ALL_HASHES[i][n]     = randU64();
@@ -87,7 +82,7 @@ void bb::generateZobristKeys() {
 }
 
 
-void bb::printBitmap(U64 bb) {
+void printBitmap(U64 bb) {
     for (int i = 7; i >= 0; i--) {
         for (int n = 0; n < 8; n++) {
             if ((bb >> (i * 8 + n)) & (U64) 1) {
@@ -99,4 +94,5 @@ void bb::printBitmap(U64 bb) {
         std::cout << "\n";
     }
     std::cout << "\n";
+}
 }

@@ -107,10 +107,10 @@ std::vector<std::string>& splitString(const std::string& txt, std::vector<std::s
  * @return
  */
 std::string loadingBar(int count, int max, const std::string& msg) {
-    std::stringstream ss {};
+    std::stringstream ss;
     double            p = count / (double) max;
 
-    ss << (int) (100 * p) << "% [";
+    ss << static_cast<int>(100 * p) << "% [";
     for (int i = 0; i < 50 * p; i++) {
         ss << "=";
     }
@@ -139,7 +139,6 @@ void startMeasure() {
  * @return
  */
 int stopMeasure() {
-
     auto                          end  = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end - start;
 

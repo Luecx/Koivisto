@@ -23,46 +23,40 @@
 #include "Bitboard.h"
 #include "Move.h"
 
-using namespace bb;
-using namespace move;
-
 struct SearchData {
-
-    Move     bestMove = 0;
+    move::Move     bestMove = 0;
     // Effort spent
-    int64_t  spentEffort[N_SQUARES][N_SQUARES]                                   = {0};
+    int64_t  spentEffort[bb::N_SQUARES][bb::N_SQUARES]                                                      = {0};
     // EvalImprovement
-    int      maxImprovement[N_SQUARES][N_SQUARES]                                = {0};
+    int      maxImprovement[bb::N_SQUARES][bb::N_SQUARES]                                                   = {0};
     // capture history table (side-from-to)
-    int      captureHistory[N_COLORS][N_SQUARES * N_SQUARES]                     = {0};
+    int      captureHistory[bb::N_COLORS][bb::N_SQUARES * bb::N_SQUARES]                                    = {0};
     // threat history
-    int      th[N_COLORS][N_SQUARES + 1][N_SQUARES * N_SQUARES]                  = {0};
+    int      th[bb::N_COLORS][bb::N_SQUARES + 1][bb::N_SQUARES * bb::N_SQUARES]                             = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    int      cmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
-    // killer history
-    int      fmh[N_PIECE_TYPES * N_SQUARES][N_COLORS][N_PIECE_TYPES * N_SQUARES] = {0};
+    int      cmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]        = {0};
+    // followup move history
+    int      fmh[bb::N_PIECE_TYPES * bb::N_SQUARES + 1][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]    = {0};
     // kill table, +2 used to make sure we can always reset +2
-    Move     killer[N_COLORS][MAX_INTERNAL_PLY + 2][2]                           = {0};
+    move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                        = {0};
     // threat data
-    int      threatCount[MAX_INTERNAL_PLY][N_COLORS]                             = {0};
-    Square   mainThreat[MAX_INTERNAL_PLY]                                        = {0}; 
-    // played moves
-    Move     playedMoves[MAX_INTERNAL_PLY]                                       = {0};
+    int      threatCount[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                                = {0};
+    bb::Square   mainThreat[bb::MAX_INTERNAL_PLY]                                                           = {0};
     // eval history across plies
-    Score    eval[N_COLORS][MAX_INTERNAL_PLY]                                    = {0};
+    bb::Score    eval[bb::N_COLORS][bb::MAX_INTERNAL_PLY]                                                   = {0};
     bool     sideToReduce;
     bool     reduce;
-    bool     targetReached                                                       = 1;
+    bool     targetReached                                                                                  = 1;
 
-    int      getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare);
+    [[nodiscard]] int  getHistories(move::Move m, bb::Color side, move::Move previous, move::Move followup, bb::Square threatSquare) const;
 
-    void     setKiller(Move move, Depth ply, Color color);
+    void               setKiller(move::Move move, bb::Depth ply, bb::Color color);
 
-    int      isKiller(Move move, Depth ply, Color color);
+    [[nodiscard]] int  isKiller(move::Move move, bb::Depth ply, bb::Color color) const;
 
-    void     setHistoricEval(Score eval, Color color, Depth ply);
+    void               setHistoricEval(bb::Score eval, bb::Color color, bb::Depth ply);
 
-    bool     isImproving(Score eval, Color color, Depth ply);
+    [[nodiscard]] bool isImproving(bb::Score eval, bb::Color color, bb::Depth ply) const;
 } __attribute__((aligned(64)));
 
 

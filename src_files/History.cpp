@@ -18,13 +18,18 @@
  ****************************************************************************************************/
 #include "History.h"
 
-int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) {
+using namespace bb;
+using namespace move;
+
+int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) const {
     if (isCapture(m)) {
         return captureHistory[side][getSqToSqFromCombination(m)];
     } else {
-        return (2 * (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side][getPieceTypeSqToCombination(m)] : 0)
-               + 2 * cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)]
-               + 2 * th[side][threatSquare][getSqToSqFromCombination(m)]) / 3;
+        auto fmh_value = (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side]
+                                             [getPieceTypeSqToCombination(m)] : 0);
+        auto cmh_value = cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)];
+        auto th_vaue   = th[side][threatSquare][getSqToSqFromCombination(m)];
+        return (2 * fmh_value + 2 * cmh_value + 2 * th_vaue) / 3;
     }
 }
 
@@ -41,7 +46,7 @@ void SearchData::setKiller(Move move, Depth ply, Color color) {
 /*
  * Is killer?
  */
-int SearchData::isKiller(Move move, Depth ply, Color color) {
+int SearchData::isKiller(Move move, Depth ply, Color color) const {
     if (sameMove(move, killer[color][ply][0]))
         return 2;
     return sameMove(move, killer[color][ply][1]);
@@ -57,7 +62,7 @@ void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
 /*
  * Is improving
  */
-bool SearchData::isImproving(Score ev, Color color, Depth ply) {
+bool SearchData::isImproving(Score ev, Color color, Depth ply) const {
     if (ply >= 2) {
         return (ev > eval[color][ply - 2]);
     } else {

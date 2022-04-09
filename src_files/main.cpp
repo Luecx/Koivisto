@@ -17,22 +17,21 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "Bitboard.h"
-#include "Board.h"
-#include "Move.h"
-#include "Verification.h"
 #include "uci.h"
 #ifdef GENERATOR
 #include "generator/genpool.h"
 #endif
 
-#include <iomanip>
-#include "movegen.h"
-
-using namespace std;
-using namespace bb;
-using namespace move;
-
+std::string getV(const std::vector<std::string>& vec, const std::string& key) {
+    int index = 0;
+    for (const std::string& s : vec) {
+        if (s == key) {
+            return vec.at(index + 1);
+        }
+        index++;
+    }
+    return "";
+}
 
 int main(int argc, char *argv[]) {
 
@@ -47,7 +46,7 @@ int main(int argc, char *argv[]) {
         auto getParam =
             [&](std::string const& option, int def)
         {
-            std::string val = getValue(args, option);
+            std::string val = getV(args, option);
             return val.size() ? std::stoi(val) : def;
         };
     

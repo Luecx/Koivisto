@@ -20,81 +20,76 @@
 #ifndef KOIVISTO_TIMEMANAGER_H
 #define KOIVISTO_TIMEMANAGER_H
 
+#include "Bitboard.h"
 #include "Board.h"
 #include "History.h"
 #include "Move.h"
 
-using namespace move;
-using namespace bb;
 
-enum TimeMode {
-    DEPTH,
-    MOVETIME,
-    TOURNAMENT,
+struct Limit {
+    bool enabled = false;
+};
+
+struct DepthLimit : public Limit {
+    bb::Depth depth;
+};
+
+struct NodeLimit : public Limit {
+    bb::U64 nodes;
+};
+
+struct MoveTimeLimit : public Limit {
+    bb::U64 upper_time_bound;
+};
+
+struct MatchTimeLimit : public Limit {
+    bb::U64 time_to_use;
 };
 
 class TimeManager {
-
-    private:
-    TimeMode mode;
-
-    int      timeToUse;
-    U64      nodesToUse;
-    int      upperTimeBound;
-    bool     forceStop;
-
     public:
-    TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board);
+    DepthLimit     depth_limit      {};
+    NodeLimit      node_limit       {};
+    MoveTimeLimit  move_time_limit  {};
+    MatchTimeLimit match_time_limit {};
+
+    bool           force_stop       {};
+    bb::U64        start_time       {};
 
     TimeManager();
 
-    TimeManager(int moveTime);
-
-    virtual ~TimeManager();
+    void setDepthLimit(bb::Depth depth);
+    
+    void setNodeLimit(bb::U64 nodes);
+    
+    void setMoveTimeLimit(bb::U64 move_time);
+    
+    void setMatchTimeLimit(bb::U64 time, bb::U64 inc, int moves_to_go);
+    
+    void setStartTime();
 
     /**
      * returns the time elapsed since the constructor call
      * @return
      */
-    int      elapsedTime();
+    [[nodiscard]] bb::U64 elapsedTime() const;
 
     /**
      * stops the search. this should be considered to check if time is left
      */
-    void     stopSearch();
+    void stopSearch();
 
     /**
-     * returns true if the search should continue. false otherwise.
+     * returns true if there is enough time left. This is used by the principal variation search.
+     */
+    [[nodiscard]] bool isTimeLeft(SearchData* sd = nullptr) const;
+
+    /**
+     * returns true if there is enough root time. root time is used to increase the depth in between
+     * iterative deepening iterations. It ensures that the search will mostly finish its iteration.
      * @return
      */
-    bool     isTimeLeft(SearchData* sd = nullptr);
-
-    /**
-     * checks if time at the root is left
-     * @return
-     */
-    bool     rootTimeLeft(int score);
-
-    /**
-     * returns the timemode
-     * @return
-     */
-    TimeMode getMode() const;
-
-    /**
-     * set a node limit for the search
-     */
-    void     setNodeLimit(U64 maxNodes = -1);
-
-    /**
-     * check if the search shall be stopped by force
-     */
-    bool     isForceStopped();
-
-    /**
-     * returns the node limit for the search
-     */
-    U64      getNodeLimit();
+    [[nodiscard]] bool rootTimeLeft(int nodeScore, int evalScore) const;
 };
 
 #endif    // KOIVISTO_TIMEMANAGER_H

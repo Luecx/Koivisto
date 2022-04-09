@@ -29,7 +29,7 @@ public:
 
     Game(std::ofstream&, std::mt19937&);
 
-    bool positionIsFavourable(Move best);
+    bool positionIsFavourable(move::Move best);
     void run();
     bool makeBookMove();
     void savePosition(int score);
@@ -43,7 +43,7 @@ public:
         return m_savedFens.size();
     }
     
-    std::tuple<Move, int> searchPosition();
+    std::tuple<move::Move, int> searchPosition();
 private:
     int    m_currentPly = 0;
     bool   m_useTb      = false;

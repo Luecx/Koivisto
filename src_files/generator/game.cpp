@@ -3,12 +3,16 @@
 #include "game.h"
 #include "../eval.h"
 #include "../movegen.h"
+#include "../Bitboard.h"
 #include "../search.h"
 #include "../syzygy/tbprobe.h"
 #include "../uci.h"
+#include "../uci.cpp"
 
-static void generateLegalMoves(Board* board, MoveList* movelist) {
-    MoveList pseudolegal;
+using namespace bb;
+
+static void generateLegalMoves(Board* board, move::MoveList* movelist) {
+    move::MoveList pseudolegal;
     pseudolegal.clear();
     generatePerftMoves(board, &pseudolegal);
 
@@ -125,12 +129,12 @@ bool Game::isDrawn() {
            || m_currentPosition.getCurrentRepetitionCount() >= 3;
 }
 
-bool Game::positionIsFavourable(Move) {
+bool Game::positionIsFavourable(move::Move) {
     return m_searcher.qSearch(&m_currentPosition) == m_currentPosition.evaluate();
 }
 
 bool Game::makeBookMove() {
-    MoveList movelist;
+    move::MoveList movelist;
     movelist.clear();
 
     generateLegalMoves(&m_currentPosition, &movelist);
@@ -147,7 +151,7 @@ bool Game::makeBookMove() {
 }
 
 bool Game::hasLegalLeft() {
-    MoveList movelist;
+    move::MoveList movelist;
     movelist.clear();
 
     generateLegalMoves(&m_currentPosition, &movelist);
@@ -164,9 +168,10 @@ void Game::reset() {
 
 void Game::savePosition(int score) { m_savedFens.push_back({m_currentPosition.fen(), score}); }
 
-std::tuple<Move, int> Game::searchPosition() {
+std::tuple<move::Move, int> Game::searchPosition() {
     auto tm   = TimeManager();
-    Move best = m_searcher.bestMove(&m_currentPosition, engineGameSearchDepth, &tm);
+    tm.setDepthLimit(engineGameSearchDepth);
+    move::Move best = m_searcher.bestMove(&m_currentPosition, &tm);
     return {best, m_searcher.overview().score};
 }
 

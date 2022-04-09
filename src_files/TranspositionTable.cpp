@@ -19,15 +19,16 @@
 
 #include "TranspositionTable.h"
 
+#include <cstring>
+
 /**
  * inits the table to the given size.
  * Calculates the amount of entries that can fit.
  * @param MB
  */
-void TranspositionTable::init(U64 MB) {
-
-    U64 bytes      = MB * 1024 * 1024;
-    U64 maxEntries = bytes / sizeof(Entry);
+void TranspositionTable::init(bb::U64 MB) {
+    bb::U64 bytes      = MB * 1024 * 1024;
+    bb::U64 maxEntries = bytes / sizeof(Entry);
 
     // size must be a power of 2!
     m_size = 1;
@@ -39,7 +40,7 @@ void TranspositionTable::init(U64 MB) {
     m_size /= 2;
     m_mask = m_size - 1;
 
-    m_entries = (Entry*) (calloc(m_size, sizeof(Entry)));
+    m_entries = std::make_unique<Entry[]>(m_size);
     clear();
 
     m_currentAge = 0;
@@ -49,42 +50,38 @@ void TranspositionTable::init(U64 MB) {
  * returns the maximum amount of entries that can be stored.
  * @return
  */
-U64 TranspositionTable::getSize() { return m_size; }
+bb::U64 TranspositionTable::getSize() const { return m_size; }
 
 /**
  * constructor which inits the table with a maximum size given by mb.
  * @param mb
  */
-TranspositionTable::TranspositionTable(U64 mb) { init(mb); }
-
-/**
- * destructor which deletes the table.
- */
-TranspositionTable::~TranspositionTable() { free(m_entries); }
+TranspositionTable::TranspositionTable(bb::U64 mb) { init(mb); }
 
 /**
  * clears the content and enlarges the table if possibles to a maximum size of mb
  * @param mb
  */
-void TranspositionTable::setSize(U64 mb) {
-    free(m_entries);
+void TranspositionTable::setSize(bb::U64 mb) {
     init(mb);
 }
 
 /**
  * clears the content and sets all entries to 0.
  */
-void TranspositionTable::clear() { std::memset(m_entries, 0, sizeof(Entry) * m_size); }
+void TranspositionTable::clear() {
+    if (m_entries)
+        std::memset(m_entries.get(), 0, sizeof(Entry) * m_size);
+}
 
 /**
  * returns a floating value for the amount of values used.
  * if it returns 0, no value is stored and if it returns 1, it is full.
  */
-double TranspositionTable::usage() {
-
+double TranspositionTable::usage() const {
     double used = 0;
     // Thank you Andrew for this idea :)
-    for (U64 i = 0; i < 100; i++) {
+    for (bb::U64 i = 0; i < 100; i++) {
         if ((m_entries[i].zobrist)) {
             used++;
         }
@@ -99,9 +96,8 @@ double TranspositionTable::usage() {
  * @param zobrist
  * @return
  */
-Entry TranspositionTable::get(U64 zobrist) {
-
-    U64 index = zobrist & m_mask;
+Entry TranspositionTable::get(bb::U64 zobrist) const {
+    bb::U64 index = zobrist & m_mask;
 
     Entry enP = m_entries[index];
 
@@ -123,27 +119,29 @@ Entry TranspositionTable::get(U64 zobrist) {
  * @param depth
  * @return
  */
-bool TranspositionTable::put(U64 zobrist, Score score, Move move, NodeType type, Depth depth, Score eval) {
-
-    U64 index  = zobrist & m_mask;
+bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type,
+                             bb::Depth depth, bb::Score eval) {
+    bb::U64 index  = zobrist & m_mask;
     Entry* enP = &m_entries[index];
-    U32 key    = zobrist >> 32;
+    bb::U32 key    = zobrist >> 32;
 
     if (enP->zobrist == 0) {
         enP->set(key, score, move, type, depth, eval);
         enP->setAge(m_currentAge);
         return true;
     } else {
+        //  on enP->depth < depth * 2:
+        //  The idea behind this replacement scheme is to allow faster searches of subtrees by
+        //  allowing more localized search results to be stored in the TT. A hard replacement scheme
+        //  has been tested on another engine, and has been shown to be worse (there is a limit to how
+        //  great of a depth override should occur).
 
-        //  on enP->depth < depth * 2: 
-        //  The idea behind this replacement scheme is to allow faster searches of subtrees by allowing more localized 
-        //  search results to be stored in the TT. A hard replacement scheme has been tested on another engine, and has 
-        //  been shown to be worse (there is a limit to how great of a depth override should occur).
-
-        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however they use a static margin. 
-        //  Martin (author of Cheng) tested and validated a variable margin.
-
-        if (enP->getAge() != m_currentAge || type == PV_NODE || (enP->type != PV_NODE && enP->depth <= depth) || (enP->zobrist == key && enP->depth <= depth * 2)) {
+        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however
+        //  they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
+        if (   enP->getAge() != m_currentAge
+            || type == PV_NODE
+            || (enP->type    != PV_NODE && enP->depth <= depth)
+            || (enP->zobrist == key     && enP->depth <= depth * 2)) {
             enP->set(key, score, move, type, depth, eval);
             enP->setAge(m_currentAge);
             return true;
@@ -164,8 +162,12 @@ void TranspositionTable::incrementAge() {
     }
 }
 
+void TranspositionTable::prefetch(const bb::U64 zobrist) const {
+    __builtin_prefetch(&m_entries[zobrist & m_mask]);
+}
+
 /**
  * returns the maximum TT size in MB
  * @return
  */
-int maxTTSize() { return (ONE << (32 - 20)) * sizeof(Entry); }
+int maxTTSize() { return (bb::ONE << (32 - 20)) * sizeof(Entry); }

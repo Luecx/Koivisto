@@ -17,189 +17,117 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include <algorithm>
 #include "TimeManager.h"
-#include "Board.h"
 #include "UCIAssert.h"
-#include "History.h"
 
-auto startTime =
-    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+using namespace bb;
 
-/**
- * We use this constructor if the movetime has been specified.
- * This means that we do not want to extend the time in critical positions and want to stop the search exactly after
- * movetime milliseconds.
- */
-TimeManager::TimeManager(int moveTime) : 
-    mode(MOVETIME), 
-    timeToUse(moveTime),
-    nodesToUse(-1),
-    upperTimeBound(moveTime),
-    forceStop() {
-
-    startTime =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+TimeManager::TimeManager() {
+    this->setStartTime();
 }
 
-/**
- * If the depth is specified, we use this constructor.
- * No constraints about time are made and the search wont be stopped by the time manager.
- */
-TimeManager::TimeManager() : 
-    mode(DEPTH), 
-    timeToUse(1 << 29),
-    nodesToUse(-1),
-    upperTimeBound(1 << 30),
-    forceStop() {
-
-    startTime =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+void TimeManager::setDepthLimit     (Depth depth) {
+    UCI_ASSERT(depth >= 0);
+    
+    this->depth_limit.depth   = depth;
+    this->depth_limit.enabled = true;
+}
+void TimeManager::setNodeLimit      (U64 nodes) {
+    UCI_ASSERT(nodes >= 0);
+    
+    this->node_limit.nodes   = nodes;
+    this->node_limit.enabled = true;
+}
+void TimeManager::setMoveTimeLimit  (U64 move_time) {
+    UCI_ASSERT(move_time >= 0);
+    
+    this->move_time_limit.upper_time_bound = move_time;
+    this->move_time_limit.enabled          = true;
+}
+void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
+    UCI_ASSERT(time >= 0);
+    UCI_ASSERT(inc >= 0);
+    UCI_ASSERT(moves_to_go >= 0);
+    
+    const U64    overhead = inc == 0 ? 50 : 0;
+    const double division = 2;
+    
+    if(time < 1000 && inc == 0){
+        time = time * 0.7;
+    }
+    
+    U64 upperTimeBound = time / division;
+    U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
+    
+    timeToUse          = std::min(time - overhead - inc, timeToUse);
+    upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
+    
+    this->setMoveTimeLimit(upperTimeBound);
+    this->match_time_limit.time_to_use = timeToUse;
+    this->match_time_limit.enabled     = true;
+}
+void TimeManager::setStartTime() {
+    start_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-/**
- * If a real game is being played, this is used.
- * It computes the time which should be used an an upper bound which is always larger then the time which is the target
- * time. The search loop will continue until timeToUse has been reached, yet the pv search wont stop until the upper
- * time bound is reached.
- * @param white
- * @param black
- * @param whiteInc
- * @param blackInc
- * @param movesToGo
- * @param board
- */
-TimeManager::TimeManager(int white, int black, int whiteInc, int blackInc, int movesToGo, Board* board) : 
-    mode(TOURNAMENT), 
-    timeToUse(),
-    nodesToUse(-1),
-    upperTimeBound(),
-    forceStop() {
-    UCI_ASSERT(board);
-    UCI_ASSERT(white > 0);
-    UCI_ASSERT(black > 0);
-    UCI_ASSERT(movesToGo >= 0);
-
-    double division = movesToGo+1;
-
-    upperTimeBound = board->getActivePlayer() == WHITE ? (int(white / division)*3 + std::min(white * 0.9 + whiteInc, whiteInc * 3.0) - 25)
-                                                       : (int(black / division)*3 + std::min(black * 0.9 + blackInc, blackInc * 3.0) - 25);
-
-    timeToUse = upperTimeBound / 3;
-
-    timeToUse = std::min(timeToUse, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
-    upperTimeBound = std::min(upperTimeBound, board->getActivePlayer() == WHITE ? white - 50 : black - 50);
-
-    startTime =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
-}
-
-/**
- * returns the elapsed time since the starttime has been set.
- * @return
- */
-int TimeManager::elapsedTime() {
-    auto end =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
-    auto diff = end - startTime;
-
+bb::U64 TimeManager::elapsedTime() const {
+    auto end   = std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now().time_since_epoch()).count();
+    auto diff = end - start_time;
     return diff;
-    // std::cout << "measurement finished! [" << round(diff.count() * 1000) << " ms]" << std::endl;
 }
 
-/**
- * a destructor for the sake of completeness.
- */
-TimeManager::~TimeManager() {
+void TimeManager::stopSearch() {
+    force_stop = true;
 }
 
-/**
- * stops the search. Next time isTimeLeft() is called, false will be returned so that the search finishes as soon as
- * possible.
- */
-void TimeManager::stopSearch() { forceStop = true; }
-
-/**
- * returns true if there is enough time left. This is used by the principal variation search.
- */
-bool TimeManager::isTimeLeft(SearchData* sd) {
-
-
+bool TimeManager::isTimeLeft(SearchData* sd) const {
     // stop the search if requested
-    if (forceStop)
+    if (force_stop)
         return false;
     
-    int elapsed = elapsedTime();
+    U64 elapsed = elapsedTime();
     
-    if (sd != nullptr && mode == TOURNAMENT) {
-        if (elapsed * 10 < timeToUse) {
-           sd->targetReached = false;
+    if (sd != nullptr && this->match_time_limit.enabled) {
+        if (elapsed * 10 < this->match_time_limit.time_to_use) {
+            sd->targetReached = false;
         } else {
             sd->targetReached = true;
         }
     }
     
-    // if we are above the maximum allowed time, stope  
-    if (elapsed >= upperTimeBound)
+    // if we are above the maximum allowed time, stope
+    if (    this->move_time_limit.enabled
+         && this->move_time_limit.upper_time_bound < elapsed)
         return false;
-
+    
     return true;
 }
 
-/**
- * returns true if there is enough root time. root time is used to increase the depth in between iterative deepening
- * iterations. It ensures that the search will mostly finish its iteration.
- * @return
- */
-bool TimeManager::rootTimeLeft(int score) {
-    int elapsed = elapsedTime();
-
+bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     // stop the search if requested
-    if (forceStop)
+    if (force_stop)
         return false;
 
-    // if we are above the maximum allowed time at root, stop
-    if (elapsed >= timeToUse*50/std::max(score, 30))
-        return false;
+    nodeScore = 110 - std::min(nodeScore, 90);
+    evalScore = std::min(std::max(50, 50 + evalScore), 80);
 
+    U64 elapsed = elapsedTime();
+    
+    if(    move_time_limit.enabled
+        && move_time_limit.upper_time_bound < elapsed)
+        return false;
+    
+    // the score is a value between 0 and 100 where 100 means that
+    // the entire time has been spent looking at the best move.
+    // this indicates that there is most likely just a single best move
+    // which means we could spend less time searching. In case of the score being
+    // 100, we half the time to use. If it's lower than 30, it reaches a maximum of 1.4 times the
+    // original time to use.
+    if(    match_time_limit.enabled
+        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 65 < elapsed)
+        return false;
+    
     return true;
 }
-
-/**
- * returns the move of the time manager.
- * Its either,
- *   - DEPTH
- *   - MOVETIME
- *   - TOURNAMENT
- * @return
- */
-TimeMode TimeManager::getMode() const { return mode; }
-
-/**
- * sets the node limit for the search
- * @param maxNodes
- */
-void     TimeManager::setNodeLimit(U64 maxNodes) {
-    this->nodesToUse = maxNodes;
-}
-
-/**
- * checks if the search is stopped by force
- * @return
- */
-bool TimeManager::isForceStopped() {
-    return forceStop;
-}
-
-/**
- * gets the node limit for the search
- * @return
- */
-U64  TimeManager::getNodeLimit() {
-    return nodesToUse;
-}
-

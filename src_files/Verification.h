@@ -47,7 +47,6 @@ void verifySEECase(std::string fen, Move m, Score s) {
  * Promoting positions have been removed for now
  */
 void verifySEE() {
-
     // 100,325,325,500,1000,10000
 
     // clang-format off
