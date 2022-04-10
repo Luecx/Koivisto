@@ -247,7 +247,7 @@ void Game::run() {
         
         // check if we want the position (e.g. if its quiet)
         if (positionIsFavourable(move))
-            score = m_currentPosition.getCurrent50MoveRuleCount() * (35 - m_currentPosition.getCurrent50MoveRuleCount()) / 35
+            score = m_currentPosition.getCurrent50MoveRuleCount() * (50 - m_currentPosition.getCurrent50MoveRuleCount()) / 50;
             savePosition(whiteRelativeScore(&m_currentPosition, score));
 
         bool scoreIsDraw = std::abs(score) <= adjudicationDrawScoreLimit;
