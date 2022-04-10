@@ -7,9 +7,19 @@
 #include "../search.h"
 #include "../syzygy/tbprobe.h"
 #include "../uci.h"
-#include "../uci.cpp"
 
 using namespace bb;
+
+std::string getV(const std::vector<std::string>& vec, const std::string& key) {
+    int index = 0;
+    for (const std::string& s : vec) {
+        if (s == key) {
+            return vec.at(index + 1);
+        }
+        index++;
+    }
+    return "";
+}
 
 static void generateLegalMoves(Board* board, move::MoveList* movelist) {
     move::MoveList pseudolegal;
@@ -44,11 +54,11 @@ void        Game::init(int argc, char** argv) {
     std::vector<std::string> args(argv, argv + argc);
 
     auto                     setParam = [&](std::string const& option, int def) {
-        auto s = getValue(args, option);
+        auto s = getV(args, option);
         return s.size() ? std::stoi(s) : def;
     };
 
-    wdlPath                    = getValue(args, "-tbpath");
+    wdlPath                    = getV(args, "-tbpath");
     engineGameSearchDepth      = setParam("-depth", 9);
     gameHashSize               = setParam("-hash", 4);
     randomOpeningMoveCount     = setParam("-bookdepth", 10);
@@ -64,7 +74,7 @@ void        Game::init(int argc, char** argv) {
     auto set_choice = 
     [&](bool& choice, std::string_view option)
     {
-        std::string_view value = getValue(args, option.data());
+        std::string_view value = getV(args, option.data());
         if (value.size())
             choice = value == "true";
     };  

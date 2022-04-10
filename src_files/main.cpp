@@ -22,17 +22,6 @@
 #include "generator/genpool.h"
 #endif
 
-std::string getV(const std::vector<std::string>& vec, const std::string& key) {
-    int index = 0;
-    for (const std::string& s : vec) {
-        if (s == key) {
-            return vec.at(index + 1);
-        }
-        index++;
-    }
-    return "";
-}
-
 int main(int argc, char *argv[]) {
 
 
@@ -46,7 +35,7 @@ int main(int argc, char *argv[]) {
         auto getParam =
             [&](std::string const& option, int def)
         {
-            std::string val = getV(args, option);
+            std::string val = getValue(args, option);
             return val.size() ? std::stoi(val) : def;
         };
     
