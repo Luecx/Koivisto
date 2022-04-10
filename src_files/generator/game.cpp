@@ -59,7 +59,7 @@ void        Game::init(int argc, char** argv) {
     };
 
     wdlPath                    = getV(args, "-tbpath");
-    engineGameSearchDepth      = setParam("-depth", 9);
+    engineGameSearchDepth      = setParam("-depth", 10);
     gameHashSize               = setParam("-hash", 4);
     randomOpeningMoveCount     = setParam("-bookdepth", 10);
     adjudicationDrawScoreLimit = setParam("-drawscore", 20);
@@ -135,8 +135,8 @@ Game::Game(std::ofstream& out, std::mt19937& generator)
 }
 
 bool Game::isDrawn() {
-    return m_currentPosition.getCurrent50MoveRuleCount() >= 50
-           || m_currentPosition.getCurrentRepetitionCount() >= 3;
+    return m_currentPosition.getCurrent50MoveRuleCount() >= 25
+           || m_currentPosition.getCurrentRepetitionCount() >= 2;
 }
 
 bool Game::positionIsFavourable(move::Move) {
@@ -247,6 +247,7 @@ void Game::run() {
         
         // check if we want the position (e.g. if its quiet)
         if (positionIsFavourable(move))
+            score = m_currentPosition.getCurrent50MoveRuleCount() * (35 - m_currentPosition.getCurrent50MoveRuleCount()) / 35
             savePosition(whiteRelativeScore(&m_currentPosition, score));
 
         bool scoreIsDraw = std::abs(score) <= adjudicationDrawScoreLimit;

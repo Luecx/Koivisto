@@ -283,7 +283,7 @@ bool Board::isInCheck(Color player) const {
  * which is only given during the search.
  * @return
  */
-bool Board::isDraw() const { return getCurrent50MoveRuleCount() >= 50 || getCurrentRepetitionCount() >= 2; }
+bool Board::isDraw() const { return getCurrent50MoveRuleCount() >= 25 || getCurrentRepetitionCount() >= 2; }
 
 /**
  * returns the piece which occupies the board at the given index
