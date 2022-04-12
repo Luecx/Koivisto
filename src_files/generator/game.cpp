@@ -205,6 +205,11 @@ void Game::run() {
             continue;
         }
 
+        if (m_currentPly == randomOpeningMoveCount) {
+            if (abs(m_currentPosition.evaluate()) > 250)
+                return;
+        }
+
         // Check if game ends in repetition or by halfmoves rule
         if (isDrawn()) {
             result = "[0.5]";
