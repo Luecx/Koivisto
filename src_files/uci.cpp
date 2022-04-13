@@ -476,7 +476,7 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
         U64 btime = (btime_str.empty()) ? 60000000 : stoi(btime_str);
         U64 wincr = (wincr_str.empty()) ?        0 : stoi(wincr_str);
         U64 bincr = (bincr_str.empty()) ?        0 : stoi(bincr_str);
-        int mvtog = (mvtog_str.empty()) ?       20 : stoi(mvtog_str);
+        int mvtog = (mvtog_str.empty()) ?       18 : stoi(mvtog_str);
         
         timeManager.setMatchTimeLimit(board.getActivePlayer() == WHITE ? wtime : btime,
                                       board.getActivePlayer() == WHITE ? wincr : bincr,
