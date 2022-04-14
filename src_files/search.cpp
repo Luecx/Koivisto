@@ -673,7 +673,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck
                     && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                         b->getPreviousMove(2), mainThreat)
-                           < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                           < (b->getActivePlayer() == behindNMP ? 
+                             std::max(-200, std::min(140 - 30 * (depth * (depth + isImproving)), 0))
+                           : std::min(140 - 30 * (depth * (depth + isImproving)), 0))) {
                     continue;
                 }
             }
@@ -863,16 +865,20 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // beta -cutoff
         if (score >= beta) {
-            if (!skipMove && !td->dropOut) {
-                // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
-            }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
+
+            if (1 - b->getActivePlayer() == behindNMP)
+                return highestScore;
+
+            if (!skipMove && !td->dropOut) {
+                // put the beta cutoff into the perft_tt
+                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+            }
 
             return highestScore;
         }
@@ -917,6 +923,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             table->put(key, highestScore, bestMove, PV_NODE, depth,
                        sd->eval[b->getActivePlayer()][ply]);
         } else {
+            if (b->getActivePlayer() == behindNMP)
+                return highestScore;
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (highestScore == alpha && !sameMove(hashMove, bestMove)) {
