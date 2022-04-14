@@ -59,7 +59,7 @@ void        Game::init(int argc, char** argv) {
     };
 
     wdlPath                    = getV(args, "-tbpath");
-    engineGameSearchDepth      = setParam("-depth", 9);
+    engineGameSearchDepth      = setParam("-depth", 10);
     gameHashSize               = setParam("-hash", 4);
     randomOpeningMoveCount     = setParam("-bookdepth", 10);
     adjudicationDrawScoreLimit = setParam("-drawscore", 20);
