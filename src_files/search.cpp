@@ -812,6 +812,17 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
+
+            if (score <= alpha && hashMove && en.type == CUT_NODE) {
+                if (lmrFactor != nullptr) {
+                    if (*lmrFactor > 0) {
+                        depth += *lmrFactor;
+                        *lmrFactor = 0;
+                         score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
+                              behindNMP);
+                    }
+                }
+            } 
         } else {
             if (ply == 0 && lmr) {
                 sd->reduce       = true;
