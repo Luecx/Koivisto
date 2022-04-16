@@ -751,6 +751,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         } else if (depth < 8
                && !skipMove
                && !inCheck
+               &&  en.score > alpha
                &&  sameMove(m, hashMove)
                &&  ply > 0
                &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
