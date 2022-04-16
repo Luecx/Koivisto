@@ -443,13 +443,17 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+    // we check if the evaluation improves across plies.
+    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
+
     if (!inCheck) {
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][ b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         mainThreat   = sd->mainThreat [ply];
         
-        if (ply > 0 && b->getPreviousMove() != 0) {
+        if (ply > 0 && b->getPreviousMove() != 0 && !isCapture(b->getPreviousMove())) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())]
@@ -457,10 +461,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
         }
     }
-
-    // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
-    bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
 
     if (en.zobrist == key >> 32) {
         // adjusting eval
@@ -639,6 +639,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
+        //bool wouldHavePruned = false;
+
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 
@@ -664,6 +666,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                + sd->eval[b->getActivePlayer()][ply]
                            < alpha)
                     continue;
+
+                // prune quiet moves that are unlikely to improve alpha
+                /*if (!inCheck
+                    && moveDepth <= 7
+                    && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
+                               + moveDepth * FUTILITY_MARGIN + 90
+                               + sd->eval[b->getActivePlayer()][ply]
+                           < alpha)
+                    wouldHavePruned = true;*/
 
                 // ***********************************************************************************
                 // history pruning:
@@ -860,6 +871,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             bestNodeCount = td->nodes - nodeCount;
         }
+        
+        //if (ply == 0) 
+            //std::cout << sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] << " Move " << toString(m) <<  " <<<<<<<<<<<<<<< " << b->fen() <<std::endl;
+
 
         // beta -cutoff
         if (score >= beta) {
@@ -873,6 +888,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
+
+            //if (!pv && wouldHavePruned)
+                //std::cout << "DEPTH " << (int) depth << " EVAL " << sd->eval[b->getActivePlayer()][ply] << " beta " << (int) beta << " improvement " << sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] << " Move " << toString(m) <<  " <<<<<<<<<<<<<<< " << b->fen() <<std::endl;
 
             return highestScore;
         }
