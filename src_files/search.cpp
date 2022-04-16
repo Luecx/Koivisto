@@ -661,7 +661,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck
                     && moveDepth <= 7
                     && sd->maxImprovement[getPieceTypeSqToCombination(m)]
-                               + moveDepth * FUTILITY_MARGIN + 100
+                               + moveDepth * FUTILITY_MARGIN + 50
                                + sd->eval[b->getActivePlayer()][ply]
                            < alpha)
                     continue;
