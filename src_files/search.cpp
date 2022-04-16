@@ -456,8 +456,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply > 0 && b->getPreviousMove() != 0 && !isCapture(b->getPreviousMove())) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
-                sd->maxImprovement[getSquareFrom(b->getPreviousMove())]
-                                  [getSquareTo  (b->getPreviousMove())] = improvement;
+                sd->maxImprovement[getPieceTypeSqToCombination(b->getPreviousMove())] = improvement;
             }
         }
     }
@@ -661,7 +660,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck
                     && moveDepth <= 7
-                    && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
+                    && sd->maxImprovement[getPieceTypeSqToCombination(m)]
                                + moveDepth * FUTILITY_MARGIN + 100
                                + sd->eval[b->getActivePlayer()][ply]
                            < alpha)
@@ -670,7 +669,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // prune quiet moves that are unlikely to improve alpha
                 /*if (!inCheck
                     && moveDepth <= 7
-                    && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
+                    && sd->maxImprovement[getPieceTypeSqToCombination(m)]
                                + moveDepth * FUTILITY_MARGIN + 90
                                + sd->eval[b->getActivePlayer()][ply]
                            < alpha)
@@ -873,7 +872,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
         
         //if (ply == 0) 
-            //std::cout << sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] << " Move " << toString(m) <<  " <<<<<<<<<<<<<<< " << b->fen() <<std::endl;
+            //std::cout << sd->maxImprovement[getPieceTypeSqToCombination(m)] << " Move " << toString(m) <<  " <<<<<<<<<<<<<<< " << b->fen() <<std::endl;
 
 
         // beta -cutoff
@@ -890,7 +889,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             mGen->updateHistory(depth + (staticEval < alpha));
 
             //if (!pv && wouldHavePruned)
-                //std::cout << "DEPTH " << (int) depth << " EVAL " << sd->eval[b->getActivePlayer()][ply] << " beta " << (int) beta << " improvement " << sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)] << " Move " << toString(m) <<  " <<<<<<<<<<<<<<< " << b->fen() <<std::endl;
+                //std::cout << "DEPTH " << (int) depth << " EVAL " << sd->eval[b->getActivePlayer()][ply] << " beta " << (int) beta << " improvement " << sd->maxImprovement[getPieceTypeSqToCombination(m)] << " Move " << toString(m) <<  " <<<<<<<<<<<<<<< " << b->fen() <<std::endl;
 
             return highestScore;
         }
@@ -1123,7 +1122,7 @@ void           Search::clearHistory() {
         memset(&td.searchData.cmh, 0, 384*2*384*4);
         memset(&td.searchData.fmh, 0, 384*2*384*4);
         memset(&td.searchData.killer, 0, 2*257*2*4);
-        memset(&td.searchData.maxImprovement, 0, 64*64*4);
+        memset(&td.searchData.maxImprovement, 0, 2*384*4);
     }
 }
 void Search::clearHash() { this->table->clear(); }
