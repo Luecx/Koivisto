@@ -561,6 +561,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Score     betaCut = beta + 100;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
+        && !(hashMove && !isCapture(hashMove))
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
         Move m;
