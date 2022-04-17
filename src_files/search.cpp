@@ -674,7 +674,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                         b->getPreviousMove(2), mainThreat)
                            < (b->getActivePlayer() == behindNMP ? 
-                             std::max(-200, std::min(140 - 30 * (depth * (depth + isImproving)), 0))
+                             std::max(-400, std::min(140 - 30 * (depth * (depth + isImproving)), 0))
                            : std::min(140 - 30 * (depth * (depth + isImproving)), 0))) {
                     continue;
                 }
