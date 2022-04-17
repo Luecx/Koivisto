@@ -872,9 +872,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // update history scores
             mGen->updateHistory(depth + (staticEval < alpha));
 
-            if (1 - b->getActivePlayer() == behindNMP)
-                return highestScore;
-
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
@@ -923,8 +920,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             table->put(key, highestScore, bestMove, PV_NODE, depth,
                        sd->eval[b->getActivePlayer()][ply]);
         } else {
-            if (b->getActivePlayer() == behindNMP)
-                return highestScore;
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (highestScore == alpha && !sameMove(hashMove, bestMove)) {
