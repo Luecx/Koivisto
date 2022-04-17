@@ -764,7 +764,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
-        Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2
+        Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 3
                      || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
@@ -791,8 +791,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
-            if (lmr > depth - 2) {
-                lmr = depth - 2;
+            if (lmr > depth - 3) {
+                lmr = depth - 3;
             }
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
