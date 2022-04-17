@@ -780,10 +780,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                            b->getPreviousMove(2), mainThreat);
             lmr         = lmr - history / 150;
             lmr += !isImproving;
-            lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
-            lmr -= behindNMP == 2;
+            if (pv || behindNMP == 2)
+                lmr--;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
