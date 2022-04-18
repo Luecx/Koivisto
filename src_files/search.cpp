@@ -811,7 +811,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves == 0 
          && hashMove 
          && !isCapture(m) 
-         && sd->th[!b->getActivePlayer()][mainThreat][getSqToSqFromCombination(m)] 
+         && sd->th[!b->getActivePlayer()][mainThreat][getSqToSqFromCombination(m)] + 100
          <  sd->cmh[getPieceTypeSqToCombination(b->getPreviousMove())][!b->getActivePlayer()][getPieceTypeSqToCombination(m)])
             extension = 1;
 
