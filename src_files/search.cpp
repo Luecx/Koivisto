@@ -456,7 +456,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply > 0 && b->getPreviousMove() != 0 && !isCapture(b->getPreviousMove())) {
             if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
                 int improvement = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
-                sd->maxImprovement[getPieceTypeSqToCombination(b->getPreviousMove())] = improvement;
+                sd->maxImprovement[384 * b->getActivePlayer() + getPieceTypeSqToCombination(b->getPreviousMove())] = improvement;
             }
         }
     }
@@ -660,7 +660,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck
                     && moveDepth <= 7
-                    && sd->maxImprovement[getPieceTypeSqToCombination(m)]
+                    && sd->maxImprovement[384 * b->getActivePlayer() + getPieceTypeSqToCombination(m)]
                                + moveDepth * FUTILITY_MARGIN + 100
                                + sd->eval[b->getActivePlayer()][ply]
                            < alpha)
