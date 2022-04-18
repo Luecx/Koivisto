@@ -716,7 +716,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             &&  sameMove(m, hashMove)
             &&  legalMoves == 0
             &&  ply        >  0
-            &&  en.depth   >= depth - 3
             &&  abs(en.score) < MIN_MATE_SCORE
             && (   en.type == CUT_NODE
                 || en.type == PV_NODE)) {
@@ -730,9 +729,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     *lmrFactor = 0;
                 }
                 extension++;
-            } else if (score >= beta) {
+            } else if (score >= beta && en.depth   >= depth - 3) {
                 return score;
-            } else if (en.score >= beta) {
+            } else if (en.score >= beta && en.depth   >= depth - 3) {
                 score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
                 if (score >= beta)
                     return score;
