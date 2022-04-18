@@ -484,17 +484,17 @@ void moveGen::updateHistory(int weight) {
     Move bestMove   = searched[searched_index - 1];    
 
     if (isCapture(bestMove)) {
-        m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)] +=
+        m_sd->captureHistory[c][4096 * getCapturedPiece(bestMove) + getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->captureHistory[c][4096 * getCapturedPiece(bestMove) + getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
 
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                    m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
+                    m_sd->captureHistory[c][4096 * getCapturedPiece(bestMove) + getSqToSqFromCombination(m)] +=
                                 - weight
-                                - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
+                                - weight * m_sd->captureHistory[c][4096 * getCapturedPiece(bestMove) + getSqToSqFromCombination(m)]
                                 / MAX_HIST;
             }
         } 
@@ -514,9 +514,9 @@ void moveGen::updateHistory(int weight) {
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
+                m_sd->captureHistory[c][4096 * getCapturedPiece(m) + getSqToSqFromCombination(m)] +=
                             - weight
-                            - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
+                            - weight * m_sd->captureHistory[c][4096 * getCapturedPiece(m) + getSqToSqFromCombination(m)]
                             / MAX_HIST;
             } else {
                 m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)] +=

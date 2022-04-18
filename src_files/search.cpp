@@ -1101,7 +1101,7 @@ void           Search::useTableBase(bool val) { this->useTB = val; }
 void           Search::clearHistory() {
     for (auto &td : tds) {
         memset(&td.searchData.th, 0, 2*64*4096*4);
-        memset(&td.searchData.captureHistory, 0, 2*4096*4);
+        memset(&td.searchData.captureHistory, 0, 2*6*4096*4);
         memset(&td.searchData.cmh, 0, 384*2*384*4);
         memset(&td.searchData.fmh, 0, 384*2*384*4);
         memset(&td.searchData.killer, 0, 2*257*2*4);

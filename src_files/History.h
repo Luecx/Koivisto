@@ -30,7 +30,7 @@ struct SearchData {
     // EvalImprovement
     int      maxImprovement[bb::N_SQUARES][bb::N_SQUARES]                                                   = {0};
     // capture history table (side-from-to)
-    int      captureHistory[bb::N_COLORS][bb::N_SQUARES * bb::N_SQUARES]                                    = {0};
+    int      captureHistory[bb::N_COLORS][bb::N_SQUARES * bb::N_SQUARES * bb::N_PIECE_TYPES]                = {0};
     // threat history
     int      th[bb::N_COLORS][bb::N_SQUARES + 1][bb::N_SQUARES * bb::N_SQUARES]                             = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
