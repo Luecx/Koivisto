@@ -808,6 +808,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
+        if (legalMoves == 0 
+         && hashMove 
+         && !isCapture(m) 
+         && sd->th[!b->getActivePlayer()][mainThreat][getSqToSqFromCombination(m)] 
+         <  sd->cmh[getPieceTypeSqToCombination(b->getPreviousMove())][!b->getActivePlayer()][getPieceTypeSqToCombination(m)])
+            extension = 1;
+
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
