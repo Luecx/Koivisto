@@ -440,6 +440,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             staticEval = -MAX_MATE_SCORE + ply;
         else {
             staticEval = b->evaluate();
+            sd->evalSum += staticEval * (1 - 2 * b->getActivePlayer());
         }
     }
 
@@ -817,6 +818,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
             }
+            int64_t oldSum = sd->evalSum * (2 * b->getActivePlayer() - 1);
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
@@ -825,8 +827,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (ply == 0) {
                 sd->sideToReduce = b->getActivePlayer();
             }
-
-            if (lmr && score > alpha)
+            int64_t newSum = sd->evalSum * (2 * b->getActivePlayer() - 1);
+            if (lmr && (score > alpha || (newSum > oldSum && b->getActivePlayer() == behindNMP)))
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search
             if (score > alpha && score < beta)
