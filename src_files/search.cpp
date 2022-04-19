@@ -841,7 +841,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
         }
 
-        mGen->addSearched(m);
+        if (!(isCapture(m) && mGen->lastSee < 0) || sameMove(m, hashMove))
+            mGen->addSearched(m);
 
         // if we got a new best score for this node, update the highest score and keep track of the
         // best move
