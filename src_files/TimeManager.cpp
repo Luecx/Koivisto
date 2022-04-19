@@ -50,7 +50,7 @@ void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
     UCI_ASSERT(moves_to_go >= 0);
     
     const U64    overhead = inc == 0 ? 50 : 0;
-    const double division = 2;
+    const double division = 4;
     
     if(time < 1000 && inc == 0){
         time = time * 0.7;
