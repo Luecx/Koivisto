@@ -624,6 +624,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
 
+    int         pruneDepth      = depth;
+    if (legalMoves == 0 && lmrFactor != nullptr) {
+        if (*lmrFactor > 0) 
+            pruneDepth += 2;
+    }
+
     Move m;
     // loop over all moves in the movelist
     while ((m = mGen->next())) {
@@ -640,7 +646,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
-            Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
+            Depth moveDepth = std::max(1, 1 + depth - lmrReductions[pruneDepth][legalMoves]);
 
             if (quiet) {
                 quiets++;
@@ -652,7 +658,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (mGen->shouldSkip())
                     continue;
                 
-                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
+                if (depth <= 7 && quiets >= lmp[isImproving][pruneDepth]) {
                     mGen->skip();
                 }
 
@@ -673,7 +679,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck
                     && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                         b->getPreviousMove(2), mainThreat)
-                           < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                           < std::min(140 - 30 * (pruneDepth * (pruneDepth + isImproving)), 0)) {
                     continue;
                 }
             }
@@ -788,7 +794,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
             lmr -= bitCount(getNewThreats(b, m));
-            lmr++;
+            lmr += 2;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -811,7 +817,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (legalMoves == 0 && lmrFactor != nullptr) {
             if (*lmrFactor > 0) 
-                extension++;
+                extension += 2;
         }
 
         // principal variation search recursion.
@@ -835,7 +841,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             
             if (legalMoves == 0 && lmrFactor != nullptr) {
                 if (*lmrFactor > 0) 
-                    extension++;
+                    extension += 2;
             }
 
             if (lmr && score > alpha)
