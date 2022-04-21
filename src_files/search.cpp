@@ -923,7 +923,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 bestMove = 0;
             }
 
-            if (depth > 7 && bestMove && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+            if (depth > 3 && bestMove && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
                            sd->eval[b->getActivePlayer()][ply]);
             } else {
