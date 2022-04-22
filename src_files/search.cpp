@@ -526,7 +526,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
 
-        if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
+        if (depth == 1 && staticEval > beta && !enemyThreats)
             return beta;
 
         // *******************************************************************************************
