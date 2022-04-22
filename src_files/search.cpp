@@ -664,18 +664,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                + sd->eval[b->getActivePlayer()][ply]
                            < alpha)
                     continue;
+            }
 
-                // ***********************************************************************************
-                // history pruning:
-                // if the history score for a move is really bad at low depth, dont consider this
-                // move.
-                // ***********************************************************************************
-                if (!inCheck
-                    && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
-                                        b->getPreviousMove(2), mainThreat)
-                           < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
-                    continue;
-                }
+            // ***********************************************************************************
+            // history pruning:
+            // if the history score for a move is really bad at low depth, dont consider this
+            // move.
+            // ***********************************************************************************
+            if (!inCheck && !isCapture(m) && !isPromotion
+                && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
+                                    b->getPreviousMove(2), mainThreat)
+                        < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                continue;
             }
 
             // ***************************************************************************************
