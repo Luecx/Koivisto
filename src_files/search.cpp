@@ -400,6 +400,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Score       score         = -MAX_MATE_SCORE;
     Move        bestMove      = 0;
     Move        hashMove      = 0;
+    
     Score       staticEval;
     Score       ownThreats    = 0;
     Score       enemyThreats  = 0;
@@ -522,7 +523,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // *******************************************************************************************
         if (   depth        <= 7
             && enemyThreats <  2
-            && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
+            && staticEval   >= beta + (depth - ((isImproving || ownThreats) && !enemyThreats)) * FUTILITY_MARGIN
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
 
