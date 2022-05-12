@@ -28,7 +28,7 @@ using namespace bb;
 using namespace move;
 
 
-float phaseValues[bb::N_PIECE_TYPES] {
+constexpr float phaseValues[bb::N_PIECE_TYPES] {
     0.6541, 1, 1, 2, 1.641
 };
 
@@ -1426,9 +1426,7 @@ Score Board::evaluate(){
     constexpr float evaluation_mg_scalar = 1.66;
     constexpr float evaluation_eg_scalar = 1.07;
     
-    
-    
-    const float phase_sum =
+    constexpr float phase_sum =
            phaseValues[PAWN  ] * 16
          + phaseValues[KNIGHT] * 4
          + phaseValues[BISHOP] * 4
