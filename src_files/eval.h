@@ -110,9 +110,6 @@ struct Evaluator {
     std::vector<Accumulator> history;
     AccumulatorTable accumulator_table{};
     
-    alignas(ALIGNMENT) int16_t activation[HIDDEN_DSIZE] {};
-    alignas(ALIGNMENT) int32_t output    [OUTPUT_SIZE ] {};
-
     Evaluator();
     
     void addNewAccumulation();

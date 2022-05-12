@@ -124,6 +124,12 @@ void uci::uci() {
     std::cout << "option name OwnBook type check default false" << std::endl;
     std::cout << "option name BookPath type string" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
+    
+    std::cout << "option name PawnPhaseValue type string default 0" << std::endl;
+    std::cout << "option name KnightPhaseValue type string default 1" << std::endl;
+    std::cout << "option name BishopPhaseValue type string default 1" << std::endl;
+    std::cout << "option name RookPhaseValue type string default 2" << std::endl;
+    std::cout << "option name QueenPhaseValue type string default 4" << std::endl;
 
     std::cout << "uciok" << std::endl;
 }
@@ -271,7 +277,19 @@ void uci::set_option(const std::string& name, const std::string& value) {
         polyglot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
         polyglot::book.open(value);
+    } else if (name == "PawnPhaseValue") {
+        phaseValues[PAWN] = std::stof(value);
+    } else if (name == "KnightPhaseValue") {
+        phaseValues[KNIGHT] = std::stof(value);
+    } else if (name == "BishopPhaseValue") {
+        phaseValues[BISHOP] = std::stof(value);
+    } else if (name == "RookPhaseValue") {
+        phaseValues[ROOK] = std::stof(value);
+    } else if (name == "QueenPhaseValue") {
+        phaseValues[QUEEN] = std::stof(value);
     }
+    
+    
 }
 
 /**
