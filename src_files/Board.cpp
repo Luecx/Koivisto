@@ -29,10 +29,10 @@ using namespace move;
 
 
 constexpr float phaseValues[bb::N_PIECE_TYPES] {
-    0.73  , // Pawn
-    1.8544, // Knight
-    3.7062, // Bishop
-    4.1208, // Rook
+    0.9   , // Pawn
+    3.03  , // Knight
+    2.5   , // Bishop
+    6.32  , // Rook
     4.0     // Queen
 };
 
