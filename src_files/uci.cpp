@@ -124,7 +124,6 @@ void uci::uci() {
     std::cout << "option name OwnBook type check default false" << std::endl;
     std::cout << "option name BookPath type string" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
-
     std::cout << "uciok" << std::endl;
 }
 

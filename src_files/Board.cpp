@@ -27,8 +27,9 @@
 using namespace bb;
 using namespace move;
 
-const float phaseValues[N_PIECE_TYPES] {
-    0, 1, 1, 2, 4, 0,
+
+constexpr float phaseValues[bb::N_PIECE_TYPES] {
+    0.6541, 1, 1, 2, 1.641
 };
 
 /**
@@ -1425,12 +1426,20 @@ Score Board::evaluate(){
     constexpr float evaluation_mg_scalar = 1.66;
     constexpr float evaluation_eg_scalar = 1.07;
     
-    float phase = (24.0f + phaseValues[5] - phaseValues[0] * bitCount(getPieceBB()[WHITE_PAWN] | getPieceBB()[BLACK_PAWN])
-                   - phaseValues[1] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
-                   - phaseValues[2] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
-                   - phaseValues[3] * bitCount(getPieceBB()[WHITE_ROOK] | getPieceBB()[BLACK_ROOK])
-                   - phaseValues[4] * bitCount(getPieceBB()[WHITE_QUEEN] | getPieceBB()[BLACK_QUEEN]))
-                  / 24.0f;
+    constexpr float phase_sum =
+           phaseValues[PAWN  ] * 16
+         + phaseValues[KNIGHT] * 4
+         + phaseValues[BISHOP] * 4
+         + phaseValues[ROOK  ] * 4
+         + phaseValues[QUEEN ] * 2;
+    
+    float phase = (phase_sum
+         - phaseValues[PAWN  ] * bitCount(getPieceBB()[WHITE_PAWN  ] | getPieceBB()[BLACK_PAWN  ])
+         - phaseValues[KNIGHT] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
+         - phaseValues[BISHOP] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
+         - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
+         - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
+                  / phase_sum;
     return (+          evaluation_mg_scalar
             - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
            * (this->evaluator.evaluate(this->getActivePlayer()));
