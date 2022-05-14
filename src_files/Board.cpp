@@ -29,7 +29,7 @@ using namespace move;
 
 
 constexpr float phaseValues[bb::N_PIECE_TYPES] {
-    2.36, 1.58, 1.16, 2.75, 4.0
+    0.9, 1.58, 1.16, 2.75, 4.0
 };
 
 /**
