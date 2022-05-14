@@ -29,7 +29,7 @@ using namespace move;
 
 
 constexpr float phaseValues[bb::N_PIECE_TYPES] {
-    0.6541, 1, 1, 2, 1.641
+    0.552938, 1.55294, 1.50862, 2.64379, 4.0
 };
 
 /**
@@ -1423,8 +1423,8 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    constexpr float evaluation_mg_scalar = 1.66;
-    constexpr float evaluation_eg_scalar = 1.07;
+    constexpr float evaluation_mg_scalar = 1.07576;
+    constexpr float evaluation_eg_scalar = 1.05163;
     
     constexpr float phase_sum =
            phaseValues[PAWN  ] * 16
