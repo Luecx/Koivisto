@@ -1439,9 +1439,24 @@ Score Board::evaluate(){
          - phaseValues[BISHOP] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
          - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
          - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
-                  / phase_sum;
-    return (+          evaluation_mg_scalar
-            - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
-           * (this->evaluator.evaluate(this->getActivePlayer()));
+        / phase_sum;
+
+    float scalar = evaluation_mg_scalar- phase * (evaluation_mg_scalar - evaluation_eg_scalar);
+
+    // OCB endings, get bitboard of pieces (minors + majors). no pawns/kings.
+    U64 piece_occupancy {m_occupiedBB};
+    piece_occupancy &= ~(getPieceBB<WHITE, PAWN>());
+    piece_occupancy &= ~(getPieceBB<BLACK, PAWN>());
+    piece_occupancy &= ~(getPieceBB<WHITE, KING>());
+    piece_occupancy &= ~(getPieceBB<BLACK, KING>());
+    if( bitCount(piece_occupancy)                    == 2 &&
+        bitCount(getPieceBB<WHITE, BISHOP>())        == 1 &&
+        bitCount(getPieceBB<BLACK, BISHOP>())        == 1 &&
+        bitCount(piece_occupancy & WHITE_SQUARES_BB) == 1){
+        scalar *= 0.25;
+    }
+    
+   
+    return (this->evaluator.evaluate(this->getActivePlayer())) * scalar;
     
 }
