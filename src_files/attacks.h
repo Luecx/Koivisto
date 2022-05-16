@@ -169,6 +169,7 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
 [[nodiscard]] inline bb::U64       lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
     return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index]
                                                 >> (rookShifts[index]))];
+    
 }
 
 /**

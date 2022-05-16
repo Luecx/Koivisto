@@ -1440,6 +1440,15 @@ Score Board::evaluate(){
          - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
          - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
                   / phase_sum;
+    
+    float scalar =
+        (+          evaluation_mg_scalar
+         - phase * (evaluation_mg_scalar - evaluation_eg_scalar));
+    
+    if(this->getCurrent50MoveRuleCount() > 15){
+        scalar *= (35 - (this->getCurrent50MoveRuleCount() - 15)) / 35.0f;
+    }
+    
     return (+          evaluation_mg_scalar
             - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
            * (this->evaluator.evaluate(this->getActivePlayer()));
