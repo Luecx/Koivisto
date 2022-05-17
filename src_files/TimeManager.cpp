@@ -23,7 +23,7 @@
 using namespace bb;
 
 TimeManager::TimeManager() {
-    this->setStartTime();
+    this->reset();
 }
 
 void TimeManager::setDepthLimit     (Depth depth) {
@@ -32,50 +32,75 @@ void TimeManager::setDepthLimit     (Depth depth) {
     this->depth_limit.depth   = depth;
     this->depth_limit.enabled = true;
 }
-void TimeManager::setNodeLimit      (U64 nodes) {
+void TimeManager::setNodeLimit      (S64 nodes) {
     UCI_ASSERT(nodes >= 0);
     
     this->node_limit.nodes   = nodes;
     this->node_limit.enabled = true;
 }
-void TimeManager::setMoveTimeLimit  (U64 move_time) {
+void TimeManager::setMoveTimeLimit  (S64 move_time) {
     UCI_ASSERT(move_time >= 0);
     
     this->move_time_limit.upper_time_bound = move_time;
     this->move_time_limit.enabled          = true;
 }
-void TimeManager::setMatchTimeLimit (U64 time, U64 inc, int moves_to_go) {
+void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go) {
     UCI_ASSERT(time >= 0);
     UCI_ASSERT(inc >= 0);
     UCI_ASSERT(moves_to_go >= 0);
     
-    const U64    overhead = inc == 0 ? 50 : 0;
-    const double division = 2;
+    const S64    overhead          = inc == 0 ? 50 : 0;
+    const double division          = 2;
+    
+    const S64    overhead_per_game = move_overhead.type == PER_GAME ? move_overhead.time : 0;
     
     if(time < 1000 && inc == 0){
         time = time * 0.7;
     }
     
-    U64 upperTimeBound = time / division;
-    U64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
+    S64 upperTimeBound = time / division;
+    S64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
-    timeToUse          = std::min(time - overhead - inc, timeToUse);
-    upperTimeBound     = std::min(time - overhead - inc, upperTimeBound);
+    timeToUse          = std::min(time - overhead - inc - overhead_per_game, timeToUse);
+    upperTimeBound     = std::min(time - overhead - inc - overhead_per_game, upperTimeBound);
+    
+    if(move_overhead.type == PER_MOVE){
+        timeToUse      = std::max(static_cast<S64>(10) , timeToUse      - move_overhead.time);
+        upperTimeBound = std::max(static_cast<S64>(10) , upperTimeBound - move_overhead.time);
+    }
     
     this->setMoveTimeLimit(upperTimeBound);
     this->match_time_limit.time_to_use = timeToUse;
     this->match_time_limit.enabled     = true;
 }
+
+void TimeManager::reset() {
+    this->setStartTime();
+    this->force_stop       = false;
+    this->depth_limit      = {};
+    this->node_limit       = {};
+    this->move_time_limit  = {};
+    this->match_time_limit = {};
+}
+
 void TimeManager::setStartTime() {
     start_time = std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-bb::U64 TimeManager::elapsedTime() const {
+bb::S64 TimeManager::elapsedTime() const {
     auto end   = std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now().time_since_epoch()).count();
     auto diff = end - start_time;
     return diff;
+}
+
+void TimeManager::setMoveOverhead(bb::S64 time) {
+    move_overhead.time = time;
+}
+
+void TimeManager::setMoveOverheadType(MoveOverheadType mode) {
+    move_overhead.type = mode;
 }
 
 void TimeManager::stopSearch() {
@@ -87,7 +112,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
     if (force_stop)
         return false;
     
-    U64 elapsed = elapsedTime();
+    S64 elapsed = elapsedTime();
     
     if (sd != nullptr && this->match_time_limit.enabled) {
         if (elapsed * 10 < this->match_time_limit.time_to_use) {
@@ -113,7 +138,7 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     nodeScore = 110 - std::min(nodeScore, 90);
     evalScore = std::min(std::max(50, 50 + evalScore), 80);
 
-    U64 elapsed = elapsedTime();
+    S64 elapsed = elapsedTime();
     
     if(    move_time_limit.enabled
         && move_time_limit.upper_time_bound < elapsed)

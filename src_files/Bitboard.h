@@ -28,6 +28,7 @@
 
 namespace bb {
 using U64 = uint64_t;
+using S64 =  int64_t;
 using U32 = uint32_t;
 using Square = int8_t;
 using Diagonal = int8_t;
