@@ -37,10 +37,10 @@ using namespace move;
 
 int  lmrReductions[256][256];
 
-int  RAZOR_MARGIN     = 243;
-int  FUTILITY_MARGIN  = 68;
+int  RAZOR_MARGIN     = 250;
+int  FUTILITY_MARGIN  = 80;
 int  SE_MARGIN_STATIC = 0;
-int  LMR_DIV          = 267;
+int  LMR_DIV          = 288;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
