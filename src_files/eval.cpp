@@ -27,14 +27,16 @@
 #include "incbin/incbin.h"
 
 // clang-format off
-alignas(ALIGNMENT) int16_t nn::inputWeights [INPUT_SIZE ][HIDDEN_SIZE ];
-alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
-alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
+alignas(ALIGNMENT) int16_t nn::inputWeights [INPUT_SIZE   ][HIDDEN_SIZE ];
+alignas(ALIGNMENT) int16_t nn::hiddenWeights[HIDDEN_2_SIZE][HIDDEN_DSIZE];
+alignas(ALIGNMENT) float   nn::outputWeights[OUTPUT_SIZE  ][HIDDEN_2_SIZE];
+alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE  ];
+alignas(ALIGNMENT) int32_t nn::hiddenBias   [HIDDEN_2_SIZE];
+alignas(ALIGNMENT) float   nn::outputBias   [OUTPUT_SIZE  ];
 // clang-format on
 
-#define INPUT_WEIGHT_MULTIPLIER  (64)
-#define HIDDEN_WEIGHT_MULTIPLIER (512)
+#define INPUT_WEIGHT_MULTIPLIER  (128)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;
@@ -112,10 +114,15 @@ void nn::init() {
     std::memcpy(inputBias, &gEvalData[memoryIndex], HIDDEN_SIZE * sizeof(int16_t));
     memoryIndex += HIDDEN_SIZE * sizeof(int16_t);
 
-    std::memcpy(hiddenWeights, &gEvalData[memoryIndex], HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t));
-    memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
-    std::memcpy(hiddenBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(int32_t));
-    memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
+    std::memcpy(hiddenWeights, &gEvalData[memoryIndex], HIDDEN_DSIZE * HIDDEN_2_SIZE * sizeof(int16_t));
+    memoryIndex += HIDDEN_DSIZE * HIDDEN_2_SIZE * sizeof(int16_t);
+    std::memcpy(hiddenBias, &gEvalData[memoryIndex], HIDDEN_2_SIZE * sizeof(int32_t));
+    memoryIndex += HIDDEN_2_SIZE * sizeof(int32_t);
+    
+    std::memcpy(outputWeights, &gEvalData[memoryIndex], OUTPUT_SIZE * HIDDEN_2_SIZE * sizeof(float));
+    memoryIndex += OUTPUT_SIZE * HIDDEN_2_SIZE * sizeof(float);
+    std::memcpy(outputBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(float));
+    memoryIndex += OUTPUT_SIZE * sizeof(float);
 }
 
 int nn::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color view,
@@ -297,19 +304,23 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     const auto acc_act = (avx_register_type_16*) history.back().summation[activePlayer];
     const auto acc_nac = (avx_register_type_16*) history.back().summation[!activePlayer];
 
-    // compute the dot product
-    avx_register_type_32 res {};
-    const auto           wgt = (avx_register_type_16*) (hiddenWeights[0]);
-    for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-        res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_act[i], reluBias), wgt[i]));
+    float output = outputBias[0];
+    for(int o = 0; o < HIDDEN_2_SIZE; o++){
+        // compute the dot product of the hidden layer
+        avx_register_type_32 res {};
+        const auto           wgt = (avx_register_type_16*) (hiddenWeights[o]);
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+            res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_act[i], reluBias), wgt[i]));
+        }
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
+            res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_nac[i], reluBias),
+                                                    wgt[i + HIDDEN_SIZE / STRIDE_16_BIT]));
+        }
+        const auto hidden_out = sumRegisterEpi32(res) + hiddenBias[o];
+        output += std::max(hidden_out / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER, 0) *
+                  outputWeights[0][o];
     }
-    for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT; i++) {
-        res = avx_add_epi32(res, avx_madd_epi16(avx_max_epi16(acc_nac[i], reluBias),
-                                                wgt[i + HIDDEN_SIZE / STRIDE_16_BIT]));
-    }
-
-    const auto outp = sumRegisterEpi32(res) + hiddenBias[0];
-    return outp / INPUT_WEIGHT_MULTIPLIER / HIDDEN_WEIGHT_MULTIPLIER;
+    return output;
 }
 
 nn::Evaluator::Evaluator() {

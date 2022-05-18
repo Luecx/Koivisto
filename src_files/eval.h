@@ -34,6 +34,7 @@
 #define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
 #define HIDDEN_SIZE    (512)
 #define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
+#define HIDDEN_2_SIZE  (8)
 #define OUTPUT_SIZE    (1)
  
 #if defined(__AVX512F__)
@@ -53,10 +54,12 @@ namespace nn {
 
 struct Evaluator;
 
-extern int16_t inputWeights [INPUT_SIZE][HIDDEN_SIZE];
-extern int16_t hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
-extern int16_t inputBias    [HIDDEN_SIZE];
-extern int32_t hiddenBias   [OUTPUT_SIZE];
+extern int16_t inputWeights [INPUT_SIZE   ][HIDDEN_SIZE];
+extern int16_t hiddenWeights[HIDDEN_2_SIZE][HIDDEN_DSIZE];
+extern float   outputWeights[OUTPUT_SIZE  ][HIDDEN_2_SIZE];
+extern int16_t inputBias    [HIDDEN_SIZE  ];
+extern int32_t hiddenBias   [HIDDEN_2_SIZE];
+extern float   outputBias   [OUTPUT_SIZE  ];
 
 // initialise and load the weights
 void init();
