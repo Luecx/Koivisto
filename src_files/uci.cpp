@@ -35,7 +35,7 @@ using namespace bb;
 using namespace move;
 
 
-TimeManager timeManager;
+TimeManager timeManager{};
 Board       board{};
 Search      searchObject;
 std::thread searchThread;
@@ -124,6 +124,8 @@ void uci::uci() {
     std::cout << "option name OwnBook type check default false" << std::endl;
     std::cout << "option name BookPath type string" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
+    std::cout << "option name MoveOverhead type spin default 0 min 0 max 10000" << std::endl;
+    std::cout << "option name MoveOverheadType type combo default PerMove var PerMove var PerGame" << std::endl;
     std::cout << "uciok" << std::endl;
 }
 
@@ -270,6 +272,15 @@ void uci::set_option(const std::string& name, const std::string& value) {
         polyglot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
         polyglot::book.open(value);
+    } else if (name == "MoveOverhead"){
+        timeManager.setMoveOverhead(std::stoi(value));
+    } else if (name == "MoveOverheadType"){
+        if(value == "PerMove"){
+            timeManager.setMoveOverheadType(PER_MOVE);
+        }
+        if(value == "PerGame"){
+            timeManager.setMoveOverheadType(PER_GAME);
+        }
     }
 }
 
@@ -457,7 +468,8 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
     }
     
     // reset the time manager
-    timeManager = TimeManager();
+    timeManager.reset();
+    
     // parse match time.
     // check if anything like wtime, btime, winc or binc is given
     if (   str.find("wtime") != std::string::npos
