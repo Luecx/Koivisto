@@ -27,11 +27,6 @@
 using namespace bb;
 using namespace move;
 
-
-constexpr float phaseValues[bb::N_PIECE_TYPES] {
-    0.552938, 1.55294, 1.50862, 2.64379, 4.0
-};
-
 /**
  * The default constructor uses a fen-representation of the board. if nothing is specified, the starting position
  * will be used. This might crash if the given fen is illegal in its structure. e.g. not all rows/columns specified.
@@ -1423,25 +1418,5 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    constexpr float evaluation_mg_scalar = 1.07576;
-    constexpr float evaluation_eg_scalar = 1.05163;
-    
-    constexpr float phase_sum =
-           phaseValues[PAWN  ] * 16
-         + phaseValues[KNIGHT] * 4
-         + phaseValues[BISHOP] * 4
-         + phaseValues[ROOK  ] * 4
-         + phaseValues[QUEEN ] * 2;
-    
-    float phase = (phase_sum
-         - phaseValues[PAWN  ] * bitCount(getPieceBB()[WHITE_PAWN  ] | getPieceBB()[BLACK_PAWN  ])
-         - phaseValues[KNIGHT] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
-         - phaseValues[BISHOP] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
-         - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
-         - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
-                  / phase_sum;
-    return (+          evaluation_mg_scalar
-            - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
-           * (this->evaluator.evaluate(this->getActivePlayer()));
-    
+    return 1.06 * this->evaluator.evaluate(this->getActivePlayer());
 }
