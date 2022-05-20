@@ -24,6 +24,7 @@
 #include "History.h"
 #include "Move.h"
 
+#define TESTwad 1
 void generateMoves          (Board* b, move::MoveList* mv, move::Move hashMove = 0, SearchData* sd = nullptr, bb::Depth ply = 0);
 void generateNonQuietMoves  (Board* b, move::MoveList* mv, move::Move hashMove = 0, SearchData* sd = nullptr, bb::Depth ply = 0, bool inCheck = 0);
 void generatePerftMoves     (Board* b, move::MoveList* mv);
