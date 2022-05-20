@@ -29,7 +29,7 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move followup, S
                                              [getPieceTypeSqToCombination(m)] : 0);
         auto cmh_value = cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)];
         auto th_vaue   = th[side][threatSquare][getSqToSqFromCombination(m)];
-        return (2 * fmh_value + 2 * cmh_value + 2 * th_vaue) / 3;
+        return (3 * fmh_value + 2 * cmh_value + 2 * th_vaue) / 3;
     }
 }
 
