@@ -37,7 +37,7 @@ using namespace move;
 
 int  lmrReductions[256][256];
 
-int  RAZOR_MARGIN     = 243;
+int  RAZOR_MARGIN     = 210;
 int  FUTILITY_MARGIN  = 68;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 267;
@@ -61,7 +61,7 @@ bool hasOnlyPawns(Board* board, Color color) {
     // compare total team occupation with pawn and king bitboard
     return board->getTeamOccupiedBB(color)
            == ((board->getPieceBB(color, PAWN)
-              | board->getPieceBB(color, KING)));
+                | board->getPieceBB(color, KING)));
 }
 
 template<Color color>
@@ -69,16 +69,16 @@ U64 getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
     const U64 occupied         = b->getOccupiedBB();
     
     const U64 opp_major  = b->getPieceBB<!color, QUEEN >()
-                         | b->getPieceBB<!color, ROOK  >();
+                          | b->getPieceBB<!color, ROOK  >();
     const U64 opp_minor  = b->getPieceBB<!color, KNIGHT>()
-                         | b->getPieceBB<!color, BISHOP>();
+                          | b->getPieceBB<!color, BISHOP>();
     const U64 opp_queen  = b->getPieceBB<!color, QUEEN >();
     const U64 pawns      = b->getPieceBB< color, PAWN  >();
     
     // pawn attacks
     U64 pawn_attacks     = color == WHITE ?
-                                     shiftNorthEast(pawns) | shiftNorthWest(pawns) :
-                                     shiftSouthEast(pawns) | shiftSouthWest(pawns);
+                                      shiftNorthEast(pawns) | shiftNorthWest(pawns) :
+                                      shiftSouthEast(pawns) | shiftSouthWest(pawns);
     
     // minor attacks
     U64 minor_attacks = 0;
@@ -137,7 +137,7 @@ U64 getNewThreats(Board* b, move::Move m) {
     const Color  color    = b->getActivePlayer();
 
     U64    attacks        = 0;
-    U64 sqBB              = ONE << sqTo; 
+    U64 sqBB              = ONE << sqTo;
 
     switch (p) {
         case QUEEN:
@@ -469,7 +469,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             || (en.type  & ALL_NODE && staticEval > en.score)) {
             staticEval = en.score;
         }
-    } 
+    }
 
     // ***********************************************************************************************
     // tablebase probing:
@@ -507,7 +507,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // razoring:
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
+        if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) {
                 return score;
@@ -521,7 +521,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // from eval to prevent pruning if the oponent has multiple threats.
         // *******************************************************************************************
         if (   depth        <= 7
-            && enemyThreats <  2
             && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
@@ -559,7 +558,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // this is based on other top engines.
     // ***********************************************************************************************
 
-    Score     betaCut = beta + 100;
+    Score     betaCut = beta + 130;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
@@ -613,9 +612,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         occupiedBB = b->getOccupiedBB();
-    U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
-                           | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
-                           | KNIGHT_ATTACKS[kingSq];
+    U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB)
+                  | attacks::lookUpRookAttacks(kingSq, occupiedBB)
+                  | KNIGHT_ATTACKS[kingSq];
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
                PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.
@@ -749,12 +748,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->reduce = true;
             }
         } else if (depth < 8
-               && !skipMove
-               && !inCheck
-               &&  sameMove(m, hashMove)
-               &&  ply > 0
-               &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
-               &&  en.type == CUT_NODE) {
+                   && !skipMove
+                   && !inCheck
+                   &&  sameMove(m, hashMove)
+                   &&  ply > 0
+                   &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
+                   &&  en.type == CUT_NODE) {
             extension = 1;
         }
 
@@ -767,8 +766,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2
                      || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
-                              ? 0
-                              : lmrReductions[depth][legalMoves];
+                        ? 0
+                        : lmrReductions[depth][legalMoves];
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
@@ -781,7 +780,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            if (!sd->targetReached) 
+            if (!sd->targetReached)
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
@@ -1143,7 +1142,7 @@ void Search::printInfoString(Depth depth, Score score, Move* pv, uint16_t pvLen)
     U64 sel_depth   = selDepth();
     U64 tb_hits     = tbHits();
     U64 nps         = static_cast<U64>(nodes * 1000) /
-                      static_cast<U64>(timeManager->elapsedTime() + 1);
+              static_cast<U64>(timeManager->elapsedTime() + 1);
 
     // print basic info string including depth and seldepth
     std::cout << "info"
@@ -1310,7 +1309,7 @@ Move Search::probeDTZ(Board* board) {
         // check if it's the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
             if (   (    promo == 6
-                    && !isPromotion(m))
+                 && !isPromotion(m))
                 || (isPromotion(m)
                     && promo < 6
                     && getPromotionPieceType(m) == promo)) {
