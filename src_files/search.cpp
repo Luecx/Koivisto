@@ -795,6 +795,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
+            if (abs(staticEval) > 750 && (staticEval < alpha || staticEval > beta)) {
+                lmr++;
+            }
         }
 
         // doing the move
