@@ -369,20 +369,20 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // Koivisto is based on a different idea, namely the Beal effect. (see
         // https://www.chessprogramming.org/Search_with_Random_Leaf_Values).
 
-        //  Later note: This has not shown to be better in other engines, altough it gained over the
-        //  standard implementation in Koi
-        //   Weiss now also has a similar implementation to Koi, but its unclear if it is better than
-        //   standard either.
+        // Later note: This has not shown to be better in other engines, although it gained over the
+        // standard implementation in Koi
+        // Weiss now also has a similar implementation to Koi, but its unclear if it is better than
+        // standard either.
 
         return 8 - (td->nodes & MASK<4>);
     }
 
     // beside keeping track of the nodes, we need to keep track of the selective depth for this
-    // thread.
+    // thread which is relevant for uci logging
     if (ply > td->seldepth) {
         td->seldepth = ply;
     }
-
+    
     // check if the active player is in check. used for various pruning decisions.
     bool inCheck = b->isInCheck(b->getActivePlayer());
 
@@ -443,6 +443,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+    // if we are not in check, we can compute things like threats in this position
+    // beside the threats, we keep track of the improvement across plies which is used below
+    // the threats are computed using the getThreats function which is documented above
+    // to better handle the threats, they are extracted from the search data array.
+    // the threat count is how many threats there are for the given color at the given ply
+    // the main threat is the square which is threatened. If there are multiple threats, the first
+    // one will be selected as the main threat.
     if (!inCheck) {
         getThreats(b, sd, ply);
         ownThreats   = sd->threatCount[ply][ b->getActivePlayer()];
@@ -461,7 +468,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
-
+    
+    // the static evaluation is adjusted based on the tt entry. note that this is not done before
+    // computing the improvement above since that one is based on the evaluation function
+    // and not the static evaluation.
     if (en.zobrist == key >> 32) {
         // adjusting eval
         if (   (en.type == PV_NODE)
@@ -469,7 +479,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             || (en.type  & ALL_NODE && staticEval > en.score)) {
             staticEval = en.score;
         }
-    } 
+    }
 
     // ***********************************************************************************************
     // tablebase probing:
@@ -503,10 +513,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
     if (!skipMove && !inCheck && !pv) {
-        // **********************************************************************************************************
+        // *******************************************************************************************
         // razoring:
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
-        // **********************************************************************************************************
+        // *******************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) {
@@ -559,8 +569,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // ***********************************************************************************************
 
     Score     betaCut = beta + 130;
-    if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
-        && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
+    if (   !inCheck
+        && !pv
+        &&  depth > 4
+        && !skipMove
+        &&  ownThreats
+        && !(   hashMove
+             && en.depth >= depth - 3
+             && en.score < betaCut)) {
+        
         mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
         Move m;
         while ((m = mGen->next())) {
@@ -613,8 +630,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         occupiedBB = b->getOccupiedBB();
     U64         kingCBB    = attacks::lookUpBishopAttacks(kingSq, occupiedBB) 
-                           | attacks::lookUpRookAttacks(kingSq, occupiedBB) 
-                           | KNIGHT_ATTACKS[kingSq];
+                           | attacks::lookUpRookAttacks  (kingSq, occupiedBB)
+                           | KNIGHT_ATTACKS              [kingSq];
     mGen->init(sd, b, ply, hashMove, b->getPreviousMove(), b->getPreviousMove(2),
                PV_SEARCH, mainThreat, kingCBB);
     // count the legal and quiet moves.
@@ -666,7 +683,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
                 // ***********************************************************************************
                 // history pruning:
-                // if the history score for a move is really bad at low depth, dont consider this
+                // if the history score for a move is awful at low depth, don't consider this
                 // move.
                 // ***********************************************************************************
                 if (!inCheck
@@ -795,6 +812,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
+            if (abs(staticEval) > 850 && isImproving){
+                lmr ++;
+            }
         }
 
         // doing the move
