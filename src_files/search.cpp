@@ -37,7 +37,7 @@ using namespace move;
 
 int  lmrReductions[256][256];
 
-int  RAZOR_MARGIN     = 243;
+int  RAZOR_MARGIN     = 190;
 int  FUTILITY_MARGIN  = 68;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 267;
@@ -507,7 +507,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // razoring:
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN < beta) {
+        if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta) {
                 return score;
@@ -521,7 +521,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // from eval to prevent pruning if the oponent has multiple threats.
         // *******************************************************************************************
         if (   depth        <= 7
-            && enemyThreats <  2
             && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
@@ -559,7 +558,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // this is based on other top engines.
     // ***********************************************************************************************
 
-    Score     betaCut = beta + 100;
+    Score     betaCut = beta + 130;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
         && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
         mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
