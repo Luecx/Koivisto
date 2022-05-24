@@ -727,6 +727,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
                     *lmrFactor = 0;
+                } else if (pv) {
+                    extension = 1;
                 }
                 extension++;
             } else if (score >= beta) {
