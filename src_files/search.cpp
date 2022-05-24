@@ -767,7 +767,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                      || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
-                              : lmrReductions[depth][legalMoves];
+                              : lmrReductions[depth][legalMoves] >> pv;
 
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
@@ -779,7 +779,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                            b->getPreviousMove(2), mainThreat);
             lmr         = lmr - history / 150;
             lmr += !isImproving;
-            lmr -= pv;
             if (!sd->targetReached) 
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
