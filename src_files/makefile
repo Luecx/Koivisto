@@ -34,6 +34,7 @@ PEXTFLAGS   = -DUSE_PEXT
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
 # autodetect features for pext and append it to native flags
+PROPS = $(shell echo | $(CC) -march=native -E -dM -)
 ifneq ($(findstring __BMI2__, $(PROPS)),)
     ifeq ($(findstring __znver1, $(PROPS)),)
         ifeq ($(findstring __znver2, $(PROPS)),)
