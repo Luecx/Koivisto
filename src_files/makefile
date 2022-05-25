@@ -38,7 +38,7 @@ PROPS = $(shell echo | $(CC) -march=native -E -dM -)
 ifneq ($(findstring __BMI2__, $(PROPS)),)
     ifeq ($(findstring __znver1, $(PROPS)),)
         ifeq ($(findstring __znver2, $(PROPS)),)
-            NATIVEFLAGS += PEXTFLAGS
+            NATIVEFLAGS += $(PEXTFLAGS)
         endif
     endif
 endif
