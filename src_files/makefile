@@ -29,10 +29,20 @@ AVX2FLAGS   = $(SSEFLAGS) -mavx2
 AVX512FLAGS = $(AVX2FLAGS) -mavx512f -mavx512bw -mavx512dq
 OPENMPFLAGS = -fopenmp
 NATIVEFLAGS = -march=native
+PEXTFLAGS   = -DUSE_PEXT
 
 MAKROS      = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
+# autodetect features for pext and append it to native flags
+ifneq ($(findstring __BMI2__, $(PROPS)),)
+    ifeq ($(findstring __znver1, $(PROPS)),)
+        ifeq ($(findstring __znver2, $(PROPS)),)
+            NATIVEFLAGS += PEXTFLAGS
+        endif
+    endif
+endif
 
+# targets
 openbench: updateNetwork
 	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -o $(EXE)
 
