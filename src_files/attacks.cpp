@@ -55,14 +55,22 @@ void attacks::init() {
         const U64  bish_entries   = (ONE << (64 - bish_shift));
         
         for (U64 i = 0; i < rook_entries; i++) {
-            const U64 rel_occ            = populateMask(rookMasks[n], i);
-            const int index              = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
+            const U64 rel_occ      = populateMask(rookMasks[n], i);
+#ifdef USE_PEXT
+            const int index        = static_cast<int>(_pext_u64(rel_occ, rookMasks[n]));
+#else
+            const int index        = static_cast<int>((rel_occ * rookMagics[n]) >> rook_shift);
+#endif
             ROOK_ATTACKS[n][index] = generateRookAttacks(n, rel_occ);
         }
         
         for (U64 i = 0; i < bish_entries; i++) {
-            const U64 rel_occ              = populateMask(bishopMasks[n], i);
-            const int index                = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
+            const U64 rel_occ        = populateMask(bishopMasks[n], i);
+#ifdef USE_PEXT
+            const int index          = static_cast<int>(_pext_u64(rel_occ, bishopMasks[n]));
+#else
+            const int index          = static_cast<int>((rel_occ * bishopMagics[n]) >> bish_shift);
+#endif
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
     }
