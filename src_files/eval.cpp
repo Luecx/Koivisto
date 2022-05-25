@@ -34,7 +34,7 @@ alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 // clang-format on
 
 #define INPUT_WEIGHT_MULTIPLIER  (64)
-#define HIDDEN_WEIGHT_MULTIPLIER (512)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;
