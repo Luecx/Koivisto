@@ -27,6 +27,8 @@ PEXTFLAGS   = $(POPCNTFLAGS) -DUSE_PEXT -mbmi2
 SSEFLAGS    = $(POPCNTFLAGS) -msse -msse4.1 -mssse3 -msse2
 AVX2FLAGS   = $(SSEFLAGS) -mavx2
 AVX512FLAGS = $(AVX2FLAGS) -mavx512f -mavx512bw -mavx512dq
+PGOMAKEFLAGS = -fprofile-generate -lgcov
+PGOUSEFLAGS  = -fprofile-use -fno-peel-loops -fno-tracer
 OPENMPFLAGS = -fopenmp
 NATIVEFLAGS = -march=native
 PEXTFLAGS   = -DUSE_PEXT
@@ -45,7 +47,10 @@ endif
 
 # targets
 openbench: updateNetwork
-	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) -o $(EXE)
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) $(PGOMAKEFLAGS) -o $(EXE)
+	$(EXE) bench
+	$(CC) $(CFLAGS) $(SRC) $(MAKROS) $(LIBS) $(NATIVEFLAGS) $(PGOUSEFLAGS) -o $(EXE)
+	@rm -f *.gcda
 
 native: updateNetwork
 	mkdir -p $(ROOT)$(FOLDER)
