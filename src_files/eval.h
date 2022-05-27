@@ -31,7 +31,7 @@
 #include <vector>
 
 
-#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
+#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 8)
 #define HIDDEN_SIZE    (512)
 #define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
 #define OUTPUT_SIZE    (1)

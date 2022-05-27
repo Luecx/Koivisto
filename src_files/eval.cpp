@@ -33,8 +33,8 @@ alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 // clang-format on
 
-#define INPUT_WEIGHT_MULTIPLIER  (64)
-#define HIDDEN_WEIGHT_MULTIPLIER (512)
+#define INPUT_WEIGHT_MULTIPLIER  (16)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;
@@ -147,14 +147,14 @@ int nn::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
         return 0;
     // clang-format off
     constexpr int indices[bb::N_SQUARES] {
-        0,  1,  2,  3,  3,  2,  1,  0,
-        4,  5,  6,  7,  7,  6,  5,  4,
-        8,  9,  10, 11, 11, 10, 9,  8,
-        8,  9,  10, 11, 11, 10, 9,  8,
-        12, 12, 13, 13, 13, 13, 12, 12,
-        12, 12, 13, 13, 13, 13, 12, 12,
-        14, 14, 15, 15, 15, 15, 14, 14,
-        14, 14, 15, 15, 15, 15, 14, 14,
+        3, 2, 1, 0, 0, 1, 2, 3,
+        3, 2, 1, 0, 0, 1, 2, 3,
+        5, 5, 4, 4, 4, 4, 5, 5,
+        5, 5, 4, 4, 4, 4, 5, 5,
+        6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6,
+        7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7,
     };
     // clang-format on
     if (kingColor == bb::BLACK) {
