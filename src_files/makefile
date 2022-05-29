@@ -7,8 +7,8 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 # compiler and sources
 CXX        = g++
 _LIBS     := -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-_CXXSRCS  := $(wildcard $(_SRC)/*.cpp $(_SRC)/*/*.cpp $(_SRC)/*/*/*.cpp $(_SRC)/*/*/*/*.cpp)
-_CSRCS	  := $(wildcard $(_SRC)/*.c $(_SRC)/*/*.c $(_SRC)/*/*/*.c $(_SRC)/*/*/*/*.c)
+_CXXSRCS  := $(_SRC)/*.cpp
+_CSRCS	  := $(_SRC)/syzygy/tbprobe.c
 _SRCS     := $(_CSRCS) $(_CXXSRCS)
 
 # engine name and version
@@ -16,12 +16,11 @@ NAME       = Koivisto
 MINOR      = 9
 MAJOR      = 8
 MAKROS     = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
-EXE       := $(_BIN)/$(NAME)_$(MAJOR).$(MINOR)
-EXE_NAME  := $(EXE)
-EXE_DIR    = $(dir $(abspath $(firstword $(EXE))))
-EVALFILE  := $(_ROOT)/networks/default.net
+EXE_NAME   = $(NAME)_$(MAJOR).$(MINOR)
+EXE_DIR    = $(_ROOT)/bin
+EXE        = $(EXE_DIR)/$(EXE_NAME)
+EVALFILE   = $(_ROOT)/networks/default.net
 EXE_INFO   =
-EXE_SUFFIX =
 
 
 # compilation flags
@@ -34,14 +33,14 @@ PGO_POST_FLAGS = -fprofile-use -fno-peel-loops -fno-tracer
 # ---------------------------------------------------------------------------------------------------------------------
 
 # options
-NAMING   ?= 1         # adjusts the name based on the used flags
-STATIC   ?= 0         # compiles a static executable
-NATIVE   ?= 0         # uses native flags
-DETECT   ?= 1         # enables detection and automatically toggle flags like: PEXT
-PGO      ?= 0         # enables profile guided optimizations
-DEBUG    ?= 0         # enables debug flags
-FLTO     ?= 0         # enables link time optimization
-PEXT     ?= 0         # enables pext
+NAMING   ?= 1
+STATIC   ?= 0
+NATIVE   ?= 0
+DETECT   ?= 1
+PGO      ?= 0
+DEBUG    ?= 0
+LTO      ?= 0
+PEXT     ?= 0
 # vector instructions
 AVX512   ?= 0
 AVX2     ?= $(AVX512)
@@ -71,10 +70,10 @@ endif
 
 ifeq ($(PEXT),1)
 	EXE_INFO := $(EXE_INFO)-pext
-	FLAGS    += -DUSE_PEXT -bmi2
+	FLAGS    += -DUSE_PEXT -mbmi2
 endif
 
-ifeq ($(FLTO),1)
+ifeq ($(LTO),1)
 	FLAGS    += -flto
 endif
 
@@ -148,40 +147,44 @@ endif
 # HOST DETECTION AND NAME ADJUSTMENT IF NAMING IS ACTIVE
 # ---------------------------------------------------------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
-    PREFIX    = windows
-    SUFFIX    = .exe
+    PREFIX    := windows
+    SUFFIX    := .exe
 else
 UNAME    := $(shell uname -s)
 ifeq ($(UNAME),Linux)
-    PREFIX    = linux
-    SUFFIX    =
+    PREFIX    := linux
+    SUFFIX    :=
 else
     $(warning incompatible host, this might fail)
-    PREFIX    = _
-    SUFFIX    =
+    PREFIX    := _
+    SUFFIX    :=
 endif
 endif
 ifeq ($(NAMING),1)
-	EXE_NAME := $(EXE)-$(PREFIX)$(EXE_INFO)$(SUFFIX)
+    EXE := $(EXE_DIR)/$(EXE_NAME)-$(PREFIX)$(EXE_INFO)$(SUFFIX)
 endif
+EXE_FULL   := $(abspath $(EXE))
+
 
 # ---------------------------------------------------------------------------------------------------------------------
 # RULES
 # ---------------------------------------------------------------------------------------------------------------------
 
 openbench:
-	-$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 FLTO=1 DETECT=1 NAMING=0 EXE=$(EXE)
+	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 LTO=1 DETECT=1 NAMING=0 EXE=$(EXE)
 
 native:
-	-$(_MAKE) build DEBUG=0 NATIVE=1 PGO=0 FLTO=1 DETECT=1 NAMING=1 STATIC=$(STATIC) EXE=$(EXE)
+	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=0 LTO=1 DETECT=1 NAMING=$(NAMING) STATIC=$(STATIC) EXE_NAME=$(EXE_NAME)
 
 pgo:
-	-$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 FLTO=1 DETECT=1 NAMING=1 STATIC=$(STATIC) EXE=$(EXE)
+	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 LTO=1 DETECT=1 NAMING=$(NAMING) STATIC=$(STATIC) EXE_NAME=$(EXE_NAME)
 
 
 overview:
-	$(info TARGET_FOLER is $(EXE_DIR))
-	$(info EXECUTABLE   is $(EXE_NAME))
+	$(info NAME         is $(NAME))
+	$(info EXE          is $(EXE))
+	$(info FULL NAME    is $(EXE_FULL))
+	$(info NAMING       is $(NAMING))
 	$(info FLAGS        is $(FLAGS))
 	$(info NATIVE       is $(NATIVE))
 	$(info STATIC       is $(STATIC))
@@ -201,16 +204,35 @@ overview:
 build: updateNetwork overview
 	mkdir -p $(EXE_DIR)
     ifeq ($(PGO),1)
-		$(CXX) $(PGO_PRE_FLAGS)  $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE_NAME)
-		$(EXE_NAME) bench
-		$(CXX) $(PGO_POST_FLAGS) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE_NAME)
+		$(CXX) $(PGO_PRE_FLAGS)  $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
+		$(EXE_FULL) bench
+		$(CXX) $(PGO_POST_FLAGS) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
 		@rm -f *.gcda
     else
-		$(CXX) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE_NAME)
+		$(CXX) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
     endif
+
+release:
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX512=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX2=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 POPCNT=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE42=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE41=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE3=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE2=1
+	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE=1
+
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX512=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX2=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 POPCNT=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE42=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE41=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE3=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE2=1
+	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE=1
 
 # update the network
 updateNetwork:
-    ifeq ($(EVALFILE),$(ROOT)networks/default.net)
+    ifeq ($(EVALFILE),$(_ROOT)/networks/default.net)
 		git -C .. submodule update --init
     endif
