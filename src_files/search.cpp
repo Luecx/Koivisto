@@ -681,7 +681,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!quiet && moveDepth <= 5 && (getCapturedPieceType(m)) < (getMovingPieceType(m)) 
                 && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= -100 * moveDepth)
                 continue;
-            if (quiet) {
+            if (quiet && (getCapturedPieceType(m)) < (getMovingPieceType(m))) {
                 staticExchangeEval = b->staticExchangeEvaluation(m);
                 if (moveDepth <= 8 && staticExchangeEval <= - moveDepth * 40)
                     continue;
