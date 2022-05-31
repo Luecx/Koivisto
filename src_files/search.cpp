@@ -686,6 +686,23 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (moveDepth <= 8 && staticExchangeEval <= - moveDepth * 40)
                     continue;
             }
+
+            if (depth == 1 && staticExchangeEval >= 0 && staticExchangeEval != 1 
+                && givesCheck && sd->eval[b->getActivePlayer()][ply] > beta + 20) {
+                if (!skipMove) {
+                    // put the beta cutoff into the perft_tt
+                    table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                }
+                // also set this move as a killer move into the history
+                if (!isCapture(m) && !isPromotion)
+                    sd->setKiller(m, ply, b->getActivePlayer());
+
+                // update history scores
+                mGen->updateHistory(depth + (staticEval < alpha));
+                mGen->addSearched(m);
+                return beta;
+            }
+
         }
 
         // dont search illegal moves
