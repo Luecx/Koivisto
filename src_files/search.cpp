@@ -637,6 +637,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool givesCheck  = ((ONE << getSquareTo(m)) & kingCBB) ? b->givesCheck(m) : 0;
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
+        Score staticExchangeEval = isCapture(m) ? mGen->lastSee : 1;
 
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
@@ -676,16 +677,15 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     continue;
                 }
             }
-
-            // ***************************************************************************************
-            // static exchange evaluation pruning (see pruning):
-            // if the depth we are going to search the move at is small enough and the static exchange
-            // evaluation for the given move is very negative, dont consider this quiet move as well.
-            // ***************************************************************************************
-            if (moveDepth <= 5 + quiet * 3
-                && (getCapturedPieceType(m)) < (getMovingPieceType(m))
-                && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= (quiet ? -40 * moveDepth : -100 * moveDepth))
+        
+            if (!quiet && moveDepth <= 5 && (getCapturedPieceType(m)) < (getMovingPieceType(m)) 
+                && (isCapture(m) ? mGen->lastSee : b->staticExchangeEvaluation(m)) <= -100 * moveDepth)
                 continue;
+            if (quiet) {
+                staticExchangeEval = b->staticExchangeEvaluation(m);
+                if (moveDepth <= 8 && staticExchangeEval <= - moveDepth * 40)
+                    continue;
+            }
         }
 
         // dont search illegal moves
@@ -697,9 +697,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
         }
-
-        // compute the static exchange evaluation if the move is a capture
-        Score staticExchangeEval = isCapture(m) ? mGen->lastSee : 1;
 
         // keep track of the depth we want to extend by
         int extension = 0;
