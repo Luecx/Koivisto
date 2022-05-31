@@ -787,6 +787,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
             lmr -= bitCount(getNewThreats(b, m));
+            lmr += enemyThreats;
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
