@@ -24,7 +24,7 @@ EXE_INFO   =
 
 
 # compilation flags
-FLAGS         ?= -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+FLAGS          = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
 PGO_PRE_FLAGS  = -fprofile-generate -lgcov
 PGO_POST_FLAGS = -fprofile-use -fno-peel-loops -fno-tracer
 
@@ -181,25 +181,25 @@ pgo:
 
 
 overview:
-	$(info NAME         is $(NAME))
-	$(info EXE          is $(EXE))
-	$(info FULL NAME    is $(EXE_FULL))
-	$(info NAMING       is $(NAMING))
-	$(info FLAGS        is $(FLAGS))
-	$(info NATIVE       is $(NATIVE))
-	$(info STATIC       is $(STATIC))
-	$(info PEXT         is $(PEXT))
-	$(info PGO          is $(PGO))
-	$(info DEBUG        is $(DEBUG))
-	$(info AVX512       is $(AVX512))
-	$(info AVX2         is $(AVX2))
-	$(info AVX          is $(AVX))
-	$(info POPCNT       is $(POPCNT))
-	$(info SSE42        is $(SSE42))
-	$(info SSE41        is $(SSE41))
-	$(info SSE3         is $(SSE3))
-	$(info SSE2         is $(SSE2))
-	$(info SSE          is $(SSE))
+	$(info NAME      : $(NAME))
+	$(info EXE       : $(EXE))
+	$(info FULL NAME : $(EXE_FULL))
+	$(info NAMING    : $(NAMING))
+	$(info FLAGS     : $(FLAGS))
+	$(info NATIVE    : $(NATIVE))
+	$(info STATIC    : $(STATIC))
+	$(info PEXT      : $(PEXT))
+	$(info PGO       : $(PGO))
+	$(info DEBUG     : $(DEBUG))
+	$(info AVX512    : $(AVX512))
+	$(info AVX2      : $(AVX2))
+	$(info AVX       : $(AVX))
+	$(info POPCNT    : $(POPCNT))
+	$(info SSE42     : $(SSE42))
+	$(info SSE41     : $(SSE41))
+	$(info SSE3      : $(SSE3))
+	$(info SSE2      : $(SSE2))
+	$(info SSE       : $(SSE))
 
 build: updateNetwork overview
 	mkdir -p $(EXE_DIR)
@@ -213,7 +213,7 @@ build: updateNetwork overview
     endif
 
 release:
-	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX512=1
+	#$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX512=1
 	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX2=1
 	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 POPCNT=1
 	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE42=1
@@ -222,7 +222,7 @@ release:
 	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE2=1
 	$(_MAKE) build DEBUG=0 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE=1
 
-	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX512=1
+	#$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX512=1
 	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 AVX2=1
 	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 POPCNT=1
 	$(_MAKE) build DEBUG=0 PEXT=1 PGO=1 LTO=1 DETECT=0 NAMING=1 STATIC=1 SSE42=1
