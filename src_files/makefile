@@ -171,7 +171,7 @@ EXE_FULL   := $(abspath $(EXE))
 # ---------------------------------------------------------------------------------------------------------------------
 
 openbench:
-	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 LTO=1 DETECT=1 NAMING=0 EXE=$(EXE)
+	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 LTO=1 DETECT=1 EVALFILE=$(EVALFILE) NAMING=0 EXE=$(EXE)
 
 native:
 	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=0 LTO=1 DETECT=1 NAMING=$(NAMING) STATIC=$(STATIC) EXE_NAME=$(EXE_NAME)
