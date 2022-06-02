@@ -1,7 +1,8 @@
 
-#ifdef GENERATOR
 #pragma once
 #include "game.h"
+
+#ifdef GENERATOR
 
 #include <array>
 #include <atomic>

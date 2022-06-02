@@ -112,10 +112,10 @@ class Search {
                                       bb::Depth ply, ThreadData* sd, move::Move skipMove,
                                       int behindNMP, bb::Depth* lmrFactor = nullptr);
     [[nodiscard]] bb::Score  qSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth ply,
-                                     ThreadData* sd, bool inCheck = false);
+                                     ThreadData* sd, bool inCheck = false, bool useHash=true);
+    [[nodiscard]] bb::Score  qSearch(Board* b);
     [[nodiscard]] bb::Score  probeWDL(Board* board);
     [[nodiscard]] move::Move probeDTZ(Board* board);
-    Score           qSearch(Board* b);
 };
 
 extern int RAZOR_MARGIN;

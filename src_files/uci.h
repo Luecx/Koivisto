@@ -61,5 +61,5 @@ void bench();
 void quit();
 }
 
-std::string getValue(std::vector<std::string>& vec, std::string key);
+std::string getValue(const std::vector<std::string>& vec, const std::string &key);
 #endif    // KOIVISTO_UCI_H

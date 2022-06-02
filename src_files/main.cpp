@@ -18,31 +18,30 @@
  ****************************************************************************************************/
 
 #include "uci.h"
-#ifdef GENERATOR
 #include "generator/genpool.h"
-#endif
+#include "attacks.h"
 
 int main(int argc, char *argv[]) {
 
-
     #ifdef GENERATOR
+        attacks::init();
         bb::init();
         nn::init();
         Game::init(argc, argv);
-        
+
         std::vector<std::string> args(argv, argv + argc);
-    
+
         auto getParam =
             [&](std::string const& option, int def)
         {
             std::string val = getValue(args, option);
             return val.size() ? std::stoi(val) : def;
         };
-    
+
         GeneratorPool pool(getParam("-threads", 1));
         pool.run(getParam("-games", 10));
     #else
-    uci::mainloop(argc, argv);
+//    uci::mainloop(argc, argv);
     #endif
     return 0;
 }

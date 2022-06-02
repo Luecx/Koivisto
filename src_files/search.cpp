@@ -549,6 +549,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
     }
 
+
     // we reuse movelists for memory reasons.
     moveGen* mGen   = &td->generators[ply];
 
@@ -638,7 +639,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
-        if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
+        if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE && !pv) {
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 
             if (quiet) {
@@ -1059,11 +1060,9 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     return bestScore;
 }
 
-    //    return 0;
-}
 
 Score Search::qSearch(Board* b){
-    return qSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, tds[0], b->isInCheck(b->getActivePlayer()), false);
+    return qSearch(b, -MAX_MATE_SCORE, MAX_MATE_SCORE, 0, &tds[0], b->isInCheck(b->getActivePlayer()), false);
 }
 
 //Search::Search(int hashsize) { this->init(hashsize); }
@@ -1323,21 +1322,24 @@ Move Search::probeDTZ(Board* board) {
                 || (isPromotion(m)
                     && promo < 6
                     && getPromotionPieceType(m) == promo)) {
-                std::cout << "info"
-                          << " depth "      << static_cast<int>(dtz)
-                          << " seldepth "   << static_cast<int>(selDepth());
-                std::cout << " score cp "   << s;
-
-                if (tbHits() != 0) {
-                    std::cout << " tbhits " << 1;
+                
+                
+                if(printInfo){
+                    std::cout << "info"
+                              << " depth "      << static_cast<int>(dtz)
+                              << " seldepth "   << static_cast<int>(selDepth());
+                    std::cout << " score cp "   << s;
+    
+                    if (tbHits() != 0) {
+                        std::cout << " tbhits " << 1;
+                    }
+    
+                    std::cout << " nodes "      << 1
+                              << " nps "        << 1
+                              << " time "       << timeManager->elapsedTime()
+                              << " hashfull "   << static_cast<int>(table->usage() * 1000);
+                    std::cout << std::endl;
                 }
-
-                std::cout << " nodes "      << 1
-                          << " nps "        << 1
-                          << " time "       << timeManager->elapsedTime()
-                          << " hashfull "   << static_cast<int>(table->usage() * 1000);
-                std::cout << std::endl;
-
                 return m;
             }
         }
