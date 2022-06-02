@@ -7,7 +7,7 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 # compiler and sources
 CXX        = g++
 _LIBS     := -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-_CXXSRCS  := $(_SRC)/*.cpp
+_CXXSRCS  := $(_SRC)/*.cpp $(_SRC)/generator/*.cpp
 _CSRCS	  := $(_SRC)/syzygy/tbprobe.c
 _SRCS     := $(_CSRCS) $(_CXXSRCS)
 
