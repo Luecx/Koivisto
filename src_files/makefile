@@ -133,7 +133,7 @@ endif
 
 # auto detect certain flags
 ifeq ($(DETECT),1)
-	PROPS = $(shell echo | $(CC) -march=native -E -dM -)
+	PROPS = $(shell echo | $(CXX) -march=native -E -dM -)
 	ifneq ($(findstring __BMI2__, $(PROPS)),)
 		ifeq ($(findstring __znver1, $(PROPS)),)
 			ifeq ($(findstring __znver2, $(PROPS)),)
