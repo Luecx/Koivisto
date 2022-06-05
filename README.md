@@ -1,9 +1,6 @@
 # Koivisto UCI
 
-<h1 align="center">
- <img src="https://image.prntscr.com/image/bo9NE9KfRFGPIa_oGP-Q7Q.png" />
-</h1>
-
+![Banner_Ukraine_github](https://user-images.githubusercontent.com/34272583/171700088-85cb7d80-3d1c-4a57-950a-b95c35cb9b04.png)
 
 Koivisto is a strong chess engine written primarily by Kim Kåhre and Finn Eggers in c++. Koivisto in itself is not a complete chess program and requires a UCI-compatible graphical user interface.
 
@@ -42,7 +39,7 @@ git clone https://github.com/Luecx/Koivisto.git
 cd Koivisto/
 
 cd src_files
-make native
+make pgo
 ```
 
 Besides compiling a native version which should be best in terms of performance, one can also compile static executables using:
