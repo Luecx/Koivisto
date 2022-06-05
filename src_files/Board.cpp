@@ -1418,5 +1418,5 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    return 1.06 * this->evaluator.evaluate(this->getActivePlayer());
+    return 1.11 * this->evaluator.evaluate(this->getActivePlayer());
 }
