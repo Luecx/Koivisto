@@ -804,9 +804,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
-        if (sameMove(hashMove, m) && en.type > ALL_NODE)
-            extension = 1;
-
         // principal variation search recursion.
         if (legalMoves == 0) {
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
