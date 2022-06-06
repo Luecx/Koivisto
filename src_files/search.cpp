@@ -729,9 +729,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     *lmrFactor = 0;
                 }
                 extension++;
-            } else if (!pvType && score >= beta) {
+            } else if (score >= beta) {
                 return score;
-            } else if (!pvType && en.score >= beta) {
+            } else if (en.score >= beta) {
                 score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
                 if (score >= beta)
                     return score;
@@ -779,7 +779,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                            b->getPreviousMove(2), mainThreat);
             lmr         = lmr - history / 150;
             lmr += !isImproving;
-            lmr -= pv;
+            lmr -= pvType;
             if (!sd->targetReached) 
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
