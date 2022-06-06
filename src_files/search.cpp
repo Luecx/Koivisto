@@ -622,7 +622,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
-
+    bool        pvType          = pv || (hashMove && en.type == PV_NODE);
     Move m;
     // loop over all moves in the movelist
     while ((m = mGen->next())) {
@@ -729,9 +729,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     *lmrFactor = 0;
                 }
                 extension++;
-            } else if (score >= beta) {
+            } else if (!pvType && score >= beta) {
                 return score;
-            } else if (en.score >= beta) {
+            } else if (!pvType && en.score >= beta) {
                 score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
                 if (score >= beta)
                     return score;
