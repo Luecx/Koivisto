@@ -53,6 +53,8 @@ void debug(bool mode);
 
 void uci();
 
+void eval();
+
 void position_fen(const std::string& fen, const std::string& moves);
 void position_startpos(const std::string& moves);
 

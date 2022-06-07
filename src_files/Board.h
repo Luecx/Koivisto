@@ -121,6 +121,7 @@ class Board {
     // as this is only used internally, there is no need to make this public.
     void computeNewRepetition();
     
+    public:
     // sets the piece on a given square. considers zobrist-key and all relevant fields.
     template<bool updateNN=true, bool updateZobrist=true>
     void setPiece(bb::Square sq, bb::Piece piece);
@@ -133,6 +134,7 @@ class Board {
     template<bool updateNN=true, bool updateZobrist=true>
     void replacePiece(bb::Square sq, bb::Piece piece);
 
+    private:
     // sets the piece on a given square. considers zobrist-key and all relevant fields.
     void setPieceHash(bb::Square sq, bb::Piece piece);
     
