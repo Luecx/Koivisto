@@ -129,7 +129,74 @@ void uci::uci() {
     std::cout << "uciok" << std::endl;
 }
 
-
+/**
+ * computes the evaluation and if specified a detailed analysis of how much each piece is worth
+ * according to the static neural network evaluation
+ */
+void uci::eval() {
+    nn::Evaluator evaluator{};
+    evaluator.reset(&board);
+    
+    auto base_eval = evaluator.evaluate(board.getActivePlayer());
+    std::cout << "eval=" << base_eval << std::endl;
+    
+    
+    const std::string h_sep = "+-------+-------+-------+-------+-------+-------+-------+-------+";
+    const std::string e_sep = "|       |       |       |       |       |       |       |       |";
+    const std::string empty = "|       ";
+    
+    std::cout << h_sep << "\n";
+    
+    for (Rank r = 7; r >= 0; r--) {
+        
+        for (File f = 0; f <= 7; ++f) {
+            const Square sq = bb::squareIndex(r, f);
+            const Piece  pc = board.getPiece(sq);
+            
+            if(pc < 0){
+                std::cout << empty;
+            }else{
+                std::cout << "|   " << PIECE_IDENTIFER[pc] << "   ";
+            }
+        }
+        
+        std::cout << "|\n";
+        
+        for (File f = 0; f <= 7; ++f) {
+            const Square sq = bb::squareIndex(r, f);
+            const Piece  pc = board.getPiece(sq);
+            
+            if(pc >= 0 && getPieceType(pc) != KING){
+                
+                board.unsetPiece(sq);
+                auto eval = board.evaluate();
+                board.setPiece(sq, pc);
+                
+                auto diff = base_eval - eval;
+                auto diff_string = std::to_string(diff);
+                
+                auto l_zeros = (7 - diff_string.size()) / 2;
+                auto r_zeros = (7 - diff_string.size() - l_zeros);
+                
+                std::cout << "|";
+                for(int i = 0; i < l_zeros; i++){
+                    std::cout << " ";
+                }
+                std::cout << diff;
+                for(int i = 0; i < r_zeros; i++){
+                    std::cout << " ";
+                }
+            }
+            else{
+                std::cout << empty;
+            }
+        }
+        
+        std::cout << "|\n" << h_sep << "\n";
+    }
+    std::cout << "fen: " << board.fen() << std::endl;
+    
+}
 
 /**
  * processes a single command.
@@ -198,9 +265,8 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "print") {
         std::cout << board << std::endl;
     } else if (split.at(0) == "eval") {
-        nn::Evaluator evaluator{};
-        evaluator.reset(&board);
-        std::cout << "eval=" << evaluator.evaluate(board.getActivePlayer()) << std::endl;
+        uci::eval();
+        
     } else if (split.at(0) == "bench"){
         bench();
     } else if (split.at(0) == "exit" || split.at(0) == "quit"){
