@@ -868,8 +868,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
 
             //if (!sameMove(m, hashMove) && isCapture(m) && quiets < 2) {
-                //capn++;
-                //capcn += legalMoves;
+            //    capn++;
+            //    capcn += legalMoves;
             //}
 
             if (!skipMove && !td->dropOut) {
