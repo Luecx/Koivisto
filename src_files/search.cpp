@@ -44,6 +44,9 @@ int  LMR_DIV          = 267;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
+//int64_t capn;
+//int64_t capcn;
+
 /**
  * =================================================================================
  *                              S E A R C H
@@ -297,6 +300,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             break;
     }
 
+    //std::cout << capcn * 10000 / capn;
     // if the main thread finishes, we will record the data of this thread
     if (threadId == 0) {
         // tell all other threads if they are running to stop the search
@@ -862,6 +866,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // beta -cutoff
         if (score >= beta) {
+
+            //if (!sameMove(m, hashMove) && isCapture(m) && quiets < 2) {
+            //    capn++;
+            //    capcn += legalMoves;
+            //}
+
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
