@@ -169,6 +169,10 @@ void initLMR() {
     }
 }
 
+int colorMultiplier(Color color) {
+    return 1 - 2 * color;
+}
+
 /**
  * returns the best move for the given board.
  * the search will stop if either the max depth is reached.
@@ -241,6 +245,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // dropout means that we stopped the search. It is important to reset this before we
     // start searching.
     td->dropOut = false;
+    td->searchData.totalSearchEval = 0;
     // start the main iterative deepening loop
     Depth depth;
     for (depth = 1; depth <= maxDepth; depth++) {
@@ -439,7 +444,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (inCheck)
             staticEval = -MAX_MATE_SCORE + ply;
         else {
-            staticEval = b->evaluate();
+            staticEval = b->evaluate() + colorMultiplier(b->getActivePlayer()) * sd->evalBonus;
         }
     }
 
@@ -456,6 +461,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                                   [getSquareTo  (b->getPreviousMove())] = improvement;
             }
         }
+        sd->totalSearchEval += colorMultiplier(b->getActivePlayer()) * staticEval;
     }
 
     // we check if the evaluation improves across plies.
@@ -622,7 +628,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
-
+    int         baseBonus       = 0;
     Move m;
     // loop over all moves in the movelist
     while ((m = mGen->next())) {
@@ -696,6 +702,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0 && depth == 1) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
+            sd->totalEval[getSquareFrom(m)][getSquareTo(m)] = 0;
         }
 
         // compute the static exchange evaluation if the move is a capture
@@ -757,8 +764,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
         }
 
-        U64   nodeCount = td->nodes;
-
+        U64         nodeCount = td->nodes;
+        int64_t     prevEvalTotal   = sd->totalSearchEval;
         
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
@@ -809,12 +816,19 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // principal variation search recursion.
         if (legalMoves == 0) {
+            if (ply == 0) {
+                sd->evalBonus = 0;
+                baseBonus     = colorMultiplier(1 - b->getActivePlayer()) * sd->totalEval[getSquareFrom(m)][getSquareTo(m)] / (1 + sd->spentEffort[getSquareFrom(m)][getSquareTo(m)]);
+            }
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
             if (ply == 0 && lmr) {
                 sd->reduce       = true;
                 sd->sideToReduce = !b->getActivePlayer();
+            }
+            if (ply == 0) {
+                sd->evalBonus = std::max(-6, std::min(6,(int)(baseBonus - colorMultiplier(1 - b->getActivePlayer()) * sd->totalEval[getSquareFrom(m)][getSquareTo(m)] /  (1 + sd->spentEffort[getSquareFrom(m)][getSquareTo(m)]) / 10)));
             }
             // reduced search.
             score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
@@ -838,6 +852,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         if (ply == 0) {
             sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] += td->nodes - nodeCount;
+            sd->totalEval[getSquareFrom(m)][getSquareTo(m)] += sd->totalSearchEval - prevEvalTotal;
         }
 
         mGen->addSearched(m);
@@ -982,7 +997,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         }
         stand_pat = bestScore = en.eval;
     } else {
-        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate() + colorMultiplier(b->getActivePlayer()) * sd->evalBonus;
     }
 
     // we can also use the tt entry to adjust the evaluation.

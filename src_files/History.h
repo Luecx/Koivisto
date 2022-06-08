@@ -27,6 +27,8 @@ struct SearchData {
     move::Move     bestMove = 0;
     // Effort spent
     int64_t  spentEffort[bb::N_SQUARES][bb::N_SQUARES]                                                      = {0};
+    int64_t  totalEval[bb::N_SQUARES][bb::N_SQUARES]                                                        = {0};
+
     // EvalImprovement
     int      maxImprovement[bb::N_SQUARES][bb::N_SQUARES]                                                   = {0};
     // capture history table (side-from-to)
@@ -47,6 +49,8 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                                                  = 1;
+    int64_t  totalSearchEval                                                                                = 0;
+    int      evalBonus                                                                                      = 0;
 
     [[nodiscard]] int  getHistories(move::Move m, bb::Color side, move::Move previous, move::Move followup, bb::Square threatSquare) const;
 
