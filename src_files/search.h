@@ -20,11 +20,11 @@
 #ifndef KOIVISTO_SEARCH_H
 #define KOIVISTO_SEARCH_H
 
-#include "Bitboard.h"
-#include "Board.h"
-#include "History.h"
-#include "TimeManager.h"
-#include "TranspositionTable.h"
+#include "bitboard.h"
+#include "board.h"
+#include "history.h"
+#include "timemanager.h"
+#include "transpositiontable.h"
 #include "eval.h"
 #include "newmovegen.h"
 

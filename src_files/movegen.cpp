@@ -17,7 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "movegen.h"
-#include "UCIAssert.h"
+#include "uciassert.h"
 
 #include "attacks.h"
 

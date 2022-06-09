@@ -20,10 +20,10 @@
 #ifndef KOIVISTO_NEWMOVEGEN_H
 #define KOIVISTO_NEWMOVEGEN_H
 
-#include "Board.h"
-#include "History.h"
-#include "Move.h"
-#include "Bitboard.h"
+#include "board.h"
+#include "history.h"
+#include "move.h"
+#include "bitboard.h"
 
 constexpr int MAX_QUIET = 128;
 constexpr int MAX_NOISY = 32;

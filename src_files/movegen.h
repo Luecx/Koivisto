@@ -20,9 +20,9 @@
 #ifndef KOIVISTO_MOVEGEN_H
 #define KOIVISTO_MOVEGEN_H
 
-#include "Board.h"
-#include "History.h"
-#include "Move.h"
+#include "board.h"
+#include "history.h"
+#include "move.h"
 
 void generateMoves          (Board* b, move::MoveList* mv, move::Move hashMove = 0, SearchData* sd = nullptr, bb::Depth ply = 0);
 void generateNonQuietMoves  (Board* b, move::MoveList* mv, move::Move hashMove = 0, SearchData* sd = nullptr, bb::Depth ply = 0, bool inCheck = 0);

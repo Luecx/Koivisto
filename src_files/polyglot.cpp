@@ -19,7 +19,7 @@
 
 #include "polyglot.h"
 
-#include "Board.h"
+#include "board.h"
 
 #include <fstream>
 

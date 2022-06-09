@@ -18,9 +18,8 @@
  ****************************************************************************************************/
 
 #include "eval.h"
-
-#include "Board.h"
-#include "UCIAssert.h"
+#include "board.h"
+#include "uciassert.h"
 
 #define INCBIN_STYLE INCBIN_STYLE_CAMEL
 

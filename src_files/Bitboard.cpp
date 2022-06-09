@@ -17,7 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "Bitboard.h"
+#include "bitboard.h"
 #include "attacks.h"
 
 namespace bb {

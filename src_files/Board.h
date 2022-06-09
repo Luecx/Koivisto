@@ -19,10 +19,10 @@
 #ifndef CHESSCOMPUTER_BOARD_H
 #define CHESSCOMPUTER_BOARD_H
 
-#include "Bitboard.h"
-#include "Move.h"
-#include "Util.h"
-#include "TranspositionTable.h"
+#include "bitboard.h"
+#include "move.h"
+#include "util.h"
+#include "transpositiontable.h"
 #include "eval.h"
 #include "vector"
 

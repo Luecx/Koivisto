@@ -19,9 +19,9 @@
 #ifndef CHESSCOMPUTER_PERFT_H
 #define CHESSCOMPUTER_PERFT_H
 
-#include "Board.h"
-#include "Bitboard.h"
-#include "TranspositionTable.h"
+#include "board.h"
+#include "bitboard.h"
+#include "transpositiontable.h"
 
 [[nodiscard]] bb::U64 perft(Board* b, int depth, bool print = true, bool d1 = true, bool hash = false, int ply = 0);
 

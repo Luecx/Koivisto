@@ -16,7 +16,7 @@
  *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
  *                                                                                                  *
  ****************************************************************************************************/
-#include "History.h"
+#include "history.h"
 
 using namespace bb;
 using namespace move;

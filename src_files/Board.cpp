@@ -19,10 +19,9 @@
 
 
 #include "attacks.h"
-#include "TranspositionTable.h"
-#include "Board.h"
-
-#include "UCIAssert.h"
+#include "transpositiontable.h"
+#include "board.h"
+#include "uciassert.h"
 
 using namespace bb;
 using namespace move;

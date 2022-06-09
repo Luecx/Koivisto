@@ -21,7 +21,7 @@
 #include "attacks.h"
 #include "polyglot.h"
 #include "search.h"
-#include "UCIAssert.h"
+#include "uciassert.h"
 
 #include "syzygy/tbprobe.h"
 

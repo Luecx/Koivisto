@@ -19,11 +19,10 @@
 
 #include "search.h"
 #include "attacks.h"
-
-#include "Bitboard.h"
-#include "History.h"
-#include "TimeManager.h"
-#include "UCIAssert.h"
+#include "bitboard.h"
+#include "history.h"
+#include "timemanager.h"
+#include "uciassert.h"
 #include "movegen.h"
 #include "newmovegen.h"
 #include "polyglot.h"

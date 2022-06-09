@@ -17,8 +17,8 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "TimeManager.h"
-#include "UCIAssert.h"
+#include "timemanager.h"
+#include "uciassert.h"
 
 using namespace bb;
 
