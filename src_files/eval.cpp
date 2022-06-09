@@ -286,7 +286,7 @@ void nn::Evaluator::reset(Board* board) {
 }
 
 void nn::Evaluator::resetAccumulator(Board* board, bb::Color color) {
-    accumulator_table.use(color, board, *this);
+    accumulator_table->use(color, board, *this);
 }
 
 int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
@@ -315,7 +315,15 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
 
 nn::Evaluator::Evaluator() {
     this->history.push_back(Accumulator {});
-    this->accumulator_table.reset();
+    this->accumulator_table->reset();
+}
+
+nn::Evaluator::Evaluator(const nn::Evaluator& evaluator) {
+    history = evaluator.history;
+}
+nn::Evaluator& nn::Evaluator::operator=(const nn::Evaluator& evaluator) {
+    this->history = evaluator.history;
+    return *this;
 }
 
 void nn::Evaluator::addNewAccumulation() { this->history.emplace_back(this->history.back()); }
