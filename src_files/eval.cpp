@@ -326,12 +326,6 @@ void nn::Evaluator::clearHistory() {
     this->history.clear();
     this->history.push_back(Accumulator {});
 }
-nn::Evaluator::~Evaluator() {
-    if (this->accumulator_table != nullptr){
-        delete this->accumulator_table;
-        this->accumulator_table = nullptr;
-    }
-}
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,
                                                     bb::Square square, bb::Square wKingSquare,

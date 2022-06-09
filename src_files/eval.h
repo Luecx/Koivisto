@@ -29,7 +29,7 @@
 #include <immintrin.h>
 #endif
 #include <vector>
-
+#include <memory>
 
 #define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
 #define HIDDEN_SIZE    (512)
@@ -108,11 +108,10 @@ struct AccumulatorTable {
 struct Evaluator {
     // summations
     std::vector<Accumulator> history;
-    AccumulatorTable* accumulator_table = new AccumulatorTable();
-    
-    Evaluator();
+    std::unique_ptr<AccumulatorTable> accumulator_table =
+        std::make_unique<AccumulatorTable>(AccumulatorTable());
 
-    virtual ~Evaluator();
+    Evaluator();
 
     void addNewAccumulation();
     
