@@ -1422,7 +1422,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    constexpr float evaluation_mg_scalar = 1.15;
+    constexpr float evaluation_mg_scalar = 1.25;
     constexpr float evaluation_eg_scalar = 1.05;
 
     constexpr float phase_sum =
