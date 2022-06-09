@@ -21,7 +21,9 @@
 #define KOIVISTO_ATTACKS_H
 
 #include "Bitboard.h"
+#ifdef USE_PEXT
 #include "immintrin.h"
+#endif
 
 namespace attacks{
 constexpr bb::U64 bishopMasks[] {

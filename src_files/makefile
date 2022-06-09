@@ -6,7 +6,8 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 
 # compiler and sources
 CXX        = g++
-_LIBS     := -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+_LIBS_WL  := -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+_LIBS     := -pthread
 _CXXSRCS  := $(_SRC)/*.cpp
 _CSRCS	  := $(_SRC)/syzygy/tbprobe.c
 _SRCS     := $(_CSRCS) $(_CXXSRCS)
@@ -149,15 +150,22 @@ endif
 ifeq ($(OS),Windows_NT)
     PREFIX    := windows
     SUFFIX    := .exe
+    _LIBS 	  += $(_LIBS_WL)
 else
 UNAME    := $(shell uname -s)
 ifeq ($(UNAME),Linux)
     PREFIX    := linux
     SUFFIX    :=
+    _LIBS 	  += $(_LIBS_WL)
 else
-    $(warning incompatible host, this might fail)
+ifeq ($(UNAME),Darwin)
+    PREFIX    := darwin
+    SUFFIX	  :=
+else
+$(warning incompatible host, this might fail)
     PREFIX    := _
     SUFFIX    :=
+endif
 endif
 endif
 ifeq ($(NAMING),1)
