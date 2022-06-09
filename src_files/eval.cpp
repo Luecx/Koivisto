@@ -327,7 +327,7 @@ void nn::Evaluator::clearHistory() {
     this->history.push_back(Accumulator {});
 }
 nn::Evaluator::~Evaluator() {
-    if (this->accumulator_table == nullptr){
+    if (this->accumulator_table != nullptr){
         delete this->accumulator_table;
         this->accumulator_table = nullptr;
     }
