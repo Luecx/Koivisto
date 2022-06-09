@@ -38,7 +38,7 @@ using namespace move;
 int  lmrReductions[256][256];
 
 int  RAZOR_MARGIN     = 190;
-int  FUTILITY_MARGIN  = 68;
+int  FUTILITY_MARGIN  = 54;
 int  SE_MARGIN_STATIC = 0;
 int  LMR_DIV          = 267;
 
