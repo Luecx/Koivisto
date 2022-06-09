@@ -108,10 +108,12 @@ struct AccumulatorTable {
 struct Evaluator {
     // summations
     std::vector<Accumulator> history;
-    AccumulatorTable accumulator_table{};
+    AccumulatorTable* accumulator_table = new AccumulatorTable();
     
     Evaluator();
-    
+
+    virtual ~Evaluator();
+
     void addNewAccumulation();
     
     void popAccumulation();
