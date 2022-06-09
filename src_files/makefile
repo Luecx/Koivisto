@@ -135,25 +135,21 @@ ifeq ($(OS),Windows_NT)
     PREFIX     := windows
     SUFFIX     := .exe
     _LIBS 	   += $(_LIBS_WL)
-	FLAGS      += MARCH_FLAG
 else
 UNAME    := $(shell uname -s)
 ifeq ($(UNAME),Linux)
     PREFIX     := linux
     SUFFIX     :=
     _LIBS 	   += $(_LIBS_WL)
-	FLAGS      += MARCH_FLAG
 else
 ifeq ($(UNAME),Darwin)
     PREFIX     := darwin
     SUFFIX	   :=
 	MARCH_FLAG := -mcpu=apple-a14
-	FLAGS      += -mcpu=apple-a14
 else
 $(warning incompatible host, this might fail)
     PREFIX     := _
     SUFFIX     :=
-	FLAGS      += MARCH_FLAG
 endif
 endif
 endif
@@ -161,6 +157,8 @@ ifeq ($(NAMING),1)
     EXE := $(EXE_DIR)/$(EXE_NAME)-$(PREFIX)$(EXE_INFO)$(SUFFIX)
 endif
 EXE_FULL   := $(abspath $(EXE))
+
+FLAGS      += $(MARCH_FLAG)
 
 # auto detect certain flags
 ifeq ($(DETECT),1)
