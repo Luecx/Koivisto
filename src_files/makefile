@@ -6,7 +6,8 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 
 # compiler and sources
 CXX        = g++
-_LIBS     := -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+_LIBS_WL  := -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+_LIBS     := -pthread
 _CXXSRCS  := $(_SRC)/*.cpp
 _CSRCS	  := $(_SRC)/syzygy/tbprobe.c
 _SRCS     := $(_CSRCS) $(_CXXSRCS)
@@ -25,6 +26,7 @@ EXE_INFO   =
 
 # compilation flags
 FLAGS          = -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+MARCH_FLAG     = -march=native
 PGO_PRE_FLAGS  = -fprofile-generate -lgcov
 PGO_POST_FLAGS = -fprofile-use -fno-peel-loops -fno-tracer
 
@@ -61,11 +63,6 @@ ifeq ($(DEBUG),1)
 	EXE_INFO := $(EXE_INFO)-debug
 else
     FLAGS    += -DNDEBUG -O3
-endif
-
-ifeq ($(NATIVE),1)
-	EXE_INFO := $(EXE_INFO)-native
-	FLAGS    += -march=native
 endif
 
 ifeq ($(PEXT),1)
@@ -131,9 +128,43 @@ else ifeq ($(SSE),1)
 	EXE_INFO := $(EXE_INFO)-sse
 endif
 
+# ---------------------------------------------------------------------------------------------------------------------
+# HOST DETECTION AND NAME ADJUSTMENT IF NAMING IS ACTIVE
+# ---------------------------------------------------------------------------------------------------------------------
+ifeq ($(OS),Windows_NT)
+    PREFIX     := windows
+    SUFFIX     := .exe
+    _LIBS 	   += $(_LIBS_WL)
+	FLAGS      += MARCH_FLAG
+else
+UNAME    := $(shell uname -s)
+ifeq ($(UNAME),Linux)
+    PREFIX     := linux
+    SUFFIX     :=
+    _LIBS 	   += $(_LIBS_WL)
+	FLAGS      += MARCH_FLAG
+else
+ifeq ($(UNAME),Darwin)
+    PREFIX     := darwin
+    SUFFIX	   :=
+	MARCH_FLAG := -mcpu=apple-a14
+	FLAGS      += -mcpu=apple-a14
+else
+$(warning incompatible host, this might fail)
+    PREFIX     := _
+    SUFFIX     :=
+	FLAGS      += MARCH_FLAG
+endif
+endif
+endif
+ifeq ($(NAMING),1)
+    EXE := $(EXE_DIR)/$(EXE_NAME)-$(PREFIX)$(EXE_INFO)$(SUFFIX)
+endif
+EXE_FULL   := $(abspath $(EXE))
+
 # auto detect certain flags
 ifeq ($(DETECT),1)
-	PROPS = $(shell echo | $(CC) -march=native -E -dM -)
+	PROPS = $(shell echo | $(CC) $(MARCH_FLAG) -E -dM -)
 	ifneq ($(findstring __BMI2__, $(PROPS)),)
 		ifeq ($(findstring __znver1, $(PROPS)),)
 			ifeq ($(findstring __znver2, $(PROPS)),)
@@ -144,34 +175,16 @@ ifeq ($(DETECT),1)
 endif
 
 # ---------------------------------------------------------------------------------------------------------------------
-# HOST DETECTION AND NAME ADJUSTMENT IF NAMING IS ACTIVE
-# ---------------------------------------------------------------------------------------------------------------------
-ifeq ($(OS),Windows_NT)
-    PREFIX    := windows
-    SUFFIX    := .exe
-else
-UNAME    := $(shell uname -s)
-ifeq ($(UNAME),Linux)
-    PREFIX    := linux
-    SUFFIX    :=
-else
-    $(warning incompatible host, this might fail)
-    PREFIX    := _
-    SUFFIX    :=
-endif
-endif
-ifeq ($(NAMING),1)
-    EXE := $(EXE_DIR)/$(EXE_NAME)-$(PREFIX)$(EXE_INFO)$(SUFFIX)
-endif
-EXE_FULL   := $(abspath $(EXE))
-
-
-# ---------------------------------------------------------------------------------------------------------------------
 # RULES
 # ---------------------------------------------------------------------------------------------------------------------
 
+ifeq ($(UNAME),Darwin)
+openbench:
+	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=0 LTO=1 DETECT=1 EVALFILE=$(EVALFILE) NAMING=0 EXE=$(EXE)
+else
 openbench:
 	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 LTO=1 DETECT=1 EVALFILE=$(EVALFILE) NAMING=0 EXE=$(EXE)
+endif
 
 native:
 	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=0 LTO=1 DETECT=1 NAMING=$(NAMING) STATIC=$(STATIC) EXE_NAME=$(EXE_NAME)
