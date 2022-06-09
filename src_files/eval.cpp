@@ -33,8 +33,8 @@ alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 // clang-format on
 
-#define INPUT_WEIGHT_MULTIPLIER  (64)
-#define HIDDEN_WEIGHT_MULTIPLIER (512)
+#define INPUT_WEIGHT_MULTIPLIER  (32)
+#define HIDDEN_WEIGHT_MULTIPLIER (128)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;
@@ -277,6 +277,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
             sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
         }
     }
+    
 }
 
 void nn::Evaluator::reset(Board* board) {

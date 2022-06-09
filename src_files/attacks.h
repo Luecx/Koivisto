@@ -21,6 +21,7 @@
 #define KOIVISTO_ATTACKS_H
 
 #include "Bitboard.h"
+#include "immintrin.h"
 
 namespace attacks{
 constexpr bb::U64 bishopMasks[] {
@@ -132,6 +133,7 @@ constexpr bb::U64 KING_ATTACKS[] {
     0x3828380000000000ULL, 0x7050700000000000ULL, 0xe0a0e00000000000ULL, 0xc040c00000000000ULL,
     0x0203000000000000ULL, 0x0507000000000000ULL, 0x0a0e000000000000ULL, 0x141c000000000000ULL,
     0x2838000000000000ULL, 0x5070000000000000ULL, 0xa0e0000000000000ULL, 0x40c0000000000000ULL};
+
 constexpr bb::U64 KNIGHT_ATTACKS[] {
     0x0000000000020400ULL, 0x0000000000050800ULL, 0x00000000000a1100ULL, 0x0000000000142200ULL,
     0x0000000000284400ULL, 0x0000000000508800ULL, 0x0000000000a01000ULL, 0x0000000000402000ULL,
@@ -150,8 +152,8 @@ constexpr bb::U64 KNIGHT_ATTACKS[] {
     0x0004020000000000ULL, 0x0008050000000000ULL, 0x00110a0000000000ULL, 0x0022140000000000ULL,
     0x0044280000000000ULL, 0x0088500000000000ULL, 0x0010a00000000000ULL, 0x0020400000000000ULL};
 
-extern       bb::U64 ROOK_ATTACKS  [bb::N_SQUARES][4096];
-extern       bb::U64 BISHOP_ATTACKS[bb::N_SQUARES][ 512];
+extern bb::U64 ROOK_ATTACKS  [bb::N_SQUARES][4096];
+extern bb::U64 BISHOP_ATTACKS[bb::N_SQUARES][ 512];
 
 void init();
 
@@ -166,9 +168,13 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * @param occupied
  * @return
  */
-[[nodiscard]] inline bb::U64       lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
+[[nodiscard]] inline bb::U64 lookUpRookAttacks(bb::Square index, bb::U64 occupied) {
+#ifdef USE_PEXT
+    return ROOK_ATTACKS[index][static_cast<int>(_pext_u64(occupied, rookMasks[index]))];
+#else
     return ROOK_ATTACKS[index][static_cast<int>((occupied & rookMasks[index]) * rookMagics[index]
                                                 >> (rookShifts[index]))];
+#endif
 }
 
 /**
@@ -189,8 +195,12 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
  * @return
  */
 [[nodiscard]] inline bb::U64 lookUpBishopAttacks(bb::Square index, bb::U64 occupied) {
+#ifdef USE_PEXT
+    return BISHOP_ATTACKS[index][static_cast<int>(_pext_u64(occupied, bishopMasks[index]))];
+#else
     return BISHOP_ATTACKS[index][static_cast<int>(
         (occupied & bishopMasks[index]) * bishopMagics[index] >> (bishopShifts[index]))];
+#endif
 }
 
 /**
