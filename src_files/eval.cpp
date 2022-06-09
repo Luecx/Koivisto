@@ -318,6 +318,14 @@ nn::Evaluator::Evaluator() {
     this->accumulator_table->reset();
 }
 
+nn::Evaluator::Evaluator(const nn::Evaluator& evaluator) {
+    history = evaluator.history;
+}
+nn::Evaluator& nn::Evaluator::operator=(const nn::Evaluator& evaluator) {
+    this->history = evaluator.history;
+    return *this;
+}
+
 void nn::Evaluator::addNewAccumulation() { this->history.emplace_back(this->history.back()); }
 
 void nn::Evaluator::popAccumulation() { this->history.pop_back(); }

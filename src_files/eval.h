@@ -112,7 +112,11 @@ struct Evaluator {
         std::make_unique<AccumulatorTable>(AccumulatorTable());
 
     Evaluator();
-
+    
+    Evaluator(const Evaluator& evaluator);
+    
+    Evaluator& operator=(const Evaluator& evaluator);
+    
     void addNewAccumulation();
     
     void popAccumulation();
