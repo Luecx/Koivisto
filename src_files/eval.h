@@ -31,7 +31,7 @@
 #include <vector>
 #include <memory>
 
-#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 16)
+#define INPUT_SIZE     (bb::N_PIECE_TYPES * bb::N_SQUARES * 2 * 20)
 #define HIDDEN_SIZE    (512)
 #define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
 #define OUTPUT_SIZE    (1)
@@ -87,15 +87,15 @@ struct AccumulatorTableEntry {
 // without the table we would need to fully recompute
 // with the table, we are able to look into the table and get a potential similar position
 // which requires fewer updates than a full reset
-// The Table has 32 AccumulatorTableEntries. The 32 is chosen because we have 16 king buckets
-// which might be mirrored --> 2 * 16 = 32. Depending on the resulting king bucket index and its
-// half we choose the table entry. The AccumulatorTableEntry contains the accumulator which features
+// The Table has 20 AccumulatorTableEntries. The 20 is chosen because we have 20 king buckets.
+// Depending on the resulting king bucket index we choose the table entry.
+// The AccumulatorTableEntry contains the accumulator which features
 // white and blacks point of view. Depending on which king moved, we look and potentially copy that
 // specific accumulator. Since the position from whites or blacks pov may be different, we need
 // to also index based on the king color. This results in 50% of the accumulator content not being
 // used but is the fastest solution.
 struct AccumulatorTable {
-    AccumulatorTableEntry entries[bb::N_COLORS][32] {};
+    AccumulatorTableEntry entries[bb::N_COLORS][20] {};
 
     // sets the specific accumulator to store the specified accumulator
     void put(bb::Color view, Board* board, Accumulator& accumulator);

@@ -32,8 +32,8 @@ alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
 // clang-format on
 
-#define INPUT_WEIGHT_MULTIPLIER  (32)
-#define HIDDEN_WEIGHT_MULTIPLIER (128)
+#define INPUT_WEIGHT_MULTIPLIER  (16)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;
@@ -127,10 +127,6 @@ int nn::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, 
     const int     ksIndex          = kingSquareIndex(kingSquare, view);
     bb::Square    relativeSquare   = view == bb::WHITE ? square : bb::mirrorVertically(square);
 
-    if (kingSide) {
-        relativeSquare = bb::mirrorHorizontally(relativeSquare);
-    }
-
     // clang-format off
     return relativeSquare
            + pieceType * pieceTypeFactor
@@ -146,14 +142,14 @@ int nn::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
         return 0;
     // clang-format off
     constexpr int indices[bb::N_SQUARES] {
-        0,  1,  2,  3,  3,  2,  1,  0,
-        4,  5,  6,  7,  7,  6,  5,  4,
-        8,  9,  10, 11, 11, 10, 9,  8,
-        8,  9,  10, 11, 11, 10, 9,  8,
-        12, 12, 13, 13, 13, 13, 12, 12,
-        12, 12, 13, 13, 13, 13, 12, 12,
-        14, 14, 15, 15, 15, 15, 14, 14,
-        14, 14, 15, 15, 15, 15, 14, 14,
+        0,  1,  2,  3,  4,  5,  6,  7,
+        8,  9, 10, 10, 11, 11, 12, 13,
+       14, 14, 15, 15, 16, 16, 17, 17,
+       14, 14, 15, 15, 16, 16, 17, 17,
+       18, 18, 18, 18, 19, 19, 19, 19,
+       18, 18, 18, 18, 19, 19, 19, 19,
+       18, 18, 18, 18, 19, 19, 19, 19,
+       18, 18, 18, 18, 19, 19, 19, 19,
     };
     // clang-format on
     if (kingColor == bb::BLACK) {
@@ -164,12 +160,10 @@ int nn::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
 
 void nn::AccumulatorTable::put(bb::Color view, Board* board, nn::Accumulator& accumulator) {
     const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
-    const bool       king_side = bb::fileIndex(king_sq) > 3;
     const int        ks_index  = kingSquareIndex(king_sq, view);
 
-    // use a different entry if the king crossed the half but it would technically
-    // still be within the same bucket
-    const int entry_idx = king_side * 16 + ks_index;
+        // use the king bucket index as the entry index
+    const int entry_idx = ks_index;
 
     // get the entry
     AccumulatorTableEntry& entry = entries[view][entry_idx];
@@ -189,12 +183,10 @@ void nn::AccumulatorTable::put(bb::Color view, Board* board, nn::Accumulator& ac
 
 void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& evaluator) {
     const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
-    const bool       king_side = bb::fileIndex(king_sq) > 3;
     const int        ks_index  = kingSquareIndex(king_sq, view);
 
-    // use a different entry if the king crossed the half but it would technically
-    // still be within the same bucket
-    const int entry_idx = king_side * 16 + ks_index;
+    // use the king bucket index as the entry index
+    const int entry_idx = ks_index;
 
     // get the entry
     AccumulatorTableEntry& entry = entries[view][entry_idx];
@@ -239,7 +231,7 @@ void nn::AccumulatorTable::reset() {
     // clearing will erase all information from the table and reset every entry to an empty board.
     // This will require the accumulators to be initialised to the bias
     for (bb::Color c : {bb::WHITE, bb::BLACK}) {
-        for (int s = 0; s < 32; s++) {
+        for (int s = 0; s < 20; s++) {
             std::memcpy(entries[c][s].accumulator.summation[c], inputBias,
                         sizeof(int16_t) * HIDDEN_SIZE);
         }
