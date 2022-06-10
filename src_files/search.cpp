@@ -439,7 +439,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (inCheck)
             staticEval = -MAX_MATE_SCORE + ply;
         else {
-            staticEval = b->evaluate();
+            if (!b->getPreviousMove()) {
+                staticEval = -sd->eval[b->getActivePlayer()][ply - 1] + 30;
+            } else {
+                staticEval = b->evaluate();
+            }
         }
     }
 
