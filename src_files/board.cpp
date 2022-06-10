@@ -153,7 +153,7 @@ Board::Board(const Board& board) {
  * Copies the entire history as well as all relevant fields.
  * @param board
  */
-Board& Board::operator=(const Board& board) {    
+Board& Board::operator=(const Board& board) {
     // we need to copy occupancy bitboards for the teams
     m_teamOccupiedBB[WHITE] = board.getTeamOccupiedBB()[WHITE];
     m_teamOccupiedBB[BLACK] = board.getTeamOccupiedBB()[BLACK];
@@ -175,6 +175,7 @@ Board& Board::operator=(const Board& board) {
     }
     
     // next we copy the entire history of the board.
+    m_boardStatusHistory.clear();
     for (int n = 0; n < static_cast<int>(board.m_boardStatusHistory.size()); n++) {
         m_boardStatusHistory.push_back(board.m_boardStatusHistory.at(n).copy());
     }
