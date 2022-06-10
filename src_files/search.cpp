@@ -424,7 +424,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // search has to be searched to great depth is to make sure that we dont
         // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
         // we still do a normal search. Thus the standard of proof required is different.
-        if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth) {
+        if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth
+            || pv && en.type == PV_NODE && en.depth > depth && depth < 4) {
             if (en.type == PV_NODE) {
                 return en.score;
             } else if (en.type == CUT_NODE) {
