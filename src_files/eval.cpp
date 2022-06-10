@@ -280,6 +280,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
 }
 
 void nn::Evaluator::reset(Board* board) {
+    history.resize(1);
     resetAccumulator(board, bb::WHITE);
     resetAccumulator(board, bb::BLACK);
 }
