@@ -151,7 +151,8 @@ class Board {
     Board(const std::string& fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     
     // instead of providing the fen, we can directly clone a board object.
-    Board(Board* board);
+    Board(const Board& board);
+    Board& operator=(const Board& board);
     
     // for the sake of completeness, we define a destructor which doesnt do anything.
     ~Board() = default;

@@ -178,11 +178,11 @@ void uci::eval() {
                 auto r_zeros = (7 - diff_string.size() - l_zeros);
                 
                 std::cout << "|";
-                for(int i = 0; i < l_zeros; i++){
+                for(size_t i = 0; i < l_zeros; i++){
                     std::cout << " ";
                 }
                 std::cout << diff;
-                for(int i = 0; i < r_zeros; i++){
+                for(size_t i = 0; i < r_zeros; i++){
                     std::cout << " ";
                 }
             }
