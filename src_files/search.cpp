@@ -459,7 +459,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // we check if the evaluation improves across plies.
-    sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    if (inCheck && ply > 1) {
+        sd->setHistoricEval(sd->eval[b->getActivePlayer()][ply], b->getActivePlayer(), ply);
+    } else {
+        sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
+    }
     bool  isImproving = inCheck ? false : sd->isImproving(staticEval, b->getActivePlayer(), ply);
 
     if (en.zobrist == key >> 32) {
