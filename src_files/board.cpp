@@ -54,6 +54,7 @@ Board::Board(const std::string& fen) {
     
     // we need to push a default board status.
     BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0};
+    this->m_boardStatusHistory.reserve(512);
     this->m_boardStatusHistory.push_back(boardStatus);
     
     // using some string utilties defined in Util.h, we split the fen into parts.
