@@ -88,7 +88,7 @@ void TimeManager::setStartTime() {
                  std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-bb::S64 TimeManager::elapsedTime() const {
+bb::U64 TimeManager::elapsedTime() const {
     auto end   = std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now().time_since_epoch()).count();
     auto diff = end - start_time;
@@ -112,7 +112,7 @@ bool TimeManager::isTimeLeft(SearchData* sd) const {
     if (force_stop)
         return false;
     
-    S64 elapsed = elapsedTime();
+    U64 elapsed = elapsedTime();
     
     if (sd != nullptr && this->match_time_limit.enabled) {
         if (elapsed * 10 < this->match_time_limit.time_to_use) {
@@ -138,7 +138,7 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     nodeScore = 110 - std::min(nodeScore, 90);
     evalScore = std::min(std::max(50, 50 + evalScore), 80);
 
-    S64 elapsed = elapsedTime();
+    U64 elapsed = elapsedTime();
     
     if(    move_time_limit.enabled
         && move_time_limit.upper_time_bound < elapsed)

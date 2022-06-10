@@ -91,7 +91,7 @@ class TimeManager {
      * returns the time elapsed since the constructor call
      * @return
      */
-    [[nodiscard]] bb::S64 elapsedTime() const;
+    [[nodiscard]] bb::U64 elapsedTime() const;
     
     /**
      * sets the move overhead

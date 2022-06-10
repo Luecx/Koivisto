@@ -157,6 +157,9 @@ U64 getNewThreats(Board* b, move::Move m) {
             return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT));
         case KING:
             return 0;
+        default:
+            __builtin_unreachable();
+            return 0;
     }
 }
 
@@ -235,8 +238,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // Also, its relevant because if we stop the search even if the search has not finished, the board
     // object will have a random position from the tree. Using this would lead to an illegal/not
     // existing pv
-    Board       searchBoard {b};
-    Board       printBoard {b};
+    Board       searchBoard {*b};
+    Board       printBoard {*b};
     // dropout means that we stopped the search. It is important to reset this before we
     // start searching.
     td->dropOut = false;

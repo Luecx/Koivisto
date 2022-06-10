@@ -31,7 +31,7 @@ enum MoveGenConfig{
 };
 
 template<Color c, MoveTypes t, MoveGenConfig m>
-inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd, Depth ply){
+inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd, [[maybe_unused]] Depth ply){
     Move move = mv->getMove(mv->getSize()-1);
     int  idx  = mv->getSize()-1;
     
@@ -69,9 +69,9 @@ template<Color c, MoveGenConfig m, bool score>
 void generatePawnMoves(
     Board* b,
     MoveList* mv,
-    Move hashMove=0,
-    SearchData* sd= nullptr,
-    Depth ply=0){
+    [[maybe_unused]] Move hashMove=0,
+    [[maybe_unused]] SearchData* sd= nullptr,
+    [[maybe_unused]] Depth ply=0){
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     
@@ -202,9 +202,9 @@ template<Color c, MoveGenConfig m, bool score>
 void generatePieceMoves(
     Board* b,
     MoveList* mv,
-    Move hashMove=0,
-    SearchData* sd= nullptr,
-    Depth ply=0){
+    [[maybe_unused]] Move hashMove=0,
+    [[maybe_unused]] SearchData* sd= nullptr,
+    [[maybe_unused]] Depth ply=0){
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     
@@ -271,9 +271,9 @@ template<Color c, MoveGenConfig m, bool score>
 void generateKingMoves(
     Board* b,
     MoveList* mv,
-    Move hashMove=0,
-    SearchData* sd= nullptr,
-    Depth ply=0){
+    [[maybe_unused]] Move hashMove=0,
+    [[maybe_unused]] SearchData* sd= nullptr,
+    [[maybe_unused]] Depth ply=0){
     UCI_ASSERT(b);
     UCI_ASSERT(mv);
     

@@ -144,40 +144,45 @@ Board::Board(const std::string& fen) {
     // note that we do not read information about move counts. This is usually not required for playing games.
 }
 
+Board::Board(const Board& board) {
+    *this = board;
+}
+
 /**
  * Beside using the FEN for a position, one can also copy directly for another board object.
  * Copies the entire history as well as all relevant fields.
  * @param board
  */
-Board::Board(Board* board) {
-    UCI_ASSERT(board);
-    
+Board& Board::operator=(const Board& board) {
     // we need to copy occupancy bitboards for the teams
-    m_teamOccupiedBB[WHITE] = board->getTeamOccupiedBB()[WHITE];
-    m_teamOccupiedBB[BLACK] = board->getTeamOccupiedBB()[BLACK];
+    m_teamOccupiedBB[WHITE] = board.getTeamOccupiedBB()[WHITE];
+    m_teamOccupiedBB[BLACK] = board.getTeamOccupiedBB()[BLACK];
     
     // we need to copy occupancy bitboards for each piece
     for (int n = 0; n < N_PIECES; n++) {
-        m_piecesBB[n] = board->m_piecesBB[n];
+        m_piecesBB[n] = board.m_piecesBB[n];
     }
     
     // we need to copy occupancy bitboards for all pieces
-    m_occupiedBB = board->getOccupiedBB();
+    m_occupiedBB = board.getOccupiedBB();
     
     // we also need to copy the active player
-    m_activePlayer = board->getActivePlayer();
+    m_activePlayer = board.getActivePlayer();
     
     // copying the piece board for each square
     for (int i = 0; i < N_SQUARES; i++) {
-        m_pieceBoard[i] = board->m_pieceBoard[i];
+        m_pieceBoard[i] = board.m_pieceBoard[i];
     }
     
     // next we copy the entire history of the board.
-    for (int n = 0; n < static_cast<int>(board->m_boardStatusHistory.size()); n++) {
-        m_boardStatusHistory.push_back(board->m_boardStatusHistory.at(n).copy());
+    m_boardStatusHistory.clear();
+    for (int n = 0; n < static_cast<int>(board.m_boardStatusHistory.size()); n++) {
+        m_boardStatusHistory.push_back(board.m_boardStatusHistory.at(n).copy());
     }
     
     this->evaluator.reset(this);
+
+    return *this;
 }
 
 /**
