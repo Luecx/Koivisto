@@ -127,9 +127,9 @@ void moveGen::addNoisy(Move m) {
         return;
     int score   = m_board->staticExchangeEvaluation(m);
     noisySee[noisySize] = score;
-    int mvvLVA  = piece_values[(getCapturedPieceType(m))];
+    //int mvvLVA  = piece_values[(getCapturedPieceType(m))];
     if (score >= 0) {
-        score = 100000 + mvvLVA + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+        score = 100000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare) + score  + 150 * (getSquareTo(m) == getSquareTo(m_previous));
         goodNoisyCount++;
     } else {
         score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
