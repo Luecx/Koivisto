@@ -20,11 +20,11 @@
 #ifndef KOIVISTO_UCI_H
 #define KOIVISTO_UCI_H
 
-#include "Bitboard.h"
-#include "Board.h"
-#include "Move.h"
-#include "Perft.h"
-#include "Util.h"
+#include "bitboard.h"
+#include "board.h"
+#include "move.h"
+#include "perft.h"
+#include "util.h"
 #include "search.h"
 
 #include <cstdlib>

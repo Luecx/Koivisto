@@ -17,7 +17,7 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "TranspositionTable.h"
+#include "transpositiontable.h"
 
 #include <cstring>
 

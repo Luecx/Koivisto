@@ -19,7 +19,7 @@
 #ifndef KOIVISTO_EVAL_H
 #define KOIVISTO_EVAL_H
 
-#include "Bitboard.h"
+#include "bitboard.h"
 
 #include <cstdint>
 #include <cstring>

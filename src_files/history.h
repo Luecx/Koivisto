@@ -20,8 +20,8 @@
 #ifndef KOIVISTO_HISTORY_H
 #define KOIVISTO_HISTORY_H
 
-#include "Bitboard.h"
-#include "Move.h"
+#include "bitboard.h"
+#include "move.h"
 
 struct SearchData {
     move::Move     bestMove = 0;

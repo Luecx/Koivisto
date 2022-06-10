@@ -19,10 +19,9 @@
 
 
 #include "attacks.h"
-#include "TranspositionTable.h"
-#include "Board.h"
-
-#include "UCIAssert.h"
+#include "transpositiontable.h"
+#include "board.h"
+#include "uciassert.h"
 
 using namespace bb;
 using namespace move;
@@ -1420,3 +1419,18 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 Score Board::evaluate(){
     return 1.25 * this->evaluator.evaluate(this->getActivePlayer());
 }
+
+template void Board::setPiece<true, true>(Square sq, Piece piece);
+template void Board::setPiece<true, false>(Square sq, Piece piece);
+template void Board::setPiece<false, true>(Square sq, Piece piece);
+template void Board::setPiece<false, false>(Square sq, Piece piece);
+
+template void Board::unsetPiece<true, true>(Square sq);
+template void Board::unsetPiece<true, false>(Square sq);
+template void Board::unsetPiece<false, true>(Square sq);
+template void Board::unsetPiece<false, false>(Square sq);
+
+template void Board::replacePiece<true, true>(Square sq, Piece piece);
+template void Board::replacePiece<true, false>(Square sq, Piece piece);
+template void Board::replacePiece<false, true>(Square sq, Piece piece);
+template void Board::replacePiece<false, false>(Square sq, Piece piece);

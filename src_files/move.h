@@ -21,7 +21,7 @@
 #define CHESSCOMPUTER_MOVE_H
 
 
-#include "Bitboard.h"
+#include "bitboard.h"
 
 #include <cstdint>
 

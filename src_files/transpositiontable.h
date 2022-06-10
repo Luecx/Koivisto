@@ -20,8 +20,8 @@
 #ifndef CHESSCOMPUTER_HASHMAP_H
 #define CHESSCOMPUTER_HASHMAP_H
 
-#include "Bitboard.h"
-#include "Move.h"
+#include "bitboard.h"
+#include "move.h"
 
 #include <memory>
 #include <ostream>

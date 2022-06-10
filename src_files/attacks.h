@@ -20,8 +20,10 @@
 #ifndef KOIVISTO_ATTACKS_H
 #define KOIVISTO_ATTACKS_H
 
-#include "Bitboard.h"
+#include "bitboard.h"
+#ifdef USE_PEXT
 #include "immintrin.h"
+#endif
 
 namespace attacks{
 constexpr bb::U64 bishopMasks[] {

@@ -20,8 +20,8 @@
 #ifndef KOIVISTO_VERIFICATION_H
 #define KOIVISTO_VERIFICATION_H
 
-#include "Board.h"
-#include "Move.h"
+#include "board.h"
+#include "move.h"
 
 /**
  * verifies the given static-exchange evaluation case. requires a fen and a move and compares the see output with the

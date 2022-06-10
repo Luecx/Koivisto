@@ -20,7 +20,7 @@
 #ifndef CHESSCOMPUTER_UTIL_CPP
 #define CHESSCOMPUTER_UTIL_CPP
 
-#include "Util.h"
+#include "util.h"
 
 /**
  * trim from end of string (right)

@@ -16,10 +16,9 @@
  *                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
  *                                                                                                  *
  ****************************************************************************************************/
-#include "Perft.h"
-
-#include "UCIAssert.h"
-#include "Move.h"
+#include "perft.h"
+#include "uciassert.h"
+#include "move.h"
 #include "movegen.h"
 
 

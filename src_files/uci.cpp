@@ -21,7 +21,7 @@
 #include "attacks.h"
 #include "polyglot.h"
 #include "search.h"
-#include "UCIAssert.h"
+#include "uciassert.h"
 
 #include "syzygy/tbprobe.h"
 
@@ -92,6 +92,7 @@ void uci::mainloop(int argc, char* argv[]) {
               << " by K. Kahre, F. Eggers"
               << std::endl;
     
+    board = Board();
     std::atexit(uci::quit);
     std::string line;
 
