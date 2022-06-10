@@ -460,7 +460,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // we check if the evaluation improves across plies.
     if (inCheck && ply > 1) {
-        sd->setHistoricEval(sd->eval[b->getActivePlayer()][ply], b->getActivePlayer(), ply);
+        sd->setHistoricEval(sd->eval[b->getActivePlayer()][ply - 2], b->getActivePlayer(), ply);
     } else {
         sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
     }
