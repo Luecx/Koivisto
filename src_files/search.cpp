@@ -819,6 +819,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // principal variation search recursion.
         if (legalMoves == 0) {
+            if (ply == 0 && !extension) {
+                if (td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
+                                              [getSquareTo  (td->searchData.bestMove)] * 100 / td->nodes < 30)
+                                              extension = 1;
+            }
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
