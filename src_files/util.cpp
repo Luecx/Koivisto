@@ -100,6 +100,24 @@ std::vector<std::string>& splitString(const std::string& txt, std::vector<std::s
 }
 
 /**
+ * splits the string into subparts
+ * @param fen
+ * @return
+ */
+std::vector<std::string> split_input_fen(std::string fen)
+{
+    std::stringstream fen_stream(fen);
+    std::string segment;
+    std::vector<std::string> seglist;
+
+    while (std::getline(fen_stream, segment, ' '))
+    {
+        seglist.push_back(segment);
+    }
+    return seglist;
+}
+
+/**
  * returns a loading bar as a string. Usually used together with '\r'.
  * @param count
  * @param max
