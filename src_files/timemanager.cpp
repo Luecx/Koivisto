@@ -61,8 +61,10 @@ void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go) {
     S64 upperTimeBound = time / division;
     S64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
     
-    timeToUse          = std::min(time - overhead - inc - overhead_per_game, timeToUse);
-    upperTimeBound     = std::min(time - overhead - inc - overhead_per_game, upperTimeBound);
+    S64 minTime        = 10;
+    
+    timeToUse          = std::max(minTime, std::min(time - overhead - inc - overhead_per_game, timeToUse));
+    upperTimeBound     = std::max(minTime, std::min(time - overhead - inc - overhead_per_game, upperTimeBound));
     
     if(move_overhead.type == PER_MOVE){
         timeToUse      = std::max(static_cast<S64>(10) , timeToUse      - move_overhead.time);
