@@ -784,6 +784,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
+        if (legalMoves > 0 && ply == 0) {
+            if (td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
+                                          [getSquareTo  (td->searchData.bestMove)] * 100 / td->nodes < 30)
+                                              lmr++;
+        }
+
         if (lmr) {
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                            b->getPreviousMove(2), mainThreat);
@@ -819,11 +825,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // principal variation search recursion.
         if (legalMoves == 0) {
-            if (ply == 0 && !extension) {
-                if (td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
-                                              [getSquareTo  (td->searchData.bestMove)] * 100 / td->nodes < 30)
-                                              extension = 1;
-            }
             score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
