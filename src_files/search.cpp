@@ -959,6 +959,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     U64         key        = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
+    bool        pv         = (beta - alpha) != 1;
 
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
@@ -971,15 +972,17 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // ***********************************************************************************************
 
     if (en.zobrist == key >> 32) {
-        if (en.type == PV_NODE) {
-            return en.score;
-        } else if (en.type == CUT_NODE) {
-            if (en.score >= beta) {
+        if (!pv) {
+            if (en.type == PV_NODE) {
                 return en.score;
-            }
-        } else if (en.type & ALL_NODE) {
-            if (en.score <= alpha) {
-                return en.score;
+            } else if (en.type == CUT_NODE) {
+                if (en.score >= beta) {
+                    return en.score;
+                }
+            } else if (en.type & ALL_NODE) {
+                if (en.score <= alpha) {
+                    return en.score;
+                }
             }
         }
         stand_pat = bestScore = en.eval;
