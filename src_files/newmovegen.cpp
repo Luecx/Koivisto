@@ -488,7 +488,7 @@ void moveGen::updateHistory(int weight) {
                     + weight
                     - weight * m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
-
+        weight = std::min(weight, 128);
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
@@ -511,6 +511,7 @@ void moveGen::updateHistory(int weight) {
                     + weight
                     - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)]
                     / MAX_HIST;
+        weight = std::min(weight, 128);
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
