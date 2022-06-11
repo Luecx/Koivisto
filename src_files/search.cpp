@@ -43,6 +43,9 @@ int  LMR_DIV          = 267;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
+int64_t qcutoff      = 0;
+int64_t qcutoffmoves = 0;
+
 /**
  * =================================================================================
  *                              S E A R C H
@@ -298,6 +301,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
             break;
     }
+
+    std::cout << qcutoffmoves * 10000 / qcutoff << std::endl; 
 
     // if the main thread finishes, we will record the data of this thread
     if (threadId == 0) {
@@ -864,6 +869,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // beta -cutoff
         if (score >= beta) {
+            if (quiet) {
+                qcutoff++;
+                qcutoffmoves+=quiets;
+            }
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
                 table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
