@@ -119,18 +119,6 @@ EXE_DIR  := $(_ROOT)/bin
 # can be manually overwritten
 EXE      := $(EXE_DIR)/$(EXE_NAME)
 
-# recompute exe name and exe dir if exe has been overwritten
-override EXE_NAME := $(notdir $(EXE))
-override EXE_DIR  := $(dir $(EXE))
-
-# if EXE_NAME is not the same as the default exe name, force disable NAMING
-ifneq ($(EXE_NAME), $(DEFAULT_EXE_NAME))
-	override NAMING := 0
-endif
-
-# generate the exe name which will be used for pgo
-EXE_PGO := $(abspath $(EXE))
-
 # ---------------------------------------------------------------------------------------------------------------------
 # BUILD FLAGS
 # ---------------------------------------------------------------------------------------------------------------------
@@ -230,6 +218,9 @@ ifeq ($(DEBUG),1)
 	override EXE_INFO := $(EXE_INFO)-debug
 endif
 
+
+$(info EXE_INFO    : $(EXE_INFO))
+
 # native naming
 ifeq ($(NATIVE),1)
 	override EXE_INFO := $(EXE_INFO)-native
@@ -259,6 +250,14 @@ endif
 endif
 endif
 
+# adjust the EXE path
+ifeq ($(NAMING),1)
+    EXE := $(EXE_DIR)/$(EXE_NAME)-$(PREFIX)$(EXE_INFO)$(SUFFIX)
+endif
+
+# generate the exe name which will be used for pgo
+EXE_PGO := $(abspath $(EXE))
+
 # ---------------------------------------------------------------------------------------------------------------------
 # RULES
 # ---------------------------------------------------------------------------------------------------------------------
@@ -278,6 +277,7 @@ overview:
 	$(info EXE       : $(EXE))
 	$(info EXE_NAME  : $(EXE_NAME))
 	$(info EXE_DIR   : $(EXE_DIR))
+	$(info NAMING    : $(NAMING))
 	$(info NATIVE    : $(NATIVE))
 	$(info LTO       : $(LTO))
 	$(info STATIC    : $(STATIC))
