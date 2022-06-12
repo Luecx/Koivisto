@@ -798,12 +798,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr++;
             lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
-                lmr = 0;
+                lmr = 255;
             }
             if (lmr > depth - 2) {
                 lmr = depth - 2;
             }
-            if (history > 256*(2-isCapture(m)))
+            if (lmr < MAX_PLY && history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
 
