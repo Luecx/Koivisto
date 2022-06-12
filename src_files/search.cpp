@@ -580,6 +580,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!b->isLegal(m))
                 continue;
 
+            if (see_piece_vals[getCapturedPieceType(m)] <= see_piece_vals[getMovingPieceType(m)])
+                continue;
+
             b->move<true>(m, table);
 
             Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
