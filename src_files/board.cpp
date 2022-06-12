@@ -788,7 +788,7 @@ Score Board::staticExchangeEvaluation(Move m) const {
     
     Color attacker = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
     
-    Score gain[16], d = 0;
+    Score gain[32], d = 0;
     U64   fromSet = ONE << sqFrom;
     U64   occ     = m_occupiedBB;
     
@@ -1430,7 +1430,7 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    constexpr float evaluation_mg_scalar = 1.5;
+    constexpr float evaluation_mg_scalar = 1.75;
     constexpr float evaluation_eg_scalar = 1.25;
 
     constexpr float phase_sum = 39.6684;
