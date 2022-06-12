@@ -54,14 +54,11 @@ Board::Board(const std::string& fen) {
     
     // we need to push a default board status.
     BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0};
+    this->m_boardStatusHistory.reserve(512);
     this->m_boardStatusHistory.push_back(boardStatus);
     
     // using some string utilties defined in Util.h, we split the fen into parts.
-    std::vector<std::string> split;
-    std::string              str {fen};
-    str = trim(str);
-    findAndReplaceAll(str, "  ", " ");
-    splitString(str, split, ' ');
+    std::vector<std::string> split = split_input_fen(fen);
     
     // first we parse the pieces on the board.
     File x {0};
@@ -132,13 +129,19 @@ Board::Board(const std::string& fen) {
         }
     }
     
-    // the last thing we consider is e.p. square.
+    // e.p. square.
     if (split.size() >= 4) {
         if (split[3].at(0) != '-') {
             Square square = squareIndex(split[3]);
             setEnPassantSquare(square);
         }
     }
+    
+    if (split.size() >= 5)
+        getBoardStatus()->fiftyMoveCounter = std::stoi(split[4]);
+
+    if (split.size() >= 6) 
+        getBoardStatus()->moveCounter = std::stoi(split[5]);
     
     this->evaluator.reset(this);
     // note that we do not read information about move counts. This is usually not required for playing games.
@@ -564,7 +567,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         // check if it crossed squares
         if(     nn::kingSquareIndex(sqTo, color) !=
                 nn::kingSquareIndex(sqFrom, color)
-            ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
+                ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
             this->evaluator.resetAccumulator(this, color);
         }
         
@@ -1310,8 +1313,9 @@ void Board::computeNewRepetition() {
     const int maxChecks = getBoardStatus()->fiftyMoveCounter;
     
     const int lim = m_boardStatusHistory.size() - 1 - maxChecks;
-    
-    for (int i = m_boardStatusHistory.size() - 3; i >= lim; i -= 2) {
+    const int end = std::max(0,lim);
+
+    for (int i = m_boardStatusHistory.size() - 3; i >= end; i -= 2) {
         if (m_boardStatusHistory.at(i).zobrist == getBoardStatus()->zobrist) {
             getBoardStatus()->repetitionCounter = m_boardStatusHistory.at(i).repetitionCounter + 1;
         }

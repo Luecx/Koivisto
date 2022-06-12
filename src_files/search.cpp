@@ -375,18 +375,26 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         //  standard implementation in Koi
         //   Weiss now also has a similar implementation to Koi, but its unclear if it is better than
         //   standard either.
-
+        if (b->getCurrent50MoveRuleCount() >= 50 && b->isInCheck(b->getActivePlayer())) {
+            MoveList mv {};
+            generatePerftMoves(b, &mv);
+            for (size_t i = 0; i < mv.getSize(); i++) {
+                if (b->isLegal(mv.getMove(i)))
+                    return 8 - (td->nodes & MASK<4>);
+            }
+            return -MAX_MATE_SCORE + ply;
+        }
         return 8 - (td->nodes & MASK<4>);
     }
 
+    // check if the active player is in check. used for various pruning decisions.
+    bool inCheck = b->isInCheck(b->getActivePlayer());
+    
     // beside keeping track of the nodes, we need to keep track of the selective depth for this
     // thread.
     if (ply > td->seldepth) {
         td->seldepth = ply;
     }
-
-    // check if the active player is in check. used for various pruning decisions.
-    bool inCheck = b->isInCheck(b->getActivePlayer());
 
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
     if (depth == 0 || depth > MAX_PLY || ply > MAX_PVSEARCH_PLY) {

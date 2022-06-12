@@ -82,6 +82,14 @@ std::string&              findAndReplaceAll(std::string& data, const std::string
  */
 std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch);
 
+
+/**
+ * splits the string into subparts
+ * @param fen
+ * @return
+ */
+std::vector<std::string> split_input_fen(std::string fen);
+
 /**
  * starts the time measurement.
  * Note that this Tool is not used during search but rather for internal profilings and debugging.
