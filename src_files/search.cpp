@@ -577,7 +577,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (!m)
                 break;
 
-            if (!b->isLegal(m))
+            if (!b->isLegal(m) || mGen->lastSee <= 0)
                 continue;
 
             b->move<true>(m, table);
