@@ -1431,7 +1431,6 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 
 Score Board::evaluate(){
     constexpr float evaluation_mg_scalar = 1.75;
-    constexpr float evaluation_eg_scalar = 1.25;
 
     constexpr float phase_sum = 39.6684;
     float phase = (phase_sum
@@ -1442,7 +1441,7 @@ Score Board::evaluate(){
         - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
                 / phase_sum;
     return (+     evaluation_mg_scalar
-                - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
+                - phase * (evaluation_mg_scalar - 1.0))
             * (this->evaluator.evaluate(this->getActivePlayer()));
 }
 
