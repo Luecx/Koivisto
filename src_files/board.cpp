@@ -788,7 +788,7 @@ Score Board::staticExchangeEvaluation(Move m) const {
     
     Color attacker = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
     
-    Score gain[16], d = 0;
+    Score gain[32], d = 0;
     U64   fromSet = ONE << sqFrom;
     U64   occ     = m_occupiedBB;
     

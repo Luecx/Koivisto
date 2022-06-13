@@ -218,9 +218,6 @@ ifeq ($(DEBUG),1)
 	override EXE_INFO := $(EXE_INFO)-debug
 endif
 
-
-$(info EXE_INFO    : $(EXE_INFO))
-
 # native naming
 ifeq ($(NATIVE),1)
 	override EXE_INFO := $(EXE_INFO)-native
