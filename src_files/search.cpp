@@ -549,8 +549,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->move_null();
             score =
                 -pvSearch(b, -beta, 1 - beta,
-                          depth - (depth / 4 + 3) * ONE_PLY
-                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
+                          depth - (depth / 4 + 4) * ONE_PLY
+                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3) + (b->getActivePlayer() == behindNMP),
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
@@ -602,23 +602,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // ***********************************************************************************************
     if (depth >= 4 && !hashMove)
         depth--;
-
-    // ***********************************************************************************************
-    // mate distance pruning:
-    // ***********************************************************************************************
-    Score matingValue = MAX_MATE_SCORE - ply;
-    if (matingValue < beta) {
-        beta = matingValue;
-        if (alpha >= matingValue)
-            return matingValue;
-    }
-
-    matingValue = -MAX_MATE_SCORE + ply;
-    if (matingValue > alpha) {
-        alpha = matingValue;
-        if (beta <= matingValue)
-            return matingValue;
-    }
     
     Square      kingSq     = bitscanForward(b->getPieceBB(!b->getActivePlayer(), KING));
     U64         occupiedBB = b->getOccupiedBB();
