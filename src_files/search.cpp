@@ -432,7 +432,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // search has to be searched to great depth is to make sure that we dont
         // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
         // we still do a normal search. Thus the standard of proof required is different.
-        if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth) {
+        if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth + (isCapture(hashMove) && en.score > beta + 50)) {
             if (en.type == PV_NODE) {
                 return en.score;
             } else if (en.type == CUT_NODE) {
@@ -661,7 +661,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (mGen->shouldSkip())
                     continue;
                 
-                if (depth <= 7 && quiets >= lmp[isImproving][depth] && (sd->eval[b->getActivePlayer()][ply] < beta)) {
+                if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
                     mGen->skip();
                 }
 
@@ -682,7 +682,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 if (!inCheck
                     && sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                         b->getPreviousMove(2), mainThreat)
-                           < std::min(140 - 30 * (depth * (depth + isImproving)), 0) && (sd->eval[b->getActivePlayer()][ply] < beta)) {
+                           < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
                     continue;
                 }
             }
