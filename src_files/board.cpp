@@ -26,6 +26,10 @@
 using namespace bb;
 using namespace move;
 
+constexpr float phaseValues[bb::N_PIECE_TYPES] {
+    0.552938, 1.55294, 1.50862, 2.64379, 4.0
+};
+
 /**
  * The default constructor uses a fen-representation of the board. if nothing is specified, the starting position
  * will be used. This might crash if the given fen is illegal in its structure. e.g. not all rows/columns specified.
@@ -784,7 +788,7 @@ Score Board::staticExchangeEvaluation(Move m) const {
     
     Color attacker = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
     
-    Score gain[16], d = 0;
+    Score gain[32], d = 0;
     U64   fromSet = ONE << sqFrom;
     U64   occ     = m_occupiedBB;
     
@@ -1426,7 +1430,20 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
 }
 
 Score Board::evaluate(){
-    return 1.25 * this->evaluator.evaluate(this->getActivePlayer());
+    constexpr float evaluation_mg_scalar = 1.5;
+    constexpr float evaluation_eg_scalar = 1.25;
+
+    constexpr float phase_sum = 39.6684;
+    float phase = (phase_sum
+        - phaseValues[PAWN  ] * bitCount(getPieceBB()[WHITE_PAWN  ] | getPieceBB()[BLACK_PAWN  ])
+        - phaseValues[KNIGHT] * bitCount(getPieceBB()[WHITE_KNIGHT] | getPieceBB()[BLACK_KNIGHT])
+        - phaseValues[BISHOP] * bitCount(getPieceBB()[WHITE_BISHOP] | getPieceBB()[BLACK_BISHOP])
+        - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
+        - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
+                / phase_sum;
+    return (+     evaluation_mg_scalar
+                - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
+            * (this->evaluator.evaluate(this->getActivePlayer()));
 }
 
 template void Board::setPiece<true, true>(Square sq, Piece piece);
