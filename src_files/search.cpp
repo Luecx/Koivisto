@@ -219,15 +219,17 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // for each thread, we will reset the thread data like node counts, tablebase hits etc.
         for (size_t i = 0; i < tds.size(); i++) {
             // reseting the thread data
-            this->tds[i].threadID = i;
-            this->tds[i].tbhits   = 0;
-            this->tds[i].nodes    = 0;
-            this->tds[i].rootMoves.clear();
+            this->tds[i].threadID      = i;
+            this->tds[i].tbhits        = 0;
+            this->tds[i].nodes         = 0;
+            this->tds[i].rootMoveCount = rootMoves.getSize();
 
             for (int m = 0; m < rootMoves.getSize(); ++m) {
-                this->tds[i].rootMoves.emplace_back(RootMove {
-                    0, -MAX_MATE_SCORE, -MAX_MATE_SCORE, { rootMoves.getMove(m) }, 1
-                });
+                this->tds[i].rootMoves[m].seldepth  = 0;
+                this->tds[i].rootMoves[m].score     = -MAX_MATE_SCORE;
+                this->tds[i].rootMoves[m].prevScore = -MAX_MATE_SCORE;
+                this->tds[i].rootMoves[m].pv[0]     = rootMoves.getMove(m);
+                this->tds[i].rootMoves[m].pvLen     = 1;
             }
         }
 
@@ -309,14 +311,14 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
 
             
             // Copy the PV line into the corresponding root move slot
-            RootMove& curRootMove = *std::find(td->rootMoves.begin(), td->rootMoves.end(), td->pv[0][0]);
+            RootMove& curRootMove = *std::find(&td->rootMoves[0], &td->rootMoves[td->rootMoveCount], td->pv[0][0]);
             std::copy_n(td->pv[0], td->pvLen[0], curRootMove.pv);
             curRootMove.pvLen = td->pvLen[0];
             curRootMove.score = score;
             curRootMove.seldepth = td->seldepth;
 
             // Sort the root move list
-            std::sort(td->rootMoves.begin(), td->rootMoves.end());
+            std::sort(&td->rootMoves[0], &td->rootMoves[td->rootMoveCount]);
 
             // print the info string if its the main thread, don't do partial multipv
             // updates when elapsed time is low to avoid cluttering stdout
@@ -690,7 +692,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             continue;
 
         // in multipv mode, exclude root moves already analysed from the search
-        if (ply == 0 && std::find(td->rootMoves.begin() + td->pvIdx, td->rootMoves.end(), m) == td->rootMoves.end())
+        if (ply == 0 && std::find(&td->rootMoves[td->pvIdx], &td->rootMoves[td->rootMoveCount], m) == &td->rootMoves[td->rootMoveCount])
             continue ;
 
         if (pv && td->threadID == 0)

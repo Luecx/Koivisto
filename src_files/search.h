@@ -70,8 +70,9 @@ struct ThreadData {
     SearchData searchData {};
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
     move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
-    std::vector<RootMove> rootMoves {};
     uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
+    RootMove   rootMoves[256];
+    uint16_t   rootMoveCount;
 
     ThreadData();
 
