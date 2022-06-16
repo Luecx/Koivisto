@@ -318,7 +318,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             curRootMove.seldepth = td->seldepth;
 
             // Sort the root move list
-            std::sort(&td->rootMoves[0], &td->rootMoves[td->rootMoveCount]);
+            std::stable_sort(&td->rootMoves[0], &td->rootMoves[td->rootMoveCount]);
 
             // print the info string if its the main thread, don't do partial multipv
             // updates when elapsed time is low to avoid cluttering stdout
@@ -692,7 +692,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             continue;
 
         // in multipv mode, exclude root moves already analysed from the search
-        if (ply == 0 && std::find(&td->rootMoves[td->pvIdx], &td->rootMoves[td->rootMoveCount], m) == &td->rootMoves[td->rootMoveCount])
+        if (ply == 0 && std::find(&td->rootMoves[0], &td->rootMoves[td->pvIdx], m) != &td->rootMoves[td->pvIdx])
             continue ;
 
         if (pv && td->threadID == 0)
