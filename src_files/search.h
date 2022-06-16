@@ -39,6 +39,23 @@
 #include <vector>
 
 #define MAX_THREADS 256
+#define MAX_MULTIPV 256
+
+struct RootMove {
+    int seldepth;
+    bb::Score score;
+    bb::Score prevScore;
+    move::Move pv[bb::MAX_INTERNAL_PLY + 1];
+    uint16_t pvLen;
+
+    inline bool operator==(const move::Move& m) const {
+        return move::sameMove(pv[0], m);
+    }
+    inline bool operator <(const RootMove& other) const {
+        return other.score != score ? other.score < score
+                                    : other.prevScore < prevScore;
+    }
+};
 
 /**
  * data about each thread
@@ -49,9 +66,11 @@ struct ThreadData {
     int        seldepth = 0;
     int        tbhits   = 0;
     bool       dropOut  = false;
+    int        pvIdx    = 0;
     SearchData searchData {};
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
     move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
+    std::vector<RootMove> rootMoves {};
     uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
 
     ThreadData();
@@ -72,6 +91,7 @@ struct SearchOverview {
 
 class Search {
     int                      threadCount = 1;
+    int                      multiPv = 1;
     TranspositionTable*      table;
     SearchOverview           searchOverview;
 
@@ -102,9 +122,10 @@ class Search {
     void clearHash();
     void setThreads(int threads);
     void setHashSize(int hashSize);
+    void setMultiPv(int multiPvCount);
     void stop();
 
-    void printInfoString(bb::Depth depth, bb::Score score, move::Move* pv, uint16_t pvLen);
+    void printInfoString(bb::Depth depth, int sel_depth, bb::Score score, move::Move* pv, uint16_t pvLen,int pvIdx);
 
     // basic move functions
     move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);

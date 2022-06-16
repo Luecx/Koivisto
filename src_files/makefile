@@ -8,9 +8,7 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 CXX        = g++
 _LIBS_WL  := -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 _LIBS     := -pthread
-_CXXSRCS  := $(_SRC)/*.cpp
-_CSRCS	  := $(_SRC)/syzygy/tbprobe.c
-_SRCS     := $(_CSRCS) $(_CXXSRCS)
+_SRCS     := $(_SRC)/*.cpp $(_SRC)/syzygy/tbprobe.cpp
 
 # engine name and version
 NAME       = Koivisto
