@@ -209,9 +209,8 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         }
 
         // Clamp MultiPV to the root move count
-        MoveList rootMoves;
-        generatePerftMoves(b, &rootMoves);
-        multiPv = std::min(multiPv, rootMoves.getSize());
+        MoveList rootMoves = legals(b);
+        multiPv = std::min(multiPvDefault, rootMoves.getSize());
         
         // we need to reset the hash between searches
         this->table->incrementAge();
@@ -324,10 +323,19 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
             // updates when elapsed time is low to avoid cluttering stdout
             if (threadId == 0 && (td->pvIdx + 1 == multiPv || (depth > 1 && this->timeManager->elapsedTime() >= 3000))) {
                 for (int pvLine = 0; pvLine < td->pvIdx + 1; ++pvLine) {
-                    this->printInfoString(depth, td->rootMoves[pvLine].seldepth, td->rootMoves[pvLine].score, td->rootMoves[pvLine].pv, td->rootMoves[pvLine].pvLen, pvLine);
+                    this->printInfoString(depth,
+                                          td->rootMoves[pvLine].seldepth,
+                                          td->rootMoves[pvLine].score,
+                                          td->rootMoves[pvLine].pv,
+                                          td->rootMoves[pvLine].pvLen,
+                                          pvLine);
                 }
                 for (int pvLine = td->pvIdx + 1; pvLine < multiPv; ++pvLine) {
-                    this->printInfoString(depth - 1, td->rootMoves[pvLine].seldepth, td->rootMoves[pvLine].prevScore, td->rootMoves[pvLine].pv, td->rootMoves[pvLine].pvLen, pvLine);
+                    this->printInfoString(depth - 1,
+                                          td->rootMoves[pvLine].seldepth,
+                                          td->rootMoves[pvLine].prevScore,
+                                          td->rootMoves[pvLine].pv,
+                                          td->rootMoves[pvLine].pvLen, pvLine);
                 }
                 if (td->pvIdx == 0)
                     topScore = score;
@@ -1158,6 +1166,23 @@ U64 Search::tbHits() const {
     }
     return total;
 }
+
+move::MoveList Search::legals(Board* board) const {
+    // create a movelist to store all moves and one to only store the legal ones
+    MoveList ml{};
+    MoveList ml_legal{};
+    generatePerftMoves(board, &ml);
+    // go through each move and check the move for legality
+    int legal_count = 0;
+    for(int i = 0; i < ml.getSize();i++){
+        // increase the legal count if the move is legal
+        if(board->isLegal(ml.getMove(i))) {
+            ml_legal.add(ml.getMove(i));
+        }
+    }
+    return ml_legal;
+}
+
 SearchOverview Search::overview() const { return this->searchOverview; }
 void           Search::enableInfoStrings() { this->printInfo = true; }
 void           Search::disableInfoStrings() { this->printInfo = false; }
@@ -1194,7 +1219,7 @@ void Search::setHashSize(int hashSize) {
         table->setSize(hashSize);
 }
 void Search::setMultiPv(int multiPvCount) {
-    this->multiPv = multiPvCount;
+    this->multiPvDefault = multiPvCount;
 }
 void Search::stop() {
     if (timeManager)
