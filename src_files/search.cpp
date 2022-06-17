@@ -199,14 +199,19 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // if there is a dtz move available, do not start any threads or search at all. just do the
         // dtz move
         Move dtzMove = this->probeDTZ(b);
-        if (dtzMove != 0)
+        if (dtzMove != 0 && multiPv == 1)
             return dtzMove;
 
-        if (polyglot::book.enabled) {
+        if (polyglot::book.enabled && multiPv == 1) {
             Move bookmove = polyglot::book.probe(*b);
             if (bookmove)
                 return bookmove;
         }
+
+        // Clamp MultiPV to the root move count
+        MoveList rootMoves;
+        generatePerftMoves(b, &rootMoves);
+        multiPv = std::min(multiPv, rootMoves.getSize());
         
         // we need to reset the hash between searches
         this->table->incrementAge();
@@ -214,10 +219,18 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // for each thread, we will reset the thread data like node counts, tablebase hits etc.
         for (size_t i = 0; i < tds.size(); i++) {
             // reseting the thread data
-            this->tds[i].threadID = i;
-            this->tds[i].tbhits   = 0;
-            this->tds[i].nodes    = 0;
-            this->tds[i].seldepth = 0;
+            this->tds[i].threadID      = i;
+            this->tds[i].tbhits        = 0;
+            this->tds[i].nodes         = 0;
+            this->tds[i].rootMoveCount = rootMoves.getSize();
+
+            for (int m = 0; m < rootMoves.getSize(); ++m) {
+                this->tds[i].rootMoves[m].seldepth  = 0;
+                this->tds[i].rootMoves[m].score     = -MAX_MATE_SCORE;
+                this->tds[i].rootMoves[m].prevScore = -MAX_MATE_SCORE;
+                this->tds[i].rootMoves[m].pv[0]     = rootMoves.getMove(m);
+                this->tds[i].rootMoves[m].pvLen     = 1;
+            }
         }
 
         // we will call this function for the other threads which will skip this part and jump
@@ -231,6 +244,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     ThreadData* td = &this->tds[threadId];
     // initialise the score outside the loop tp keep track of it during iterations.
     // This is required for aspiration windows
+    Score topScore  = 0;
     Score score     = 0;
     Score prevScore = 0;
     // we will create a copy of the board object which will be used during search
@@ -246,56 +260,93 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // start the main iterative deepening loop
     Depth depth;
     for (depth = 1; depth <= maxDepth; depth++) {
-        for (uint16_t& len : td->pvLen) {
-            len = 0;
-        }
-        // do not use aspiration windows if we are in the first few operations since they will be
-        // done very quick anyway
-        if (depth < 6) {
-            score = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, depth, 0, td, 0, 2);
-            prevScore = score;
-        } else {
-            // initial window size
-            Score window = 10;
-            // lower and upper bounds
-            Score alpha  = score - window;
-            Score beta   = score + window;
-            Depth sDepth = depth;
-            // widen the window as long as time is left
-            while (this->timeManager->isTimeLeft()) {
-                sDepth = sDepth < depth - 3 ? depth - 3 : sDepth;
-                score  = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
-                window += window;
-                // dont widen the window above a size of 500
-                if (window > 500)
-                    window = MIN_MATE_SCORE;
-                // adjust the alpha/beta bound based on which side has failed
-                if (score >= beta) {
-                    beta += window;
-                    sDepth--;
-                } else if (score <= alpha) {
-                    beta = (alpha + beta) / 2;
-                    alpha -= window;
-                } else {
-                    break;
+        // Keep track of when the timeman stops the search
+        bool timemanAbort = false;
+
+        for (td->pvIdx = 0; td->pvIdx < multiPv; ++td->pvIdx) {
+            for (uint16_t& len : td->pvLen) {
+                len = 0;
+            }
+            td->seldepth = 0;
+            // do not use aspiration windows if we are in the first few operations since they will be
+            // done very quick anyway
+            if (depth < 6) {
+                score = this->pvSearch(&searchBoard, -MAX_MATE_SCORE, MAX_MATE_SCORE, depth, 0, td, 0, 2);
+                prevScore = score;
+            } else {
+                score = prevScore = td->rootMoves[td->pvIdx].prevScore;
+                // initial window size
+                Score window = 10;
+                // lower and upper bounds
+                Score alpha  = score - window;
+                Score beta   = score + window;
+                Depth sDepth = depth;
+                // widen the window as long as time is left
+                while (this->timeManager->isTimeLeft()) {
+                    sDepth = sDepth < depth - 3 ? depth - 3 : sDepth;
+                    score  = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
+                    window += window;
+                    // dont widen the window above a size of 500
+                    if (window > 500)
+                        window = MIN_MATE_SCORE;
+                    // adjust the alpha/beta bound based on which side has failed
+                    if (score >= beta) {
+                        beta += window;
+                        sDepth--;
+                    } else if (score <= alpha) {
+                        beta = (alpha + beta) / 2;
+                        alpha -= window;
+                    } else {
+                        break;
+                    }
                 }
             }
-        }
-        // compute a score which puts the nodes we spent looking at the best move
-        // in relation to all the nodes searched so far (only thread local)
-        int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
-                                                     [getSquareTo  (td->searchData.bestMove)]
-                           * 100 / td->nodes;
+            // compute a score which puts the nodes we spent looking at the best move
+            // in relation to all the nodes searched so far (only thread local)
+            int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
+                                                        [getSquareTo  (td->searchData.bestMove)]
+                            * 100 / td->nodes;
 
-        int evalScore    = prevScore - score;
-        
-        // print the info string if its the main thread
-        if (threadId == 0) {
-            this->printInfoString(depth, score, td->pv[0], td->pvLen[0]);
+            int evalScore    = prevScore - score;
+
+            
+            // Copy the PV line into the corresponding root move slot
+            RootMove& curRootMove = *std::find(&td->rootMoves[0], &td->rootMoves[td->rootMoveCount], td->pv[0][0]);
+            std::copy_n(td->pv[0], td->pvLen[0], curRootMove.pv);
+            curRootMove.pvLen = td->pvLen[0];
+            curRootMove.score = score;
+            curRootMove.seldepth = td->seldepth;
+
+            // Sort the root move list
+            std::stable_sort(&td->rootMoves[0], &td->rootMoves[td->rootMoveCount]);
+
+            // print the info string if its the main thread, don't do partial multipv
+            // updates when elapsed time is low to avoid cluttering stdout
+            if (threadId == 0 && (td->pvIdx + 1 == multiPv || (depth > 1 && this->timeManager->elapsedTime() >= 3000))) {
+                for (int pvLine = 0; pvLine < td->pvIdx + 1; ++pvLine) {
+                    this->printInfoString(depth, td->rootMoves[pvLine].seldepth, td->rootMoves[pvLine].score, td->rootMoves[pvLine].pv, td->rootMoves[pvLine].pvLen, pvLine);
+                }
+                for (int pvLine = td->pvIdx + 1; pvLine < multiPv; ++pvLine) {
+                    this->printInfoString(depth - 1, td->rootMoves[pvLine].seldepth, td->rootMoves[pvLine].prevScore, td->rootMoves[pvLine].pv, td->rootMoves[pvLine].pvLen, pvLine);
+                }
+                if (td->pvIdx == 0)
+                    topScore = score;
+            }
+
+            // if the search finished due to timeout, we also need to stop here
+            if (!this->timeManager->rootTimeLeft(timeManScore, evalScore)) {
+                timemanAbort = true;
+                break;
+            }
         }
 
-        // if the search finished due to timeout, we also need to stop here
-        if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
+        // Update the prevScore of each rootMove, and reset the score
+        for (RootMove& rootMove: td->rootMoves) {
+            rootMove.prevScore = rootMove.score;
+            rootMove.score = -MAX_MATE_SCORE;
+        }
+        // Quit the loop if the timeman stopped the search
+        if (timemanAbort)
             break;
     }
 
@@ -314,7 +365,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // collect some information which can be used for benching
         this->searchOverview.nodes = this->totalNodes();
         this->searchOverview.depth = depth;
-        this->searchOverview.score = score;
+        this->searchOverview.score = topScore;
         this->searchOverview.time  = timeman->elapsedTime();
         this->searchOverview.move  = best;
 
@@ -378,7 +429,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (b->getCurrent50MoveRuleCount() >= 50 && b->isInCheck(b->getActivePlayer())) {
             MoveList mv {};
             generatePerftMoves(b, &mv);
-            for (size_t i = 0; i < mv.getSize(); i++) {
+            for (int i = 0; i < mv.getSize(); i++) {
                 if (b->isLegal(mv.getMove(i)))
                     return 8 - (td->nodes & MASK<4>);
             }
@@ -639,6 +690,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
             continue;
+
+        // in multipv mode, exclude root moves already analysed from the search
+        if (ply == 0 && std::find(&td->rootMoves[0], &td->rootMoves[td->pvIdx], m) != &td->rootMoves[td->pvIdx])
+            continue ;
 
         if (pv && td->threadID == 0)
             td->pvLen[ply + 1] = 0;
@@ -1138,26 +1193,29 @@ void Search::setHashSize(int hashSize) {
     if (table)
         table->setSize(hashSize);
 }
+void Search::setMultiPv(int multiPvCount) {
+    this->multiPv = multiPvCount;
+}
 void Search::stop() {
     if (timeManager)
         timeManager->stopSearch();
 }
-void Search::printInfoString(Depth depth, Score score, Move* pv, uint16_t pvLen) {
+void Search::printInfoString(Depth depth, int sel_depth, Score score, Move* pv, uint16_t pvLen, int pvIdx) {
 
     if (!printInfo)
         return;
 
     // extract nodes, seldepth and nps
     U64 nodes       = totalNodes();
-    U64 sel_depth   = selDepth();
     U64 tb_hits     = tbHits();
     U64 nps         = static_cast<U64>(nodes * 1000) /
                       static_cast<U64>(timeManager->elapsedTime() + 1);
 
-    // print basic info string including depth and seldepth
+    // print basic info string including depth, seldepth and multiPv
     std::cout << "info"
               << " depth "          << static_cast<int>(depth)
-              << " seldepth "       << static_cast<int>(sel_depth);
+              << " seldepth "       << sel_depth
+              << " multipv "        << (pvIdx + 1);
 
     // print the score. if its a mate score, show mate xx instead of cp xx
     if (abs(score) > MIN_MATE_SCORE) {
