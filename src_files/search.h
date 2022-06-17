@@ -61,16 +61,30 @@ struct RootMove {
  * data about each thread
  */
 struct ThreadData {
+    // threadID indicates what thread this data belongs to. threadID = 0 is the mainthread
     int        threadID = 0;
+    // nodes searched by this thread
     bb::U64    nodes    = 0;
+    // maximum depth reached in pvsearch / qsearch in this thread
     int        seldepth = 0;
+    // amount of tablenbase hits in this thread
     int        tbhits   = 0;
+    // if we dropout from search (due to timeout for example)
     bool       dropOut  = false;
-    int        pvIdx    = 0;
+    // search data which contains additional information like history tables etc
     SearchData searchData {};
+    // move generators to not reallocate
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
+    
+    // pv information...
+    // the pvIdx indicates what index of the multipv we are analysing
+    int        pvIdx    = 0;
+    // we use a triangular pv table to track the pv during search for each thread
     move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
+    // we also need to track the partial pv length of each subtree
     uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
+    
+    // each thread gets informations
     RootMove   rootMoves[256];
     uint16_t   rootMoveCount;
 
@@ -91,39 +105,68 @@ struct SearchOverview {
 } __attribute__((aligned(32)));
 
 class Search {
-    int                      threadCount = 1;
-    int                      multiPv = 1;
-    TranspositionTable*      table;
-    SearchOverview           searchOverview;
-
-    TimeManager*             timeManager;
+    // how many threads to use for smp
+    int threadCount = 1;
+    // compute multiPv lines at the same time
+    // since multipv will be lowered if there are not enough legal moves, we store
+    // the default multiPv value which is adjusted by uci and multiPv which is just the value
+    // being used in search
+    int multiPv        = 1;
+    int multiPvDefault = 1;
+    // use a transposition table to store transpositions
+    TranspositionTable* table;
+    // the search overview stores information from the latest search and includes information
+    // defined above (SearchOverview struct)
+    SearchOverview searchOverview;
+    // the search keeps a reference to the time manager which tells the search when
+    // to stop the search based on enabled limits like node-limits, time-limits and depth-limits.
+    TimeManager* timeManager;
+    // if smp is enabled (threadCount > 1), we need to keep track of all the threads spawned
     std::vector<std::thread> runningThreads;
-    bool                     useTB     = false;
-    bool                     printInfo = true;
-
-    std::vector<ThreadData>  tds;
+    // beside storing each thread, we need to also track the data per thread
+    std::vector<ThreadData> tds;
+    // if specified below, the search will attempt to use tablebases
+    // this will only work if tablebases have been initialised before
+    bool useTB = false;
+    // printInfo specifies if uci strings shall be displayed or not
+    bool printInfo = true;
 
     public:
+    // initialise the search including the transposition table
     void init(int hashsize);
+    // cleans up the search class. Can be moved to the destructor in the future
     void cleanUp();
 
     private:
+    // functions internally used to compute node counts, seldepth and tbhits across all threads
     [[nodiscard]] bb::U64 totalNodes() const;
     [[nodiscard]] int     selDepth() const;
     [[nodiscard]] bb::U64 tbHits() const;
 
+    // function to compute get all the legal moves for the board
+    [[nodiscard]] move::MoveList legals(Board* board) const;
+
     public:
+    // returns the overview of the latest search
     [[nodiscard]] SearchOverview overview() const;
     // enable / disable info strings
     void enableInfoStrings();
     void disableInfoStrings();
 
+    // enable tablebase usage for the search
     void useTableBase(bool val);
+    // clears history tables
     void clearHistory();
+    // clears transposition table
     void clearHash();
+    // sets threads to be used for smp
     void setThreads(int threads);
+    // set the hash size for the transposition table
     void setHashSize(int hashSize);
+    // sets the amount of lines to analyse
     void setMultiPv(int multiPvCount);
+    
+    // stops the search
     void stop();
 
     void printInfoString(bb::Depth depth, int sel_depth, bb::Score score, move::Move* pv, uint16_t pvLen,int pvIdx);
