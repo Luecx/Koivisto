@@ -1173,7 +1173,6 @@ move::MoveList Search::legals(Board* board) const {
     MoveList ml_legal{};
     generatePerftMoves(board, &ml);
     // go through each move and check the move for legality
-    int legal_count = 0;
     for(int i = 0; i < ml.getSize();i++){
         // increase the legal count if the move is legal
         if(board->isLegal(ml.getMove(i))) {
