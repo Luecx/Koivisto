@@ -27,6 +27,7 @@
 #include "newmovegen.h"
 #include "polyglot.h"
 #include "syzygy/tbprobe.h"
+#include "mcts.h"
 
 #include <thread>
 
