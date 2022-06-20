@@ -35,8 +35,8 @@ inline void scoreMove(Board* board, MoveList* mv, Move hashMove, SearchData* sd,
     Move move = mv->getMove(mv->getSize()-1);
     int  idx  = mv->getSize()-1;
     
-    constexpr bool  isCapture   = t & CAPTURE_MASK;
-    constexpr bool  isPromotion = t & PROMOTION_MASK;
+    [[maybe_unused]] constexpr bool  isCapture   = t & CAPTURE_MASK;
+    [[maybe_unused]] constexpr bool  isPromotion = t & PROMOTION_MASK;
     
     // score hash move
     if(sameMove(move, hashMove)){
