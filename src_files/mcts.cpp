@@ -41,12 +41,20 @@ Edge Node::bestVisitsEdge() {
     return bestUTC;
 }
 
+void Node::calculatePriors(Board* b) {
+    
+}
+
 void Node::expand(Board* b) {
     if (this->visits == 0) {
         return;
     } else {
         return;
     }
+}
+
+void Node::backup(Board* b) {
+
 }
 
 Node* Tree::getNode(bb::U64 hash) {

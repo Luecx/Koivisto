@@ -30,6 +30,7 @@ class Node {
     int internalChildCount;
     Edge children[CHILD_COUNT];
 
+    void calculatePriors(Board* b);
     void expand(Board* b);
     void backup(Board* b);
     Edge bestUTCEdge();
