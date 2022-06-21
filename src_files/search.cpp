@@ -1383,7 +1383,7 @@ Move Search::probeDTZ(Board* board) {
 
     // get the promotion piece if the target move is a promotion (this does not yet work the way it
     // should)
-    PieceType promo  = 6 - TB_GET_PROMOTES(result);
+    PieceType promo  = 5 - TB_GET_PROMOTES(result);
 
     // gets the square from and square to for the move which should be played
     Square    sqFrom = TB_GET_FROM(result);
