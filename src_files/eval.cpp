@@ -30,10 +30,12 @@ alignas(ALIGNMENT) int16_t nn::inputWeights [INPUT_SIZE ][HIDDEN_SIZE ];
 alignas(ALIGNMENT) int16_t nn::hiddenWeights[OUTPUT_SIZE][HIDDEN_DSIZE];
 alignas(ALIGNMENT) int16_t nn::inputBias    [HIDDEN_SIZE];
 alignas(ALIGNMENT) int32_t nn::hiddenBias   [OUTPUT_SIZE];
+alignas(ALIGNMENT) float   nn::metaWeights  [6];
+
 // clang-format on
 
-#define INPUT_WEIGHT_MULTIPLIER  (32)
-#define HIDDEN_WEIGHT_MULTIPLIER (128)
+#define INPUT_WEIGHT_MULTIPLIER  (16)
+#define HIDDEN_WEIGHT_MULTIPLIER (256)
 
 #if defined(__AVX512F__)
 using avx_register_type_16 = __m512i;
@@ -115,6 +117,9 @@ void nn::init() {
     memoryIndex += HIDDEN_DSIZE * OUTPUT_SIZE * sizeof(int16_t);
     std::memcpy(hiddenBias, &gEvalData[memoryIndex], OUTPUT_SIZE * sizeof(int32_t));
     memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
+
+    std::memcpy(metaWeights, &gEvalData[memoryIndex], 6 * sizeof(float));
+    memoryIndex += 6 * sizeof(float);
 }
 
 int nn::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color view,
@@ -297,7 +302,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
 
     const auto acc_act = (avx_register_type_16*) history.back().summation[activePlayer];
     const auto acc_nac = (avx_register_type_16*) history.back().summation[!activePlayer];
-
+   
     // compute the dot product
     avx_register_type_32 res {};
     const auto           wgt = (avx_register_type_16*) (hiddenWeights[0]);

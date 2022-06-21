@@ -140,6 +140,7 @@ void uci::eval() {
     auto base_eval = evaluator.evaluate(board.getActivePlayer());
     std::cout << "eval=" << base_eval << std::endl;
     
+    return;
     
     const std::string h_sep = "+-------+-------+-------+-------+-------+-------+-------+-------+";
     const std::string e_sep = "|       |       |       |       |       |       |       |       |";
@@ -169,7 +170,8 @@ void uci::eval() {
             if(pc >= 0 && getPieceType(pc) != KING){
                 
                 board.unsetPiece(sq);
-                auto eval = board.evaluate();
+                evaluator.reset(&board);
+                auto eval = evaluator.evaluate(board.getActivePlayer());
                 board.setPiece(sq, pc);
                 
                 auto diff = base_eval - eval;

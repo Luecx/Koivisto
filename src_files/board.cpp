@@ -1441,9 +1441,25 @@ Score Board::evaluate(){
         - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
         - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
                 / phase_sum;
+    
+    Color a = getActivePlayer();
+    
+    float castle_our_ks = this->getCastlingRights(a == WHITE ? WHITE_KINGSIDE_CASTLING : BLACK_KINGSIDE_CASTLING);
+    float castle_our_qs = this->getCastlingRights(a == WHITE ? WHITE_QUEENSIDE_CASTLING : BLACK_QUEENSIDE_CASTLING);
+    float castle_opp_ks = this->getCastlingRights(a == WHITE ? BLACK_KINGSIDE_CASTLING : WHITE_KINGSIDE_CASTLING);
+    float castle_opp_qs = this->getCastlingRights(a == WHITE ? BLACK_QUEENSIDE_CASTLING : WHITE_QUEENSIDE_CASTLING);
+    float fifty_move_rule = this->getCurrent50MoveRuleCount() / 50.f;
+    
+    float scaling = nn::metaWeights[0] * castle_our_ks +
+                    nn::metaWeights[1] * castle_our_qs +
+                    nn::metaWeights[2] * castle_opp_ks +
+                    nn::metaWeights[3] * castle_opp_qs +
+                    nn::metaWeights[4] * fifty_move_rule +
+                    nn::metaWeights[5];
+    
     return (+     evaluation_mg_scalar
                 - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
-            * (this->evaluator.evaluate(this->getActivePlayer()));
+            * (this->evaluator.evaluate(this->getActivePlayer())) * std::max(0.0f,scaling);
 }
 
 template void Board::setPiece<true, true>(Square sq, Piece piece);
