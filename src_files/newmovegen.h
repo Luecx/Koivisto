@@ -91,6 +91,7 @@ class moveGen {
     [[nodiscard]] move::Move next();
     void                     addNoisy(move::Move m);
     void                     addQuiet(move::Move m);
+    template<bool sort>
     [[nodiscard]] move::Move nextNoisy();
     [[nodiscard]] move::Move nextQuiet();
     void                     addSearched(move::Move m);

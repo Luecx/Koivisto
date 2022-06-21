@@ -66,7 +66,7 @@ Move moveGen::next() {
             // fallthrough
         case GET_GOOD_NOISY:
             if (noisy_index < (m_mode & Q_SEARCHCHECK ? noisySize : goodNoisyCount)) 
-                return nextNoisy();
+                return nextNoisy<true>();
             if (m_mode == Q_SEARCH)
                 return 0;
             if (m_mode == Q_SEARCHCHECK) {
@@ -105,7 +105,7 @@ Move moveGen::next() {
             // fallthrough
         case GET_BAD_NOISY:
             if (noisy_index < noisySize) 
-                return nextNoisy();
+                return nextNoisy<false>();
             stage++;
             // fallthrough
         case END:
@@ -146,22 +146,28 @@ void moveGen::addQuiet(Move m) {
                              + m_fmh[getPieceTypeSqToCombination(m)];
 }
 
+template<bool sort>
 Move moveGen::nextNoisy() {
     if (m_skip) {
         lastSee = noisySee[noisy_index];
         return noisy[noisy_index++];
     }
     int bestNoisy = noisy_index;
-    for (int i = noisy_index + 1; i < noisySize; i++) {
-        if (noisyScores[i] > noisyScores[bestNoisy])
-            bestNoisy = i;
+    
+    if constexpr (sort){
+        for (int i = noisy_index + 1; i < noisySize; i++) {
+            if (noisyScores[i] > noisyScores[bestNoisy])
+                bestNoisy = i;
+        }
     }
+    
     Move m  = noisy[bestNoisy];
     lastSee = noisySee[bestNoisy];
     noisySee[bestNoisy]     = noisySee[noisy_index];
     noisyScores[bestNoisy]  = noisyScores[noisy_index];
     noisy[bestNoisy]        = noisy[noisy_index++];
     return m;
+   
 }
 
 Move moveGen::nextQuiet() {
