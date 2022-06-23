@@ -158,3 +158,19 @@ void MoveList::printMoveBits() const {
         move::printMoveBits(getMove(i), false);
     }
 }
+
+move::Move MoveList::next() {
+    move::Move      best        = moves[0];
+    move::MoveScore bestScore   = scores[0];
+    int bestIndex = 0;
+    for (int i = 1; i < size; i++) {
+        if (scores[i] > bestScore) {
+            bestIndex = i;
+            best      = moves[i];
+            bestScore = scores[i];
+        }
+    }
+    size--;
+    this->swap(bestIndex, size);
+    return best;
+}

@@ -186,6 +186,7 @@ class MoveList {
     [[nodiscard]] MoveScore  getScore(int index) const;
     void                     printMoveBits() const;
     [[nodiscard]] int        getSize() const;
+    move::Move               next();
 };
 }    // namespace move
 

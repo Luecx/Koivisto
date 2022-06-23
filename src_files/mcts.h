@@ -4,48 +4,51 @@
 #include "move.h"
 #include "bitboard.h"
 #include "board.h"
+#include "search.h"
 #include <unordered_map>
 #include <iostream>
 
-#define CHILD_COUNT
+#define CHILD_COUNT 100
 
 class Edge {
     public:
-    double visits;
-    double eval;
-    double prior;
-    move::Move move;
+    double     visits = 0;
+    double     eval   = 0;
+    double     prior  = 0;
+    move::Move move   = 0;
 
     double UTC(double parentVisits);
     double Eval();
     Edge() {};
+    Edge(move::Move m, double p) {
+        move  = m;
+        prior = p;
+    };
 };
 
 class Node {
     public:
-    move::Move move;
-    double visits;
-    double eval;
+    double     visits   = 0;
+    double     eval     = 0;
+    bool       terminal = false;
 
-    int internalChildCount;
-    Edge children[CHILD_COUNT];
+    int internalChildCount     = 0;
+    Edge children[CHILD_COUNT] = {};
 
-    void calculatePriors(Board* b);
-    void expand(Board* b);
-    void backup(Board* b);
-    Edge bestUTCEdge();
-    Edge bestScoringEdge();
-    Edge bestVisitsEdge();
+    double calculatePriors(Board* b, Search* search, bb::Depth depth);
+    double expand(Board* b, Search* search, bb::Depth depth);
+    Edge*  bestUTCEdge();
+    Edge*  bestScoringEdge();
+    Edge*  bestVisitsEdge();
 };
 
-class Tree {
-    Node* getNode(bb::U64 hash);
-    std::unordered_map<bb::U64, Node> HashMap = {};
+Node* getNode(bb::U64 hash);
 
-    bb::U64 nodeCount;
+class Tree {
+    bb::U64 nodeCount = 0;
 
     public:
-    move::Move Search(Board* b, bb::U64 maxNodes);
+    move::Move mctsSearch(Board* b, bb::U64 maxNodes, Search* search);
 };
 
 #endif

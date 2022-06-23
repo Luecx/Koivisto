@@ -27,7 +27,6 @@
 #include "newmovegen.h"
 #include "polyglot.h"
 #include "syzygy/tbprobe.h"
-#include "mcts.h"
 
 #include <thread>
 
@@ -172,6 +171,15 @@ void initLMR() {
     }
 }
 
+void Search::resetTd() {
+    // for each thread, we will reset the thread data like node counts, tablebase hits etc.
+    for (size_t i = 0; i < tds.size(); i++) {
+        // reseting the thread data
+        this->tds[i].threadID      = i;
+        this->tds[i].tbhits        = 0;
+        this->tds[i].nodes         = 0;
+    }
+}
 /**
  * returns the best move for the given board.
  * the search will stop if either the max depth is reached.
@@ -403,25 +411,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // increment the node counter for the current thread
     td->nodes++;
-
-    // force a stop when enough nodes have been searched
-    if (   timeManager->node_limit.enabled
-        && timeManager->node_limit.nodes <= td->nodes) {
-        this->timeManager->stopSearch();
-    }
-
-    // check if a stop is forced
-    if (timeManager->force_stop) {
-        td->dropOut = true;
-        return beta;
-    }
-
-    // if the time is over, we fail hard to stop the search. We don't want to call the system clock
-    // too often for speed reasons, so we only apply this when the depth is larger than 6.
-    if ((depth > 6 && !timeManager->isTimeLeft(&td->searchData))) {
-        td->dropOut = true;
-        return beta;
-    }
 
     // if its a draw by 3-fold or 50-move rule, we return a drawscore
     if (b->isDraw() && ply > 0) {
@@ -700,13 +689,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (sameMove(m, skipMove))
             continue;
 
-        // in multipv mode, exclude root moves already analysed from the search
-        if (ply == 0 && std::find(&td->rootMoves[0], &td->rootMoves[td->pvIdx], m) != &td->rootMoves[td->pvIdx])
-            continue ;
-
-        if (pv && td->threadID == 0)
-            td->pvLen[ply + 1] = 0;
-
         // check if the move gives check and/or its promoting
         bool givesCheck  = ((ONE << getSquareTo(m)) & kingCBB) ? b->givesCheck(m) : 0;
         bool isPromotion = move::isPromotion(m);
@@ -921,16 +903,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score > highestScore) {
             highestScore = score;
             bestMove     = m;
-            if (ply == 0 && (timeManager->isTimeLeft() || depth <= 2) && td->threadID == 0) {
-                // Store bestMove for bestMove
-                sd->bestMove = m;
-                alpha        = highestScore;
-            }
-            if (pv && td->threadID == 0) {
-                td->pv[ply][0] = m;
-                memcpy(&td->pv[ply][1], &td->pv[ply + 1][0], sizeof(move::Move) * td->pvLen[ply + 1]);
-                td->pvLen[ply] = td->pvLen[ply + 1] + 1;
-            }
             bestNodeCount = td->nodes - nodeCount;
         }
 
@@ -959,18 +931,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if this loop finished, we can increment the legal move counter by one which is important
         // for detecting mates
         legalMoves++;
-    }
-
-    // if we are inside a tournament game and at the root and there is only one legal move, no need to
-    // search at all.
-    if (   timeManager->match_time_limit.enabled
-        && ply          == 0
-        && legalMoves   == 1
-        && td->threadID == 0) {
-        // save best move
-        sd->bestMove = bestMove;
-        timeManager->stopSearch();
-        return staticEval;
     }
 
     // if there are no legal moves, its either stalemate or checkmate.

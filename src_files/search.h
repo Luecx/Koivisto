@@ -123,8 +123,6 @@ class Search {
     TimeManager* timeManager;
     // if smp is enabled (threadCount > 1), we need to keep track of all the threads spawned
     std::vector<std::thread> runningThreads;
-    // beside storing each thread, we need to also track the data per thread
-    std::vector<ThreadData> tds;
     // if specified below, the search will attempt to use tablebases
     // this will only work if tablebases have been initialised before
     bool useTB = false;
@@ -149,6 +147,8 @@ class Search {
     public:
     // returns the overview of the latest search
     [[nodiscard]] SearchOverview overview() const;
+    // beside storing each thread, we need to also track the data per thread
+    std::vector<ThreadData> tds;
     // enable / disable info strings
     void enableInfoStrings();
     void disableInfoStrings();
@@ -168,6 +168,7 @@ class Search {
     
     // stops the search
     void stop();
+    void resetTd();
 
     void printInfoString(bb::Depth depth, int sel_depth, bb::Score score, move::Move* pv, uint16_t pvLen,int pvIdx);
 
