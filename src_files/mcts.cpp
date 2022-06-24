@@ -17,7 +17,7 @@ void copy(Edge* e, Node* n) {
 }
 
 double Edge::UTC(double parentVisits) {
-    return (this->eval / (this->visits + 1)) + this->prior + sqrt(parentVisits) / (this->visits + 1);
+    return (this->eval / (this->visits + 1)) + this->prior + log(parentVisits) / (this->visits + 1);
 }
 
 double Edge::Eval() {
