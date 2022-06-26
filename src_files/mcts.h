@@ -16,6 +16,7 @@ class Edge {
     double     eval   = 0;
     double     prior  = 0;
     move::Move move   = 0;
+    double     abScore= -1.0;
 
     double UTC(double parentVisits);
     double Eval();
@@ -31,6 +32,7 @@ class Node {
     double     visits   = 0;
     double     eval     = 0;
     bool       terminal = false;
+    double     abScore  = 1.0;
 
     int internalChildCount     = 0;
     Edge children[CHILD_COUNT] = {};
@@ -39,6 +41,7 @@ class Node {
     double expand(Board* b, Search* search, bb::Depth depth);
     Edge*  bestUTCEdge();
     Edge*  bestScoringEdge();
+    Edge*  bestABEdge();
     Edge*  bestVisitsEdge();
 };
 

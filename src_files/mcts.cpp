@@ -12,12 +12,13 @@ double fastS(double eval) {
 }
 
 void copy(Edge* e, Node* n) {
-    e->eval = -1.0 * n->eval;
-    e->visits = n->visits;
+    e->eval    = -1.0 * n->eval;
+    e->abScore = -1.0 * n->abScore;
+    e->visits  = n->visits;
 }
 
 double Edge::UTC(double parentVisits) {
-    return (this->eval / (this->visits + 1)) + this->prior + log(parentVisits) / (this->visits + 1);
+    return (this->eval/ (this->visits + 1)) + this->prior + log(parentVisits) / (this->visits + 1);
 }
 
 double Edge::Eval() {
@@ -38,6 +39,16 @@ Edge* Node::bestScoringEdge() {
     Edge* best = &this->children[0];
     for (int i = 1; i < this->internalChildCount; i++) {
         if (best->Eval() < this->children[i].Eval()) {
+            best = &this->children[i];
+        }
+    }
+    return best;
+}
+
+Edge* Node::bestABEdge() {
+    Edge* best = &this->children[0];
+    for (int i = 1; i < this->internalChildCount; i++) {
+        if (best->abScore < this->children[i].abScore) {
             best = &this->children[i];
         }
     }
@@ -82,19 +93,23 @@ double Node::expand(Board* b, Search* search, bb::Depth depth) {
     if (this->terminal) {
         this->visits++;
         if (b->isInCheck(b->getActivePlayer())) {
-            this->eval += -1.0;
+            this->eval   += -1.0;
+            this->abScore = -1.0;
             return -1.0;
         }
+        this->abScore = 0.0;
         return 0.0;
     }
     if (b->isDraw()) {
         this->visits++;
+        this->abScore = 0.0;
         return 0.0;
     }
     if (this->visits == 0 || this->internalChildCount == 0) {
         double s   = this->calculatePriors(b, search, depth);
         this->visits += 1;
         this->eval += s;
+        this->abScore = s;
         return s * -1.0;
     } else {
         Edge* e  = this->bestUTCEdge();
@@ -105,6 +120,8 @@ double Node::expand(Board* b, Search* search, bb::Depth depth) {
         b->undoMove();
         this->visits++;
         this->eval += s;
+        e = this->bestABEdge();
+        this->abScore = e->abScore;
         return s * -1.0;
     }
 }
@@ -144,5 +161,5 @@ move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search) {
 
     //printPv();
 
-    return rootNode->bestVisitsEdge()->move;
+    return rootNode->bestABEdge()->move;
 }
