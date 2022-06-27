@@ -18,7 +18,7 @@ void copy(Edge* e, Node* n) {
 }
 
 double Edge::UTC(double parentVisits) {
-    return (this->eval/ (this->visits + 1)) + this->prior + log(parentVisits) / (this->visits + 1);
+    return (this->eval/ (this->visits + 1)) + (this->visits ? this->abScore : this->prior) + log(parentVisits) / (this->visits + 1);
 }
 
 double Edge::Eval() {
@@ -67,19 +67,19 @@ Edge* Node::bestVisitsEdge() {
 
 double Node::calculatePriors(Board* b, Search* search, bb::Depth depth) {
     generateMoves(b, &generator, 0, &search->tds[0].searchData);
-    int size            = generator.getSize();
-    int bestScore = -10000;
+    int size         = generator.getSize();
+    int bestScore    = -10000;
     for (int i = 0; i < size; i++) {
-        move::Move m    = generator.next();
+        move::Move m = generator.next();
         if (!b->isLegal(m))
             continue;
         b->move(m);
         int s = -search->pvSearch(b, -10000, 10000, 0, depth, &search->tds[0], 0, 2);
-        s = std::min(1000, std::max(-10000, s));
+        s = std::min(10000, std::max(-10000, s));
         b->undoMove();
         this->children[this->internalChildCount] = Edge(m, fastS(1.0 * s));
         this->internalChildCount++;
-        bestScore   = std::max(bestScore, s);
+        bestScore = std::max(bestScore, s);
     }
     if (this->internalChildCount == 0) {
         this->terminal = true;
@@ -106,9 +106,9 @@ double Node::expand(Board* b, Search* search, bb::Depth depth) {
         return 0.0;
     }
     if (this->visits == 0 || this->internalChildCount == 0) {
-        double s   = this->calculatePriors(b, search, depth);
+        double s      = this->calculatePriors(b, search, depth);
         this->visits += 1;
-        this->eval += s;
+        this->eval   += s;
         this->abScore = s;
         return s * -1.0;
     } else {
@@ -160,6 +160,12 @@ move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search) {
     }
 
     //printPv();
-
+    std::cout << std::endl << move::toString(rootNode->bestABEdge()->move) << " " << rootNode->bestABEdge()->visits << " " << rootNode->bestABEdge()->abScore << std::endl;
+    searchBoard.move(rootNode->bestABEdge()->move);
+    Node* n = getNode(searchBoard.zobrist());
+        for (int i = 0; i < n->internalChildCount; i++) {
+            std::cout << move::toString(n->children[i].move) << " ... " << n->children[i].visits << " ... " << n->children[i].abScore << std::endl;
+        }
+    searchBoard.undoMove();
     return rootNode->bestABEdge()->move;
 }
