@@ -70,7 +70,7 @@ std::string getValue(const std::vector<std::string>& vec, const std::string& key
  */
 void searchAndPrint(TimeManager* p_timeManager) {
     Tree tree = {};
-    Move m = tree.mctsSearch(&board, 1000, &searchObject);
+    Move m = tree.mctsSearch(&board, 18000, &searchObject, p_timeManager);
     //Move m = searchObject.bestMove(&board, p_timeManager);
     std::cout << "bestmove " << toString(m) << std::endl;
 }

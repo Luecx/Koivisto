@@ -136,14 +136,14 @@ Node* getNode(bb::U64 hash) {
     }
 }
 
-move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search) {
+move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search, TimeManager* tm) {
     Board searchBoard {*b};
     std::unordered_map<uint64_t, Node> map = {};
     HashMap = &map;
     Node* rootNode = getNode(b->zobrist());
     search->resetTd();
 
-    while (this->nodeCount < maxNodes) {
+    while (this->nodeCount < maxNodes && tm->isTimeLeft(&search->tds[0].searchData)) {
 
         rootNode->expand(&searchBoard, search, 0);
 
@@ -152,20 +152,8 @@ move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search) {
         if (this->nodeCount % 500 == 0 && this->nodeCount > 0)
             std::cout << "info depth 1 seldepth 1 score cp " << (int)(100 * rootNode->eval / rootNode->visits) << " nodes " << search->tds[0].nodes << std::endl;
            //printPv();
-        if (this->nodeCount % 500 == 0 && this->nodeCount > 0) {
-        for (int i = 0; i < rootNode->internalChildCount; i++) {
-            std::cout << move::toString(rootNode->children[i].move) << " ... " << rootNode->children[i].Eval() << std::endl;
-        }
-        }
     }
 
     //printPv();
-    std::cout << std::endl << move::toString(rootNode->bestABEdge()->move) << " " << rootNode->bestABEdge()->visits << " " << rootNode->bestABEdge()->abScore << std::endl;
-    searchBoard.move(rootNode->bestABEdge()->move);
-    Node* n = getNode(searchBoard.zobrist());
-        for (int i = 0; i < n->internalChildCount; i++) {
-            std::cout << move::toString(n->children[i].move) << " ... " << n->children[i].visits << " ... " << n->children[i].abScore << std::endl;
-        }
-    searchBoard.undoMove();
     return rootNode->bestABEdge()->move;
 }

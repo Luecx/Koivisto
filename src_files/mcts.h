@@ -51,7 +51,7 @@ class Tree {
     bb::U64 nodeCount = 0;
 
     public:
-    move::Move mctsSearch(Board* b, bb::U64 maxNodes, Search* search);
+    move::Move mctsSearch(Board* b, bb::U64 maxNodes, Search* search, TimeManager* tm);
 };
 
 #endif
