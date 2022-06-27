@@ -150,7 +150,7 @@ move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search, TimeMana
         this->nodeCount++;
 
         if (this->nodeCount % 500 == 0 && this->nodeCount > 0)
-            std::cout << "info depth 1 seldepth 1 score cp " << (int)(100 * rootNode->eval / rootNode->visits) << " nodes " << search->tds[0].nodes << std::endl;
+            std::cout << "info depth 1 seldepth 1 score cp " << (int)(100 * rootNode->abScore) << " nodes " << search->tds[0].nodes << " pv " << move::toString(rootNode->bestABEdge()->move) << std::endl;
            //printPv();
     }
 
