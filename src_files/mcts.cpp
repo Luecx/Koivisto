@@ -18,7 +18,7 @@ void copy(Edge* e, Node* n) {
 }
 
 double Edge::UTC(double parentVisits) {
-    return (this->eval/ (this->visits + 1)) + (this->visits ? this->abScore : this->prior) + log(parentVisits) / (this->visits + 1);
+    return (this->eval / (this->visits + VALUE_SCALE)) + (this->visits ? this->abScore : this->prior) * VALUE_US + log(parentVisits * VALUE_US) / (this->visits + VALUE_SCALE) * VALUE_SCALE;
 }
 
 double Edge::Eval() {
@@ -77,37 +77,37 @@ double Node::calculatePriors(Board* b, Search* search, bb::Depth depth) {
         int s = -search->pvSearch(b, -10000, 10000, 0, depth, &search->tds[0], 0, 2);
         s = std::min(10000, std::max(-10000, s));
         b->undoMove();
-        this->children[this->internalChildCount] = Edge(m, fastS(1.0 * s));
+        this->children[this->internalChildCount] = Edge(m, fastS(1.0 * s) * VALUE_SCALE);
         this->internalChildCount++;
         bestScore = std::max(bestScore, s);
     }
     if (this->internalChildCount == 0) {
         this->terminal = true;
-        this->eval = b->isInCheck(b->getActivePlayer()) ? -1.0 : 0.0;
+        this->eval = b->isInCheck(b->getActivePlayer()) ? LOSS : DRAW;
         return this->eval;
     }
-    return fastS(1.0 * bestScore);
+    return fastS(1.0 * bestScore) * VALUE_SCALE;
 }
 
 double Node::expand(Board* b, Search* search, bb::Depth depth) {
     if (this->terminal) {
-        this->visits++;
+        this->visits += VALUE_SCALE;
         if (b->isInCheck(b->getActivePlayer())) {
-            this->eval   += -1.0;
-            this->abScore = -1.0;
-            return -1.0;
+            this->eval   += LOSS;
+            this->abScore = LOSS;
+            return LOSS;
         }
-        this->abScore = 0.0;
-        return 0.0;
+        this->abScore = DRAW;
+        return DRAW;
     }
     if (b->isDraw()) {
-        this->visits++;
-        this->abScore = 0.0;
-        return 0.0;
+        this->visits += VALUE_SCALE;
+        this->abScore = DRAW;
+        return DRAW;
     }
     if (this->visits == 0 || this->internalChildCount == 0) {
         double s      = this->calculatePriors(b, search, depth);
-        this->visits += 1;
+        this->visits += VALUE_SCALE;
         this->eval   += s;
         this->abScore = s;
         return s * -1.0;
@@ -118,7 +118,7 @@ double Node::expand(Board* b, Search* search, bb::Depth depth) {
         double s = n->expand(b, search, depth + 1);
         copy(e, n);
         b->undoMove();
-        this->visits++;
+        this->visits += VALUE_SCALE;
         this->eval += s;
         e = this->bestABEdge();
         this->abScore = e->abScore;
@@ -136,6 +136,18 @@ Node* getNode(bb::U64 hash) {
     }
 }
 
+void Tree::printPv(Board* b) {
+    Node* n = getNode(b->zobrist());
+    if (n->terminal || n->internalChildCount == 0 || b->isDraw()) {
+        std::cout << std::endl;
+        return;
+    }
+    std::cout << " " << move::toString(n->bestABEdge()->move);
+    b->move(n->bestABEdge()->move);
+    printPv(b);
+    b->undoMove();
+}
+
 move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search, TimeManager* tm) {
     Board searchBoard {*b};
     std::unordered_map<uint64_t, Node> map = {};
@@ -149,11 +161,12 @@ move::Move Tree::mctsSearch(Board* b, bb::U64 maxNodes, Search* search, TimeMana
 
         this->nodeCount++;
 
-        if (this->nodeCount % 500 == 0 && this->nodeCount > 0)
-            std::cout << "info depth 1 seldepth 1 score cp " << (int)(100 * rootNode->abScore) << " nodes " << search->tds[0].nodes << " pv " << move::toString(rootNode->bestABEdge()->move) << std::endl;
-           //printPv();
+        if (this->nodeCount % 500 == 0 && this->nodeCount > 0) {
+            std::cout << "info depth 1 seldepth 1 score cp " << (int)(100 * rootNode->abScore * VALUE_US) << " nodes " << search->tds[0].nodes << " pv";
+           this->printPv(&searchBoard);
+        }
     }
 
-    //printPv();
+    this->printPv(&searchBoard);
     return rootNode->bestABEdge()->move;
 }
