@@ -37,6 +37,8 @@ struct SearchData {
     int      cmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]        = {{{0}}};
     // followup move history
     int      fmh[bb::N_PIECE_TYPES * bb::N_SQUARES + 1][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]    = {{{0}}};
+    // move history table
+    int      plyHistory[bb::MAX_INTERNAL_PLY]                                                               = {0};
     // kill table, +2 used to make sure we can always reset +2
     move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                        = {{{0}}};
     // threat data

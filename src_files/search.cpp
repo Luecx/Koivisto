@@ -847,9 +847,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
+        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
+                                       b->getPreviousMove(2), mainThreat);
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
-                                           b->getPreviousMove(2), mainThreat);
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
@@ -869,7 +869,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
-
+        
+        sd->plyHistory[ply] = history;
         // doing the move
         b->move<true>(m, table);
 

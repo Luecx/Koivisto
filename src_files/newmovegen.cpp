@@ -51,6 +51,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_cmh           = &sd->cmh[getPieceTypeSqToCombination(previous)][c][0];
     m_fmh           = &sd->fmh[followup ? getPieceTypeSqToCombination(followup) : 384][c][0];
     m_th            = &sd->th[c][m_threatSquare][0];
+    ph              = ply > 0 ? 512 + sd->plyHistory[ply - 1] : 0;
 }
 
 Move moveGen::next() {
@@ -142,7 +143,7 @@ void moveGen::addQuiet(Move m) {
         return;
     quiets[quietSize] = m;
     quietScores[quietSize++] = m_th[getSqToSqFromCombination(m)] 
-                             + m_cmh[getPieceTypeSqToCombination(m)] 
+                             + m_cmh[getPieceTypeSqToCombination(m)] * ph / 512
                              + m_fmh[getPieceTypeSqToCombination(m)];
 }
 

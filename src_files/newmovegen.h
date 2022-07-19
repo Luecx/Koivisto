@@ -78,6 +78,7 @@ class moveGen {
     int*            m_th;
     int*            m_cmh;
     int*            m_fmh;
+    int             ph;
     bb::Square      m_threatSquare;
     bb::U64         m_checkerSq;
     bb::Color       c;
