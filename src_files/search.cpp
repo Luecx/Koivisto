@@ -798,10 +798,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
                 if (lmrFactor != nullptr) {
+                    if (*lmrFactor < 2) extension++;
                     depth += *lmrFactor;
                     *lmrFactor = 0;
+                } else {
+                    extension++;
                 }
-                extension++;
             } else if (score >= beta) {
                 return score;
             } else if (en.score >= beta) {
