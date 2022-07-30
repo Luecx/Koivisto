@@ -782,7 +782,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
         // node turns out to be singular. Also standard multi-cut.
         // *******************************************************************************************
-        if (depth >= 8
+        if (depth >= 6
             && !skipMove
             && !inCheck
             &&  sameMove(m, hashMove)
@@ -820,7 +820,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (legalMoves == 0) {
                 sd->reduce = true;
             }
-        } else if (depth < 8
+        } else if (depth < 6
                && !skipMove
                && !inCheck
                &&  sameMove(m, hashMove)
