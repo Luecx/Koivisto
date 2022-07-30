@@ -820,8 +820,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (legalMoves == 0) {
                 sd->reduce = true;
             }
-        } else if (depth < 8
-               && !skipMove
+        } else if (!skipMove
                && !inCheck
                &&  sameMove(m, hashMove)
                &&  ply > 0
