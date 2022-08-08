@@ -898,6 +898,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->sideToReduce = b->getActivePlayer();
             }
 
+            if (!extension)
+                extension = en.zobrist == key >> 32 && en.type == ALL_NODE;
+
             if (lmr && score > alpha)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search
