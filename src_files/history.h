@@ -47,6 +47,7 @@ struct SearchData {
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                                                  = 1;
+    bb::Score    rootScore                                                                                  = 0;
 
     [[nodiscard]] int  getHistories(move::Move m, bb::Color side, move::Move previous, move::Move followup, bb::Square threatSquare) const;
 

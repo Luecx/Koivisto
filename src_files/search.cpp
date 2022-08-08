@@ -284,6 +284,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
                 while (this->timeManager->isTimeLeft()) {
                     sDepth = sDepth < depth - 3 ? depth - 3 : sDepth;
                     score  = this->pvSearch(&searchBoard, alpha, beta, sDepth, 0, td, 0, 2);
+                    td->searchData.rootScore = score;
                     window += window;
                     // dont widen the window above a size of 500
                     if (window > 500)
@@ -874,7 +875,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         b->move<true>(m, table);
 
         // adjust the extension policy for checks.
-        if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
+        if (extension == 0 && depth > 4 && abs(sd->rootScore) > 10 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
