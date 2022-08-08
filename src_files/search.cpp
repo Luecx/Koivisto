@@ -691,6 +691,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
+    bool        singular        = false;
 
     Move m;
     // loop over all moves in the movelist
@@ -797,6 +798,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             // get the score from recursive call
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
+                singular = true;
                 if (lmrFactor != nullptr) {
                     depth += *lmrFactor;
                     *lmrFactor = 0;
@@ -944,7 +946,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->setKiller(m, ply, b->getActivePlayer());
 
             // update history scores
-            mGen->updateHistory(depth + (staticEval < alpha));
+            mGen->updateHistory(depth + (staticEval < alpha) + singular);
 
             return highestScore;
         }
