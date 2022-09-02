@@ -32,6 +32,7 @@ PGO_POST_FLAGS = -fprofile-use -fno-peel-loops -fno-tracer
 
 # options
 NAMING   ?= 1
+VALGRIND ?= 1
 STATIC   ?= 0
 NATIVE   ?= 0
 DETECT   ?= 1
@@ -133,6 +134,10 @@ endif
 
 ifeq ($(LTO),1)
 	override FLAGS += -flto
+endif
+
+ifeq ($(VALGRIND),1)
+	override FLAGS += -lstdc++
 endif
 
 ifeq ($(STATIC),1)
@@ -266,6 +271,9 @@ native:
 
 pgo:
 	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=1 LTO=1 DETECT=1 NAMING=$(NAMING) STATIC=1 EXE_NAME=$(EXE_NAME)
+
+valgrind:
+	$(_MAKE) build DEBUG=0 NATIVE=1 PGO=0 LTO=1 DETECT=1 NAMING=$(NAMING) STATIC=0 VALGRIND=1 EXE_NAME=$(EXE_NAME)
 
 overview:
 	$(info NAME      : $(NAME))
