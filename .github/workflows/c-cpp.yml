@@ -2,6 +2,7 @@ name: C/C++ CI
 
 on:
   push:
+  pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -13,7 +14,7 @@ jobs:
     strategy:
       matrix:
         compiler: [g++-9]
-        target: [openbench, native, release]
+        target: [openbench, native, valgrind]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,9 +23,16 @@ jobs:
         run: |
          cd src_files
          make ${{ matrix.target }} CXX=${{ matrix.compiler }} EXE=../bin/Koivisto
-
+      - name: Check valgrind
+        if: matrix.target == 'valgrind'
+        run: |
+         sudo apt-get install g++
+         sudo apt update
+         sudo apt install expect valgrind g++-multilib qemu-user
+         cd bin
+         valgrind --error-exitcode=1 ./Koivisto bench
       - name: Check bench matches commit message
-        if: matrix.target == 'openbench'
+        if: matrix.target == 'openbench' && github.event_name == 'push'
         run: |
           cd bin
           commit_bench=$(git show --summary | grep -o "bench: [0-9]*" | awk '{ print $NF }')
@@ -39,7 +47,7 @@ jobs:
       matrix:
         config:
           - { system: mingw64, package: x86_64-gcc, compiler: g++ }
-        target: [openbench, native, release]
+        target: [openbench, native]
 
     steps:
       - uses: actions/checkout@v2
@@ -59,7 +67,7 @@ jobs:
          make ${{ matrix.target }} CXX=${{ matrix.config.compiler }} EXE=../bin/Koivisto
 
       - name: Check bench matches commit message
-        if: matrix.target == 'openbench'
+        if: matrix.target == 'openbench' && github.event_name == 'push'
         shell: msys2 {0}
         run: |
           cd bin
