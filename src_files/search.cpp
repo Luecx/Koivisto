@@ -1400,10 +1400,10 @@ Move Search::probeDTZ(Board* board) {
 
         // check if it's the same.
         if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if (   (    promo == 6
+            if (   (    promo == 5
                     && !isPromotion(m))
                 || (isPromotion(m)
-                    && promo < 6
+                    && promo < 5
                     && getPromotionPieceType(m) == promo)) {
                 std::cout << "info"
                           << " depth "      << static_cast<int>(dtz)
