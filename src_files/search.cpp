@@ -578,10 +578,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta) {
             score = qSearch(b, alpha, beta, ply, td);
-            if (score < beta) {
+            if (score < beta)
                 return score;
-            } else if (depth == 1)
-                return beta;
         }
         // *******************************************************************************************
         // static null move pruning:
