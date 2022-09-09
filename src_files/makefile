@@ -12,7 +12,7 @@ _SRCS     := $(_SRC)/*.cpp $(_SRC)/syzygy/tbprobe.cpp
 
 # engine name and version
 NAME       = Koivisto
-MINOR      = 13
+MINOR      = 14
 MAJOR      = 8
 MAKROS     = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
