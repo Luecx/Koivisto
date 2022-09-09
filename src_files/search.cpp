@@ -608,7 +608,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->move_null();
             score =
                 -pvSearch(b, -beta, 1 - beta,
-                          depth - (depth / 4 + 3) * ONE_PLY
+                          depth - (depth / 4 + 2) * ONE_PLY
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3) - !enemyThreats,
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
