@@ -23,9 +23,10 @@ using namespace attacks;
 using namespace bb;
 using namespace move;
 
-// static const int piece_values[6] = {
-//     90, 463, 474, 577, 1359, 0,
-// };
+
+static const int piece_values[6] = {
+    90, 463, 474, 577, 1359, 0,
+};
 
 void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq) {
     m_sd            = sd;

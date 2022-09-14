@@ -8,11 +8,13 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 CXX        = g++
 _LIBS_WL  := -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 _LIBS     := -pthread
-_SRCS     := $(_SRC)/*.cpp $(_SRC)/syzygy/tbprobe.cpp
+_CXXSRCS  := $(_SRC)/*.cpp
+_CSRCS	  := $(_SRC)/syzygy/tbprobe.c
+_SRCS     := $(_CSRCS) $(_CXXSRCS)
 
 # engine name and version
 NAME       = Koivisto
-MINOR      = 14
+MINOR      = 15
 MAJOR      = 8
 MAKROS     = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
