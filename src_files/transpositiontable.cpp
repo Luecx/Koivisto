@@ -135,12 +135,13 @@ bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, 
         //  allowing more localized search results to be stored in the TT. A hard replacement scheme
         //  has been tested on another engine, and has been shown to be worse (there is a limit to how
         //  great of a depth override should occur).
-
+        
+        bb::Depth ageDiff = static_cast<bb::Depth>((m_currentAge - enP->getAge()) & move::MASK<8>);
         //  This idea of replacement can be found in many strong engines (SF and Ethereal), however
         //  they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
-        if (   enP->getAge() != m_currentAge
-            || type == PV_NODE
-            || (enP->type    != PV_NODE && enP->depth <= depth)
+        if (
+               type == PV_NODE
+            || (enP->type    != PV_NODE && enP->depth <= depth + 2.5 * ageDiff)
             || (enP->zobrist == key     && enP->depth <= depth * 2)) {
             enP->set(key, score, move, type, depth, eval);
             enP->setAge(m_currentAge);
