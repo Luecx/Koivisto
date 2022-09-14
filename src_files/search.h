@@ -22,11 +22,13 @@
 
 #include "bitboard.h"
 #include "board.h"
+#include "densenetwork.h"
+#include "denseweights.h"
+#include "eval.h"
 #include "history.h"
+#include "newmovegen.h"
 #include "timemanager.h"
 #include "transpositiontable.h"
-#include "eval.h"
-#include "newmovegen.h"
 
 #include <chrono>
 #include <cmath>
@@ -125,6 +127,8 @@ class Search {
     std::vector<std::thread> runningThreads;
     // beside storing each thread, we need to also track the data per thread
     std::vector<ThreadData> tds;
+    // neural network to evaluate the LMR
+    dense_network::Network<16, 8, 1> network {LMR_NET_WEIGHTS};
     // if specified below, the search will attempt to use tablebases
     // this will only work if tablebases have been initialised before
     bool useTB = false;

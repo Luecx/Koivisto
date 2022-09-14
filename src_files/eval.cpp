@@ -104,6 +104,8 @@ inline int32_t sumRegisterEpi32(avx_register_type_32& reg) {
 #endif
 }
 
+
+
 void nn::init() {
     int memoryIndex = 0;
     std::memcpy(inputWeights, &gEvalData[memoryIndex], INPUT_SIZE * HIDDEN_SIZE * sizeof(int16_t));

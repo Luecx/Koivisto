@@ -18,16 +18,18 @@
  ****************************************************************************************************/
 
 #include "search.h"
+
 #include "attacks.h"
 #include "bitboard.h"
 #include "history.h"
-#include "timemanager.h"
-#include "uciassert.h"
 #include "movegen.h"
 #include "newmovegen.h"
 #include "polyglot.h"
 #include "syzygy/tbprobe.h"
+#include "timemanager.h"
+#include "uciassert.h"
 
+#include <fstream>
 #include <thread>
 
 using namespace attacks;
@@ -43,6 +45,7 @@ int  LMR_DIV          = 267;
 
 int  lmp[2][8]        = {{0, 2, 3, 5, 8, 12, 17, 23}, {0, 3, 6, 9, 12, 18, 28, 40}};
 
+std::ofstream outfile{"test.txt"};
 /**
  * =================================================================================
  *                              S E A R C H
@@ -829,8 +832,30 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         U64   nodeCount = td->nodes;
-
         
+//        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
+//                                       b->getPreviousMove(2), mainThreat);
+////        Depth lmr = round(network.feed({
+////                  (float) legalMoves ,
+////                  (float) isCapture(m),
+////                  (float) isCastle(m),
+////                  (float) depth,
+////                  (float) staticEval / 1024,
+////                  (float) (hashMove != 0),
+////                  (float) history / 1024,
+////                  (float) isImproving,
+////                  (float) inCheck,
+////                  (float) sd->isKiller(m, ply, b->getActivePlayer()),
+////                  (float) staticExchangeEval / 1024,
+////                  (float) isPromotion,
+////                  (float) sd->targetReached,
+////                  (float) bitCount(getNewThreats(b, m)),
+////                  (float) ply,
+////                  (float) pv
+////        })[0]);
+//        Depth lmr = 0;
+        
+        //-------------------------------------------------------------------------------------------
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
@@ -845,13 +870,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
             lmr++;
 
+        int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
+                                       b->getPreviousMove(2), mainThreat);
         if (lmr) {
-            int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
-                                           b->getPreviousMove(2), mainThreat);
             lmr         = lmr - history / 150;
             lmr += !isImproving;
             lmr -= pv;
-            if (!sd->targetReached) 
+            if (!sd->targetReached)
                 lmr++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
                 lmr--;
@@ -867,7 +892,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
         }
-
+        
         // doing the move
         b->move<true>(m, table);
 

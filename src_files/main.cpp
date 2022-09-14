@@ -17,9 +17,17 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+#include "densenetwork.h"
+#include "denseweights.h"
 #include "uci.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     uci::mainloop(argc, argv);
     return 0;
+    //    using namespace dense_network;
+    //
+    //    Network<16, 8, 1> network {LMR_NET_WEIGHTS};
+    //    float             input[16] {8,0,0,9,-254 / 1024,1,-216 / 1024,0,0,0,1 / 1024,0,1,0,4,0};
+    //
+    //    std::cout << round(network.feed(input)[0]) << std::endl;
 }
