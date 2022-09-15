@@ -807,7 +807,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = depth - 2;
             }
             if (history > 256*(2-isCapture(m)))
-                lmr = 0;
+                lmr = -1;
         }
 
         // doing the move
