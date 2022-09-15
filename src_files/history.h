@@ -26,24 +26,24 @@
 struct SearchData {
     move::Move     bestMove = 0;
     // Effort spent
-    int64_t  spentEffort[bb::N_SQUARES][bb::N_SQUARES]                                                      = {{0}};
+    int64_t  spentEffort[bb::N_SQUARES][bb::N_SQUARES]                                                      = {0};
     // EvalImprovement
-    int      maxImprovement[bb::N_SQUARES][bb::N_SQUARES]                                                   = {{0}};
+    int      maxImprovement[bb::N_SQUARES][bb::N_SQUARES]                                                   = {0};
     // capture history table (side-from-to)
-    int      captureHistory[bb::N_COLORS][bb::N_SQUARES * bb::N_SQUARES]                                    = {{0}};
+    int      captureHistory[bb::N_COLORS][bb::N_SQUARES * bb::N_SQUARES]                                    = {0};
     // threat history
-    int      th[bb::N_COLORS][bb::N_SQUARES + 1][bb::N_SQUARES * bb::N_SQUARES]                             = {{{0}}};
+    int      th[bb::N_COLORS][bb::N_SQUARES + 1][bb::N_SQUARES * bb::N_SQUARES]                             = {0};
     // counter move history table (prev_piece, prev_to, side, move_piece, move_to)
-    int      cmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]        = {{{0}}};
+    int      cmh[bb::N_PIECE_TYPES * bb::N_SQUARES][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]        = {0};
     // followup move history
-    int      fmh[bb::N_PIECE_TYPES * bb::N_SQUARES + 1][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]    = {{{0}}};
+    int      fmh[bb::N_PIECE_TYPES * bb::N_SQUARES + 1][bb::N_COLORS][bb::N_PIECE_TYPES * bb::N_SQUARES]    = {0};
     // kill table, +2 used to make sure we can always reset +2
-    move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                        = {{{0}}};
+    move::Move     killer[bb::N_COLORS][bb::MAX_INTERNAL_PLY + 2][2]                                        = {0};
     // threat data
-    int      threatCount[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                                = {{0}};
+    int      threatCount[bb::MAX_INTERNAL_PLY][bb::N_COLORS]                                                = {0};
     bb::Square   mainThreat[bb::MAX_INTERNAL_PLY]                                                           = {0};
     // eval history across plies
-    bb::Score    eval[bb::N_COLORS][bb::MAX_INTERNAL_PLY]                                                   = {{0}};
+    bb::Score    eval[bb::N_COLORS][bb::MAX_INTERNAL_PLY]                                                   = {0};
     bool     sideToReduce;
     bool     reduce;
     bool     targetReached                                                                                  = 1;

@@ -39,23 +39,6 @@
 #include <vector>
 
 #define MAX_THREADS 256
-#define MAX_MULTIPV 256
-
-struct RootMove {
-    int seldepth;
-    bb::Score score;
-    bb::Score prevScore;
-    move::Move pv[bb::MAX_INTERNAL_PLY + 1];
-    uint16_t pvLen;
-
-    inline bool operator==(const move::Move& m) const {
-        return move::sameMove(pv[0], m);
-    }
-    inline bool operator <(const RootMove& other) const {
-        return other.score != score ? other.score < score
-                                    : other.prevScore < prevScore;
-    }
-};
 
 /**
  * data about each thread
@@ -71,7 +54,7 @@ struct ThreadData {
     int        tbhits   = 0;
     // if we dropout from search (due to timeout for example)
     bool       dropOut  = false;
-    // search data which contains additional information like history tables etc
+    
     SearchData searchData {};
     // move generators to not reallocate
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
@@ -83,10 +66,6 @@ struct ThreadData {
     move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
     // we also need to track the partial pv length of each subtree
     uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
-    
-    // each thread gets informations
-    RootMove   rootMoves[256];
-    uint16_t   rootMoveCount;
 
     ThreadData();
 
@@ -105,23 +84,11 @@ struct SearchOverview {
 } __attribute__((aligned(32)));
 
 class Search {
-    // how many threads to use for smp
-    int threadCount = 1;
-    // compute multiPv lines at the same time
-    // since multipv will be lowered if there are not enough legal moves, we store
-    // the default multiPv value which is adjusted by uci and multiPv which is just the value
-    // being used in search
-    int multiPv        = 1;
-    int multiPvDefault = 1;
-    // use a transposition table to store transpositions
-    TranspositionTable* table;
-    // the search overview stores information from the latest search and includes information
-    // defined above (SearchOverview struct)
-    SearchOverview searchOverview;
-    // the search keeps a reference to the time manager which tells the search when
-    // to stop the search based on enabled limits like node-limits, time-limits and depth-limits.
-    TimeManager* timeManager;
-    // if smp is enabled (threadCount > 1), we need to keep track of all the threads spawned
+    int                      threadCount = 1;
+    TranspositionTable*      table;
+    SearchOverview           searchOverview;
+
+    TimeManager*             timeManager;
     std::vector<std::thread> runningThreads;
     // beside storing each thread, we need to also track the data per thread
     std::vector<ThreadData> tds;
@@ -163,13 +130,9 @@ class Search {
     void setThreads(int threads);
     // set the hash size for the transposition table
     void setHashSize(int hashSize);
-    // sets the amount of lines to analyse
-    void setMultiPv(int multiPvCount);
-    
-    // stops the search
     void stop();
 
-    void printInfoString(bb::Depth depth, int sel_depth, bb::Score score, move::Move* pv, uint16_t pvLen,int pvIdx);
+    void printInfoString(bb::Depth depth, bb::Score score, move::Move* pv, uint16_t pvLen);
 
     // basic move functions
     move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);

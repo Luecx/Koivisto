@@ -120,7 +120,6 @@ void uci::uci() {
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;
     std::cout << "option name Threads type spin default 1 min 1 max " << MAX_THREADS << std::endl;
-    std::cout << "option name MultiPV type spin default 1 min 1 max " << MAX_MULTIPV << std::endl;
     std::cout << "option name OwnBook type check default false" << std::endl;
     std::cout << "option name BookPath type string" << std::endl;
     std::cout << "option name SyzygyPath type string default" << std::endl;
@@ -334,9 +333,6 @@ void uci::set_option(const std::string& name, const std::string& value) {
     } else if (name == "Threads") {
         int count           = stoi(value);
         searchObject.setThreads(count);
-    } else if (name == "MultiPV") {
-        int count           = stoi(value);
-        searchObject.setMultiPv(count);
     } else if (name == "OwnBook") {
         polyglot::book.enabled = (value == "true");
     } else if (name == "BookPath") {
