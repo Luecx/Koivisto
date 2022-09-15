@@ -120,13 +120,13 @@ Entry TranspositionTable::get(bb::U64 zobrist) const {
  * @return
  */
 bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type,
-                             bb::Depth depth, bb::Score eval) {
+                             bb::Depth depth, bb::Depth mr50, bb::Score eval) {
     bb::U64 index  = zobrist & m_mask;
     Entry* enP = &m_entries[index];
     bb::U32 key    = zobrist >> 32;
 
     if (enP->zobrist == 0) {
-        enP->set(key, score, move, type, depth, eval);
+        enP->set(key, score, move, type, depth, mr50, eval);
         enP->setAge(m_currentAge);
         return true;
     } else {
@@ -142,7 +142,7 @@ bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, 
             || type == PV_NODE
             || (enP->type    != PV_NODE && enP->depth <= depth)
             || (enP->zobrist == key     && enP->depth <= depth * 2)) {
-            enP->set(key, score, move, type, depth, eval);
+            enP->set(key, score, move, type, depth, mr50, eval);
             enP->setAge(m_currentAge);
             return true;
         }
