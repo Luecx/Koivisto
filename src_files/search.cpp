@@ -776,7 +776,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // compute the lmr based on the depth, the amount of legal moves etc.
         // we dont want to reduce if its the first move we search, or a capture with a positive see
         // score or if the depth is too small. furthermore no queen promotions are reduced
-        Depth lmr       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2
+        float lmr_float       = (legalMoves < 2 - (hashMove != 0) + pv || depth <= 2
                      || (isCapture(m) && staticExchangeEval > 0)
                      || (isPromotion && (getPromotionPieceType(m) == QUEEN)))
                               ? 0
@@ -785,30 +785,32 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // increase reduction if we are behind a null move, depending on which side we are looking at.
         // this is a sound reduction in theory.
         if (legalMoves > 0 && depth > 2 && b->getActivePlayer() == behindNMP)
-            lmr++;
+            lmr_float++;
 
-        if (lmr) {
+        if (lmr_float) {
             int history = sd->getHistories(m, b->getActivePlayer(), b->getPreviousMove(),
                                            b->getPreviousMove(2), mainThreat);
-            lmr         = lmr - history / 150;
-            lmr += !isImproving;
-            lmr -= pv;
+            lmr_float         = lmr_float - history / 150;
+            lmr_float += !isImproving;
+            lmr_float -= pv;
             if (!sd->targetReached) 
-                lmr++;
+                lmr_float++;
             if (sd->isKiller(m, ply, b->getActivePlayer()))
-                lmr--;
+                lmr_float--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
-                lmr++;
-            lmr -= bitCount(getNewThreats(b, m));
-            if (lmr > MAX_PLY) {
-                lmr = 0;
+                lmr_float+=0.7;
+            lmr_float -= bitCount(getNewThreats(b, m));
+            if (lmr_float > MAX_PLY) {
+                lmr_float = 0;
             }
-            if (lmr > depth - 2) {
-                lmr = depth - 2;
+            if (lmr_float > depth - 2) {
+                lmr_float = depth - 2;
             }
             if (history > 256*(2-isCapture(m)))
-                lmr = 0;
+                lmr_float = 0;
         }
+        
+        Depth lmr = (int) (lmr_float);
 
         // doing the move
         b->move<true>(m, table);
