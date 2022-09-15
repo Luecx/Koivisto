@@ -152,4 +152,8 @@ extern int LMR_DIV;
 
 void       initLMR();
 
+bb::Score scoreToTT(bb::Score s, int plies);
+
+bb::Score scoreFromTT(bb::Score s, int plies);
+
 #endif    // KOIVISTO_SEARCH_H

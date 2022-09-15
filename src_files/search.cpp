@@ -422,6 +422,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // return the tablebase score if the depth of that entry is larger than our current depth.
     // ***********************************************************************************************
     Entry en = table->get(key);
+    bb::Score ttScore = scoreFromTT(en.score, ply);
 
     if (en.zobrist == key >> 32 && !skipMove) {
         hashMove = en.move;
@@ -432,16 +433,16 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // search has to be searched to great depth is to make sure that we dont
         // cut in an unsafe way. Well if the nullmove search fails high, we dont cut anything,
         // we still do a normal search. Thus the standard of proof required is different.
-        if (!pv && en.depth + (!b->getPreviousMove() && en.score >= beta) * 100 >= depth) {
+        if (!pv && en.depth + (!b->getPreviousMove() && ttScore >= beta) * 100 >= depth) {
             if (en.type == PV_NODE) {
-                return en.score;
+                return ttScore;
             } else if (en.type == CUT_NODE) {
-                if (en.score >= beta) {
-                    return en.score;
+                if (ttScore >= beta) {
+                    return ttScore;
                 }
             } else if (en.type & ALL_NODE) {
-                if (en.score <= alpha) {
-                    return en.score;
+                if (ttScore <= alpha) {
+                    return ttScore;
                 }
             }
         }
@@ -460,7 +461,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         mainThreat   = sd->mainThreat [ply];
         
         if (ply > 0 && b->getPreviousMove() != 0) {
-            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE) {
+            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE_MIN) {
                 int improvement = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
                 sd->maxImprovement[getSquareFrom(b->getPreviousMove())]
                                   [getSquareTo  (b->getPreviousMove())] = improvement;
@@ -475,9 +476,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (en.zobrist == key >> 32) {
         // adjusting eval
         if (   (en.type == PV_NODE)
-            || (en.type == CUT_NODE && staticEval < en.score)
-            || (en.type  & ALL_NODE && staticEval > en.score)) {
-            staticEval = en.score;
+            || (en.type == CUT_NODE && staticEval < ttScore)
+            || (en.type  & ALL_NODE && staticEval > ttScore)) {
+            staticEval = ttScore;
         }
     } 
 
@@ -552,6 +553,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
+                // dont return mate/tb scores
+                if (score >= TB_WIN_SCORE_MIN)
+                    score = beta;
+
                 return score;
             }
         }
@@ -568,7 +573,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     Score     betaCut = beta + 130;
     if (!inCheck && !pv && depth > 4 && !skipMove && ownThreats
-        && !(hashMove && en.depth >= depth - 3 && en.score < betaCut)) {
+        && !(hashMove && en.depth >= depth - 3 && ttScore < betaCut)) {
         mGen->init(sd, b, ply, 0, 0, 0, Q_SEARCH, 0);
         Move m;
         while ((m = mGen->next())) {
@@ -588,7 +593,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, qScore, m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, scoreToTT(qScore, ply), m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
                 return betaCut;
             }
         }
@@ -724,11 +729,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             &&  legalMoves == 0
             &&  ply        >  0
             &&  en.depth   >= depth - 3
-            &&  abs(en.score) < MIN_MATE_SCORE
+            &&  abs(ttScore) < MIN_MATE_SCORE
             && (   en.type == CUT_NODE
                 || en.type == PV_NODE)) {
             // compute beta cut value
-            betaCut = std::min(static_cast<int>(en.score - SE_MARGIN_STATIC - depth * 2), static_cast<int>(beta));
+            betaCut = std::min(static_cast<int>(ttScore - SE_MARGIN_STATIC - depth * 2), static_cast<int>(beta));
             // get the score from recursive call
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
@@ -739,7 +744,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 extension++;
             } else if (score >= beta) {
                 return score;
-            } else if (en.score >= beta) {
+            } else if (ttScore >= beta) {
                 score = pvSearch(b, beta - 1, beta, (depth >> 1) + 3, ply, td, m, behindNMP);
                 if (score >= beta)
                     return score;
@@ -872,7 +877,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(key, score, m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, scoreToTT(score, ply), m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
@@ -921,7 +926,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // havent skipped a move due to our extension policy.
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
-            table->put(key, highestScore, bestMove, PV_NODE, depth,
+            table->put(key, scoreToTT(highestScore, ply), bestMove, PV_NODE, depth,
                        sd->eval[b->getActivePlayer()][ply]);
         } else {
             if (hashMove && en.type == CUT_NODE) {
@@ -931,10 +936,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
 
             if (depth > 7 && bestMove && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
-                table->put(key, highestScore, bestMove, FORCED_ALL_NODE, depth,
+                table->put(key, scoreToTT(highestScore, ply), bestMove, FORCED_ALL_NODE, depth,
                            sd->eval[b->getActivePlayer()][ply]);
             } else {
-                table->put(key, highestScore, bestMove, ALL_NODE, depth,
+                table->put(key, scoreToTT(highestScore, ply), bestMove, ALL_NODE, depth,
                            sd->eval[b->getActivePlayer()][ply]);
             }
         }
@@ -965,6 +970,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     U64         key        = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
+    bb::Score ttScore = scoreFromTT(en.score, ply);
 
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
@@ -977,15 +983,16 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // ***********************************************************************************************
 
     if (en.zobrist == key >> 32) {
+
         if (en.type == PV_NODE) {
-            return en.score;
+            return ttScore;
         } else if (en.type == CUT_NODE) {
-            if (en.score >= beta) {
-                return en.score;
+            if (ttScore >= beta) {
+                return ttScore;
             }
         } else if (en.type & ALL_NODE) {
-            if (en.score <= alpha) {
-                return en.score;
+            if (ttScore <= alpha) {
+                return ttScore;
             }
         }
         stand_pat = bestScore = en.eval;
@@ -997,10 +1004,10 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     if (en.zobrist == key >> 32) {
         // adjusting eval
         if (   (en.type == PV_NODE)
-            || (en.type == CUT_NODE && stand_pat < en.score)
-            || (en.type  & ALL_NODE && stand_pat > en.score)) {
+            || (en.type == CUT_NODE && stand_pat < ttScore)
+            || (en.type  & ALL_NODE && stand_pat > ttScore)) {
             // save as best score
-            bestScore = en.score;
+            bestScore = ttScore;
         }
     }
 
@@ -1050,7 +1057,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(key, bestScore, m, ttNodeType, !inCheckOpponent, stand_pat);
+                table->put(key, scoreToTT(bestScore, ply), m, ttNodeType, !inCheckOpponent, stand_pat);
                 return score;
             }
             if (score > alpha) {
@@ -1062,7 +1069,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
     // store the current position inside the transposition table
     if (bestMove)
-        table->put(key, bestScore, bestMove, ttNodeType, 0, stand_pat);
+        table->put(key, scoreToTT(bestScore, ply), bestMove, ttNodeType, 0, stand_pat);
     return bestScore;
 }
 
@@ -1358,6 +1365,16 @@ Move Search::probeDTZ(Board* board) {
     }
 
     return 0;
+}
+
+bb::Score scoreToTT(bb::Score s, int plies)
+{
+    return (s >= TB_WIN_SCORE_MIN ? s + plies : s <= -TB_WIN_SCORE_MIN ? s - plies : s);
+}
+
+bb::Score scoreFromTT(bb::Score s, int plies)
+{
+    return (s >= TB_WIN_SCORE_MIN ? s - plies : s <= -TB_WIN_SCORE_MIN ? s + plies : s);
 }
 
 ThreadData::ThreadData(int threadId) : threadID(threadId) {}
