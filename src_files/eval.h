@@ -20,7 +20,6 @@
 #define KOIVISTO_EVAL_H
 
 #include "bitboard.h"
-
 #include <cstdint>
 #include <cstring>
 #if defined(__ARM_NEON)
@@ -110,7 +109,6 @@ struct Evaluator {
     std::vector<Accumulator> history;
     std::unique_ptr<AccumulatorTable> accumulator_table =
         std::make_unique<AccumulatorTable>(AccumulatorTable());
-
     Evaluator();
     
     Evaluator(const Evaluator& evaluator);

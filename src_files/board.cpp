@@ -1443,7 +1443,8 @@ Score Board::evaluate(){
                 / phase_sum;
     return (+     evaluation_mg_scalar
                 - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
-            * (this->evaluator.evaluate(this->getActivePlayer()));
+            * (this->evaluator.evaluate(this->getActivePlayer()))
+            + rme_eval.evaluate(this, phase);
 }
 
 template void Board::setPiece<true, true>(Square sq, Piece piece);

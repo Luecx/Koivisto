@@ -20,10 +20,11 @@
 #define CHESSCOMPUTER_BOARD_H
 
 #include "bitboard.h"
-#include "move.h"
-#include "util.h"
-#include "transpositiontable.h"
 #include "eval.h"
+#include "evalrme.h"
+#include "move.h"
+#include "transpositiontable.h"
+#include "util.h"
 #include "vector"
 
 #include <ostream>
@@ -106,6 +107,8 @@ class Board {
     
     // store an evaluator which can be efficiently updated
     nn::Evaluator evaluator{};
+    RMEEvaluator rme_eval{};
+    
     
     // we also store the piece for each square.
     bb::Piece m_pieceBoard[bb::N_SQUARES];
