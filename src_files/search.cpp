@@ -822,7 +822,14 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // principal variation search recursion.
         if (legalMoves == 0) {
-            score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
+            if (pv && en.zobrist == key >> 32 && en.type >= ALL_NODE) {
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
+                                  behindNMP);
+            } else {
+                score = alpha + 1;
+            }
+            if (score > alpha)
+                score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY, td, 0,
                               behindNMP);
         } else {
             if (ply == 0 && lmr) {
