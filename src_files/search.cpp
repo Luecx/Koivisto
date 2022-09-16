@@ -799,6 +799,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr--;
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
+            lmr += std::min(2, std::abs(staticEval - alpha) / 350);
             lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
                 lmr = 0;
