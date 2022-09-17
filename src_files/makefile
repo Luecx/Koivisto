@@ -14,7 +14,7 @@ _SRCS     := $(_CSRCS) $(_CXXSRCS)
 
 # engine name and version
 NAME       = Koivisto
-MINOR      = 15
+MINOR      = 16
 MAJOR      = 8
 MAKROS     = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
