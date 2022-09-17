@@ -513,6 +513,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
+    if (!skipMove && !pv) {
+        if (   depth        <= 7
+            && !inCheck ? staticEval : staticEval - FUTILITY_MARGIN >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
+            && staticEval   <  MIN_MATE_SCORE)
+            return staticEval;
+    }
+
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
         // razoring:
@@ -523,16 +530,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (score < beta)
                 return score;
         }
-        // *******************************************************************************************
-        // static null move pruning:
-        // if the static evaluation is already above beta with a specific margin, assume that the we
-        // will definetly be above beta and stop the search here and fail soft. Also reuse information
-        // from eval to prevent pruning if the oponent has multiple threats.
-        // *******************************************************************************************
-        if (   depth        <= 7
-            && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
-            && staticEval   <  MIN_MATE_SCORE)
-            return staticEval;
 
         if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
             return beta;
