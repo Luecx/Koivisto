@@ -143,18 +143,18 @@ U64 getNewThreats(Board* b, move::Move m) {
             return 0;
         case ROOK:
             attacks = lookUpRookAttacks(sqTo, occupied) & ~lookUpRookAttacks(sqFrom, occupied);
-            return attacks & (b->getPieceBB(!color, QUEEN));
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, KING));
         case BISHOP:
             attacks = lookUpBishopAttacks(sqTo, occupied) & ~lookUpBishopAttacks(sqFrom, occupied);
-            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK));
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, KING));
         case KNIGHT:
             attacks = KNIGHT_ATTACKS[sqTo];
-            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK));
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, KING));
         case PAWN:
             attacks = color == WHITE ?
                                      shiftNorthEast(sqBB) | shiftNorthWest(sqBB) :
                                      shiftSouthEast(sqBB) | shiftSouthWest(sqBB);
-            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT));
+            return attacks & (b->getPieceBB(!color, QUEEN) | b->getPieceBB(!color, ROOK) | b->getPieceBB(!color, BISHOP) | b->getPieceBB(!color, KNIGHT) | b->getPieceBB(!color, KING));
         case KING:
             return 0;
         default:
