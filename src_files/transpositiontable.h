@@ -64,6 +64,7 @@ struct Entry {
 //            enP->setAge(m_currentAge);
             return true;
         }
+        return false;
     }
 
     [[nodiscard]] NodeAge getAge() const { return move::getScore(move); }

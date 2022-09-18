@@ -153,11 +153,11 @@ bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, 
     // check if both can be replaced, if so judge by depth
     if(en_1_replace && en_2_replace){
         if( buc->en1.depth > buc->en2.depth){
-            buc->en1.set(key, score, move, type, depth, eval);
-            buc->en1.setAge(m_currentAge);
-        }else{
             buc->en2.set(key, score, move, type, depth, eval);
             buc->en2.setAge(m_currentAge);
+        }else{
+            buc->en1.set(key, score, move, type, depth, eval);
+            buc->en1.setAge(m_currentAge);
         }
     }else if(en_1_replace){
         buc->en1.set(key, score, move, type, depth, eval);
