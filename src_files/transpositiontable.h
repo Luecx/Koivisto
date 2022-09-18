@@ -54,6 +54,17 @@ struct Entry {
         this->depth   = p_depth;
         this->eval    = p_eval;
     }
+    
+    bool wouldReplace(bb::U32 p_key, NodeAge p_current_age, bb::Depth p_depth){
+        if (   getAge() != p_current_age
+            || type == PV_NODE
+            || (type    != PV_NODE && depth <= p_depth)
+            || (zobrist == p_key     && depth <= p_depth * 2)) {
+//            enP->set(key, score, move, type, depth, eval);
+//            enP->setAge(m_currentAge);
+            return true;
+        }
+    }
 
     [[nodiscard]] NodeAge getAge() const { return move::getScore(move); }
 
@@ -67,12 +78,17 @@ struct Entry {
     bb::Score   eval;  	    // 16 bit -> 112 bit = 14 byte
 };
 
+struct Bucket{
+    Entry en1;
+    Entry en2;
+};
+
 class TranspositionTable {
     private:
-    NodeAge                  m_currentAge;
-    bb::U64                  m_size;
-    std::unique_ptr<Entry[]> m_entries;
-    bb::U64                  m_mask;
+    NodeAge                   m_currentAge;
+    bb::U64                   m_size;
+    std::unique_ptr<Bucket[]> m_entries;
+    bb::U64                   m_mask;
 
     void init(bb::U64 MB);
 

@@ -28,7 +28,7 @@
  */
 void TranspositionTable::init(bb::U64 MB) {
     bb::U64 bytes      = MB * 1024 * 1024;
-    bb::U64 maxEntries = bytes / sizeof(Entry);
+    bb::U64 maxEntries = bytes / sizeof(Bucket);
 
     // size must be a power of 2!
     m_size = 1;
@@ -40,7 +40,7 @@ void TranspositionTable::init(bb::U64 MB) {
     m_size /= 2;
     m_mask = m_size - 1;
 
-    m_entries = std::make_unique<Entry[]>(m_size);
+    m_entries = std::make_unique<Bucket[]>(m_size);
     clear();
 
     m_currentAge = 0;
@@ -82,12 +82,15 @@ double TranspositionTable::usage() const {
     double used = 0;
     // Thank you Andrew for this idea :)
     for (bb::U64 i = 0; i < 100; i++) {
-        if ((m_entries[i].zobrist)) {
+        if ((m_entries[i].en1.zobrist)) {
+            used++;
+        }
+        if ((m_entries[i].en2.zobrist)) {
             used++;
         }
     }
 
-    return used / 100;
+    return used / 200;
 }
 
 /**
@@ -98,10 +101,14 @@ double TranspositionTable::usage() const {
  */
 Entry TranspositionTable::get(bb::U64 zobrist) const {
     bb::U64 index = zobrist & m_mask;
-
-    Entry enP = m_entries[index];
-
-    return enP;
+    
+    bb::U32 key    = zobrist >> 32;
+    
+    if(m_entries[index].en1.zobrist == key){
+        return m_entries[index].en1;
+    }
+   
+    return m_entries[index].en2;
 }
 
 /**
@@ -122,31 +129,76 @@ Entry TranspositionTable::get(bb::U64 zobrist) const {
 bool TranspositionTable::put(bb::U64 zobrist, bb::Score score, move::Move move, NodeType type,
                              bb::Depth depth, bb::Score eval) {
     bb::U64 index  = zobrist & m_mask;
-    Entry* enP = &m_entries[index];
+    Bucket* buc = &m_entries[index];
     bb::U32 key    = zobrist >> 32;
-
-    if (enP->zobrist == 0) {
-        enP->set(key, score, move, type, depth, eval);
-        enP->setAge(m_currentAge);
+    
+    // first check if one of the entries is empty
+    if(buc->en1.zobrist == 0){
+        buc->en1.set(key, score, move, type, depth, eval);
+        buc->en1.setAge(m_currentAge);
         return true;
-    } else {
-        //  on enP->depth < depth * 2:
-        //  The idea behind this replacement scheme is to allow faster searches of subtrees by
-        //  allowing more localized search results to be stored in the TT. A hard replacement scheme
-        //  has been tested on another engine, and has been shown to be worse (there is a limit to how
-        //  great of a depth override should occur).
-
-        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however
-        //  they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
-        if (   enP->getAge() != m_currentAge
-            || type == PV_NODE
-            || (enP->type    != PV_NODE && enP->depth <= depth)
-            || (enP->zobrist == key     && enP->depth <= depth * 2)) {
-            enP->set(key, score, move, type, depth, eval);
-            enP->setAge(m_currentAge);
-            return true;
-        }
     }
+    
+    // first check if one of the entries is empty
+    if(buc->en2.zobrist == 0){
+        buc->en2.set(key, score, move, type, depth, eval);
+        buc->en2.setAge(m_currentAge);
+        return true;
+    }
+    
+    // check which entry is replacable
+    bool en_1_replace = buc->en1.wouldReplace(key, m_currentAge, depth);
+    bool en_2_replace = buc->en2.wouldReplace(key, m_currentAge, depth);
+    
+    // check if both can be replaced, if so judge by depth
+    if(en_1_replace && en_2_replace){
+        if( buc->en1.depth > buc->en2.depth){
+            buc->en1.set(key, score, move, type, depth, eval);
+            buc->en1.setAge(m_currentAge);
+        }else{
+            buc->en2.set(key, score, move, type, depth, eval);
+            buc->en2.setAge(m_currentAge);
+        }
+    }else if(en_1_replace){
+        buc->en1.set(key, score, move, type, depth, eval);
+        buc->en1.setAge(m_currentAge);
+    }else if(en_2_replace){
+        buc->en2.set(key, score, move, type, depth, eval);
+        buc->en2.setAge(m_currentAge);
+    }else{
+        return false;
+    }
+    
+//    // choose which entry to replace
+//    Entry* enP = &buc->en1;
+//    // compute age diff to current entry
+//    bb::Depth ageDiff1 = static_cast<bb::Depth>((m_currentAge - buc->en1.getAge()) & move::MASK<8>);
+//    bb::Depth ageDiff2 = static_cast<bb::Depth>((m_currentAge - buc->en2.getAge()) & move::MASK<8>);
+//
+//    if(&buc->en2.a)
+//
+//    if (enP->zobrist == 0) {
+//        enP->set(key, score, move, type, depth, eval);
+//        enP->setAge(m_currentAge);
+//        return true;
+//    } else {
+//        //  on enP->depth < depth * 2:
+//        //  The idea behind this replacement scheme is to allow faster searches of subtrees by
+//        //  allowing more localized search results to be stored in the TT. A hard replacement scheme
+//        //  has been tested on another engine, and has been shown to be worse (there is a limit to how
+//        //  great of a depth override should occur).
+//
+//        //  This idea of replacement can be found in many strong engines (SF and Ethereal), however
+//        //  they use a static margin. Martin (author of Cheng) tested and validated a variable margin.
+//        if (   enP->getAge() != m_currentAge
+//            || type == PV_NODE
+//            || (enP->type    != PV_NODE && enP->depth <= depth)
+//            || (enP->zobrist == key     && enP->depth <= depth * 2)) {
+//            enP->set(key, score, move, type, depth, eval);
+//            enP->setAge(m_currentAge);
+//            return true;
+//        }
+//    }
 
     return false;
 }
