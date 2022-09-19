@@ -765,7 +765,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                && !inCheck
                &&  sameMove(m, hashMove)
                &&  ply > 0
-               &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
+               &&  (sd->eval[b->getActivePlayer()][ply] < alpha - 25 || mainThreat == getSquareFrom(hashMove))
                &&  en.type == CUT_NODE) {
             extension = 1;
         }
