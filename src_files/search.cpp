@@ -560,6 +560,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 return score;
             }
         }
+        
+        if(depth == 1 && td->nodes % 16 == 0 && !enemyThreats){
+            return beta;
+        }
     }
 
     // we reuse movelists for memory reasons.
