@@ -801,6 +801,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr++;
             lmr += std::min(2, std::abs(staticEval - alpha) / 350);
             lmr -= bitCount(getNewThreats(b, m));
+            if (staticExchangeEval < -300){
+                lmr ++;
+            }
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
