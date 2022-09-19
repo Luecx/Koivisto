@@ -817,6 +817,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // adjust the extension policy for checks.
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
+        
+        if (sameMove(hashMove, m) && !pv && en.type == ALL_NODE && en.score + 10 > beta && depth < 8)
+            extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
