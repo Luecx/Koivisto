@@ -166,7 +166,7 @@ U64 getNewThreats(Board* b, move::Move m) {
 void initLMR() {
     for (int d = 0; d < 256; d++){
         for (int m = 0; m < 256; m++){
-            lmrReductions[d][m] = 1.25 + log(d) * log(m) * 100 / LMR_DIV;
+            lmrReductions[d][m] = 1.25 + log(d) * log(std::min(12,m)) * 100 / LMR_DIV;
         }
     }
 }
