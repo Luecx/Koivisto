@@ -811,7 +811,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 lmr = 0;
         }
 
-        if (sameMove(hashMove, m) && sd->isKiller(hashMove, ply, b->getActivePlayer()) == 2 && en.type >= ALL_NODE)
+        if (!pv && sameMove(hashMove, m) && sd->isKiller(hashMove, ply, b->getActivePlayer()) == 2 && en.type >= ALL_NODE)
             extension = 1;
 
         // doing the move
