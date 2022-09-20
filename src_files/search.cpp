@@ -800,7 +800,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             if (sd->reduce && sd->sideToReduce != b->getActivePlayer())
                 lmr++;
             lmr += std::min(2, std::abs(staticEval - alpha) / 350);
-            lmr -= bitCount(getNewThreats(b, m));
             if (lmr > MAX_PLY) {
                 lmr = 0;
             }
@@ -819,6 +818,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
+            extension = 1;
+
+        if (depth > 2 && bitCount(getNewThreats(b, m)))
             extension = 1;
 
         // principal variation search recursion.
