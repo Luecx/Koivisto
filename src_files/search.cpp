@@ -818,6 +818,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (extension == 0 && depth > 4 && b->isInCheck(b->getActivePlayer()))
             extension = 1;
 
+        if  (pv && mainThreat == getSquareFrom(m) && isCapture(m))
+            extension = 1;
+            
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
