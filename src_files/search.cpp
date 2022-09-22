@@ -549,7 +549,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             score =
                 -pvSearch(b, -beta, 1 - beta,
                           depth - (depth / 4 + 3) * ONE_PLY
-                              - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
+                              - std::clamp((staticEval - beta) / FUTILITY_MARGIN, -3, 3),
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
             if (score >= beta) {
