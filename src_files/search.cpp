@@ -480,8 +480,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             || (en.type  & ALL_NODE && staticEval > ttScore)) {
             staticEval = ttScore;
         }
-    } 
-
+    }
+    
     // ***********************************************************************************************
     // tablebase probing:
     // search the wdl table if we are not at the root and the root did not use the wdl table to sort
@@ -513,12 +513,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
     sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
 
-    if (!skipMove && !inCheck && !pv) {
+    if (!skipMove && !inCheck) {
         // **********************************************************************************************************
         // razoring:
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
-        if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta) {
+        if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta && !pv) {
             score = qSearch(b, alpha, beta, ply, td);
             if (score < beta)
                 return score;
@@ -531,10 +531,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // *******************************************************************************************
         if (   depth        <= 7
             && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
-            && staticEval   <  MIN_MATE_SCORE)
+            && staticEval   <  MIN_MATE_SCORE
+            && !pv)
             return staticEval;
 
-        if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats)
+        if (depth == 1 && staticEval > beta + (isImproving ? 0 : 30) && !enemyThreats && !pv)
             return beta;
 
         // *******************************************************************************************
@@ -543,7 +544,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // assume that we could achieve beta, so we can return early. Don't do nmp when the oponent
         // has threats or the position or we don't have non-pawn material.
         // *******************************************************************************************
-        if (staticEval >= beta + (5 > depth ? 30 : 0) && !(depth < 5 && enemyThreats > 0)
+        if (staticEval >= beta + (5 > depth ? 30 : 0) + (pv ? 100 : 0)
+            && !(depth < 5 && enemyThreats > 0)
             && !hasOnlyPawns(b, b->getActivePlayer())) {
             b->move_null();
             score =
@@ -552,7 +554,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                               - (staticEval - beta < 300 ? (staticEval - beta) / FUTILITY_MARGIN : 3),
                           ply + ONE_PLY, td, 0, !b->getActivePlayer());
             b->undoMove_null();
-            if (score >= beta) {
+            if (score >= beta + (pv ? 100:0)) {
                 // dont return mate/tb scores
                 if (score >= TB_WIN_SCORE_MIN)
                     score = beta;
