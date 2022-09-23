@@ -1450,7 +1450,7 @@ Score Board::evaluate(){
         - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
                 / phase_sum;
     int eval = this->evaluator.evaluate(this->getActivePlayer());
-    if (phase > 28 && !hasMatingMaterial(eval > 0 ? m_activePlayer : !m_activePlayer))
+    if (phase > 0.7 && !hasMatingMaterial(eval > 0 ? m_activePlayer : !m_activePlayer))
         return eval / 10;
     return (+     evaluation_mg_scalar
                 - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
