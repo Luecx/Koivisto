@@ -288,6 +288,8 @@ class Board {
     template<bb::Color color, bb::PieceType piece_type>
     [[nodiscard]] inline bb::U64 getPieceBB() const {return m_piecesBB[color * 8 + piece_type];}
     
+    bool hasMatingMaterial(bool side);
+
     [[nodiscard]] bb::Score evaluate();
 };
 

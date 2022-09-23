@@ -1429,6 +1429,14 @@ template<Color side> U64 Board::getPinnedPieces(U64& pinners) const {
     return pinned;
 }
 
+bool Board::hasMatingMaterial(bool side) {
+    if ((getPieceBB(side, QUEEN) | getPieceBB(side, ROOK) | getPieceBB(side, PAWN))
+        || (bitCount(getPieceBB(side, BISHOP) | getPieceBB(side, KNIGHT)) > 1
+            && getPieceBB(side, BISHOP)))
+        return true;
+    return false;
+}
+
 Score Board::evaluate(){
     constexpr float evaluation_mg_scalar = 1.5;
     constexpr float evaluation_eg_scalar = 1.25;
@@ -1441,9 +1449,12 @@ Score Board::evaluate(){
         - phaseValues[ROOK  ] * bitCount(getPieceBB()[WHITE_ROOK  ] | getPieceBB()[BLACK_ROOK  ])
         - phaseValues[QUEEN ] * bitCount(getPieceBB()[WHITE_QUEEN ] | getPieceBB()[BLACK_QUEEN ]))
                 / phase_sum;
+    int eval = this->evaluator.evaluate(this->getActivePlayer());
+    if (phase > 28 && !hasMatingMaterial(eval > 0 ? m_activePlayer : !m_activePlayer))
+        return eval / 10;
     return (+     evaluation_mg_scalar
                 - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
-            * (this->evaluator.evaluate(this->getActivePlayer()));
+            * (eval);
 }
 
 template void Board::setPiece<true, true>(Square sq, Piece piece);
