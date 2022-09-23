@@ -666,6 +666,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 
                 if (depth <= 7 && quiets >= lmp[isImproving][depth]) {
                     mGen->skip();
+                    if (highestScore < alpha - FUTILITY_MARGIN * depth)
+                        return highestScore;
                 }
 
                 // prune quiet moves that are unlikely to improve alpha
