@@ -50,7 +50,7 @@ void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go) {
     UCI_ASSERT(moves_to_go >= 0);
     
     const S64    overhead          = inc == 0 ? 50 : 0;
-    const double division          = 2;
+    const double division          = 2.4;
     
     const S64    overhead_per_game = move_overhead.type == PER_GAME ? move_overhead.time : 0;
     
@@ -59,7 +59,7 @@ void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go) {
     }
     
     S64 upperTimeBound = time / division;
-    S64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
+    S64 timeToUse      = 2 * inc + 2 * time / std::max(2.0,(moves_to_go * 1.4));
     
     timeToUse          = std::min(time - overhead - inc - overhead_per_game, timeToUse);
     upperTimeBound     = std::min(time - overhead - inc - overhead_per_game, upperTimeBound);
