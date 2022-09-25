@@ -162,31 +162,6 @@ int nn::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
     return indices[relativeKingSquare];
 }
 
-void nn::AccumulatorTable::put(bb::Color view, Board* board, nn::Accumulator& accumulator) {
-    const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
-    const bool       king_side = bb::fileIndex(king_sq) > 3;
-    const int        ks_index  = kingSquareIndex(king_sq, view);
-
-    // use a different entry if the king crossed the half but it would technically
-    // still be within the same bucket
-    const int entry_idx = king_side * 16 + ks_index;
-
-    // get the entry
-    AccumulatorTableEntry& entry = entries[view][entry_idx];
-
-    // store the accumulator data
-    std::memcpy(entry.accumulator.summation[view], accumulator.summation[view],
-                sizeof(int16_t) * HIDDEN_SIZE);
-
-    // store the piece data
-    for (bb::Color c : {bb::WHITE, bb::BLACK}) {
-        for (bb::PieceType pt : {bb::PAWN, bb::KNIGHT, bb::BISHOP, bb::ROOK, bb::QUEEN, bb::KING}) {
-            bb::U64 bb             = board->getPieceBB(c, pt);
-            entry.piece_occ[c][pt] = bb;
-        }
-    }
-}
-
 void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& evaluator) {
     const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
     const bool       king_side = bb::fileIndex(king_sq) > 3;
@@ -198,10 +173,6 @@ void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& eval
 
     // get the entry
     AccumulatorTableEntry& entry = entries[view][entry_idx];
-
-    // first retrieve the accumulator from the table and put that into the evaluator
-    std::memcpy(evaluator.history.back().summation[view], entry.accumulator.summation[view],
-                sizeof(int16_t) * HIDDEN_SIZE);
 
     // go through each piece and compute the difference.
     for (bb::Color c : {bb::WHITE, bb::BLACK}) {
@@ -219,20 +190,24 @@ void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& eval
             // go through both sets and call the evaluator to update the accumulator
             while (to_set) {
                 bb::Square sq = bb::bitscanForward(to_set);
-                evaluator.setPieceOnSquareAccumulator<true>(view, pt, c, sq, king_sq);
+                evaluator.setPieceOnSquareAccumulator<true>(view, pt, c, sq, king_sq, entry.accumulator);
                 to_set = bb::lsbReset(to_set);
             }
 
             while (to_unset) {
                 bb::Square sq = bb::bitscanForward(to_unset);
-                evaluator.setPieceOnSquareAccumulator<false>(view, pt, c, sq, king_sq);
+                evaluator.setPieceOnSquareAccumulator<false>(view, pt, c, sq, king_sq, entry.accumulator);
                 to_unset = bb::lsbReset(to_unset);
             }
+            
+            // also update the entries state to the board state
+            bb::U64 bb             = board->getPieceBB(c, pt);
+            entry.piece_occ[c][pt] = bb;
         }
     }
-    // this set has most likely been done on a reset. its handy to just put the new state
-    // into the table
-    put(view, board, evaluator.history.back());
+    
+    std::memcpy(evaluator.history.back().summation[view], entry.accumulator.summation[view],
+                sizeof(int16_t) * HIDDEN_SIZE);
 }
 
 void nn::AccumulatorTable::reset() {
@@ -276,8 +251,34 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
             sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
         }
     }
-    
 }
+
+
+template<bool value>
+void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pieceType,
+                                                bb::Color pieceColor, bb::Square square,
+                                                bb::Square kingSquare, Accumulator& accumulator) {
+    const int  idx = index(pieceType, pieceColor, square, side, kingSquare);
+    
+    const auto wgt = (avx_register_type_16*) (inputWeights[idx]);
+    const auto sum = (avx_register_type_16*) (accumulator.summation[side]);
+    if constexpr (value) {
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
+            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
+            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
+            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+        }
+    } else {
+        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
+            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
+            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
+            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+        }
+    }
+}
+
 
 void nn::Evaluator::reset(Board* board) {
     history.resize(1);

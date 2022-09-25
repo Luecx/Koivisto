@@ -97,9 +97,6 @@ struct AccumulatorTableEntry {
 struct AccumulatorTable {
     AccumulatorTableEntry entries[bb::N_COLORS][32] {};
 
-    // sets the specific accumulator to store the specified accumulator
-    void put(bb::Color view, Board* board, Accumulator& accumulator);
-    
     void use(bb::Color view, Board* board, Evaluator& evaluator);
     
     void reset();
@@ -139,6 +136,14 @@ struct Evaluator {
                                      bb::Square square,
                                      bb::Square kingSquare);
 
+    template<bool value>
+    void setPieceOnSquareAccumulator(bb::Color side,
+                                     bb::PieceType pieceType,
+                                     bb::Color pieceColor,
+                                     bb::Square square,
+                                     bb::Square kingSquare,
+                                     Accumulator& accumulator);
+    
     void reset(Board* board);
     
     void resetAccumulator(Board* board, bb::Color color);
