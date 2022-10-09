@@ -1037,7 +1037,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         // *******************************************************************************************
         Score see =
             (!inCheck && (isCapture(m) || isPromotion(m))) ? mGen->lastSee : 0;
-        if (see < 0)
+        if (see < 0 + (stand_pat + 100 < alpha))
             continue;
         if (see + stand_pat > beta + 200)
             return beta;
