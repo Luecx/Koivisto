@@ -651,7 +651,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
-        if (depth > 2 && ply > 0 && highestScore > 0 && legalMoves > 0 && getMovingPieceType(b->getPreviousMove()) != PAWN 
+        if (ply > 0 && highestScore > 0 && legalMoves > 0 && getMovingPieceType(b->getPreviousMove()) != PAWN 
         && !isCastle(b->getPreviousMove()) && getMovingPieceType(b->getPreviousMove(2)) != PAWN 
         && !isCastle(b->getPreviousMove(2)) && getSquareTo(m) == getSquareFrom(b->getPreviousMove(2)) 
         && getSquareFrom(m) == getSquareTo(b->getPreviousMove(2)) 
