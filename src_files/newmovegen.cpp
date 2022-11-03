@@ -142,9 +142,12 @@ void moveGen::addQuiet(Move m) {
     if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
         return;
     quiets[quietSize] = m;
-    quietScores[quietSize++] = m_th[getSqToSqFromCombination(m)] 
-                             + m_cmh[getPieceTypeSqToCombination(m)] 
-                             + m_fmh[getPieceTypeSqToCombination(m)];
+    int th = m_th[getSqToSqFromCombination(m)];
+    int ch = m_cmh[getPieceTypeSqToCombination(m)];  
+    int fh = m_fmh[getPieceTypeSqToCombination(m)];
+    quietScores[quietSize++] = th * th * th
+                             + ch * ch * ch
+                             + fh * fh * fh;
 }
 
 Move moveGen::nextNoisy() {
