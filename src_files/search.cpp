@@ -112,10 +112,10 @@ U64 getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
     return pawn_attacks | rook_attacks | minor_attacks;
 }
 
-void getThreats(Board* b, SearchData* sd, Depth ply) {
+void getThreats(Board* b, SearchData* sd, Depth ply, bool enemyThreats = true) {
     // compute threats for both sides
-    U64 whiteThreats = getThreatsOfSide<WHITE>(b, sd, ply);
-    U64 blackThreats = getThreatsOfSide<BLACK>(b, sd, ply);
+    U64 whiteThreats = (enemyThreats |  b->getActivePlayer()) ? getThreatsOfSide<WHITE>(b, sd, ply) : 0;
+    U64 blackThreats = (enemyThreats | !b->getActivePlayer()) ? getThreatsOfSide<BLACK>(b, sd, ply) : 0;
     
     // get the threats to the active player
     U64 threats = b->getActivePlayer() == WHITE ? blackThreats : whiteThreats;
@@ -455,7 +455,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     if (!inCheck) {
-        getThreats(b, sd, ply);
+        getThreats(b, sd, ply, depth > 4);
         ownThreats   = sd->threatCount[ply][ b->getActivePlayer()];
         enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
         mainThreat   = sd->mainThreat [ply];
