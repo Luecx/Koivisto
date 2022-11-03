@@ -530,7 +530,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // from eval to prevent pruning if the oponent has multiple threats.
         // *******************************************************************************************
         if (   depth        <= 7
-            && staticEval   >= beta + (depth - (isImproving && !enemyThreats)) * FUTILITY_MARGIN
+            && staticEval   >= beta + std::max((depth - (isImproving && !enemyThreats)) - (hashMove != 0), 0) * FUTILITY_MARGIN
             && staticEval   <  MIN_MATE_SCORE)
             return staticEval;
 
