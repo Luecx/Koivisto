@@ -651,6 +651,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         bool isPromotion = move::isPromotion(m);
         bool quiet       = !isCapture(m) && !isPromotion && !givesCheck;
 
+        if (legalMoves && depth < 3 && isCapture(m) && mGen->lastSee + staticEval - depth * 300 >= beta) 
+            return beta;
+
         if (ply > 0 && legalMoves >= 1 && highestScore > -MIN_MATE_SCORE) {
             Depth moveDepth = std::max(1, 1 + depth - lmrReductions[depth][legalMoves]);
 

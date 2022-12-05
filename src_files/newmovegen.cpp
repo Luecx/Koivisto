@@ -52,6 +52,7 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_cmh           = &sd->cmh[getPieceTypeSqToCombination(previous)][c][0];
     m_fmh           = &sd->fmh[followup ? getPieceTypeSqToCombination(followup) : 384][c][0];
     m_th            = &sd->th[c][m_threatSquare][0];
+    lastSee         = 0;
 }
 
 Move moveGen::next() {
