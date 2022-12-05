@@ -831,7 +831,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->sideToReduce = !b->getActivePlayer();
             }
             // reduced search.
-            score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
+            Score bound = alpha + ((pv && lmr && (ply & 1) == 0) ? 10 : 0);
+            score = -pvSearch(b, -bound - 1, -bound, depth - ONE_PLY - lmr + extension, ply + ONE_PLY,
                               td, 0, lmr != 0 ? b->getActivePlayer() : behindNMP, &lmr);
             if (pv)
                 sd->reduce = true;
@@ -839,7 +840,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->sideToReduce = b->getActivePlayer();
             }
 
-            if (lmr && score > alpha)
+            if (score <= bound)
+                score = std::min((int)alpha, (int)score);
+
+            if (lmr && score > bound)
                 score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search
             if (score > alpha && score < beta)
