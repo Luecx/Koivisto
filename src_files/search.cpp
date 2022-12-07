@@ -734,7 +734,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             && (   en.type == CUT_NODE
                 || en.type == PV_NODE)) {
             // compute beta cut value
-            betaCut = std::min(static_cast<int>(ttScore - SE_MARGIN_STATIC - depth * 2), static_cast<int>(beta));
+            betaCut = std::min(static_cast<int>(ttScore - SE_MARGIN_STATIC - depth * 2), static_cast<int>(alpha));
             // get the score from recursive call
             score   = pvSearch(b, betaCut - 1, betaCut, depth >> 1, ply, td, m, behindNMP);
             if (score < betaCut) {
