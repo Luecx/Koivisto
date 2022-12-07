@@ -635,6 +635,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     int         quiets          = 0;
     U64         prevNodeCount   = td->nodes;
     U64         bestNodeCount   = 0;
+    bool        singular        = false;
 
     Move m;
     // loop over all moves in the movelist
@@ -742,6 +743,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     *lmrFactor = 0;
                 }
                 extension++;
+                singular = true;
             } else if (score >= beta) {
                 return score;
             } else if (ttScore >= beta) {
@@ -806,6 +808,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             if (lmr > depth - 2) {
                 lmr = depth - 2;
+                if (singular)
+                    continue;
             }
             if (history > 256*(2-isCapture(m)))
                 lmr = 0;
