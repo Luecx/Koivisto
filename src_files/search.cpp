@@ -988,11 +988,11 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (en.type == PV_NODE) {
             return ttScore;
         } else if (en.type == CUT_NODE) {
-            if (ttScore >= beta - 25) {
+            if (ttScore >= beta - 10) {
                 return ttScore;
             }
         } else if (en.type & ALL_NODE) {
-            if (ttScore <= alpha + 25) {
+            if (ttScore <= alpha + 10) {
                 return ttScore;
             }
         }
