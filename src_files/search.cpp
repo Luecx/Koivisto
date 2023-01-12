@@ -971,6 +971,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     U64         key        = b->zobrist();
     Entry       en         = table->get(b->zobrist());
     NodeType    ttNodeType = ALL_NODE;
+    bool        pv         = (beta - alpha) != 1;
     bb::Score ttScore = scoreFromTT(en.score, ply);
 
     Score stand_pat;
@@ -983,7 +984,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // perft_tt entry.
     // ***********************************************************************************************
 
-    if (en.zobrist == key >> 32) {
+    if (!pv && en.zobrist == key >> 32) {
 
         if (en.type == PV_NODE) {
             return ttScore;
@@ -997,12 +998,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             }
         }
         stand_pat = bestScore = en.eval;
-    } else {
-        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
-    }
 
-    // we can also use the tt entry to adjust the evaluation.
-    if (en.zobrist == key >> 32) {
         // adjusting eval
         if (   (en.type == PV_NODE)
             || (en.type == CUT_NODE && stand_pat < ttScore)
@@ -1010,6 +1006,9 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             // save as best score
             bestScore = ttScore;
         }
+
+    } else {
+        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
     }
 
     if (bestScore >= beta || ply >= MAX_INTERNAL_PLY)
