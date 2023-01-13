@@ -83,12 +83,12 @@ Move moveGen::next() {
             // fallthrough
         case KILLER1:
             stage++;
-            if (!sameMove(m_killer1, m_hashMove) && m_board->isPseudoLegal(m_killer1))
+            if (!m_skip && !sameMove(m_killer1, m_hashMove) && m_board->isPseudoLegal(m_killer1))
                 return m_killer1;
             // fallthrough
         case KILLER2:
             stage++;
-            if (!sameMove(m_killer2, m_hashMove) && m_board->isPseudoLegal(m_killer2))
+            if (!m_skip && !sameMove(m_killer2, m_hashMove) && m_board->isPseudoLegal(m_killer2))
                 return m_killer2;
             // fallthrough
         case GEN_QUIET:
@@ -484,17 +484,17 @@ void moveGen::updateHistory(int weight) {
     Move bestMove   = searched[searched_index - 1];    
 
     if (isCapture(bestMove)) {
-        m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)] +=
+        m_sd->captureHistory[getMovingPiece(bestMove)][getSqToSqFromCombination(bestMove)] +=
                     + weight
-                    - weight * m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)]
+                    - weight * m_sd->captureHistory[getMovingPiece(bestMove)][getSqToSqFromCombination(bestMove)]
                     / MAX_HIST;
         weight = std::min(weight, 128);
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                    m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
+                    m_sd->captureHistory[getMovingPiece(m)][getSqToSqFromCombination(m)] +=
                                 - weight
-                                - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
+                                - weight * m_sd->captureHistory[getMovingPiece(m)][getSqToSqFromCombination(m)]
                                 / MAX_HIST;
             }
         } 
@@ -515,9 +515,9 @@ void moveGen::updateHistory(int weight) {
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
+                m_sd->captureHistory[getMovingPiece(m)][getSqToSqFromCombination(m)] +=
                             - weight
-                            - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
+                            - weight * m_sd->captureHistory[getMovingPiece(m)][getSqToSqFromCombination(m)]
                             / MAX_HIST;
             } else {
                 m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)] +=

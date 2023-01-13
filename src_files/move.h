@@ -108,6 +108,7 @@ inline bb::PieceType getCapturedPieceType   (const Move& move) { return ((move >
 inline bb::Color     getMovingPieceColor    (const Move& move) { return ((move >> SHIFT_MOVING_PIECE) & 0x8);}
 inline bb::Piece     getPromotionPiece      (const Move& move){ return ((move & 0x30000) >> SHIFT_TYPE) + getMovingPiece(move) + 1; }
 inline bb::Piece     getPromotionPieceType  (const Move& move){ return ((move & 0x30000) >> SHIFT_TYPE) + 1; }
+inline bb::Square    getEPCapturedSquare    (const Move& move){ return getSquareTo(move) + (getMovingPieceColor(move) == bb::WHITE ? -8:8);}
 inline void setSquareFrom   (Move& move, const bb::Square from) {
     // move = (move & ~(MASK_6 << SHIFT_FROM));  //clearing
     move |= (from << SHIFT_FROM);

@@ -1062,13 +1062,26 @@ bool Board::isLegal(Move m) {
         opponentBishopBitboard = m_piecesBB[WHITE_BISHOP];
     }
 
+    
+    const Square sqFrom = getSquareFrom(m);
+    const Square sqTo   = getSquareTo(m);
+    const Color  color  = getMovingPieceColor(m);
+    
     if (isEnPassant(m)) {
-        this->move(m);
-        bool isOk =
-            (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
-            && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
-        this->undoMove();
+        const Square sqCaptured = getEPCapturedSquare(m);
+        const U64    occCopy    = m_occupiedBB;
+
+        unsetBit(m_occupiedBB, sqFrom);
+        unsetBit(m_occupiedBB, sqCaptured);
+        setBit(m_occupiedBB, sqTo);
         
+        bool isOk =
+               (attacks::lookUpRookAttacks  (thisKing, m_occupiedBB)
+                    & (opponentQueenBitboard | opponentRookBitboard  )) == 0
+            && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB)
+                    & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
+        
+        m_occupiedBB = occCopy;
         return isOk;
     } else if (isCastle(m)) {
         U64 secure = ZERO;
@@ -1083,8 +1096,6 @@ bool Board::isLegal(Move m) {
         }
     }
     
-    const Square sqFrom = getSquareFrom(m);
-    const Square sqTo   = getSquareTo(m);
     const bool   isCap  = isCapture(m);
     
     const U64 occCopy = m_occupiedBB;

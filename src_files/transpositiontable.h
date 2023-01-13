@@ -36,6 +36,8 @@ constexpr NodeType ALL_NODE = 2;
 constexpr NodeType FORCED_ALL_NODE = 3;
 constexpr NodeType FORMER_CUT_NODE = 6;
 
+#define NODE_AGE_DIFF(v1, v2) (((int)(v1) - (int)(v2) + (((int)(v1) - (int)(v2) < 0) ? 256 : 0)))
+
 struct Entry {
     //    Entry() = default;
     //    ~Entry() = default;
