@@ -69,19 +69,16 @@ bool SearchData::isImproving(Score ev, Color color, Depth ply) const {
 }
 
 void SearchData::clear() {
-    std::memset(this->th, 0, 2*64*4096*4);
-    std::memset(this->captureHistory, 0, 2*4096*4);
-    std::memset(this->cmh, 0, 384*2*384*4);
-    std::memset(this->fmh, 0, 384*2*384*4);
-    std::memset(this->killer, 0, 2*257*2*4);
-    std::memset(this->maxImprovement, 0, 64*64*4);
-//
-//    std::cout << sizeof(this->th) << std::endl;
-//
-//    std::memset(this->th, 0, sizeof(this->th));
-//    std::memset(this->captureHistory, 0, sizeof(this->captureHistory));
-//    std::memset(this->cmh, 0, sizeof(this->cmh));
-//    std::memset(this->fmh, 0, sizeof(this->fmh));
-//    std::memset(this->killer, 0, sizeof(this->killer));
-//    std::memset(this->maxImprovement, 0, sizeof(this->maxImprovement));
+//    std::memset(this->th, 0, 2*64*4096*4);
+//    std::memset(this->captureHistory, 0, 2*4096*4);
+//    std::memset(this->cmh, 0, 384*2*384*4);
+//    std::memset(this->fmh, 0, 384*2*384*4);
+//    std::memset(this->killer, 0, 2*257*2*4);
+//    std::memset(this->maxImprovement, 0, 64*64*4);
+    std::memset(this->th, 0, sizeof(this->th));
+    std::memset(this->captureHistory, 0, sizeof(this->captureHistory));
+    std::memset(this->cmh, 0, sizeof(this->cmh));
+    std::memset(this->fmh, 0, sizeof(this->fmh));
+    std::memset(this->killer, 0, sizeof(this->killer));
+    std::memset(this->maxImprovement, 0, sizeof(this->maxImprovement));
 }
