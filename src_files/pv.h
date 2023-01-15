@@ -1,4 +1,3 @@
-
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
@@ -17,37 +16,54 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#ifndef CHESSCOMPUTER_UTIL_CPP
-#define CHESSCOMPUTER_UTIL_CPP
+#ifndef KOIVISTO_PV_H
+#define KOIVISTO_PV_H
 
-#include "util.h"
-
-
-/**
- * Trims leading and trailing whitespace characters from a given string
- * @param s The input string to be trimmed
- * @return The trimmed string
- */
-std::string& trim(std::string& s, const char* t) {
-    s.erase(0, s.find_first_not_of(t));
-    s.erase(s.find_last_not_of(t) + 1);
-    return s;
-}
+#include "move.h"
 
 /**
- * splits the string into subparts
- * @param fen
- * @return
+ * PVLine struct represents a principal variation line.
+ * This struct is used to store a sequence of moves that are expected to be the best
+ * move at each ply.
  */
-std::vector<std::string> splitString(const std::string &fen) {
-    std::stringstream fen_stream(fen);
-    std::vector<std::string> seglist;
-    std::copy(std::istream_iterator<std::string>(fen_stream),
-              std::istream_iterator<std::string>(),
-              std::back_inserter(seglist));
-    return seglist;
-}
+struct PVLine {
+    // pv is an array that stores the sequence of moves that form the principal variation
+    move::Move pv[bb::MAX_INTERNAL_PLY + 1];
+    
+    // length is the number of moves in the principal variation
+    uint16_t length;
 
+    // operator () allows the struct to be accessed like an array,
+    // so we can use pvLine(depth) to access the move at a specific depth
+    move::Move& operator()(bb::Depth depth);
+    
+    // const version of the above operator
+    move::Move operator()(bb::Depth depth) const;
 
+} __attribute__((aligned(128)));
 
-#endif    // CHESSCOMPUTER_UTIL_CPP
+/**
+ * PVTable struct represents a table of principal variations.
+ * This struct is used to store multiple PVLine structs, one for each depth.
+ */
+struct PVTable {
+    // pvs is an array of PVLine structs, one for each depth
+    PVLine pvs[bb::MAX_INTERNAL_PLY + 1];
+
+    // operator () allows the struct to be accessed like an array,
+    // so we can use pvTable(depth) to access the PVLine at a specific depth
+    PVLine& operator()(bb::Depth depth);
+    
+    // const version of the above operator
+    PVLine operator()(bb::Depth depth) const;
+
+    // reset all the lengths of PVLine structs to 0
+    void reset();
+
+    // updatePV updates the PVLine at a specific ply with the given move.
+    // The move is added to the beginning of the PVLine and the PVLine at the next depth is appended
+    // to it.
+    void updatePV(bb::Depth ply, move::Move m);
+};
+
+#endif    // KOIVISTO_PV_H

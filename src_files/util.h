@@ -32,22 +32,6 @@
 constexpr char const*     ws_t = " \t\n\r\f\v";
 
 /**
- * trim from end of string (right)
- * @param s
- * @param t
- * @return
- */
-std::string&              rtrim(std::string& s, const char* t = ws_t);
-
-/**
- * trim from beginning of string (left)
- * @param s
- * @param t
- * @return
- */
-std::string&              ltrim(std::string& s, const char* t = ws_t);
-
-/**
  * trim from both ends of string (right then left)
  * @param s
  * @param t
@@ -56,50 +40,10 @@ std::string&              ltrim(std::string& s, const char* t = ws_t);
 std::string&              trim(std::string& s, const char* t = ws_t);
 
 /**
- * returns a loading bar as a string. Usually used together with '\r'.
- * @param count
- * @param max
- * @param msg
- * @return
- */
-std::string               loadingBar(int count, int max, const std::string& msg);
-
-/**
- * https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
- * @param data
- * @param toSearch
- * @param replaceStr
- * @return
- */
-std::string&              findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr);
-
-/**
- * splits the string into subparts at the specified char.
- * @param txt
- * @param strs
- * @param ch
- * @return
- */
-std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch);
-
-
-/**
  * splits the string into subparts
  * @param fen
  * @return
  */
-std::vector<std::string> split_input_fen(std::string fen);
-
-/**
- * starts the time measurement.
- * Note that this Tool is not used during search but rather for internal profilings and debugging.
- */
-void                      startMeasure();
-
-/**
- * stops the time measurement and returns the elapsed milliseconds.
- * @return
- */
-int                       stopMeasure();
+std::vector<std::string> splitString(const std::string &fen);
 
 #endif    // CHESSCOMPUTER_UTIL_H
