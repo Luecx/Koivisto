@@ -19,6 +19,7 @@
 #ifndef KOIVISTO_PV_H
 #define KOIVISTO_PV_H
 
+#include <cstring>
 #include "move.h"
 
 /**
