@@ -14,8 +14,8 @@ _SRCS     := $(_CSRCS) $(_CXXSRCS)
 
 # engine name and version
 NAME       = Koivisto
-MINOR      = 17
-MAJOR      = 8
+MINOR      = 0
+MAJOR      = 9
 MAKROS     = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
 EVALFILE   = $(_ROOT)/networks/default.net
