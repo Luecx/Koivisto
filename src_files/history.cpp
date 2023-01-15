@@ -23,13 +23,12 @@ using namespace move;
 
 int SearchData::getHistories(Move m, Color side, Move previous, Move followup, Square threatSquare) const {
     if (isCapture(m)) {
-        return captureHistory[side][getSqToSqFromCombination(m)];
+        return CAPTURE_HISTORY(this,side,m);
     } else {
-        auto fmh_value = (followup != 0 ? fmh[getPieceTypeSqToCombination(followup)][side]
-                                             [getPieceTypeSqToCombination(m)] : 0);
-        auto cmh_value = cmh[getPieceTypeSqToCombination(previous)][side][getPieceTypeSqToCombination(m)];
-        auto th_vaue   = th[side][threatSquare][getSqToSqFromCombination(m)];
-        return (2 * fmh_value + 2 * cmh_value + 2 * th_vaue) / 3;
+        auto fmh_value = (followup != 0 ? FMH(this, followup, side, m) : 0);
+        auto cmh_value = CMH(this, previous, side, m);
+        auto th_value  = THREAT_HISTORY(this, side, threatSquare, m);
+        return (2 * fmh_value + 2 * cmh_value + 2 * th_value) / 3;
     }
 }
 
@@ -37,26 +36,26 @@ int SearchData::getHistories(Move m, Color side, Move previous, Move followup, S
  * Set killer
  */
 void SearchData::setKiller(Move move, Depth ply, Color color) {
-    if (!sameMove(move, killer[color][ply][0])) {
-        killer[color][ply][1] = killer[color][ply][0];
-        killer[color][ply][0] = move;
+    if (!sameMove(move, KILLER1(this, color, ply))) {
+        KILLER2(this, color, ply) = KILLER1(this, color, ply);
+        KILLER1(this, color, ply) = move;
     }
 }
+
 
 /*
  * Is killer?
  */
 int SearchData::isKiller(Move move, Depth ply, Color color) const {
-    if (sameMove(move, killer[color][ply][0]))
+    if (sameMove(move, KILLER1(this, color, ply)))
         return 2;
-    return sameMove(move, killer[color][ply][1]);
+    return sameMove(move, KILLER2(this, color, ply));
 }
-
 /*
  * Set historic eval
  */
 void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
-    eval[color][ply] = ev;
+    EVAL_HISTORY(this, color, ply) = ev;
 }
 
 /*
@@ -64,8 +63,25 @@ void SearchData::setHistoricEval(Score ev, Color color, Depth ply) {
  */
 bool SearchData::isImproving(Score ev, Color color, Depth ply) const {
     if (ply >= 2) {
-        return (ev > eval[color][ply - 2]);
-    } else {
-        return true;
+        return (ev > EVAL_HISTORY(this, color, ply-2));
     }
+    return true;
+}
+
+void SearchData::clear() {
+    std::memset(this->th, 0, 2*64*4096*4);
+    std::memset(this->captureHistory, 0, 2*4096*4);
+    std::memset(this->cmh, 0, 384*2*384*4);
+    std::memset(this->fmh, 0, 384*2*384*4);
+    std::memset(this->killer, 0, 2*257*2*4);
+    std::memset(this->maxImprovement, 0, 64*64*4);
+//
+//    std::cout << sizeof(this->th) << std::endl;
+//
+//    std::memset(this->th, 0, sizeof(this->th));
+//    std::memset(this->captureHistory, 0, sizeof(this->captureHistory));
+//    std::memset(this->cmh, 0, sizeof(this->cmh));
+//    std::memset(this->fmh, 0, sizeof(this->fmh));
+//    std::memset(this->killer, 0, sizeof(this->killer));
+//    std::memset(this->maxImprovement, 0, sizeof(this->maxImprovement));
 }

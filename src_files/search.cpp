@@ -105,9 +105,9 @@ U64 getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
     minor_attacks &= opp_major;
     rook_attacks  &= opp_queen;
 
-    sd->threatCount[ply][color]  = bitCount(pawn_attacks );
-    sd->threatCount[ply][color] += bitCount(minor_attacks);
-    sd->threatCount[ply][color] += bitCount(rook_attacks );
+    THREAT_COUNT(sd, ply, color) = bitCount(pawn_attacks)
+                                 + bitCount(minor_attacks)
+                                 + bitCount(rook_attacks);
 
     return pawn_attacks | rook_attacks | minor_attacks;
 }
@@ -122,9 +122,9 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     
     // store
     if(threats){
-        sd->mainThreat[ply] = bitscanForward(threats);
+        MAIN_THREAT(sd, ply) = bitscanForward(threats);
     }else{
-        sd->mainThreat[ply] = 64;
+        MAIN_THREAT(sd, ply) = 64;
     }
 }
 
@@ -456,18 +456,19 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     if (!inCheck) {
         getThreats(b, sd, ply);
-        ownThreats   = sd->threatCount[ply][ b->getActivePlayer()];
-        enemyThreats = sd->threatCount[ply][!b->getActivePlayer()];
-        mainThreat   = sd->mainThreat [ply];
+        ownThreats   = THREAT_COUNT(sd, ply, b->getActivePlayer());
+        enemyThreats = THREAT_COUNT(sd, ply, !b->getActivePlayer());
+        mainThreat   = MAIN_THREAT(sd, ply);
         
         if (ply > 0 && b->getPreviousMove() != 0) {
-            if (sd->eval[!b->getActivePlayer()][ply - 1] > -TB_WIN_SCORE_MIN) {
-                int improvement = -staticEval - sd->eval[!b->getActivePlayer()][ply - 1];
-                sd->maxImprovement[getSquareFrom(b->getPreviousMove())]
-                                  [getSquareTo  (b->getPreviousMove())] = improvement;
+            if (EVAL_HISTORY(sd, !b->getActivePlayer(), ply - 1) > -TB_WIN_SCORE_MIN) {
+                int improvement = -staticEval - EVAL_HISTORY(sd, !b->getActivePlayer(), ply - 1);
+                MAX_IMPROVEMENT(sd, getSquareFrom(b->getPreviousMove()),
+                                    getSquareTo(b->getPreviousMove())) = improvement;
             }
         }
     }
+    
 
     // we check if the evaluation improves across plies.
     sd->setHistoricEval(staticEval, b->getActivePlayer(), ply);
@@ -510,8 +511,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // reset killer of granchildren
-    sd->killer[b->getActivePlayer()][ply + 2][0] = 0;
-    sd->killer[b->getActivePlayer()][ply + 2][1] = 0;
+    KILLER1(sd, b->getActivePlayer(), ply + 2) = 0;
+    KILLER2(sd, b->getActivePlayer(), ply + 2) = 0;
 
     if (!skipMove && !inCheck && !pv) {
         // **********************************************************************************************************
@@ -593,7 +594,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             b->undoMove();
 
             if (qScore >= betaCut) {
-                table->put(key, scoreToTT(qScore, ply), m, CUT_NODE, depth - 3, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, scoreToTT(qScore, ply), m, CUT_NODE, depth - 3, EVAL_HISTORY(sd, b->getActivePlayer(), ply));
                 return betaCut;
             }
         }
@@ -671,11 +672,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // prune quiet moves that are unlikely to improve alpha
                 if (!inCheck
                     && moveDepth <= 7
-                    && sd->maxImprovement[getSquareFrom(m)][getSquareTo(m)]
+                    && MAX_IMPROVEMENT(sd, getSquareFrom(m), getSquareTo(m))
                                + moveDepth * FUTILITY_MARGIN + 100
-                               + sd->eval[b->getActivePlayer()][ply]
+                               + EVAL_HISTORY(sd, b->getActivePlayer(), ply)
                            < alpha)
                     continue;
+                
 
                 // ***********************************************************************************
                 // history pruning:
@@ -708,7 +710,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         }
 
         if (ply == 0 && depth == 1) {
-            sd->spentEffort[getSquareFrom(m)][getSquareTo(m)] = 0;
+            SPENT_EFFORT(sd, getSquareFrom(m), getSquareTo(m)) = 0;
         }
 
         // compute the static exchange evaluation if the move is a capture
@@ -765,7 +767,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                && !inCheck
                &&  sameMove(m, hashMove)
                &&  ply > 0
-               &&  sd->eval[b->getActivePlayer()][ply] < alpha - 25
+               && EVAL_HISTORY(sd, b->getActivePlayer(), ply) < alpha - 25
                &&  en.type == CUT_NODE) {
             extension = 1;
         }
@@ -878,7 +880,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (score >= beta) {
             if (!skipMove && !td->dropOut) {
                 // put the beta cutoff into the perft_tt
-                table->put(key, scoreToTT(score, ply), m, CUT_NODE, depth, sd->eval[b->getActivePlayer()][ply]);
+                table->put(key, scoreToTT(score, ply), m, CUT_NODE, depth, EVAL_HISTORY(sd, b->getActivePlayer(), ply));
             }
             // also set this move as a killer move into the history
             if (!isCapture(m) && !isPromotion)
@@ -928,20 +930,20 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (!skipMove && !td->dropOut) {
         if (alpha > originalAlpha) {
             table->put(key, scoreToTT(highestScore, ply), bestMove, PV_NODE, depth,
-                       sd->eval[b->getActivePlayer()][ply]);
+                       EVAL_HISTORY(sd, b->getActivePlayer(), ply));
         } else {
             if (hashMove && en.type == CUT_NODE) {
                 bestMove = en.move;
             } else if (highestScore == alpha && !sameMove(hashMove, bestMove)) {
                 bestMove = 0;
             }
-
+            
             if (depth > 7 && bestMove && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
                 table->put(key, scoreToTT(highestScore, ply), bestMove, FORCED_ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply]);
+                           EVAL_HISTORY(sd, b->getActivePlayer(), ply));
             } else {
                 table->put(key, scoreToTT(highestScore, ply), bestMove, ALL_NODE, depth,
-                           sd->eval[b->getActivePlayer()][ply]);
+                           EVAL_HISTORY(sd, b->getActivePlayer(), ply));
             }
         }
     }
@@ -1131,12 +1133,7 @@ void           Search::disableInfoStrings() { this->printInfo = false; }
 void           Search::useTableBase(bool val) { this->useTB = val; }
 void           Search::clearHistory() {
     for (auto &td : tds) {
-        memset(&td.searchData.th, 0, 2*64*4096*4);
-        memset(&td.searchData.captureHistory, 0, 2*4096*4);
-        memset(&td.searchData.cmh, 0, 384*2*384*4);
-        memset(&td.searchData.fmh, 0, 384*2*384*4);
-        memset(&td.searchData.killer, 0, 2*257*2*4);
-        memset(&td.searchData.maxImprovement, 0, 64*64*4);
+        td.searchData.clear();
     }
 }
 void Search::clearHash() { this->table->clear(); }
