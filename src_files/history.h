@@ -32,8 +32,8 @@
 #define MAX_IMPROVEMENT(sd, sq_a, sq_b) ((sd)->maxImprovement                                        \
                                                   [(sq_a)]                                           \
                                                   [(sq_b)])
-#define CAPTURE_HISTORY(sd, side, m)    ((sd)->captureHistory                                        \
-                                                  [(side)]                                           \
+#define CAPTURE_HISTORY(sd, pc, m)      ((sd)->captureHistory                                        \
+                                                  [(pc)]                                             \
                                                   [(getSqToSqFromCombination((m)))])
 #define THREAT_HISTORY(sd,side,sq,m)    ((sd)->th [(side)]                                           \
                                                   [(sq)]                                             \
@@ -68,7 +68,7 @@ struct SearchData {
     int        maxImprovement [bb::N_SQUARES                        ]
                               [bb::N_SQUARES                        ] = {0};
     // capture history table (side-from-to)
-    int        captureHistory [bb::N_COLORS                         ]
+    int        captureHistory [bb::N_PIECES                         ]
                               [bb::N_SQUARES * bb::N_SQUARES        ] = {0};
     // threat history
     int        th             [bb::N_COLORS                         ]
