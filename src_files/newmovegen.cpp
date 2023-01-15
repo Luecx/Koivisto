@@ -45,14 +45,13 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     searched_index  = 0;
     c               = b->getActivePlayer();
     m_skip          = false;
-    m_killer1       = m_sd->killer[c][m_ply][0];
-    m_killer2       = m_sd->killer[c][m_ply][1];
+    m_killer1       = KILLER1(m_sd, c, m_ply);
+    m_killer2       = KILLER2(m_sd, c, m_ply);
     m_threatSquare  = threatSquare;
     m_checkerSq     = checkerSq;
-    m_cmh           = &sd->cmh[getPieceTypeSqToCombination(previous)][c][0];
+    m_cmh           = &CMH(sd, previous, c, 0);
     m_fmh           = &sd->fmh[followup ? getPieceTypeSqToCombination(followup) : 384][c][0];
-    m_th            = &sd->th[c][m_threatSquare][0];
-}
+    m_th            = &THREAT_HISTORY(sd, c, m_threatSquare, 0);}
 
 Move moveGen::next() {
     switch (stage) {
@@ -481,60 +480,39 @@ void moveGen::generateEvasions() {
 
 void moveGen::updateHistory(int weight) {
     weight          = std::min(weight * weight + 5 * weight, 384);
-    Move bestMove   = searched[searched_index - 1];    
+    Move bestMove   = searched[searched_index - 1];
 
+#define UPDATE_HISTORY_UP(value)   ((value) += + weight - weight * (value) / MAX_HIST)
+#define UPDATE_HISTORY_DOWN(value) ((value) += - weight - weight * (value) / MAX_HIST)
+    
     if (isCapture(bestMove)) {
-        m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)] +=
-                    + weight
-                    - weight * m_sd->captureHistory[c][getSqToSqFromCombination(bestMove)]
-                    / MAX_HIST;
+        UPDATE_HISTORY_UP(CAPTURE_HISTORY(m_sd,c,bestMove));
         weight = std::min(weight, 128);
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                    m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
-                                - weight
-                                - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
-                                / MAX_HIST;
+                UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, c, m));
             }
-        } 
+        }
     } else {
-        m_sd->th[c][m_threatSquare][getSqToSqFromCombination(bestMove)] +=
-                    + weight
-                    - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(bestMove)]
-                    / MAX_HIST;
-        m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)] +=
-                    + weight
-                    - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(bestMove)]
-                    / MAX_HIST;
-        m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)] +=
-                    + weight
-                    - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(bestMove)]
-                    / MAX_HIST;
+        UPDATE_HISTORY_UP(THREAT_HISTORY(m_sd,c,m_threatSquare,bestMove));
+        UPDATE_HISTORY_UP(CMH(m_sd,m_previous,c,bestMove));
+        UPDATE_HISTORY_UP(FMH(m_sd,m_followup,c,bestMove));
+        
         weight = std::min(weight, 128);
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                m_sd->captureHistory[c][getSqToSqFromCombination(m)] +=
-                            - weight
-                            - weight * m_sd->captureHistory[c][getSqToSqFromCombination(m)]
-                            / MAX_HIST;
+                UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, c, m));
             } else {
-                m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)] +=
-                            - weight
-                            - weight * m_sd->th[c][m_threatSquare][getSqToSqFromCombination(m)]
-                            / MAX_HIST;
-                m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)] +=
-                            - weight
-                            - weight * m_sd->cmh[getPieceTypeSqToCombination(m_previous)][c][getPieceTypeSqToCombination(m)]
-                            / MAX_HIST;
-                m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)] +=
-                            - weight
-                            - weight * m_sd->fmh[getPieceTypeSqToCombination(m_followup)][c][getPieceTypeSqToCombination(m)]
-                            / MAX_HIST;
+                UPDATE_HISTORY_DOWN(THREAT_HISTORY(m_sd, c, m_threatSquare, m));
+                UPDATE_HISTORY_DOWN(CMH(m_sd, m_previous, c, m));
+                UPDATE_HISTORY_DOWN(FMH(m_sd, m_followup, c, m));
             }
-        } 
+        }
     }
+#undef UPDATE_HISTORY_UP
+#undef UPDATE_HISTORY_DOWN
 }
 
 void moveGen::skip() {
