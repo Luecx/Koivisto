@@ -644,10 +644,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if the move is the move we want to skip, skip this move (used for extensions)
         if (sameMove(m, skipMove))
             continue;
-
-        if (pv && td->threadID == 0){
-            td->pvTable(0)(ply+1) = 0;
-        }
         
         // check if the move gives check and/or its promoting
         bool givesCheck  = ((ONE << getSquareTo(m)) & kingCBB) ? b->givesCheck(m) : 0;

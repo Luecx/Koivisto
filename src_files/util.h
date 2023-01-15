@@ -37,7 +37,7 @@ constexpr char const*     ws_t = " \t\n\r\f\v";
  * @param t
  * @return
  */
-std::string&              trim(std::string& s, const char* t = ws_t);
+std::string& trim(std::string& s, const char* t = ws_t);
 
 /**
  * splits the string into subparts

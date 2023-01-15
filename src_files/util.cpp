@@ -21,7 +21,7 @@
 #define CHESSCOMPUTER_UTIL_CPP
 
 #include "util.h"
-
+#include <iterator>
 
 /**
  * Trims leading and trailing whitespace characters from a given string
