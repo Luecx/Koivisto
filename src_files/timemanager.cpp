@@ -120,7 +120,7 @@ void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go, bool po
     S64 upperTimeBound = time / division;
     
     // Calculate time to use for the match
-    S64 timeToUse      = 2 * inc + 2 * time / moves_to_go + (!ponder_hit * time / 10);
+    S64 timeToUse      = 2 * inc + 2 * time / moves_to_go + (!ponder_hit * time / 20);
     
     // Ensure timeToUse and upperTimeBound do not exceed the match time limit minus overhead
     timeToUse          = std::min(time - overhead - inc - overhead_per_game, timeToUse);
