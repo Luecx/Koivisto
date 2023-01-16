@@ -302,7 +302,6 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
 
     // the thread id starts at 0 for the first thread
     ThreadData* td = &this->tds[threadId];
-    td->searchData.shiftDownKillers();
     
     // initialise the score outside the loop tp keep track of it during iterations.
     // This is required for aspiration windows
@@ -1289,23 +1288,23 @@ void Search::clearHash() {
     this->table->clear();
 }
 
-void Search::setThreads(int threadCount) {
+void Search::setThreads(int p_threadCount) {
     int processorCount = static_cast<int>(std::thread::hardware_concurrency());
     // Check if the number of processors can be determined
     if (processorCount == 0)
         processorCount = MAX_THREADS;
     
     // Clamp the number of threads to the number of processors
-    threadCount = std::min(threadCount, processorCount);
-    threadCount = std::max(threadCount, 1);
-    threadCount = std::min(threadCount, MAX_THREADS);
-    this->threadCount = threadCount;
+    p_threadCount     = std::min(p_threadCount, processorCount);
+    p_threadCount     = std::max(p_threadCount, 1);
+    p_threadCount     = std::min(p_threadCount, MAX_THREADS);
+    this->threadCount = p_threadCount;
 
     // Clear any previous thread data
     tds.clear();
 
     // Create new thread data objects
-    for (int i = 0; i < threadCount; i++) {
+    for (int i = 0; i < p_threadCount; i++) {
         tds.emplace_back();
     }
 }
@@ -1440,6 +1439,7 @@ Move Search::probeDTZ(Board* board) {
     
     if (printInfo)
         return printInfoStringDTZ(this, board, result, s, dtz);
+    return 0;
 }
 
 ThreadData::ThreadData(int threadId) : threadID(threadId) {}

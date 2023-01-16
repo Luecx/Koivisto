@@ -128,8 +128,8 @@ class Search {
     void clearHistory();
     // clears transposition table
     void clearHash();
-    // sets threads to be used for smp
-    void setThreads(int threads);
+    // sets p_threadCount to be used for smp
+    void setThreads(int p_threadCount);
     // set the hash size for the transposition table
     void setHashSize(int hashSize);
     void stop();

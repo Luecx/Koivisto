@@ -88,7 +88,6 @@ void printInfoStringPretty(Search* search, bb::Depth depth, bb::Score score, PVL
     // extract nodes, seldepth and nps
     U64 nodes       = search->totalNodes();
     U64 sel_depth   = search->selDepth();
-    U64 tb_hits     = search->tbHits();
     U64 time        = search->timeManager->elapsedTime();
     U64 nps         = static_cast<U64>(nodes * 1000) /
                       static_cast<U64>(time + 1);

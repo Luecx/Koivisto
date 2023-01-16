@@ -117,9 +117,6 @@ struct SearchData {
     // clears killers for a given ply
     void resetGrandchildrenKillers(bb::Color side, bb::Depth ply);
     
-    // shifts killers by 2 ply to align data from the previous search
-    void shiftDownKillers();
-    
     // checks if the evaluation is improving using the historic evals
     [[nodiscard]] bool isImproving(bb::Score eval, bb::Color color, bb::Depth ply) const;
 } __attribute__((aligned(64)));
