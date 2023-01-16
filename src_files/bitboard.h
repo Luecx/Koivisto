@@ -162,7 +162,15 @@ constexpr char const* SQUARE_IDENTIFIER[] {
     "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 };
 
-constexpr char PIECE_IDENTIFER[] {'P', 'N', 'B', 'R', 'Q', 'K',' ' ,' ','p', 'n', 'b', 'r', 'q', 'k'};
+constexpr char const FILE_IDENTIFIER[] {
+    'a','b','c','d','e','f','g','h'
+};
+
+constexpr char const RANK_IDENTIFIER[] {
+    '1','2','3','4','5','6','7','8'
+};
+
+constexpr char PIECE_IDENTIFIER[] {'P', 'N', 'B', 'R', 'Q', 'K',' ' ,' ','p', 'n', 'b', 'r', 'q', 'k'};
 
 
 constexpr U64 ONE  = 1ULL;

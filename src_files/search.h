@@ -28,6 +28,7 @@
 #include "eval.h"
 #include "pv.h"
 #include "newmovegen.h"
+#include "infostring.h"
 
 #include <chrono>
 #include <cmath>
@@ -40,8 +41,6 @@
 #include <vector>
 
 #define MAX_THREADS 256
-
-
 
 /**
  * data about each thread
@@ -135,8 +134,15 @@ class Search {
     void setHashSize(int hashSize);
     void stop();
 
-    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
-
+//    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend void printInfoString               (Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend void printInfoStringPretty         (Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend void printInfoStringUCI            (Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend move::Move printInfoStringDTZ      (Search* search, Board* board, unsigned int tb_result, bb::Score score, int dtz);
+    friend move::Move printInfoStringDTZPretty(Search* search, Board* board, unsigned int tb_result, bb::Score score, int dtz);
+    friend move::Move printInfoStringDTZUCI   (Search* search, Board* board, unsigned int tb_result, bb::Score score, int dtz);
+    
+    
     // basic move functions
     move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
     [[nodiscard]] bb::Score  pvSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth depth,

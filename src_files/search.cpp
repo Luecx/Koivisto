@@ -291,7 +291,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         
         // print the info string if its the main thread
         if (threadId == 0) {
-            this->printInfoString(depth, score, td->pvTable(0));
+            printInfoString(this, depth, score, td->pvTable(0));
         }
 
         // if the search finished due to timeout, we also need to stop here
@@ -340,10 +340,11 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
     UCI_ASSERT(ply >= 0);
-    
+
     // get the active player
     Color activePlayer = b->getActivePlayer();
-    
+    bool  pv           = (beta - alpha) != 1;
+
     // increment the node counter for the current thread
     td->nodes++;
 
@@ -352,13 +353,18 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         && timeManager->node_limit.nodes <= td->nodes) {
         this->timeManager->stopSearch();
     }
-
+    
+    // if we are in a pv node at depth 0,we need to reset the pv table
+    if (pv && depth == 0){
+        td->pvTable(ply).length = 0;
+    }
+    
     // check if a stop is forced
     if (timeManager->force_stop) {
         td->dropOut = true;
         return beta;
     }
-
+    
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock
     // too often for speed reasons, so we only apply this when the depth is larger than 6.
     if ((depth > 6 && !timeManager->isTimeLeft(&td->searchData))) {
@@ -407,7 +413,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // we extract a lot of information about various things.
     SearchData* sd            = &td->searchData;
     U64         zob           = b->zobrist();
-    bool        pv            = (beta - alpha) != 1;
     Score       originalAlpha = alpha;
     Score       highestScore  = -MAX_MATE_SCORE;
     Score       score         = -MAX_MATE_SCORE;
@@ -716,7 +721,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
         // keep track of the depth we want to extend by
         int extension = 0;
-
+        
         // *******************************************************************************************
         // singular extensions
         // standard implementation apart from the fact that we cancel lmr of parent node in-case the
@@ -753,7 +758,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                        b->getPreviousMove(2), PV_SEARCH, mainThreat, kingCBB);
             m = mGen->next();
         }
-
+        
         if (pv) {
             sd->sideToReduce = !b->getActivePlayer();
             sd->reduce       = false;
@@ -769,7 +774,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                &&  en.type == CUT_NODE) {
             extension = 1;
         }
-
+        
         U64   nodeCount = td->nodes;
 
         
@@ -1211,52 +1216,6 @@ void Search::stop() {
         timeManager->stopSearch();
 }
 
-void Search::printInfoString(Depth depth, Score score, PVLine& pvLine) {
-    if (!printInfo)
-        return;
-    
-    // extract nodes, seldepth and nps
-    U64 nodes       = totalNodes();
-    U64 sel_depth   = selDepth();
-    U64 tb_hits     = tbHits();
-    U64 nps         = static_cast<U64>(nodes * 1000) /
-              static_cast<U64>(timeManager->elapsedTime() + 1);
-
-    // print basic info string including depth and seldepth
-    std::cout << "info"
-              << " depth "          << static_cast<int>(depth)
-              << " seldepth "       << static_cast<int>(sel_depth);
-
-    // print the score. if its a mate score, show mate xx instead of cp xx
-    if (abs(score) > MIN_MATE_SCORE) {
-        std::cout << " score mate " << (MAX_MATE_SCORE - abs(score) + 1) / 2 * (score > 0 ? 1 : -1);
-    } else {
-        std::cout << " score cp "   << score;
-    }
-    // show tablebase hits if tablebase has been hit
-    if (tb_hits != 0) {
-        std::cout << " tbhits "     << tb_hits;
-    }
-
-    // show remaining information (nodes, nps, time, hash usage)
-    std::cout << " nodes "          << nodes
-              << " nps "            << nps
-              << " time "           << timeManager->elapsedTime()
-              << " hashfull "       << static_cast<int>(table->usage() * 1000);
-
-    // print "pv" to shell
-    std::cout << " pv";
-    
-    // go through each move in the PVLine
-    for (int i = 0; i < pvLine.length; i++) {
-        // transform move to a string and append it
-        std::cout << " " << toString(pvLine(i));
-    }
-
-    // new line
-    std::cout << std::endl;
-}
-
 /**
  * probes the wdl tables if tablebases can be used.
  */
@@ -1370,52 +1329,9 @@ Move Search::probeDTZ(Board* board) {
     if (wdl == TB_DRAW) {
         s = 0;
     }
-
-    // get the promotion piece if the target move is a promotion (this does not yet work the way it
-    // should)
-    PieceType promo  = 5 - TB_GET_PROMOTES(result);
-
-    // gets the square from and square to for the move which should be played
-    Square    sqFrom = TB_GET_FROM(result);
-    Square    sqTo   = TB_GET_TO(result);
-
-    // we generate all pseudo legal moves and check for equality between the moves to make sure the
-    // bits are correct.
-    MoveList mv {};
-    generatePerftMoves(board, &mv);
-
-    for (int i = 0; i < mv.getSize(); i++) {
-        // get the current move from the movelist
-        Move m = mv.getMove(i);
-
-        // check if it's the same.
-        if (getSquareFrom(m) == sqFrom && getSquareTo(m) == sqTo) {
-            if (   (    promo == 5
-                    && !isPromotion(m))
-                || (isPromotion(m)
-                    && promo < 5
-                    && getPromotionPieceType(m) == promo)) {
-                std::cout << "info"
-                          << " depth "      << static_cast<int>(dtz)
-                          << " seldepth "   << static_cast<int>(selDepth());
-                std::cout << " score cp "   << s;
-
-                if (tbHits() != 0) {
-                    std::cout << " tbhits " << 1;
-                }
-
-                std::cout << " nodes "      << 1
-                          << " nps "        << 1
-                          << " time "       << timeManager->elapsedTime()
-                          << " hashfull "   << static_cast<int>(table->usage() * 1000);
-                std::cout << std::endl;
-
-                return m;
-            }
-        }
-    }
-
-    return 0;
+    
+    if (printInfo)
+        return printInfoStringDTZ(this, board, result, s, dtz);
 }
 
 ThreadData::ThreadData(int threadId) : threadID(threadId) {}
