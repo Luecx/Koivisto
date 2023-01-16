@@ -35,6 +35,10 @@ using Diagonal = int8_t;
 using AntiDiagonal = int8_t;
 using Direction = int8_t;
 
+using NodeType = uint8_t;
+using NodeAge = uint8_t;
+
+
 using File = int8_t;
 using Rank = int8_t;
 using Piece = int8_t;
@@ -116,6 +120,14 @@ enum Directions{
     SOUTH_WEST = -9,
     SOUTH_EAST = -7,
     N_DIRECTIONS = 8
+};
+
+enum Nodes : NodeType {
+    PV_NODE  = 0,
+    CUT_NODE = 1,
+    ALL_NODE = 2,
+    FORCED_ALL_NODE = 3,
+    FORMER_CUT_NODE = 6,
 };
 
 enum Ranks{

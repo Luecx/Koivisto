@@ -26,19 +26,22 @@
 #include "timemanager.h"
 #include "transpositiontable.h"
 #include "eval.h"
+#include "pv.h"
 #include "newmovegen.h"
 
 #include <chrono>
 #include <cmath>
 #include <ctime>
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
-#include <tgmath.h>
+#include <ctgmath>
 #include <thread>
 #include <vector>
 
 #define MAX_THREADS 256
+
+
 
 /**
  * data about each thread
@@ -60,12 +63,12 @@ struct ThreadData {
     moveGen    generators[bb::MAX_INTERNAL_PLY] {};
     
     // pv information...
-    // the pvIdx indicates what index of the multipv we are analysing
-    int        pvIdx    = 0;
-    // we use a triangular pv table to track the pv during search for each thread
-    move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
-    // we also need to track the partial pv length of each subtree
-    uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
+    PVTable pvTable{};
+    
+//    // we use a triangular pv table to track the pv during search for each thread
+//    move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
+//    // we also need to track the partial pv length of each subtree
+//    uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
 
     ThreadData();
 
@@ -132,7 +135,7 @@ class Search {
     void setHashSize(int hashSize);
     void stop();
 
-    void printInfoString(bb::Depth depth, bb::Score score, move::Move* pv, uint16_t pvLen);
+    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
 
     // basic move functions
     move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
@@ -152,8 +155,5 @@ extern int LMR_DIV;
 
 void       initLMR();
 
-bb::Score scoreToTT(bb::Score s, int plies);
-
-bb::Score scoreFromTT(bb::Score s, int plies);
 
 #endif    // KOIVISTO_SEARCH_H

@@ -81,8 +81,8 @@ bb::U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         }
 
         zob      = b->zobrist();
-        Entry en = perft_tt->get(zob);
-        if (en.depth == depth && en.zobrist == zob) {
+        TTEntry en = perft_tt->get(zob);
+        if (en.depth == depth && en.key == zob) {
             return en.move;
         }
     }

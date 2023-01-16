@@ -18,17 +18,18 @@
  ****************************************************************************************************/
 
 #include "uci.h"
+
 #include "attacks.h"
 #include "polyglot.h"
 #include "search.h"
-#include "uciassert.h"
-
 #include "syzygy/tbprobe.h"
+#include "timer.h"
+#include "uciassert.h"
 
 #include <fstream>
 #include <iostream>
-#include <thread>
 #include <string>
+#include <thread>
 #include <vector>
 
 using namespace bb;
@@ -50,7 +51,7 @@ std::thread searchThread;
  */
 std::string getValue(const std::vector<std::string>& vec, const std::string& key) {
     int index = 0;
-    for (const std::string& s : vec) {
+    for(const std::string& s : vec) {
         if (s == key) {
             return vec.at(index + 1);
         }
@@ -205,8 +206,7 @@ void uci::processCommand(std::string str) {
     str = trim(str);
 
     // next we need to split the input by spaces.
-    std::vector<std::string> split;
-    splitString(str, split, ' ');
+    std::vector<std::string> split = splitString(str);
 
     if (split.at(0) == "ucinewgame") {
         searchObject.clearHash();
@@ -283,11 +283,13 @@ void uci::processCommand(std::string str) {
  */
 void uci::go_perft(int depth, bool hash) {
     perft_init(hash);
-
-    startMeasure();
+    
+    Timer timer{};
+    timer.tick();
     auto nodes = perft(&board, depth, true, true, hash);
-    auto time  = stopMeasure();
-
+    timer.tock();
+    auto time = timer.elapsed();
+    
     std::cout << "nodes: " << nodes << " nps: " << nodes / (time + 1) * 1000 << std::endl;
 
     perft_cleanUp();
@@ -354,8 +356,6 @@ void uci::set_option(const std::string& name, const std::string& value) {
  * The engine is supposed to return readyok after checking that its ready to receive further commands.
  */
 void uci::isReady() {
-    // TODO check if its running
-
     std::cout << "readyok" << std::endl;
 }
 
@@ -381,8 +381,7 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
 
     if (moves.empty())
         return;
-    std::vector<std::string> mv;
-    splitString(moves, mv, ' ');
+    std::vector<std::string> mv = splitString(moves);
 
     for (std::string s : mv) {
         std::string str1 = s.substr(0, 2);
@@ -524,15 +523,19 @@ void uci::bench() {
  * @param str
  */
 void uci::go(const std::vector<std::string>& split, const std::string& str) {
+    // Stop any running search
     uci::stop();
     
     // check for perft first since it will not be working with the remaining options
     if (str.find("perft") != std::string::npos) {
-        uci::go_perft(stoi(getValue(split, "perft")), str.find("hash") != std::string::npos);
+        // If the command is perft, get the depth value and whether or not to use hash table
+        int depth = stoi(getValue(split, "perft"));
+        bool useHash = str.find("hash") != std::string::npos;
+        uci::go_perft(depth, useHash);
         return;
     }
     
-    // reset the time manager
+    // Reset the time manager
     timeManager.reset();
     
     // parse match time.
@@ -542,6 +545,7 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
         || str.find("winc")  != std::string::npos
         || str.find("binc")  != std::string::npos
         || str.find("binc")  != std::string::npos) {
+        // Get the values of the options if they are given
         std::string wtime_str = getValue(split, "wtime");
         std::string btime_str = getValue(split, "btime");
         std::string wincr_str = getValue(split, "winc");

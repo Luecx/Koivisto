@@ -1,4 +1,3 @@
-
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
@@ -17,33 +16,45 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#ifndef CHESSCOMPUTER_UTIL_H
-#define CHESSCOMPUTER_UTIL_H
+//
+// Created by Luecx on 15.01.2023.
+//
 
-#include <chrono>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <regex>
-#include <string>
-#include <vector>
-#include <sstream>
+#include "pv.h"
+move::Move& PVLine::operator()(bb::Depth depth) {
+    // This operator overload allows the struct to be accessed like an array,
+    // so we can use pvLine(depth) to access the move at a specific depth
+    return pv[depth];
+}
 
-constexpr char const*     ws_t = " \t\n\r\f\v";
+move::Move PVLine::operator()(bb::Depth depth) const {
+    // This is the const version of the above operator
+    return pv[depth];
+}
 
-/**
- * trim from both ends of string (right then left)
- * @param s
- * @param t
- * @return
- */
-std::string& trim(std::string& s, const char* t = ws_t);
+PVLine& PVTable::operator()(bb::Depth depth) {
+    // This operator overload allows the struct to be accessed like an array,
+    // so we can use pvTable(depth) to access the PVLine at a specific depth
+    return pvs[depth];
+}
 
-/**
- * splits the string into subparts
- * @param fen
- * @return
- */
-std::vector<std::string> splitString(const std::string &fen);
+PVLine PVTable::operator()(bb::Depth depth) const {
+    // This is the const version of the above operator
+    return pvs[depth];
+}
 
-#endif    // CHESSCOMPUTER_UTIL_H
+void PVTable::reset() {
+    // reset all the lengths of PVLine structs to 0
+    for (auto &pvLine : pvs) {
+        pvLine.length = 0;
+    }
+}
+
+void PVTable::updatePV(bb::Depth ply, move::Move m) {
+    // Add the move to the beginning of the PVLine at the current depth
+    pvs[ply](0) = m;
+    // Copy the PVLine at the next depth to the current depth
+    memcpy(&pvs[ply](1), &pvs[ply + 1](0), sizeof(move::Move) * pvs[ply + 1].length);
+    // Update the length of the PVLine at the current depth
+    pvs[ply].length = pvs[ply + 1].length + 1;
+}

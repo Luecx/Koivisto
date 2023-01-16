@@ -21,82 +21,17 @@
 #define CHESSCOMPUTER_UTIL_CPP
 
 #include "util.h"
+#include <iterator>
 
 /**
- * trim from end of string (right)
- * @param s
- * @param t
- * @return
+ * Trims leading and trailing whitespace characters from a given string
+ * @param s The input string to be trimmed
+ * @return The trimmed string
  */
-std::string& rtrim(std::string& s, const char* t) {
+std::string& trim(std::string& s, const char* t) {
+    s.erase(0, s.find_first_not_of(t));
     s.erase(s.find_last_not_of(t) + 1);
     return s;
-}
-
-/**
- * trim from beginning of string (left)
- * @param s
- * @param t
- * @return
- */
-std::string& ltrim(std::string& s, const char* t) {
-    s.erase(0, s.find_first_not_of(t));
-    return s;
-}
-
-/**
- * trim from both ends of string (right then left)
- * @param s
- * @param t
- * @return
- */
-std::string& trim(std::string& s, const char* t) { return ltrim(rtrim(s, t), t); }
-
-/**
- * https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
- * @param data
- * @param toSearch
- * @param replaceStr
- * @return
- */
-std::string& findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr) {
-    // Get the first occurrence
-    size_t pos = data.find(toSearch);
-
-    // Repeat till end is reached
-    while (pos != std::string::npos) {
-        // Replace this occurrence of Sub String
-        data.replace(pos, toSearch.size(), replaceStr);
-        // Get the next occurrence from the current position
-        pos = data.find(toSearch, pos + replaceStr.size());
-    }
-    return data;
-}
-
-/**
- * splits the string into subparts at the specified char.
- * @param txt
- * @param strs
- * @param ch
- * @return
- */
-std::vector<std::string>& splitString(const std::string& txt, std::vector<std::string>& strs, char ch) {
-    size_t pos        = txt.find(ch);
-    size_t initialPos = 0;
-    strs.clear();
-
-    // Decompose statement
-    while (pos != std::string::npos) {
-        strs.push_back(txt.substr(initialPos, pos - initialPos));
-        initialPos = pos + 1;
-
-        pos        = txt.find(ch, initialPos);
-    }
-
-    // Add the last one
-    strs.push_back(txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
-
-    return strs;
 }
 
 /**
@@ -104,65 +39,15 @@ std::vector<std::string>& splitString(const std::string& txt, std::vector<std::s
  * @param fen
  * @return
  */
-std::vector<std::string> split_input_fen(std::string fen)
-{
+std::vector<std::string> splitString(const std::string &fen) {
     std::stringstream fen_stream(fen);
-    std::string segment;
     std::vector<std::string> seglist;
-
-    while (std::getline(fen_stream, segment, ' '))
-    {
-        seglist.push_back(segment);
-    }
+    std::copy(std::istream_iterator<std::string>(fen_stream),
+              std::istream_iterator<std::string>(),
+              std::back_inserter(seglist));
     return seglist;
 }
 
-/**
- * returns a loading bar as a string. Usually used together with '\r'.
- * @param count
- * @param max
- * @param msg
- * @return
- */
-std::string loadingBar(int count, int max, const std::string& msg) {
-    std::stringstream ss;
-    double            p = count / (double) max;
 
-    ss << static_cast<int>(100 * p) << "% [";
-    for (int i = 0; i < 50 * p; i++) {
-        ss << "=";
-    }
-    ss << ">";
-    for (int i = 0; i < 50 * (1 - p); i++) {
-        ss << " ";
-    }
-    ss << "] ";
-    ss << count << "/" << max << " " << msg;
-    return ss.str();
-}
-
-auto start = std::chrono::system_clock::now();
-
-/**
- * starts the time measurement.
- * Note that this Tool is not used during search but rather for internal profilings and debugging.
- */
-void startMeasure() {
-    // std::cout << "starting measurement!\n";
-    start = std::chrono::system_clock::now();
-}
-
-/**
- * stops the time measurement and returns the elapsed milliseconds.
- * @return
- */
-int stopMeasure() {
-    auto                          end  = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end - start;
-
-    return round(diff.count() * 1000);
-    // std::cout << "measurement finished! [" << round(diff.count() * 1000) << "
-    // ms]" << std::endl;
-}
 
 #endif    // CHESSCOMPUTER_UTIL_CPP

@@ -288,6 +288,9 @@ class Board {
     template<bb::Color color, bb::PieceType piece_type>
     [[nodiscard]] inline bb::U64 getPieceBB() const {return m_piecesBB[color * 8 + piece_type];}
     
+    template<bb::PieceType piece_type>
+    [[nodiscard]] inline bb::U64 getPieceTypeBB() const {return getPieceBB<bb::WHITE, piece_type>() | getPieceBB<bb::BLACK, piece_type>();}
+    
     [[nodiscard]] bb::Score evaluate();
 };
 
