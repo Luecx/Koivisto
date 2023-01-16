@@ -312,11 +312,12 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         Move best = td->searchData.bestMove;
 
         // collect some information which can be used for benching
-        this->searchOverview.nodes = this->totalNodes();
-        this->searchOverview.depth = depth;
-        this->searchOverview.score = score;
-        this->searchOverview.time  = timeman->elapsedTime();
-        this->searchOverview.move  = best;
+        this->searchOverview.nodes     = this->totalNodes();
+        this->searchOverview.depth     = depth;
+        this->searchOverview.score     = score;
+        this->searchOverview.time      = timeman->elapsedTime();
+        this->searchOverview.move      = best;
+        this->searchOverview.pondering = td->pvTable(0)(1);
 
         // return the best move if it's the main thread
         return best;

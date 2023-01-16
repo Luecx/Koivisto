@@ -69,8 +69,13 @@ std::string getValue(const std::vector<std::string>& vec, const std::string& key
  * @param p_timeManager
  */
 void searchAndPrint(TimeManager* p_timeManager) {
-    Move m = searchObject.bestMove(&board, p_timeManager);
-    std::cout << "bestmove " << toString(m) << std::endl;
+    searchObject.bestMove(&board, p_timeManager);
+    auto overview = searchObject.overview();
+    std::cout << "bestmove " << toString(overview.move);
+    if(overview.pondering){
+        std::cout << " pondering " << toString(overview.pondering);
+    }
+    std::cout << std::endl;
 }
 
 /**
@@ -403,7 +408,7 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
                 case 'n': promo = KNIGHT; break;
             }
 
-            if (captured >= 0) {
+            if (captured >= 0 && captured < N_PIECES) {
                 type = 11 + promo;
             } else {
                 type = 7 + promo;
@@ -417,7 +422,7 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
                         type = QUEEN_CASTLE;
                     }
                 } else {
-                    if (captured >= 0) {
+                    if (captured >= 0 && captured < N_PIECES) {
                         type = CAPTURE;
                     } else {
                         type = QUIET;
@@ -427,7 +432,7 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
                 if (abs(s2 - s1) == 16) {
                     type = DOUBLED_PAWN_PUSH;
                 } else if (abs(s2 - s1) != 8) {
-                    if (captured >= 0) {
+                    if (captured >= 0 && captured < N_PIECES) {
                         type = CAPTURE;
                     } else {
                         type = EN_PASSANT;
@@ -436,15 +441,21 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
                     type = QUIET;
                 }
             } else {
-                if (captured >= 0) {
+                if (captured >= 0 && captured < N_PIECES) {
                     type = CAPTURE;
                 } else {
                     type = QUIET;
                 }
             }
         }
-        Move m = genMove(s1, s2, type, moving, captured);
-
+        
+        Move m;
+        if(type & CAPTURE_MASK){
+            m = genMove(s1, s2, type, moving, captured);
+        }else{
+            m = genMove(s1, s2, type, moving);
+        }
+        
         UCI_ASSERT(board.isLegal(m));
         board.move(m);
     }
@@ -560,7 +571,7 @@ void uci::go(const std::vector<std::string>& split, const std::string& str) {
         
         timeManager.setMatchTimeLimit(board.getActivePlayer() == WHITE ? wtime : btime,
                                       board.getActivePlayer() == WHITE ? wincr : bincr,
-                                      mvtog);
+                                      mvtog, sameMove(searchObject.overview().pondering,board.getPreviousMove()));
     }
     if (str.find("depth") != std::string::npos) {
         timeManager.setDepthLimit(stoi(getValue(split, "depth")));

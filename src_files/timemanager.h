@@ -129,7 +129,7 @@ class TimeManager {
     // its based on a complicated equation based on the time thats left for the entire game
     // as well as the increment and the amount of moves which are left until the 40-move rule comes
     // into play
-    void setMatchTimeLimit(bb::S64 time, bb::S64 inc, int moves_to_go);
+    void setMatchTimeLimit(bb::S64 time, bb::S64 inc, int moves_to_go, bool ponder_hit);
     
     // sets the start time. Mostly just used internally
     void setStartTime();

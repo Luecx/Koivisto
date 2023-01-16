@@ -95,7 +95,7 @@ void TimeManager::setMoveTimeLimit  (S64 move_time) {
  * @param moves_to_go : The number of moves to the end of the match
  * @return None
  */
-void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go) {
+void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go, bool ponder_hit) {
     // Ensure input values are non-negative
     UCI_ASSERT(time >= 0);
     UCI_ASSERT(inc >= 0);
@@ -120,7 +120,7 @@ void TimeManager::setMatchTimeLimit (S64 time, S64 inc, int moves_to_go) {
     S64 upperTimeBound = time / division;
     
     // Calculate time to use for the match
-    S64 timeToUse      = 2 * inc + 2 * time / moves_to_go;
+    S64 timeToUse      = 2 * inc + 2 * time / moves_to_go + (!ponder_hit * time / 10);
     
     // Ensure timeToUse and upperTimeBound do not exceed the match time limit minus overhead
     timeToUse          = std::min(time - overhead - inc - overhead_per_game, timeToUse);
