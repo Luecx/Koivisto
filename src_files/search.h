@@ -115,7 +115,9 @@ class Search {
 
     // function to compute get all the legal moves for the board
     [[nodiscard]] move::MoveList legals(Board* board) const;
-
+    // function which is called within the search to print the info string
+    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
+    
     public:
     // returns the overview of the latest search
     [[nodiscard]] SearchOverview overview() const;
@@ -129,13 +131,13 @@ class Search {
     void clearHistory();
     // clears transposition table
     void clearHash();
-    // sets threads to be used for smp
-    void setThreads(int threads);
+    // sets p_threadCount to be used for smp
+    void setThreads(int p_threadCount);
     // set the hash size for the transposition table
     void setHashSize(int hashSize);
+    // stops the search
     void stop();
 
-    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
 
     // basic move functions
     move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
@@ -143,7 +145,7 @@ class Search {
                                       bb::Depth ply, ThreadData* sd, move::Move skipMove,
                                       int behindNMP, bb::Depth* lmrFactor = nullptr);
     [[nodiscard]] bb::Score  qSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth ply,
-                                     ThreadData* sd, bool inCheck = false);
+                                     ThreadData* sd, bb::Depth& depth, bool inCheck = false);
     [[nodiscard]] bb::Score  probeWDL(Board* board);
     [[nodiscard]] move::Move probeDTZ(Board* board);
 };

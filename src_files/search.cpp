@@ -401,7 +401,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
     // depth > MAX_PLY means that it overflowed because depth is unsigned.
     if (depth == 0 || depth > MAX_PLY || ply > MAX_PVSEARCH_PLY) {
-        return qSearch(b, alpha, beta, ply, td, inCheck);
+        Depth temporary_q_depth = 0;
+        return qSearch(b, alpha, beta, ply, td, temporary_q_depth, inCheck);
     }
 
     // we extract a lot of information about various things.
@@ -521,7 +522,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         // if a qsearch on the current position is far below beta at low depth, we can fail soft.
         // **********************************************************************************************************
         if (depth <= 3 && staticEval + RAZOR_MARGIN * depth < beta) {
-            score = qSearch(b, alpha, beta, ply, td);
+            Depth temporary_q_depth;
+            score = qSearch(b, alpha, beta, ply, td, temporary_q_depth);
             if (score < beta)
                 return score;
         }
@@ -587,7 +589,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
 
             b->move<true>(m, table);
 
-            Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td);
+            Depth temporary_q_depth;
+            Score qScore = -qSearch(b, -betaCut, -betaCut + 1, ply + 1, td, temporary_q_depth);
 
             if (qScore >= betaCut)
                 qScore = -pvSearch(b, -betaCut, -betaCut + 1, depth - 4, ply + 1, td, 0, behindNMP);
@@ -956,7 +959,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
  * @param ply
  * @return
  */
-Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, bool inCheck) {
+Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* td, Depth &depth, bool inCheck) {
     UCI_ASSERT(b);
     UCI_ASSERT(td);
     UCI_ASSERT(beta > alpha);
@@ -967,9 +970,9 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // extract information like search data (history tables), zobrist etc
     SearchData* sd         = &td->searchData;
     U64         zob        = b->zobrist();
-    TTEntry     en         = table->get(b->zobrist());
+    TTEntry     en         = table->get(zob);
     NodeType    ttNodeType = ALL_NODE;
-    bb::Score ttScore = scoreFromTT(en.score, ply);
+    bb::Score   ttScore    = scoreFromTT(en.score, ply);
 
     Score stand_pat;
     Score bestScore = -MAX_MATE_SCORE;
@@ -982,15 +985,17 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // ***********************************************************************************************
 
     if (en.key == TT_KEY(zob)) {
-
         if (en.type == PV_NODE) {
+            depth = 0;
             return ttScore;
         } else if (en.type == CUT_NODE) {
             if (ttScore >= beta) {
+                depth = 0;
                 return ttScore;
             }
         } else if (en.type & ALL_NODE) {
             if (ttScore <= alpha) {
+                depth = 0;
                 return ttScore;
             }
         }
@@ -998,7 +1003,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     } else {
         stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
     }
-
+    
     // we can also use the tt entry to adjust the evaluation.
     if (en.key == TT_KEY(zob)) {
         // adjusting eval
@@ -1009,9 +1014,14 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             bestScore = ttScore;
         }
     }
-
-    if (bestScore >= beta || ply >= MAX_INTERNAL_PLY)
+    
+    // ***********************************************************************************************
+    // basic qsearch pruning:
+    // ***********************************************************************************************
+    if (bestScore >= beta || ply >= MAX_INTERNAL_PLY){
+        depth = 0;
         return bestScore;
+    }
     if (alpha < bestScore)
         alpha = bestScore;
 
@@ -1022,7 +1032,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     // keping track of the best move for the transpositions
     Move        bestMove = 0;
     Move        m;
-
+    
     while ((m = mGen->next())) {
         // do not consider illegal moves
         if (!b->isLegal(m))
@@ -1040,23 +1050,37 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         if (see + stand_pat > beta + 200)
             return beta;
         
-
+        // doing the move
         b->move<true>(m, table);
 
+        // checking if the opponent is in check after this move
         bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
-
-        Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent);
-
+        
+        // get the depth of each search to find the highest depth to more accurately determine
+        // the depth of this position
+        Depth node_depth;
+        
+        // recursive search score
+        Depth temporary_q_depth;
+        Score score = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, node_depth, inCheckOpponent);
+        
+        if((node_depth + 1) > depth){
+            depth = node_depth + 1;
+        }
+        
+        // undoing the moe
         b->undoMove();
 
+        // if we exceed the best score, adjust best score and best move
         if (score > bestScore) {
             bestScore = score;
             bestMove  = m;
+            // beta cut
             if (score >= beta) {
                 ttNodeType = CUT_NODE;
                 // store the move with higher depth in tt incase the same capture would improve on
                 // beta in ordinary pvSearch too.
-                table->put(zob, scoreToTT(bestScore, ply), m, ttNodeType, !inCheckOpponent, stand_pat);
+                table->put(zob, scoreToTT(bestScore, ply), m, ttNodeType, node_depth, stand_pat);
                 return score;
             }
             if (score > alpha) {
@@ -1065,6 +1089,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
             }
         }
     }
+    
 
     // store the current position inside the transposition table
     if (bestMove)
@@ -1176,23 +1201,23 @@ void Search::clearHash() {
     this->table->clear();
 }
 
-void Search::setThreads(int threadCount) {
+void Search::setThreads(int p_threadCount) {
     int processorCount = static_cast<int>(std::thread::hardware_concurrency());
     // Check if the number of processors can be determined
     if (processorCount == 0)
         processorCount = MAX_THREADS;
     
     // Clamp the number of threads to the number of processors
-    threadCount = std::min(threadCount, processorCount);
-    threadCount = std::max(threadCount, 1);
-    threadCount = std::min(threadCount, MAX_THREADS);
-    this->threadCount = threadCount;
+    p_threadCount     = std::min(p_threadCount, processorCount);
+    p_threadCount     = std::max(p_threadCount, 1);
+    p_threadCount     = std::min(p_threadCount, MAX_THREADS);
+    this->threadCount = p_threadCount;
 
     // Clear any previous thread data
     tds.clear();
 
     // Create new thread data objects
-    for (int i = 0; i < threadCount; i++) {
+    for (int i = 0; i < p_threadCount; i++) {
         tds.emplace_back();
     }
 }

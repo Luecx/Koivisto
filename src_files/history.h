@@ -98,15 +98,8 @@ struct SearchData {
     bool     targetReached{1};
     // clang-format on
 
-    // function to extract histories
-    [[nodiscard]] int getHistories(move::Move m, bb::Color side, move::Move previous,
-                                   move::Move followup, bb::Square threatSquare) const;
-
     // function to set killers
     void setKiller(move::Move move, bb::Depth ply, bb::Color color);
-
-    // checks if a given move is a killer move
-    [[nodiscard]] int isKiller(move::Move move, bb::Depth ply, bb::Color color) const;
 
     // sets historic evals across plies and saves them
     void setHistoricEval(bb::Score eval, bb::Color color, bb::Depth ply);
@@ -116,6 +109,15 @@ struct SearchData {
 
     // checks if the evaluation is improving using the historic evals
     [[nodiscard]] bool isImproving(bb::Score eval, bb::Color color, bb::Depth ply) const;
+    
+    // checks if a given move is a killer move
+    [[nodiscard]] int isKiller(move::Move move, bb::Depth ply, bb::Color color) const;
+    
+    // function to extract histories
+    [[nodiscard]] int getHistories(move::Move m, bb::Color side, move::Move previous,
+                                   move::Move followup, bb::Square threatSquare) const;
+    
+    
 } __attribute__((aligned(64)));
 
 // clang-format on
