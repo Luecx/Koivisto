@@ -124,3 +124,26 @@ void SearchData::clear() {
     std::memset(this->killer, 0, sizeof(this->killer));
     std::memset(this->maxImprovement, 0, sizeof(this->maxImprovement));
 }
+
+/**
+ * resets the killers for 2 ply ahead for the given side
+ * Used during the search to avoid artifacts
+ * @param side
+ * @param ply
+ */
+void SearchData::resetGrandchildrenKillers(bb::Color side, bb::Depth ply) {
+    KILLER1(this, side, ply + 2) = 0;
+    KILLER2(this, side, ply + 2) = 0;
+}
+/**
+ * idea is to reuse killers from a previous search to improve ordering at the root
+ * For this, its important to shift down the killers from the previous search by 2 plies.
+ */
+void SearchData::shiftDownKillers() {
+    for(bb::Depth d = 0; d < bb::MAX_INTERNAL_PLY; d++){
+        KILLER1(this, bb::WHITE, d) = KILLER1(this, bb::WHITE, d + 2);
+        KILLER1(this, bb::BLACK, d) = KILLER1(this, bb::BLACK, d + 2);
+        KILLER2(this, bb::WHITE, d) = KILLER2(this, bb::WHITE, d + 2);
+        KILLER2(this, bb::BLACK, d) = KILLER2(this, bb::BLACK, d + 2);
+    }
+}
