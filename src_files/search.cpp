@@ -1000,7 +1000,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
     }
 
     // we can also use the tt entry to adjust the evaluation.
-    if (en.key == TT_KEY(zob)) {
+    if ((beta - alpha) != 1 && en.key == TT_KEY(zob)) {
         // adjusting eval
         if (   (en.type == PV_NODE)
             || (en.type == CUT_NODE && stand_pat < ttScore)
