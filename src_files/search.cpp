@@ -119,7 +119,9 @@ void getThreats(Board* b, SearchData* sd, Depth ply) {
     
     // get the threats to the active player
     U64 threats = b->getActivePlayer() == WHITE ? blackThreats : whiteThreats;
-    
+
+    THREATS(sd, ply, WHITE) = whiteThreats;
+    THREATS(sd, ply, BLACK) = blackThreats;
     // store
     if(threats){
         MAIN_THREAT(sd, ply) = bitscanForward(threats);

@@ -495,6 +495,10 @@ void moveGen::updateHistory(int weight) {
             }
         }
     } else {
+        
+        
+        
+        
         UPDATE_HISTORY_UP(THREAT_HISTORY(m_sd,c,m_threatSquare,bestMove));
         UPDATE_HISTORY_UP(CMH(m_sd,m_previous,c,bestMove));
         UPDATE_HISTORY_UP(FMH(m_sd,m_followup,c,bestMove));
@@ -505,7 +509,15 @@ void moveGen::updateHistory(int weight) {
             if (isCapture(m)) {
                 UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, c, m));
             } else {
-                UPDATE_HISTORY_DOWN(THREAT_HISTORY(m_sd, c, m_threatSquare, m));
+                
+                bb::U64 threats = THREATS(m_sd, m_ply, c);
+                while(threats){
+                    Square sq = bitscanForward(threats);
+                    UPDATE_HISTORY_DOWN(THREAT_HISTORY(m_sd, c, sq, m));
+                    threats = lsbReset(threats);
+                }
+                
+//                UPDATE_HISTORY_DOWN(THREAT_HISTORY(m_sd, c, m_threatSquare, m));
                 UPDATE_HISTORY_DOWN(CMH(m_sd, m_previous, c, m));
                 UPDATE_HISTORY_DOWN(FMH(m_sd, m_followup, c, m));
             }

@@ -48,6 +48,9 @@
                                                   [(side)]                                           \
                                                   [(ply)]                                            \
                                                   [(id)])
+#define THREATS(sd, ply, side)         ((sd)->threats                                                \
+                                                  [(ply)]                                            \
+                                                  [(side)])
 #define THREAT_COUNT(sd, ply, side)     ((sd)->threatCount                                           \
                                                   [(ply)]                                            \
                                                   [(side)])
@@ -87,6 +90,8 @@ struct SearchData {
                               [bb::MAX_INTERNAL_PLY + 2             ]
                               [2                                    ] = {0};
     // threat data
+    bb::U64    threats        [bb::MAX_INTERNAL_PLY                 ]
+                              [bb::N_COLORS                         ] = {0};
     int        threatCount    [bb::MAX_INTERNAL_PLY                 ]
                               [bb::N_COLORS                         ] = {0};
     bb::Square mainThreat     [bb::MAX_INTERNAL_PLY                 ] = {0};
