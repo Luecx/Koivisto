@@ -110,7 +110,6 @@ std::string move::moveToSAN(const Move& move){
         }
     }
     
-    
     std::string prefix{};
     std::string midfix{};
     std::string postfix{};

@@ -486,12 +486,12 @@ void moveGen::updateHistory(int weight) {
 #define UPDATE_HISTORY_DOWN(value) ((value) += - weight - weight * (value) / MAX_HIST)
     
     if (isCapture(bestMove)) {
-        UPDATE_HISTORY_UP(CAPTURE_HISTORY(m_sd,c,bestMove));
+        UPDATE_HISTORY_UP(CAPTURE_HISTORY(m_sd,m_ply,bestMove));
         weight = std::min(weight, 128);
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, c, m));
+                UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, m_ply, m));
             }
         }
     } else {
@@ -503,7 +503,7 @@ void moveGen::updateHistory(int weight) {
         for (int i = 0; i < searched_index - 1; i++) {
             Move m = searched[i];
             if (isCapture(m)) {
-                UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, c, m));
+                UPDATE_HISTORY_DOWN(CAPTURE_HISTORY(m_sd, m_ply, m));
             } else {
                 UPDATE_HISTORY_DOWN(THREAT_HISTORY(m_sd, c, m_threatSquare, m));
                 UPDATE_HISTORY_DOWN(CMH(m_sd, m_previous, c, m));
