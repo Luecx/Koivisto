@@ -148,6 +148,9 @@ void printInfoStringPretty(Search* search, bb::Depth depth, bb::Score score, PVL
         score_value = score / 100.0;
     }
     
+    // detect speed format
+    
+    
     // convert time to string
     std::stringstream time_stream;
     time_stream << std::setprecision(3) << time_value;
