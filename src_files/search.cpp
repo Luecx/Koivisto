@@ -64,7 +64,7 @@ bool hasOnlyPawns(Board* board, Color color) {
 }
 
 template<Color color>
-U64 getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
+Square getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
     const U64 occupied         = b->getOccupiedBB();
     
     const U64 opp_major  = b->getPieceBB<!color, QUEEN >()
@@ -108,24 +108,35 @@ U64 getThreatsOfSide(Board* b, SearchData* sd, Depth ply){
     THREAT_COUNT(sd, ply, color) = bitCount(pawn_attacks)
                                  + bitCount(minor_attacks)
                                  + bitCount(rook_attacks);
-
-    return pawn_attacks | rook_attacks | minor_attacks;
+    
+    if(pawn_attacks & opp_queen){
+        return bitscanForward(pawn_attacks & opp_queen);
+    }else if(minor_attacks & opp_queen){
+        return bitscanForward(minor_attacks & opp_queen);
+    }else if(rook_attacks & opp_queen){
+        return bitscanForward(rook_attacks & opp_queen);
+    }else if(pawn_attacks & opp_major){
+        return bitscanForward(pawn_attacks & opp_major);
+    }else if(minor_attacks & opp_major){
+        return bitscanForward(minor_attacks & opp_major);
+    }else if(pawn_attacks & opp_minor){
+        return bitscanForward(pawn_attacks & opp_minor);
+    }else if(pawn_attacks | minor_attacks | rook_attacks){
+        return bitscanForward(pawn_attacks | minor_attacks | rook_attacks);
+    }else{
+        return 64;
+    }
+    
 }
 
 void getThreats(Board* b, SearchData* sd, Depth ply) {
     // compute threats for both sides
-    U64 whiteThreats = getThreatsOfSide<WHITE>(b, sd, ply);
-    U64 blackThreats = getThreatsOfSide<BLACK>(b, sd, ply);
+    Square whiteMainThreat  = getThreatsOfSide<WHITE>(b, sd, ply);
+    Square blackMainThreats = getThreatsOfSide<BLACK>(b, sd, ply);
     
     // get the threats to the active player
-    U64 threats = b->getActivePlayer() == WHITE ? blackThreats : whiteThreats;
-    
-    // store
-    if(threats){
-        MAIN_THREAT(sd, ply) = bitscanForward(threats);
-    }else{
-        MAIN_THREAT(sd, ply) = 64;
-    }
+    Square threats = b->getActivePlayer() == WHITE ? blackMainThreats : whiteMainThreat;
+    MAIN_THREAT(sd, ply) = threats;
 }
 
 U64 getNewThreats(Board* b, move::Move m) {
