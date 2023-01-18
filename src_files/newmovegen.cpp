@@ -143,7 +143,8 @@ void moveGen::addQuiet(Move m) {
     quiets[quietSize] = m;
     quietScores[quietSize++] = m_th[getSqToSqFromCombination(m)] 
                              + m_cmh[getPieceTypeSqToCombination(m)] 
-                             + m_fmh[getPieceTypeSqToCombination(m)];
+                             + m_fmh[getPieceTypeSqToCombination(m)]
+                             + 100 * (getBit(m_checkerSq , getSquareTo(m)));
 }
 
 Move moveGen::nextNoisy() {
