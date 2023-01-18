@@ -21,6 +21,7 @@
 #include "attacks.h"
 #include "transpositiontable.h"
 #include "board.h"
+#include "bitboard.h"
 #include "uciassert.h"
 
 using namespace bb;
@@ -213,7 +214,7 @@ std::string Board::fen() const {
                     ss << counting;
                 }
                 counting = 0;
-                ss << PIECE_IDENTIFER[piece];
+                ss << PIECE_IDENTIFIER[piece];
             }
         }
         if (counting != 0) {
@@ -1382,7 +1383,7 @@ std::ostream& operator<<(std::ostream& os, Board& board) {
             // os << squareIndex(r,f);
             const Square sq = bb::squareIndex(r, f);
             if (board.getPiece(sq) >= 0) {
-                os << " | " << PIECE_IDENTIFER[board.getPiece(bb::squareIndex(r, f))];
+                os << " | " << PIECE_IDENTIFIER[board.getPiece(bb::squareIndex(r, f))];
             } else {
                 os << " |  ";
             }

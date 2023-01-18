@@ -83,12 +83,61 @@ std::string move::toString(const Move& move) {
     res.append(bb::SQUARE_IDENTIFIER[getSquareFrom(move)]);
     res.append(bb::SQUARE_IDENTIFIER[getSquareTo(move)]);
     if (isPromotion(move)) {
-        char chr = tolower(bb::PIECE_IDENTIFER[getPromotionPiece(move)]);
+        char chr = tolower(bb::PIECE_IDENTIFIER[getPromotionPiece(move)]);
         res.push_back(chr);
     }
     
     return res;
 }
+
+/**
+ * returns a SAN string for the given move
+ * @param move
+ * @return
+ */
+std::string move::moveToSAN(const Move& move){
+
+    auto type      = getType(move);
+    auto pieceType = getMovingPieceType(move);
+    auto sqFrom    = getSquareFrom(move);
+    auto sqTo      = getSquareTo(move);
+    
+    if(isCastle(move)){
+        if(type == QUEEN_CASTLE){
+            return "O-O-O";
+        }else{
+            return "O-O";
+        }
+    }
+    
+    
+    std::string prefix{};
+    std::string midfix{};
+    std::string postfix{};
+    
+    if(isCapture(move)){
+        midfix = "x";
+    }
+    postfix = bb::SQUARE_IDENTIFIER[sqTo];
+    
+    if(pieceType == bb::PAWN){
+        if(isCapture(move)){
+            prefix = bb::FILE_IDENTIFIER[bb::fileIndex(sqFrom)];
+        }
+        if(isEnPassant(move)){
+            postfix += " e.p.";
+        }
+        if(isPromotion(move)){
+            postfix += "=";
+            postfix += char(std::toupper(bb::PIECE_IDENTIFIER[getPromotionPiece(move)]));
+        }
+    }else{
+        prefix = std::toupper(bb::PIECE_IDENTIFIER[pieceType]);
+    }
+    
+    return prefix + midfix + postfix;
+}
+
 
 /**
  * swaps the move object at index i1 and index i2

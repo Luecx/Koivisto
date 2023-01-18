@@ -113,7 +113,10 @@ struct SearchData {
 
     // clears the history. This involves resetting all history tables
     void clear();
-
+    
+    // clears killers for a given ply
+    void resetGrandchildrenKillers(bb::Color side, bb::Depth ply);
+    
     // checks if the evaluation is improving using the historic evals
     [[nodiscard]] bool isImproving(bb::Score eval, bb::Color color, bb::Depth ply) const;
 } __attribute__((aligned(64)));

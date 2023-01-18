@@ -169,6 +169,7 @@ inline void setCapturedPiece(Move& move, const bb::Piece capturedPiece) {
 }
 
 [[nodiscard]] std::string toString(const Move& move);
+[[nodiscard]] std::string moveToSAN(const Move& move);
 void                      printMoveBits(Move move, bool bitInfo = true);
 
 class MoveList {

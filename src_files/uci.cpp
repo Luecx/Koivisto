@@ -25,6 +25,7 @@
 #include "syzygy/tbprobe.h"
 #include "timer.h"
 #include "uciassert.h"
+#include "infostring.h"
 
 #include <fstream>
 #include <iostream>
@@ -156,7 +157,7 @@ void uci::eval() {
             if(pc < 0){
                 std::cout << empty;
             }else{
-                std::cout << "|   " << PIECE_IDENTIFER[pc] << "   ";
+                std::cout << "|   " << PIECE_IDENTIFIER[pc] << "   ";
             }
         }
         
@@ -270,6 +271,8 @@ void uci::processCommand(std::string str) {
         bench();
     } else if (split.at(0) == "exit" || split.at(0) == "quit"){
         exit(0);
+    } else if (split.at(0) == "-i"){
+        usePrettyInfoString = true;
     }
 }
 

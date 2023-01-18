@@ -124,3 +124,14 @@ void SearchData::clear() {
     std::memset(this->killer, 0, sizeof(this->killer));
     std::memset(this->maxImprovement, 0, sizeof(this->maxImprovement));
 }
+
+/**
+ * resets the killers for 2 ply ahead for the given side
+ * Used during the search to avoid artifacts
+ * @param side
+ * @param ply
+ */
+void SearchData::resetGrandchildrenKillers(bb::Color side, bb::Depth ply) {
+    KILLER1(this, side, ply + 2) = 0;
+    KILLER2(this, side, ply + 2) = 0;
+}
