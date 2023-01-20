@@ -215,6 +215,51 @@ bb::U64 generateBishopAttacks (bb::Square sq, bb::U64 occupied);
     const bb::U64 blockers = opponent & attacks;
     return attacks ^ lookUpBishopAttacks(index, occupied ^ blockers);
 }
+
+/**
+ * looks up all the squares that are covered by the given piece. does not check if it covers an empty
+ * square or not.
+ * @param piece  The piece for which to lookup the covered squares
+ * @param square The square on which the piece is located
+ * @param occupied  A bitboard representing all the occupied squares on the board
+ * @return A bitboard representing all the squares covered by the given piece
+ */
+[[nodiscard]] inline bb::U64 lookUpCoveredSquares(bb::Piece piece, bb::Square square,
+                                                  bb::U64 occupied) {
+    // Get the piece type and color of the given piece
+    const bb::PieceType pt = bb::getPieceType(piece);
+    const bb::Color     c  = bb::getPieceColor(piece);
+    switch (pt) {
+        case bb::PAWN: {
+            // Create a bitboard for the given square
+            bb::U64 piece_bb = bb::ONE << square;
+            // Return the squares covered by the pawn in the north-west and north-east direction for
+            // white pawns or south-west and south-east direction for black pawns
+            return (c == bb::WHITE ? bb::shiftNorthEast(piece_bb) | bb::shiftNorthWest(piece_bb)
+                                   : bb::shiftSouthEast(piece_bb) | bb::shiftSouthWest(piece_bb));
+        }
+        case bb::KNIGHT:
+            // Return the squares covered by the knight using the precomputed knight attack bitboard
+            return attacks::KNIGHT_ATTACKS[square];
+        case bb::BISHOP:
+            // Return the squares covered by the bishop using the precomputed bishop attack bitboard
+            // taking into account the occupied squares
+            return attacks::lookUpBishopAttacks(square, occupied);
+        case bb::ROOK:
+            // Return the squares covered by the rook using the precomputed rook attack bitboard
+            // taking into account the occupied squares
+            return attacks::lookUpRookAttacks(square, occupied);
+        case bb::QUEEN:
+            // Return the squares covered by the queen using the precomputed bishop and rook attack
+            // bitboards taking into account the occupied squares
+            return attacks::lookUpRookAttacks(square, occupied)
+                 | attacks::lookUpBishopAttacks(square, occupied);
+        case bb::KING:
+            // Return the squares covered by the king using the precomputed king attack bitboard
+            return attacks::KING_ATTACKS[square];
+    }
+    return 0;
 }
 
+}
 #endif    // KOIVISTO_ATTACKS_H
