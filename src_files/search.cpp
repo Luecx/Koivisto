@@ -429,9 +429,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
     
     // if we are in a pv node at depth 0,we need to reset the pv table
-    if (pv && depth == 0){
-        td->pvTable(ply).length = 0;
-    }
+    td->pvTable(ply).length = 0;
     
     // check if a stop is forced
     if (timeManager->force_stop) {
