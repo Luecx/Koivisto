@@ -465,7 +465,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
             return -MAX_MATE_SCORE + ply;
         }
-        return 8 - (td->nodes & MASK<4>);
+        return 2 - (td->nodes & MASK<2>);
     }
 
     // check if the active player is in check. used for various pruning decisions.

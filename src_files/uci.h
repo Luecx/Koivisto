@@ -43,7 +43,7 @@ void mainloop(int argc, char* argv[]);
 
 // processCommand - This function takes a string as input, and processes the command by calling
 // appropriate functions based on the command.
-void processCommand(std::string str);
+bool processCommand(std::string str);
 
 // go_perft - This function runs a perft test with a given depth and hash usage.
 void go_perft(int depth, bool hash);

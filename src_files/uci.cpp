@@ -97,17 +97,18 @@ void uci::mainloop(int argc, char* argv[]) {
     board = Board();
     std::atexit(uci::quit);
     std::string line;
-
+    
+    bool exit_received = false;
     // read given commands from shell
     for(int i = 1; i < argc; i++){
-        processCommand(argv[i]);
+        exit_received |= processCommand(argv[i]);
         // OB requires us to give an exit command once the bench command is given
         if( strcmp(argv[i], "bench") == 0) {
-            processCommand("exit");
+            exit_received |= processCommand("exit");
         }
     }
     
-    while (std::getline(std::cin, line)) {
+    while (!exit_received && std::getline(std::cin, line)) {
         uci::processCommand(line);
     }
 }
@@ -201,11 +202,12 @@ void uci::eval() {
 
 /**
  * processes a single command.
+ * @return true if further commands should be parsed, false if the engine should exit
  */
-void uci::processCommand(std::string str) {
+bool uci::processCommand(std::string str) {
     // we trim all white spaces on both sides first
     str = trim(str);
-
+    
     // next we need to split the input by spaces.
     std::vector<std::string> split = splitString(str);
 
@@ -217,7 +219,7 @@ void uci::processCommand(std::string str) {
         uci::uci();
     } else if (split.at(0) == "setoption") {
         if (split.size() < 5)
-            return;
+            return false;
 
         const std::string name  = getValue(split, "name");
         const std::string value = getValue(split, "value");
@@ -270,10 +272,11 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "bench"){
         bench();
     } else if (split.at(0) == "exit" || split.at(0) == "quit"){
-        exit(0);
+        return false;
     } else if (split.at(0) == "-i"){
         usePrettyInfoString = true;
     }
+    return true;
 }
 
 /**
