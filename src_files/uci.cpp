@@ -118,6 +118,7 @@ void uci::mainloop(int argc, char* argv[]) {
  * Also displays a list of all uci options which can be set. Finally, 'uciok' is sent back to receive further commands.
  */
 void uci::uci() {
+    usePrettyInfoString = false;
     std::cout << "id name Koivisto " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
     std::cout << "id author K. Kahre, F. Eggers" << std::endl;
     std::cout << "option name Hash type spin default 16 min 1 max " << maxTTSize() << std::endl;

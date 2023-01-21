@@ -31,7 +31,7 @@ using namespace bb;
 using namespace move;
 
 
-bool usePrettyInfoString = false;
+bool usePrettyInfoString = true;
 
 void printInfoStringUCI(Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine){
     if (!search->printInfo)
