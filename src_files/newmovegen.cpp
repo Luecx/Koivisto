@@ -263,7 +263,7 @@ void moveGen::generateNoisy() {
 
 
     // Pieces
-    for(Piece p = KNIGHT; p <= QUEEN; p++){
+    for(Piece p = QUEEN; p >= KNIGHT; p--){
         U64 pieceOcc    = m_board->getPieceBB(c, p);
         movingPiece = p + 8 * c;
         while(pieceOcc){
