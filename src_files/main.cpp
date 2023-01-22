@@ -17,9 +17,22 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
+#include "attacks.h"
 #include "uci.h"
+
+using namespace move;
+using namespace bb;
 
 int main(int argc, char *argv[]) {
     uci::mainloop(argc, argv);
+//    bb::init();
+//    attacks::init();
+//
+//    Board b{"4R3/2r3p1/5bk1/1p1r3p/p2PR1P1/P1BK1P2/1P6/8 b - -"};
+//    Move m = genMove(H5,G4,CAPTURE, BLACK_PAWN, WHITE_PAWN);
+//
+//    std::cout << b.staticExchangeEvaluationAbove(m, 0) << std::endl;
+//    std::cout << b.staticExchangeEvaluation(m) << std::endl;
+    
     return 0;
 }

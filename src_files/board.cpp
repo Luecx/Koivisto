@@ -865,18 +865,22 @@ bool Board::staticExchangeEvaluationAbove(move::Move m, bb::Score threshold) con
     }
     
     // return if our capture didn't improve the threshold
-    if(score < 0) return false;
+    if(score < 0) {
+        return false;
+    }
     
     // check if the captured piece - our_own piece - threshold is above 0
     // if so, no matter what the opponent does, the capture is above the threshold
-    score += see_piece_vals[getMovingPieceType(m)];
+    score -= see_piece_vals[getMovingPieceType(m)];
     
     // return true if we are above the threashold
-    if(score > 0) return true;
+    if(score >= 0)  {
+        return true;
+    }
     
     // perform the swap algorithm
     // get the moving piece color as well as a bitboard of the occupied squares adjusted by the move
-    Color attacker = getMovingPieceColor(m);
+    Color attacker = !getMovingPieceColor(m);
     U64   occBB    = m_occupiedBB;
     setBit(occBB, sqTo);
     unsetBit(occBB, sqFrom);
@@ -901,9 +905,8 @@ bool Board::staticExchangeEvaluationAbove(move::Move m, bb::Score threshold) con
                       | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN])
                       | (attacks::KNIGHT_ATTACKS[sqTo] & (getPieceTypeBB<KNIGHT>()))
                       | (attacks::KING_ATTACKS  [sqTo] & (getPieceTypeBB<KING>  ()))
-                      | (attacks::lookUpRookAttacks(sqTo, occBB) &  horSliderBB)
-                      | (attacks::lookUpRookAttacks(sqTo, occBB) &  diaSliderBB);
-    
+                      | (attacks::lookUpRookAttacks  (sqTo, occBB) &  horSliderBB)
+                      | (attacks::lookUpBishopAttacks(sqTo, occBB) &  diaSliderBB);
     
     // start swap algorithm (its more efficient to just run forever here since
     // other, more precise break-criteria are implemented during the loop)
@@ -920,14 +923,17 @@ bool Board::staticExchangeEvaluationAbove(move::Move m, bb::Score threshold) con
         
         // get the least valuable piece which would capture next
         PieceType pt = PAWN;
-        #pragma unroll
         for(pt = PAWN; pt <= KING; pt ++){
             if(getPieceBB(attacker, pt) & activeAttackersBB){
                 break;
             }
         }
 
-        // swap pruning (idea from Berserk)
+        // safety stuff
+        if(pt > KING)
+            break;
+        
+        // swap pruning
         if ((score = -(score + 1 + see_piece_vals[pt])) >= 0) {
             // if the king captures but could be recaptured, we fail
             if (pt != KING || !(attackersBB & getTeamOccupiedBB(!attacker))) {
@@ -937,14 +943,16 @@ bool Board::staticExchangeEvaluationAbove(move::Move m, bb::Score threshold) con
         }
         
         // perform the move on the occ bitboard
-        U64 pieceBB = getPieceBB(attacker, pt);
+        U64 pieceBB = getPieceBB(attacker, pt) & attackersBB;
         Square pieceSqFrom = bitscanForward(pieceBB);
+        
         // unset attacker
         unsetBit(occBB, pieceSqFrom);
         // we need to update the attackers. add any potentially discovered attacks based on the occ-bb
         if(pt == PAWN || pt == BISHOP || pt == QUEEN){
             attackersBB |= attacks::lookUpBishopAttacks(sqTo, occBB) & diaSliderBB;
-        }else{
+        }
+        if(pt == ROOK || pt == QUEEN){
             attackersBB |= attacks::lookUpRookAttacks(sqTo, occBB) & horSliderBB;
         }
         // flip attacking side
