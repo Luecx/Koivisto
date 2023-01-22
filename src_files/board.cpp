@@ -840,6 +840,122 @@ Score Board::staticExchangeEvaluation(Move m) const {
 }
 
 /**
+ * returns the static exchange evaluation for the given move.
+ * this does not consider promotions during captures.
+ * @param m
+ * @return
+ */
+bool Board::staticExchangeEvaluationAbove(move::Move m, bb::Score threshold) const {
+    // castles, ep and promotions are assumed to always be above a threshold
+    if(isCastle(m) || isEnPassant(m) || isPromotion(m)){
+        return true;
+    }
+    
+    // get information about the first move and do potential pruning
+    Square sqFrom = getSquareFrom(m);
+    Square sqTo   = getSquareTo(m);
+    
+    // check if the first move is actually viable or not. if we are not a capture and
+    // the threshold is above 0, fail (because the opponent wouldn't have to capture)
+    Score score = - threshold;
+    
+    // if its a capture adjust the score by the capture
+    if(isCapture(m)){
+        score += see_piece_vals[getCapturedPieceType(m)];
+    }
+    
+    // return if our capture didn't improve the threshold
+    if(score < 0) return false;
+    
+    // check if the captured piece - our_own piece - threshold is above 0
+    // if so, no matter what the opponent does, the capture is above the threshold
+    score += see_piece_vals[getMovingPieceType(m)];
+    
+    // return true if we are above the threashold
+    if(score > 0) return true;
+    
+    // perform the swap algorithm
+    // get the moving piece color as well as a bitboard of the occupied squares adjusted by the move
+    Color attacker = getMovingPieceColor(m);
+    U64   occBB    = m_occupiedBB;
+    setBit(occBB, sqTo);
+    unsetBit(occBB, sqFrom);
+    
+    // the thing with attackers is that some attacker may be discovered after certain attackers
+    // have attacked. Its relevant during the swap algorithm to update the attackers bitboard
+    // after every move to check for discovered attacks. Discovered attacks can only happen
+    // for sliding pieces (rooks, queens, bishops). They are extracted at the first point
+    // for easier access later on
+    U64 rooksBB = getPieceTypeBB<ROOK>();
+    U64 queensBB = getPieceTypeBB<QUEEN>();
+    U64 bishopsBB = getPieceTypeBB<BISHOP>();
+    
+    // they can be divided into diagonal sliding pieces and horizontal ones
+    U64 horSliderBB = rooksBB | queensBB;
+    U64 diaSliderBB = bishopsBB | queensBB;
+
+    // get initial attacks (exclude any potentially discovered attacks since they will update during
+    // SEE)
+    U64 sqBB = ONE << sqTo;
+    U64 attackersBB = ( ( shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
+                      | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN])
+                      | (attacks::KNIGHT_ATTACKS[sqTo] & (getPieceTypeBB<KNIGHT>()))
+                      | (attacks::KING_ATTACKS  [sqTo] & (getPieceTypeBB<KING>  ()))
+                      | (attacks::lookUpRookAttacks(sqTo, occBB) &  horSliderBB)
+                      | (attacks::lookUpRookAttacks(sqTo, occBB) &  diaSliderBB);
+    
+    
+    // start swap algorithm (its more efficient to just run forever here since
+    // other, more precise break-criteria are implemented during the loop)
+    while(true){
+        // remove attackers which have moved before
+        attackersBB &= occBB;
+        
+        // get a subset of the attackers which is currently moving
+        U64 activeAttackersBB = attackersBB & getTeamOccupiedBB(attacker);
+        
+        // if there are no attackers, exit the algorithm
+        if(!activeAttackersBB)
+            break;
+        
+        // get the least valuable piece which would capture next
+        PieceType pt = PAWN;
+        #pragma unroll
+        for(pt = PAWN; pt <= KING; pt ++){
+            if(getPieceBB(attacker, pt) & activeAttackersBB){
+                break;
+            }
+        }
+
+        // swap pruning (idea from Berserk)
+        if ((score = -(score + 1 + see_piece_vals[pt])) >= 0) {
+            // if the king captures but could be recaptured, we fail
+            if (pt != KING || !(attackersBB & getTeamOccupiedBB(!attacker))) {
+                attacker = !attacker;
+            }
+            break;
+        }
+        
+        // perform the move on the occ bitboard
+        U64 pieceBB = getPieceBB(attacker, pt);
+        Square pieceSqFrom = bitscanForward(pieceBB);
+        // unset attacker
+        unsetBit(occBB, pieceSqFrom);
+        // we need to update the attackers. add any potentially discovered attacks based on the occ-bb
+        if(pt == PAWN || pt == BISHOP || pt == QUEEN){
+            attackersBB |= attacks::lookUpBishopAttacks(sqTo, occBB) & diaSliderBB;
+        }else{
+            attackersBB |= attacks::lookUpRookAttacks(sqTo, occBB) & horSliderBB;
+        }
+        // flip attacking side
+        attacker = !attacker;
+        
+    }
+    return attacker != getMovingPieceColor(m);
+}
+
+
+/**
  * returns a bitboard with all squares highlighted which either attack or defend the given square
  * @param occupied
  * @param sq

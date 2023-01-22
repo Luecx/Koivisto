@@ -204,6 +204,9 @@ class Board {
     // computes the static exchange evaluation for a given move. used the cache if defined.
     [[nodiscard]] bb::Score staticExchangeEvaluation(move::Move m) const;
     
+    // checks if SEE is above a certain threshold. more efficient than default SEE
+    [[nodiscard]] bool staticExchangeEvaluationAbove(move::Move m, bb::Score score) const;
+    
     // returns a bitboard of all squares which attack a specific square. mainly used for see.
     [[nodiscard]] bb::U64 attacksTo(bb::U64 occupied, bb::Square sq) const;
     
