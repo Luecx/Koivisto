@@ -83,6 +83,19 @@ struct AccumulatorTableEntry {
     Accumulator accumulator {};
 } __attribute__((aligned(128)));
 
+struct Index{
+    bb::PieceType pieceType;
+    bb::Color pieceColor;
+    bb::Square square;
+    bb::Square wKingSq;
+    bb::Square bKingSq;
+    
+    int operator()(bb::Color side){
+        return nn::index(pieceType, pieceColor, square, side,
+                         side == bb::WHITE ? wKingSq : bKingSq);
+    }
+} __attribute__((aligned(8)));
+
 // this is used incase a king moves
 // without the table we would need to fully recompute
 // with the table, we are able to look into the table and get a potential similar position
@@ -123,7 +136,10 @@ struct Evaluator {
     
     void clearHistory();
     
-    
+    void setUnsetPiece(Index set, Index unset);
+    void setSetUnsetPiece(Index set1, Index set2, Index unset);
+    void setSetUnsetUnsetPiece(Index set1, Index set2, Index unset1, Index unset2);
+    void setUnsetUnsetPiece(Index set1, Index unset1, Index unset2);
     
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,
@@ -138,7 +154,7 @@ struct Evaluator {
                                      bb::Color pieceColor,
                                      bb::Square square,
                                      bb::Square kingSquare);
-
+    
     void reset(Board* board);
     
     void resetAccumulator(Board* board, bb::Color color);

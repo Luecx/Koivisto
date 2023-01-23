@@ -486,6 +486,13 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     const Color    color  = getActivePlayer();
     const int      factor = getActivePlayer() == WHITE ? 1 : -1;
     
+    const Square wKingSq = bitscanForward(getPieceBB<WHITE, KING>());
+    const Square bKingSq = bitscanForward(getPieceBB<BLACK, KING>());
+
+    const PieceType movingPieceType    = getMovingPieceType(m);
+    const PieceType promotionPieceType = getPromotionPieceType(m);
+    const PieceType capturedPieceType  = getCapturedPieceType(m);
+
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
@@ -525,12 +532,23 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             this->changeActivePlayer();
             
             // setting m_piecesBB
-            this->unsetPiece(sqFrom);
+            this->unsetPiece<false>(sqFrom);
             // do the "basic" move
             if (isCapture(m)) {
-                this->replacePiece(sqTo, getPromotionPiece(m));
+                this->replacePiece<false>(sqTo, getPromotionPiece(m));
             } else {
-                this->setPiece(sqTo, getPromotionPiece(m));
+                this->setPiece<false>(sqTo, getPromotionPiece(m));
+            }
+            
+            if(isCapture(m)){
+                evaluator.setUnsetUnsetPiece(
+                    nn::Index{promotionPieceType, color, sqTo  , wKingSq, bKingSq},
+                    nn::Index{movingPieceType   , color, sqFrom, wKingSq, bKingSq},
+                    nn::Index{capturedPieceType ,!color, sqTo  , wKingSq, bKingSq});
+            }else{
+                evaluator.setUnsetPiece(
+                    nn::Index{promotionPieceType, color, sqTo  , wKingSq, bKingSq},
+                    nn::Index{movingPieceType   , color, sqFrom, wKingSq, bKingSq});
             }
             
             return;
@@ -538,10 +556,15 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
             this->changeActivePlayer();
             
-            unsetPiece(sqTo - 8 * factor);
+            Square epSquare = sqTo - 8 * factor;
+            this->unsetPiece<false>(epSquare);
+            this->unsetPiece<false>(sqFrom);
+            this->setPiece  <false>(sqTo, pFrom);
             
-            this->unsetPiece(sqFrom);
-            this->setPiece(sqTo, pFrom);
+            evaluator.setUnsetUnsetPiece(
+                nn::Index{PAWN , color, sqTo    , wKingSq, bKingSq},
+                nn::Index{PAWN , color, sqFrom  , wKingSq, bKingSq},
+                nn::Index{PAWN ,!color, epSquare, wKingSq, bKingSq});
             
             return;
         }
@@ -558,15 +581,29 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             // move the rook as well. castling rights are handled below
             Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
             Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-            this->unsetPiece(rookSquare);
-            this->setPiece(rookTarget, ROOK + 8 * color);
-        }
-        
-        this->unsetPiece(sqFrom);
-        if (isCapture(m)) {
-            this->replacePiece(sqTo, pFrom);
-        } else {
-            this->setPiece(sqTo, pFrom);
+            this->unsetPiece<false>(rookSquare);
+            this->setPiece  <false>(rookTarget, ROOK + 8 * color);
+            this->unsetPiece<false>(sqFrom);
+            this->setPiece  <false>(sqTo, pFrom);
+            this->evaluator.setSetUnsetUnsetPiece(
+                {KING, color, sqTo      , wKingSq, bKingSq},
+                {ROOK, color, rookTarget, wKingSq, bKingSq},
+                {KING, color, sqFrom    , wKingSq, bKingSq},
+                {ROOK, color, rookSquare, wKingSq, bKingSq});
+        }else if(isCapture(m)){
+            this->unsetPiece  <false>(sqFrom);
+            this->replacePiece<false>(sqTo, pFrom);
+            this->evaluator.setUnsetUnsetPiece(
+                {KING             , color, sqTo  , wKingSq, bKingSq},
+                {KING             , color, sqFrom, wKingSq, bKingSq},
+                {capturedPieceType,!color, sqTo  , wKingSq, bKingSq});
+        }else{
+            this->unsetPiece<false>(sqFrom);
+            this->setPiece  <false>(sqTo, pFrom);
+            
+            this->evaluator.setUnsetPiece(
+                {movingPieceType, color, sqTo  , wKingSq, bKingSq},
+                {movingPieceType, color, sqFrom, wKingSq, bKingSq});
         }
         
         // check if it crossed squares
@@ -584,7 +621,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     }
         
     // revoke castling rights if rook moves and it is on the initial square
-    else if (getPieceType(pFrom) == ROOK) {
+    else if (movingPieceType == ROOK) {
         if (color == WHITE) {
             if (sqFrom == A1) {
                 newBoardStatus.castlingRights &= ~(ONE << (color * 2));
@@ -604,25 +641,27 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     
     // doing the initial move
     this->unsetPieceHash(sqFrom);
-    
-    
     if (mType != EN_PASSANT && isCapture(m)) {
         this->replacePieceHash(sqTo, pFrom);
     } else {
         this->setPieceHash(sqTo, pFrom);
     }
-
     if constexpr (prefetch)
         table->prefetch(getBoardStatus()->zobrist);
 
-    // doing the initial move
-    this->unsetPiece<true, false>(sqFrom);
     
     
     if (mType != EN_PASSANT && isCapture(m)) {
-        this->replacePiece<true, false>(sqTo, pFrom);
+        this->unsetPiece<false, false>(sqFrom);
+        this->replacePiece<false, false>(sqTo, pFrom);
+        this->evaluator.setUnsetUnsetPiece({movingPieceType  , color, sqTo  , wKingSq, bKingSq},
+                                           {movingPieceType  , color, sqFrom, wKingSq, bKingSq},
+                                           {capturedPieceType,!color, sqTo  , wKingSq, bKingSq});
     } else {
-        this->setPiece<true, false>(sqTo, pFrom);
+        this->evaluator.setUnsetPiece({movingPieceType, color, sqTo  , wKingSq, bKingSq},
+                                      {movingPieceType, color, sqFrom, wKingSq, bKingSq});
+        this->unsetPiece<false, false>(sqFrom);
+        this->setPiece<false , false>(sqTo, pFrom);
     }
     
     this->changeActivePlayer();
