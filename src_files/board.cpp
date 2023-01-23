@@ -866,7 +866,7 @@ Score Board::staticExchangeEvaluation(Move m) const {
         
         // adjusting gain
         gain[d] = see_piece_vals[getPieceType(capturingPiece)] - gain[d - 1];
-//        if (std::max(-gain[d-1], gain[d]) < 0) break; // pruning does not influence the result
+        if (std::max(-gain[d-1], gain[d]) < 0) break; // pruning does not influence the result
         capturingPiece = pt;
         
         // remove attacker from both bitboard
