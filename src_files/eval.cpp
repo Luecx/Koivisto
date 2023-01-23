@@ -248,117 +248,130 @@ void nn::AccumulatorTable::reset() {
 
 void nn::Evaluator::setUnsetPiece(nn::Index set, nn::Index unset) {
     
+    Accumulator* input  = &history[history.size()-2];
+    Accumulator* output = &history[history.size()-1];
     for(bb::Color side:{bb::WHITE, bb::BLACK}){
         const auto set_wgt   = (avx_register_type_16*) (inputWeights[set(side)]);
         const auto unset_wgt = (avx_register_type_16*) (inputWeights[unset(side)]);
         
-        const auto sum = (avx_register_type_16*) (history.back().summation[side]);
+        const auto inp = (avx_register_type_16*) (input ->summation[side]);
+        const auto out = (avx_register_type_16*) (output->summation[side]);
         
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], set_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], set_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], set_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], set_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], unset_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], unset_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], unset_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], unset_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset_wgt[i * 4 + 3]);
         }
     }
 }
 
 void nn::Evaluator::setSetUnsetPiece(Index set1, Index set2, Index unset){
+    Accumulator* input  = &history[history.size()-2];
+    Accumulator* output = &history[history.size()-1];
     for(bb::Color side:{bb::WHITE, bb::BLACK}){
         const auto set1_wgt  = (avx_register_type_16*) (inputWeights[set1(side)]);
         const auto set2_wgt  = (avx_register_type_16*) (inputWeights[set2(side)]);
         const auto unset_wgt = (avx_register_type_16*) (inputWeights[unset(side)]);
         
-        const auto sum = (avx_register_type_16*) (history.back().summation[side]);
+        const auto inp = (avx_register_type_16*) (input ->summation[side]);
+        const auto out = (avx_register_type_16*) (output->summation[side]);
         
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], set1_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], set1_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], set1_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], set1_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set1_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set1_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set1_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set1_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], set2_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], set2_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], set2_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], set2_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set2_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set2_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set2_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set2_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], unset_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], unset_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], unset_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], unset_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset_wgt[i * 4 + 3]);
         }
     }
 }
 
 void nn::Evaluator::setSetUnsetUnsetPiece(Index set1, Index set2, Index unset1, Index unset2){
+    Accumulator* input  = &history[history.size()-2];
+    Accumulator* output = &history[history.size()-1];
     for(bb::Color side:{bb::WHITE, bb::BLACK}){
         const auto set1_wgt   = (avx_register_type_16*) (inputWeights[set1(side)]);
         const auto set2_wgt   = (avx_register_type_16*) (inputWeights[set2(side)]);
         const auto unset1_wgt = (avx_register_type_16*) (inputWeights[unset1(side)]);
         const auto unset2_wgt = (avx_register_type_16*) (inputWeights[unset2(side)]);
         
-        const auto sum = (avx_register_type_16*) (history.back().summation[side]);
+        const auto inp = (avx_register_type_16*) (input ->summation[side]);
+        const auto out = (avx_register_type_16*) (output->summation[side]);
         
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], set1_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], set1_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], set1_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], set1_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set1_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set1_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set1_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set1_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], set2_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], set2_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], set2_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], set2_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set2_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set2_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set2_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set2_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], unset1_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], unset1_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], unset1_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], unset1_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset1_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset1_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset1_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset1_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], unset2_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], unset2_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], unset2_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], unset2_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset2_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset2_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset2_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset2_wgt[i * 4 + 3]);
         }
     }
 }
 
 void nn::Evaluator::setUnsetUnsetPiece(Index set1, Index unset1, Index unset2){
+    Accumulator* input  = &history[history.size()-2];
+    Accumulator* output = &history[history.size()-1];
+    
     for(bb::Color side:{bb::WHITE, bb::BLACK}){
         const auto set1_wgt   = (avx_register_type_16*) (inputWeights[set1(side)]);
         const auto unset1_wgt = (avx_register_type_16*) (inputWeights[unset1(side)]);
         const auto unset2_wgt = (avx_register_type_16*) (inputWeights[unset2(side)]);
         
-        const auto sum = (avx_register_type_16*) (history.back().summation[side]);
+        const auto inp = (avx_register_type_16*) (input ->summation[side]);
+        const auto out = (avx_register_type_16*) (output->summation[side]);
         
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], set1_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], set1_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], set1_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], set1_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set1_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set1_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set1_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set1_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], unset1_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], unset1_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], unset1_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], unset1_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset1_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset1_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset1_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset1_wgt[i * 4 + 3]);
         }
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], unset2_wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], unset2_wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], unset2_wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], unset2_wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset2_wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset2_wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset2_wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset2_wgt[i * 4 + 3]);
         }
     }
 }
@@ -394,7 +407,6 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
             sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
         }
     }
-    
 }
 
 
@@ -446,7 +458,12 @@ nn::Evaluator& nn::Evaluator::operator=(const nn::Evaluator& evaluator) {
     return *this;
 }
 
-void nn::Evaluator::addNewAccumulation() { this->history.emplace_back(this->history.back()); }
+void nn::Evaluator::addNewAccumulation() {
+    if(this->history.capacity() == this->history.size()){
+        this->history.reserve(this->history.size() * 2);
+    }
+    this->history.resize(this->history.size() + 1);
+}
 
 void nn::Evaluator::popAccumulation() { this->history.pop_back(); }
 
