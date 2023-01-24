@@ -248,130 +248,192 @@ void nn::AccumulatorTable::reset() {
 
 void nn::Evaluator::setUnsetPiece(nn::Index set, nn::Index unset) {
     
-    Accumulator* input  = &history[history.size()-2];
     Accumulator* output = &history[history.size()-1];
     for(bb::Color side:{bb::WHITE, bb::BLACK}){
-        const auto set_wgt   = (avx_register_type_16*) (inputWeights[set(side)]);
-        const auto unset_wgt = (avx_register_type_16*) (inputWeights[unset(side)]);
+        const auto set_wgt   = (inputWeights[set(side)]);
+        const auto unset_wgt = (inputWeights[unset(side)]);
         
-        const auto inp = (avx_register_type_16*) (input ->summation[side]);
-        const auto out = (avx_register_type_16*) (output->summation[side]);
+        const auto out = (output->summation[side]);
         
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set_wgt[i * 4 + 3]);
-        }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset_wgt[i * 4 + 3]);
+        avx_register_type_16 regs[16]{};
+        
+        for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+            auto wgt_set   = (avx_register_type_16*) (&set_wgt  [c * CHUNK_UNROLL_SIZE]);
+            auto wgt_unset = (avx_register_type_16*) (&unset_wgt[c * CHUNK_UNROLL_SIZE]);
+            auto acc       = (avx_register_type_16*) (&out      [c * CHUNK_UNROLL_SIZE]);
+
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_load_si256(&acc[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt_set[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                _mm256_store_si256(&acc[i], regs[i]);
         }
     }
 }
 
 void nn::Evaluator::setSetUnsetPiece(Index set1, Index set2, Index unset){
-    Accumulator* input  = &history[history.size()-2];
-    Accumulator* output = &history[history.size()-1];
-    for(bb::Color side:{bb::WHITE, bb::BLACK}){
-        const auto set1_wgt  = (avx_register_type_16*) (inputWeights[set1(side)]);
-        const auto set2_wgt  = (avx_register_type_16*) (inputWeights[set2(side)]);
-        const auto unset_wgt = (avx_register_type_16*) (inputWeights[unset(side)]);
-        
-        const auto inp = (avx_register_type_16*) (input ->summation[side]);
-        const auto out = (avx_register_type_16*) (output->summation[side]);
-        
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set1_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set1_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set1_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set1_wgt[i * 4 + 3]);
-        }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set2_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set2_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set2_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set2_wgt[i * 4 + 3]);
-        }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset_wgt[i * 4 + 3]);
-        }
-    }
-}
-
-void nn::Evaluator::setSetUnsetUnsetPiece(Index set1, Index set2, Index unset1, Index unset2){
-    Accumulator* input  = &history[history.size()-2];
-    Accumulator* output = &history[history.size()-1];
-    for(bb::Color side:{bb::WHITE, bb::BLACK}){
-        const auto set1_wgt   = (avx_register_type_16*) (inputWeights[set1(side)]);
-        const auto set2_wgt   = (avx_register_type_16*) (inputWeights[set2(side)]);
-        const auto unset1_wgt = (avx_register_type_16*) (inputWeights[unset1(side)]);
-        const auto unset2_wgt = (avx_register_type_16*) (inputWeights[unset2(side)]);
-        
-        const auto inp = (avx_register_type_16*) (input ->summation[side]);
-        const auto out = (avx_register_type_16*) (output->summation[side]);
-        
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set1_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set1_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set1_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set1_wgt[i * 4 + 3]);
-        }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set2_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set2_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set2_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set2_wgt[i * 4 + 3]);
-        }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset1_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset1_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset1_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset1_wgt[i * 4 + 3]);
-        }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset2_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset2_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset2_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset2_wgt[i * 4 + 3]);
-        }
-    }
-}
-
-void nn::Evaluator::setUnsetUnsetPiece(Index set1, Index unset1, Index unset2){
-    Accumulator* input  = &history[history.size()-2];
     Accumulator* output = &history[history.size()-1];
     
     for(bb::Color side:{bb::WHITE, bb::BLACK}){
-        const auto set1_wgt   = (avx_register_type_16*) (inputWeights[set1(side)]);
-        const auto unset1_wgt = (avx_register_type_16*) (inputWeights[unset1(side)]);
-        const auto unset2_wgt = (avx_register_type_16*) (inputWeights[unset2(side)]);
+        const auto set1_wgt  = (inputWeights[set1(side)]);
+        const auto set2_wgt  = (inputWeights[set2(side)]);
+        const auto unset_wgt = (inputWeights[unset(side)]);
         
-        const auto inp = (avx_register_type_16*) (input ->summation[side]);
-        const auto out = (avx_register_type_16*) (output->summation[side]);
+        const auto out = (output->summation[side]);
         
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], set1_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], set1_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], set1_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], set1_wgt[i * 4 + 3]);
+        avx_register_type_16 regs[16]{};
+        
+        for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+            auto wgt_set1  = (avx_register_type_16*) (&set1_wgt [c * CHUNK_UNROLL_SIZE]);
+            auto wgt_set2  = (avx_register_type_16*) (&set2_wgt [c * CHUNK_UNROLL_SIZE]);
+            auto wgt_unset = (avx_register_type_16*) (&unset_wgt[c * CHUNK_UNROLL_SIZE]);
+            auto acc       = (avx_register_type_16*) (&out      [c * CHUNK_UNROLL_SIZE]);
+            
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_load_si256(&acc[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt_set1[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt_set2[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                _mm256_store_si256(&acc[i], regs[i]);
         }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset1_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset1_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset1_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset1_wgt[i * 4 + 3]);
+    }
+    
+//    for(bb::Color side:{bb::WHITE, bb::BLACK}){
+//        const auto set1_wgt  = (avx_register_type_16*) (inputWeights[set1(side)]);
+//        const auto set2_wgt  = (avx_register_type_16*) (inputWeights[set2(side)]);
+//        const auto unset_wgt = (avx_register_type_16*) (inputWeights[unset(side)]);
+//
+//        const auto out = (avx_register_type_16*) (output->summation[side]);
+//
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set1_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set1_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set1_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set1_wgt[i * 4 + 3]);
+//        }
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set2_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set2_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set2_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set2_wgt[i * 4 + 3]);
+//        }
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset_wgt[i * 4 + 3]);
+//        }
+//    }
+}
+
+void nn::Evaluator::setSetUnsetUnsetPiece(Index set1, Index set2, Index unset1, Index unset2){
+    Accumulator* output = &history[history.size()-1];
+    
+    for(bb::Color side:{bb::WHITE, bb::BLACK}){
+        const auto set1_wgt   = (inputWeights[set1(side)]);
+        const auto set2_wgt   = (inputWeights[set2(side)]);
+        const auto unset1_wgt = (inputWeights[unset1(side)]);
+        const auto unset2_wgt = (inputWeights[unset2(side)]);
+        
+        const auto out = (output->summation[side]);
+        
+        avx_register_type_16 regs[16]{};
+        
+        for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+            auto wgt_set1   = (avx_register_type_16*) (&set1_wgt  [c * CHUNK_UNROLL_SIZE]);
+            auto wgt_set2   = (avx_register_type_16*) (&set2_wgt  [c * CHUNK_UNROLL_SIZE]);
+            auto wgt_unset1 = (avx_register_type_16*) (&unset1_wgt[c * CHUNK_UNROLL_SIZE]);
+            auto wgt_unset2 = (avx_register_type_16*) (&unset2_wgt[c * CHUNK_UNROLL_SIZE]);
+            auto acc        = (avx_register_type_16*) (&out       [c * CHUNK_UNROLL_SIZE]);
+            
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_load_si256(&acc[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt_set1[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt_set2[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset1[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset2[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                _mm256_store_si256(&acc[i], regs[i]);
         }
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset2_wgt[i * 4 + 0]);
-            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset2_wgt[i * 4 + 1]);
-            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset2_wgt[i * 4 + 2]);
-            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset2_wgt[i * 4 + 3]);
+    }
+    
+//    Accumulator* output = &history[history.size()-1];
+//    for(bb::Color side:{bb::WHITE, bb::BLACK}){
+//        const auto set1_wgt   = (avx_register_type_16*) (inputWeights[set1(side)]);
+//        const auto set2_wgt   = (avx_register_type_16*) (inputWeights[set2(side)]);
+//        const auto unset1_wgt = (avx_register_type_16*) (inputWeights[unset1(side)]);
+//        const auto unset2_wgt = (avx_register_type_16*) (inputWeights[unset2(side)]);
+//
+//        const auto out = (avx_register_type_16*) (output->summation[side]);
+//
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set1_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set1_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set1_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set1_wgt[i * 4 + 3]);
+//        }
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_add_epi16(out[i * 4 + 0], set2_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_add_epi16(out[i * 4 + 1], set2_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_add_epi16(out[i * 4 + 2], set2_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_add_epi16(out[i * 4 + 3], set2_wgt[i * 4 + 3]);
+//        }
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset1_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset1_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset1_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset1_wgt[i * 4 + 3]);
+//        }
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            out[i * 4 + 0] = avx_sub_epi16(out[i * 4 + 0], unset2_wgt[i * 4 + 0]);
+//            out[i * 4 + 1] = avx_sub_epi16(out[i * 4 + 1], unset2_wgt[i * 4 + 1]);
+//            out[i * 4 + 2] = avx_sub_epi16(out[i * 4 + 2], unset2_wgt[i * 4 + 2]);
+//            out[i * 4 + 3] = avx_sub_epi16(out[i * 4 + 3], unset2_wgt[i * 4 + 3]);
+//        }
+//    }
+
+
+}
+
+void nn::Evaluator::setUnsetUnsetPiece(Index set1, Index unset1, Index unset2){
+    Accumulator* output = &history[history.size()-1];
+    
+    for(bb::Color side:{bb::WHITE, bb::BLACK}){
+        const auto set1_wgt   = (inputWeights[set1(side)]);
+        const auto unset1_wgt = (inputWeights[unset1(side)]);
+        const auto unset2_wgt = (inputWeights[unset2(side)]);
+        
+        const auto out = (output->summation[side]);
+        
+        avx_register_type_16 regs[16]{};
+        
+        for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+            auto wgt_set1   = (avx_register_type_16*) (&set1_wgt  [c * CHUNK_UNROLL_SIZE]);
+            auto wgt_unset1 = (avx_register_type_16*) (&unset1_wgt[c * CHUNK_UNROLL_SIZE]);
+            auto wgt_unset2 = (avx_register_type_16*) (&unset2_wgt[c * CHUNK_UNROLL_SIZE]);
+            auto acc        = (avx_register_type_16*) (&out       [c * CHUNK_UNROLL_SIZE]);
+            
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_load_si256(&acc[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt_set1[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset1[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset2[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                _mm256_store_si256(&acc[i], regs[i]);
         }
     }
 }
@@ -458,12 +520,7 @@ nn::Evaluator& nn::Evaluator::operator=(const nn::Evaluator& evaluator) {
     return *this;
 }
 
-void nn::Evaluator::addNewAccumulation() {
-    if(this->history.capacity() == this->history.size()){
-        this->history.reserve(this->history.size() * 2);
-    }
-    this->history.resize(this->history.size() + 1);
-}
+void nn::Evaluator::addNewAccumulation() { this->history.emplace_back(this->history.back()); }
 
 void nn::Evaluator::popAccumulation() { this->history.pop_back(); }
 

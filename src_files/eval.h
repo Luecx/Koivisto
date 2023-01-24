@@ -43,9 +43,11 @@
 #elif defined(__SSE2__) || defined(__ARM_NEON)
 #define BIT_ALIGNMENT  (128)
 #endif
-#define STRIDE_16_BIT  (BIT_ALIGNMENT / 16)
-#define BYTE_ALIGNMENT (BIT_ALIGNMENT / 8)
-#define ALIGNMENT      (BYTE_ALIGNMENT)
+#define STRIDE_16_BIT     (BIT_ALIGNMENT / 16)
+#define BYTE_ALIGNMENT    (BIT_ALIGNMENT / 8)
+#define ALIGNMENT         (BYTE_ALIGNMENT)
+#define CHUNK_UNROLL_SIZE (BIT_ALIGNMENT)
+#define REG_COUNT         (16)
 
 class Board;
 
