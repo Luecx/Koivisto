@@ -35,17 +35,20 @@
 #define HIDDEN_SIZE    (512)
 #define HIDDEN_DSIZE   (HIDDEN_SIZE * 2)
 #define OUTPUT_SIZE    (1)
- 
+
+
 #if defined(__AVX512F__)
 #define BIT_ALIGNMENT  (512)
 #elif defined(__AVX2__) || defined(__AVX__)
 #define BIT_ALIGNMENT  (256)
 #elif defined(__SSE2__) || defined(__ARM_NEON)
-#define BIT_ALIGNMENT  (128)
+#define BIT_ALIGNMENT (128)
 #endif
-#define STRIDE_16_BIT  (BIT_ALIGNMENT / 16)
-#define BYTE_ALIGNMENT (BIT_ALIGNMENT / 8)
-#define ALIGNMENT      (BYTE_ALIGNMENT)
+#define STRIDE_16_BIT     (BIT_ALIGNMENT / 16)
+#define BYTE_ALIGNMENT    (BIT_ALIGNMENT / 8)
+#define ALIGNMENT         (BYTE_ALIGNMENT)
+#define CHUNK_UNROLL_SIZE (BIT_ALIGNMENT)
+#define REG_COUNT         (16)
 
 class Board;
 

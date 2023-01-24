@@ -253,28 +253,58 @@ void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceCol
     setPieceOnSquareAccumulator<value>(bb::BLACK, pieceType, pieceColor, square, bKingSquare);
 }
 
+
 template<bool value>
 void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pieceType,
                                                 bb::Color pieceColor, bb::Square square,
                                                 bb::Square kingSquare) {
     const int  idx = index(pieceType, pieceColor, square, side, kingSquare);
 
-    const auto wgt = (avx_register_type_16*) (inputWeights[idx]);
-    const auto sum = (avx_register_type_16*) (history.back().summation[side]);
+    const auto weights     = (inputWeights[idx]);
+    const auto accumulator = (history.back().summation[side]);
+    
+    avx_register_type_16 regs[16]{};
+    
     if constexpr (value) {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+        
+        for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+            auto wgt = (avx_register_type_16*) (&weights[c * CHUNK_UNROLL_SIZE]);
+            auto acc = (avx_register_type_16*) (&accumulator[c * CHUNK_UNROLL_SIZE]);
+            
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_load_si256(&acc[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_add_epi16(regs[i], wgt[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                _mm256_store_si256(&acc[i], regs[i]);
         }
+        
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
+//            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
+//            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
+//            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+//        }
     } else {
-        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+        
+        for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+            auto wgt = (avx_register_type_16*) (&weights[c * CHUNK_UNROLL_SIZE]);
+            auto acc = (avx_register_type_16*) (&accumulator[c * CHUNK_UNROLL_SIZE]);
+            
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_load_si256(&acc[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                regs[i] = _mm256_sub_epi16(regs[i], wgt[i]);
+            for (size_t i = 0; i < REG_COUNT; i++)
+                _mm256_store_si256(&acc[i], regs[i]);
         }
+        
+//        for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
+//            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
+//            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
+//            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
+//            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+//        }
     }
     
 }
