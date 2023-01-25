@@ -271,13 +271,13 @@ void nn::Evaluator::setUnsetPiece(nn::Index set, nn::Index unset) {
             auto acc       = (avx_register_type_16*) (&out      [c * CHUNK_UNROLL_SIZE]);
 
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_load_si256(&acc[i]);
+                regs[i] = avx_load_reg(&acc[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_add_epi16(regs[i], wgt_set[i]);
+                regs[i] = avx_add_epi16(regs[i], wgt_set[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset[i]);
+                regs[i] = avx_sub_epi16(regs[i], wgt_unset[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                _mm256_store_si256(&acc[i], regs[i]);
+                avx_store_reg(&acc[i], regs[i]);
         }
     }
 }
@@ -301,15 +301,15 @@ void nn::Evaluator::setSetUnsetPiece(Index set1, Index set2, Index unset){
             auto acc       = (avx_register_type_16*) (&out      [c * CHUNK_UNROLL_SIZE]);
             
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_load_si256(&acc[i]);
+                regs[i] = avx_load_reg(&acc[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_add_epi16(regs[i], wgt_set1[i]);
+                regs[i] = avx_add_epi16(regs[i], wgt_set1[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_add_epi16(regs[i], wgt_set2[i]);
+                regs[i] = avx_add_epi16(regs[i], wgt_set2[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset[i]);
+                regs[i] = avx_sub_epi16(regs[i], wgt_unset[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                _mm256_store_si256(&acc[i], regs[i]);
+                avx_store_reg(&acc[i], regs[i]);
         }
     }
     
@@ -362,17 +362,17 @@ void nn::Evaluator::setSetUnsetUnsetPiece(Index set1, Index set2, Index unset1, 
             auto acc        = (avx_register_type_16*) (&out       [c * CHUNK_UNROLL_SIZE]);
             
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_load_si256(&acc[i]);
+                regs[i] = avx_load_reg(&acc[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_add_epi16(regs[i], wgt_set1[i]);
+                regs[i] = avx_add_epi16(regs[i], wgt_set1[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_add_epi16(regs[i], wgt_set2[i]);
+                regs[i] = avx_add_epi16(regs[i], wgt_set2[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset1[i]);
+                regs[i] = avx_sub_epi16(regs[i], wgt_unset1[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset2[i]);
+                regs[i] = avx_sub_epi16(regs[i], wgt_unset2[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                _mm256_store_si256(&acc[i], regs[i]);
+                avx_store_reg(&acc[i], regs[i]);
         }
     }
     
@@ -433,15 +433,15 @@ void nn::Evaluator::setUnsetUnsetPiece(Index set1, Index unset1, Index unset2){
             auto acc        = (avx_register_type_16*) (&out       [c * CHUNK_UNROLL_SIZE]);
             
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_load_si256(&acc[i]);
+                regs[i] = avx_load_reg(&acc[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_add_epi16(regs[i], wgt_set1[i]);
+                regs[i] = avx_add_epi16(regs[i], wgt_set1[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset1[i]);
+                regs[i] = avx_sub_epi16(regs[i], wgt_unset1[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                regs[i] = _mm256_sub_epi16(regs[i], wgt_unset2[i]);
+                regs[i] = avx_sub_epi16(regs[i], wgt_unset2[i]);
             for (size_t i = 0; i < REG_COUNT; i++)
-                _mm256_store_si256(&acc[i], regs[i]);
+                avx_store_reg(&acc[i], regs[i]);
         }
     }
 }
