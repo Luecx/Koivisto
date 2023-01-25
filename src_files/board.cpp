@@ -821,33 +821,50 @@ U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) const 
  */
 Score Board::staticExchangeEvaluation(Move m) const {
     
+    // track gains across captures
+    int gain[32];
+    Depth d = 0;
+    
+    // get basic information for the first move
     Square sqFrom         = getSquareFrom(m);
     Square sqTo           = getSquareTo(m);
     Piece  capturedPiece  = isCapture(m) ? getCapturedPiece(m) : -1;
     Piece  capturingPiece = getMovingPiece(m);
     
-    Color attacker = capturingPiece < BLACK_PAWN ? WHITE : BLACK;
+    // start with the opponent to attack
+    Color attacker = !getMovingPieceColor(m);
     
-    Score gain[32], d = 0;
-    U64   fromSet = ONE << sqFrom;
-    U64   occ     = m_occupiedBB;
+    // occupancy bitboard
+    // remove move
+    U64   occBB   = m_occupiedBB;
+    U64 sqToBB    = ONE << sqTo;
+    U64 sqFromBB  = ONE << sqFrom;
+    unsetBit(occBB,sqFrom);
+    setBit  (occBB,sqTo);
     
-    U64 sqBB = ONE << sqTo;
-    U64 bishopsQueens, rooksQueens;
-    rooksQueens = bishopsQueens = m_piecesBB[WHITE_QUEEN] | m_piecesBB[BLACK_QUEEN];
-    rooksQueens |= m_piecesBB[WHITE_ROOK] | m_piecesBB[BLACK_ROOK];
-    bishopsQueens |= m_piecesBB[WHITE_BISHOP] | m_piecesBB[BLACK_BISHOP];
+    // the thing with attackers is that some attacker may be discovered after certain attackers
+    // have attacked. Its relevant during the swap algorithm to update the attackers bitboard
+    // after every move to check for discovered attacks. Discovered attacks can only happen
+    // for sliding pieces (rooks, queens, bishops). They are extracted at the first point
+    // for easier access later on
+    U64 rooksBB = getPieceTypeBB<ROOK>();
+    U64 queensBB = getPieceTypeBB<QUEEN>();
+    U64 bishopsBB = getPieceTypeBB<BISHOP>();
     
-    U64 fixed = ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
-                | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN])
-                | (attacks::KNIGHT_ATTACKS[sqTo] & (m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT]))
-                | (attacks::KING_ATTACKS[sqTo] & (m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING]));
+    // they can be divided into diagonal sliding pieces and horizontal ones
+    U64 horSliderBB = (rooksBB   | queensBB) & ~sqFromBB;
+    U64 diaSliderBB = (bishopsBB | queensBB) & ~sqFromBB;
     
-    // fixed is the attackset of attackers that cannot pin other m_piecesBB like
-    // pawns, kings, knights
-    
-    U64 attadef =
-        (fixed | ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens)));
+    // get initial attacks (exclude any potentially discovered attacks since they will update during
+    // SEE)
+    U64 attackersBB = ( ( shiftNorthWest(sqToBB) | shiftNorthEast(sqToBB)) & m_piecesBB[BLACK_PAWN])
+                      | ((shiftSouthWest(sqToBB) | shiftSouthEast(sqToBB)) & m_piecesBB[WHITE_PAWN])
+                      | (attacks::KNIGHT_ATTACKS[sqTo] & (getPieceTypeBB<KNIGHT>()))
+                      | (attacks::KING_ATTACKS  [sqTo] & (getPieceTypeBB<KING>  ()))
+                      | (attacks::lookUpRookAttacks  (sqTo, occBB) &  horSliderBB)
+                      | (attacks::lookUpBishopAttacks(sqTo, occBB) &  diaSliderBB);
+    // remove the initially moved piece
+    attackersBB &= occBB;
     
     if (isCapture(m))
         gain[d] = see_piece_vals[getPieceType(capturedPiece)];
@@ -855,24 +872,59 @@ Score Board::staticExchangeEvaluation(Move m) const {
         gain[d] = 0;
     }
     
-    do {
-        d++;
-        attacker = 1 - attacker;
+    while(true){
         
+        // make sure we dont have any artifacts here
+        attackersBB &= occBB;
+        
+        // increase depth
+        d ++;
+        
+        // get a subset of the attackers which is currently moving
+        U64 activeAttackersBB = attackersBB & getTeamOccupiedBB(attacker);
+        
+        // if there are no attackers, exit the algorithm
+        if(!activeAttackersBB)
+            break;
+        
+        // get the least valuable piece which would capture next
+        PieceType pt = PAWN;
+        for(pt = PAWN; pt <= KING; pt ++){
+            if(getPieceBB(attacker, pt) & activeAttackersBB){
+                break;
+            }
+        }
+        
+        // safety stuff
+        if(pt > KING)
+            break;
+        
+        // perform the move on the occ bitboard
+        U64 pieceBB = getPieceBB(attacker, pt) & attackersBB;
+        Square pieceSqFrom = bitscanForward(pieceBB);
+        
+        // adjusting gain
         gain[d] = see_piece_vals[getPieceType(capturingPiece)] - gain[d - 1];
+        if (std::max(-gain[d-1], gain[d]) < 0) break; // pruning does not influence the result
+        capturingPiece = pt;
         
-        if (-gain[d - 1] < 0 && gain[d] < 0)
-            break;    // pruning does not influence the result
+        // remove attacker from both bitboard
+        unsetBit(occBB, pieceSqFrom);
         
-        attadef ^= fromSet;    // reset bit in set to traverse
-        occ ^= fromSet;
-        attadef |=
-            occ & ((attacks::lookUpBishopAttacks(sqTo, occ) & bishopsQueens) | (attacks::lookUpRookAttacks(sqTo, occ) & rooksQueens));
-        fromSet = getLeastValuablePiece(attadef, attacker, capturingPiece);
-    } while (fromSet);
+        // update attacker bitboard
+        if(pt == PAWN || pt == BISHOP || pt == QUEEN){
+            attackersBB |= attacks::lookUpBishopAttacks(sqTo, occBB) & diaSliderBB;
+        }
+        if(pt == ROOK || pt == QUEEN){
+            attackersBB |= attacks::lookUpRookAttacks(sqTo, occBB) & horSliderBB;
+        }
+        
+        // flip attacking side
+        attacker = !attacker;
+    }
     
-    while (--d) {
-        gain[d - 1] = -(-gain[d - 1] > gain[d] ? -gain[d - 1] : gain[d]);
+    while (--d){
+        gain[d-1]= -std::max (-gain[d-1], gain[d]);
     }
 
     return gain[0];
