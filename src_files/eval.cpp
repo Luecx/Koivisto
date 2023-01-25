@@ -44,10 +44,14 @@ using avx_register_type_32 = __m512i;
 #define avx_add_epi16(a, b)  (_mm512_add_epi16(a, b))
 #define avx_sub_epi16(a, b)  (_mm512_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm512_max_epi16(a, b))
+#define avx_load_reg _mm512_load_si512
+#define avx_store_reg _mmm512_store_si512
 #elif defined(__AVX2__) || defined(__AVX__)
 using avx_register_type_16 = __m256i;
 using avx_register_type_32 = __m256i;
 #define avx_madd_epi16(a, b) (_mm256_madd_epi16(a, b))
+#define avx_load_reg _mm256_load_si256
+#define avx_store_reg _mm256_store_si256
 #define avx_add_epi32(a, b)  (_mm256_add_epi32(a, b))
 #define avx_sub_epi32(a, b)  (_mm256_sub_epi32(a, b))
 #define avx_add_epi16(a, b)  (_mm256_add_epi16(a, b))
@@ -62,6 +66,8 @@ using avx_register_type_32 = __m128i;
 #define avx_add_epi16(a, b)  (_mm_add_epi16(a, b))
 #define avx_sub_epi16(a, b)  (_mm_sub_epi16(a, b))
 #define avx_max_epi16(a, b)  (_mm_max_epi16(a, b))
+#define avx_load_reg _mm_load_si128
+#define avx_store_reg _mmm_store_si128
 #elif defined(__ARM_NEON)
 using avx_register_type_16 = int16x8_t;
 using avx_register_type_32 = int32x4_t;
@@ -72,6 +78,8 @@ using avx_register_type_32 = int32x4_t;
 #define avx_add_epi16(a, b) (vaddq_s16(a, b))
 #define avx_sub_epi16(a, b) (vsubq_s16(a, b))
 #define avx_max_epi16(a, b) (vmaxq_s16(a, b))
+#define avx_load_reg vldrq_p128
+#define avx_store_reg exit(-1)
 #endif
 
 INCBIN(Eval, EVALFILE);
