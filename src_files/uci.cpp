@@ -450,6 +450,9 @@ void uci::position_fen(const std::string& fen, const std::string& moves) {
 
         UCI_ASSERT(board.isLegal(m));
         board.move(m);
+        if(board.getCurrent50MoveRuleCount() == 0){
+            board.clearHistories();
+        }
     }
 }
 

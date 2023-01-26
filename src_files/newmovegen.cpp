@@ -228,12 +228,12 @@ void moveGen::generateNoisy() {
         attacks = lsbReset(attacks);
     }
     
-    if (pawnsLeft & m_board->getBoardStatus()->enPassantTarget) {
+    if (pawnsLeft & m_board->getBoardStatus().enPassantTarget) {
         target = m_board->getEnPassantSquare();
         addNoisy(genMove(target - left, target, EN_PASSANT, movingPiece));
     }
     
-    if (pawnsRight & m_board->getBoardStatus()->enPassantTarget) {
+    if (pawnsRight & m_board->getBoardStatus().enPassantTarget) {
         target = m_board->getEnPassantSquare();
         addNoisy(genMove(target - right, target, EN_PASSANT, movingPiece));
     }

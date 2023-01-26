@@ -49,48 +49,43 @@ static constexpr bb::Score see_piece_vals[] {100, 325, 325, 500, 1000, 10000};
 // from a stack. this contains zobrist keys, en-passant information, castling rights etc.
 struct BoardStatus {
     public:
-    BoardStatus(const BoardStatus& a)
-        : zobrist(a.zobrist), enPassantTarget(a.enPassantTarget), castlingRights(a.castlingRights),
-          fiftyMoveCounter(a.fiftyMoveCounter), repetitionCounter(a.repetitionCounter), moveCounter(a.moveCounter),
-          move(a.move){}
+    bb::U64    zobrist {};
+    bb::U64    enPassantTarget {};
+    uint32_t   castlingRights {};
+    uint32_t   fiftyMoveCounter {};
+    uint32_t   repetitionCounter {};
+    uint32_t   moveCounter {};
+    move::Move move {};
+};
+
+struct BoardStatusHistory{
+    BoardStatus history[bb::MAX_INTERNAL_PLY * 2] {};
+    int size;
     
-    BoardStatus(bb::U64 p_zobrist, bb::U64 p_enPassantTarget, bb::U64 p_metaInformation, bb::U64 p_fiftyMoveCounter,
-                bb::U64 p_repetitionCounter, bb::U64 p_moveCounter, move::Move p_move)
-        : zobrist(p_zobrist), enPassantTarget(p_enPassantTarget), castlingRights(p_metaInformation),
-          fiftyMoveCounter(p_fiftyMoveCounter), repetitionCounter(p_repetitionCounter), moveCounter(p_moveCounter),
-          move(p_move){}
-    
-    bb::U64  zobrist{};
-    bb::U64  enPassantTarget{};
-    bb::U64  castlingRights{};
-    bb::U64  fiftyMoveCounter{};
-    bb::U64  repetitionCounter{};
-    bb::U64  moveCounter{};
-    move::Move move{};
-    
-    bool operator==(const BoardStatus& rhs) const {
-        return  zobrist == rhs.zobrist &&
-                enPassantTarget == rhs.enPassantTarget &&
-                castlingRights == rhs.castlingRights &&
-                fiftyMoveCounter == rhs.fiftyMoveCounter &&
-                repetitionCounter == rhs.repetitionCounter &&
-                moveCounter == rhs.moveCounter &&
-                move == rhs.move;
+    void push(const BoardStatus& new_entry){
+        history[size++] = new_entry;
     }
     
-    bool operator!=(const BoardStatus& rhs) const { return !(rhs == *this); }
-    
-    friend std::ostream& operator<<(std::ostream& os, const BoardStatus& status) {
-        os << "zobrist: " << status.zobrist << " castlingRights: " << status.castlingRights
-           << " fiftyMoveCounter: " << status.fiftyMoveCounter << " repetitionCounter: " << status.repetitionCounter
-           << " move: " << status.move;
-        return os;
+    void pop(){
+        size --;
     }
     
-    [[nodiscard]] inline BoardStatus copy() const {
-        BoardStatus b {zobrist, enPassantTarget, castlingRights, fiftyMoveCounter, repetitionCounter, moveCounter,
-                       move};
-        return b;
+    void clear(){
+        size = 0;
+    }
+    
+    BoardStatus& operator[](uint32_t idx){
+        return history[idx];
+    }
+    BoardStatus operator[](uint32_t idx) const{
+        return history[idx];
+    }
+    
+    BoardStatus& current(){
+        return history[size-1];
+    }
+    BoardStatus current() const{
+        return history[size-1];
     }
 };
 
@@ -115,7 +110,9 @@ class Board {
     
     // we have a stack of board-status. We compute a new board status with all relevant meta information with every
     // move. instead of computing the inverse, we simply pop from the stack
-    std::vector<BoardStatus> m_boardStatusHistory;
+//    std::vector<BoardStatus> m_boardStatusHistory;
+    BoardStatusHistory m_boardStatusHistory{};
+    
     
     // for each move, we need to compute the current repetition counter.
     // as this is only used internally, there is no need to make this public.
@@ -174,6 +171,8 @@ class Board {
     // move.
     bool isDraw() const;
     
+   
+    
     // returns the piece on a given square
     [[nodiscard]] bb::Piece getPiece(bb::Square sq) const;
     
@@ -231,7 +230,6 @@ class Board {
     // returns true if the given move is legal. this is the only way to check if a move is legal or not.
     // no legal move generation is implemented so this is also used for perft.
     [[nodiscard]] bool isLegal(move::Move m);
-    
 
     // Checks if the move is likely pseudo-legal. Doesn't cover en-passant, etc.
     [[nodiscard]] bool isPseudoLegal(move::Move m) const;
@@ -256,11 +254,14 @@ class Board {
     // one can also set the e.p. square yet this should be avoided.
     void setEnPassantSquare(bb::Square square);
     
-    // returns the entire meta information about the board.
-    [[nodiscard]] inline BoardStatus* getBoardStatus() { return &m_boardStatusHistory.back();}
+    // clears the history objects associated with this struct
+    void clearHistories();
     
-    // returns the entire meta information about the board.
-    [[nodiscard]] inline const BoardStatus* getBoardStatus() const { return &m_boardStatusHistory.back();}
+//    // returns the entire meta information about the board.
+//    [[nodiscard]] inline BoardStatus* getBoardStatus() { return &m_boardStatusHistory.current();}
+//
+//    // returns the entire meta information about the board.
+//    [[nodiscard]] inline BoardStatus getBoardStatus() const { return m_boardStatusHistory.current();}
     
     // returns all occupied squares.
     [[nodiscard]] inline bb::U64 getOccupiedBB() const {return m_occupiedBB;}
@@ -290,6 +291,12 @@ class Board {
     
     template<bb::PieceType piece_type>
     [[nodiscard]] inline bb::U64 getPieceTypeBB() const {return getPieceBB<bb::WHITE, piece_type>() | getPieceBB<bb::BLACK, piece_type>();}
+    
+    // returns the board status
+    [[nodiscard]] inline BoardStatus& getBoardStatus(){
+        return m_boardStatusHistory.current();
+    }
+    
     
     [[nodiscard]] bb::Score evaluate();
 };

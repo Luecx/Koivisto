@@ -135,13 +135,13 @@ void generatePawnMoves(
         }
     }
     
-    if (pawnsLeft & b->getBoardStatus()->enPassantTarget) {
+    if (pawnsLeft & b->getBoardStatus().enPassantTarget) {
         target = b->getEnPassantSquare();
         mv->add(genMove(target - left, target, EN_PASSANT, movingPiece));
         if constexpr (score) scoreMove<c, EN_PASSANT, m>(b, mv, hashMove, sd, ply);
     }
     
-    if (pawnsRight & b->getBoardStatus()->enPassantTarget) {
+    if (pawnsRight & b->getBoardStatus().enPassantTarget) {
         target = b->getEnPassantSquare();
         mv->add(genMove(target - right, target, EN_PASSANT, movingPiece));
         if constexpr (score) scoreMove<c, EN_PASSANT, m>(b, mv, hashMove, sd, ply);

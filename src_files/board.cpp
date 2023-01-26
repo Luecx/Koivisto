@@ -59,8 +59,7 @@ Board::Board(const std::string& fen) {
     
     // we need to push a default board status.
     BoardStatus boardStatus {0, 0, 0, 0, ONE, ONE, 0};
-    this->m_boardStatusHistory.reserve(512);
-    this->m_boardStatusHistory.push_back(boardStatus);
+    this->m_boardStatusHistory.push(boardStatus);
     
     // using some string utilties defined in Util.h, we split the fen into parts.
     std::vector<std::string> split = splitString(fen);
@@ -102,7 +101,7 @@ Board::Board(const std::string& fen) {
     if (split.size() >= 2 && split[1].length() == 1) {
         if (split[1].at(0) != 'w') {
             changeActivePlayer();
-            getBoardStatus()->zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
+            m_boardStatusHistory.current().zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
         }
     }
     
@@ -143,10 +142,10 @@ Board::Board(const std::string& fen) {
     }
     
     if (split.size() >= 5)
-        getBoardStatus()->fiftyMoveCounter = std::stoi(split[4]);
+        m_boardStatusHistory.current().fiftyMoveCounter = std::stoi(split[4]);
 
     if (split.size() >= 6) 
-        getBoardStatus()->moveCounter = std::stoi(split[5]);
+        m_boardStatusHistory.current().moveCounter = std::stoi(split[5]);
     
     this->evaluator.reset(this);
     // note that we do not read information about move counts. This is usually not required for playing games.
@@ -184,8 +183,8 @@ Board& Board::operator=(const Board& board) {
     
     // next we copy the entire history of the board.
     m_boardStatusHistory.clear();
-    for (int n = 0; n < static_cast<int>(board.m_boardStatusHistory.size()); n++) {
-        m_boardStatusHistory.push_back(board.m_boardStatusHistory.at(n).copy());
+    for (uint32_t n = 0; n < static_cast<int>(board.m_boardStatusHistory.size); n++) {
+        m_boardStatusHistory.push(board.m_boardStatusHistory[n]);
     }
     
     this->evaluator.reset(this);
@@ -260,8 +259,8 @@ std::string Board::fen() const {
     }
     
     // we also add the fifty move counter and the move counter to the fen (note that we dont parse those)
-    ss << " " << getBoardStatus()->fiftyMoveCounter;
-    ss << " " << getBoardStatus()->moveCounter;
+    ss << " " << m_boardStatusHistory.current().fiftyMoveCounter;
+    ss << " " << m_boardStatusHistory.current().moveCounter;
     
     return ss.str();
 }
@@ -270,7 +269,7 @@ std::string Board::fen() const {
  * Returns the zobrist key for the current board.
  * The zobrist-key is stored within the meta information of the board.
  */
-U64 Board::zobrist() const { return getBoardStatus()->zobrist; }
+U64 Board::zobrist() const { return m_boardStatusHistory.current().zobrist; }
 
 /**
  * Returns true if the given player is in check by the opponent.
@@ -330,8 +329,7 @@ void Board::setPiece(Square sq, Piece piece) {
 
     // also adjust the zobrist key
     if constexpr (updateZobrist) {
-        BoardStatus* st = getBoardStatus();
-        st->zobrist ^= getHash(piece, sq);
+        m_boardStatusHistory.current().zobrist ^= getHash(piece, sq);
     }
 }
 
@@ -365,8 +363,7 @@ void Board::unsetPiece(Square sq) {
     
     // also adjust the zobrist key
     if constexpr (updateZobrist) {
-        BoardStatus* st = getBoardStatus();
-        st->zobrist ^= getHash(p, sq);  
+        m_boardStatusHistory.current().zobrist ^= getHash(p, sq);  
     }
     
     // removing the piece from the square-wise piece table.
@@ -396,8 +393,7 @@ void Board::replacePiece(Square sq, Piece piece) {
     
     // also adjust the zobrist key
     if constexpr (updateZobrist) {
-        BoardStatus* st = getBoardStatus();
-        st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+        m_boardStatusHistory.current().zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
     }
     
     // update the evaluator
@@ -421,8 +417,7 @@ void Board::replacePiece(Square sq, Piece piece) {
  * @param piece
  */
 void Board::setPieceHash(Square sq, Piece piece) {
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(piece, sq);
+    m_boardStatusHistory.current().zobrist ^= getHash(piece, sq);
 }
 
 /**
@@ -435,8 +430,7 @@ void Board::unsetPieceHash(Square sq) {
     
     // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(p, sq);  
+    m_boardStatusHistory.current().zobrist ^= getHash(p, sq);  
 }
 
 /**
@@ -450,8 +444,7 @@ void Board::replacePieceHash(Square sq, Piece piece) {
     
     // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+    m_boardStatusHistory.current().zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
 }
 
 /**
@@ -466,14 +459,14 @@ void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
  * @param m
  */
 template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
-    BoardStatus* previousStatus = getBoardStatus();
-    BoardStatus  newBoardStatus = {previousStatus->zobrist,           // zobrist will be changed later
+    BoardStatus& previousStatus = m_boardStatusHistory.current();
+    BoardStatus  newBoardStatus{previousStatus.zobrist ^ZOBRIST_WHITE_BLACK_SWAP,           // zobrist will be changed later
                                   0ULL,                              // reset en passant. might be set later
-                                  previousStatus->castlingRights,    // copy meta. might be changed
-                                  previousStatus->fiftyMoveCounter
-                                      + 1,    // increment fifty move counter. might be reset
+                                  previousStatus.castlingRights,    // copy meta. might be changed
+                                  
+                              previousStatus.fiftyMoveCounter + uint8_t(1),    // increment fifty move counter. might be reset
                                   1ULL,       // set rep to 1 (no rep)
-                                  previousStatus->moveCounter + getActivePlayer(),    // increment move counter
+                                  previousStatus.moveCounter + getActivePlayer(),    // increment move counter
                                   m};
     
         
@@ -507,7 +500,6 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         }
     }
     
-    newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
     if (getPieceType(pFrom) == PAWN) {
         // reset fifty move counter if pawn has moved
         newBoardStatus.fiftyMoveCounter = 0;
@@ -521,7 +513,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         // moved.
         else if (isPromotion(m)) {
             // we handle this case seperately so we return after this finished.
-            m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+            m_boardStatusHistory.push(newBoardStatus);
             this->changeActivePlayer();
             
             // setting m_piecesBB
@@ -535,7 +527,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             
             return;
         } else if (mType == EN_PASSANT) {
-            m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+            m_boardStatusHistory.push(newBoardStatus);
             this->changeActivePlayer();
             
             unsetPiece(sqTo - 8 * factor);
@@ -551,7 +543,8 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
         
         // we handle this case seperately so we return after this finished.
-        m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+//        m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+        m_boardStatusHistory.push(newBoardStatus);
         this->changeActivePlayer();
         
         if (isCastle(m)) {
@@ -600,7 +593,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         }
     }
     
-    m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+    m_boardStatusHistory.push(newBoardStatus);
     
     // doing the initial move
     this->unsetPieceHash(sqFrom);
@@ -613,7 +606,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     }
 
     if constexpr (prefetch)
-        table->prefetch(getBoardStatus()->zobrist);
+        table->prefetch(m_boardStatusHistory.current().zobrist);
 
     // doing the initial move
     this->unsetPiece<true, false>(sqFrom);
@@ -635,7 +628,7 @@ template void Board::move<true >(Move m, TranspositionTable* table);
  * undoes the last move. Assumes the last move has not been a null move.
  */
 void Board::undoMove() {
-    const Move m = getBoardStatus()->move;
+    const Move m = m_boardStatusHistory.current().move;
     
     changeActivePlayer();
     
@@ -667,7 +660,7 @@ void Board::undoMove() {
     
     setPiece<false>(sqFrom, pFrom);
     
-    m_boardStatusHistory.pop_back();
+    m_boardStatusHistory.pop();
     this->evaluator.popAccumulation();
 }
 
@@ -675,16 +668,17 @@ void Board::undoMove() {
  * does a null move.
  */
 void Board::move_null() {
-    const BoardStatus* previousStatus = getBoardStatus();
-    const BoardStatus  newBoardStatus = {previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
+    const BoardStatus& previousStatus = m_boardStatusHistory.current();
+    
+    const BoardStatus  newBoardStatus{previousStatus.zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
                                          0ULL,
-                                         previousStatus->castlingRights,
-                                         previousStatus->fiftyMoveCounter + 1,
+                                         previousStatus.castlingRights,
+                                         previousStatus.fiftyMoveCounter + 1,
                                          1ULL,
-                                         previousStatus->moveCounter + getActivePlayer(),
+                                         previousStatus.moveCounter + getActivePlayer(),
                                          0ULL};
     
-    m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+    m_boardStatusHistory.push(newBoardStatus);
     changeActivePlayer();
 }
 
@@ -692,7 +686,7 @@ void Board::move_null() {
  * undoes a null move. Assumes that the previous move has been a null move.
  */
 void Board::undoMove_null() {
-    m_boardStatusHistory.pop_back();
+    m_boardStatusHistory.pop();
     changeActivePlayer();
 }
 
@@ -701,9 +695,9 @@ void Board::undoMove_null() {
  * @return
  */
 Move Board::getPreviousMove(Depth ply) const {
-    if (m_boardStatusHistory.size() <= ply)
+    if (m_boardStatusHistory.size <= ply)
         return 0;
-    return m_boardStatusHistory[m_boardStatusHistory.size() - ply].move;
+    return m_boardStatusHistory[m_boardStatusHistory.size - ply].move;
 }
 
 /**
@@ -1337,7 +1331,7 @@ bool Board::isPseudoLegal(Move m) const {
  * @param index
  * @return
  */
-bool Board::getCastlingRights(int index) const { return getBit(getBoardStatus()->castlingRights, index); }
+bool Board::getCastlingRights(int index) const { return getBit(m_boardStatusHistory.current().castlingRights, index); }
 
 /**
  * enables/disables castling.
@@ -1345,9 +1339,9 @@ bool Board::getCastlingRights(int index) const { return getBit(getBoardStatus()-
  */
 void Board::setCastlingRights(int index, bool val) {
     if (val) {
-        setBit(getBoardStatus()->castlingRights, index);
+        m_boardStatusHistory.current().castlingRights |= (1 << index);
     } else {
-        unsetBit(getBoardStatus()->castlingRights, index);
+        m_boardStatusHistory.current().castlingRights &= ~(1 << index);
     }
 }
 
@@ -1357,9 +1351,9 @@ void Board::setCastlingRights(int index, bool val) {
  */
 void Board::setEnPassantSquare(Square square) {
     if (square < 0)
-        getBoardStatus()->enPassantTarget = 0;
+        m_boardStatusHistory.current().enPassantTarget = 0;
     else
-        getBoardStatus()->enPassantTarget = (ONE << square);
+        m_boardStatusHistory.current().enPassantTarget = (ONE << square);
 }
 
 /**
@@ -1367,14 +1361,14 @@ void Board::setEnPassantSquare(Square square) {
  * as this is only used internally, there is no need to make this public.
  */
 void Board::computeNewRepetition() {
-    const int maxChecks = getBoardStatus()->fiftyMoveCounter;
+    const int maxChecks = m_boardStatusHistory.current().fiftyMoveCounter;
     
-    const int lim = m_boardStatusHistory.size() - 1 - maxChecks;
+    const int lim = m_boardStatusHistory.size - 1 - maxChecks;
     const int end = std::max(0,lim);
-
-    for (int i = m_boardStatusHistory.size() - 3; i >= end; i -= 2) {
-        if (m_boardStatusHistory.at(i).zobrist == getBoardStatus()->zobrist) {
-            getBoardStatus()->repetitionCounter = m_boardStatusHistory.at(i).repetitionCounter + 1;
+    
+    for (int i = m_boardStatusHistory.size - 3; i >= end; i -= 2) {
+        if (m_boardStatusHistory[i].zobrist == m_boardStatusHistory.current().zobrist) {
+            m_boardStatusHistory.current().repetitionCounter = m_boardStatusHistory[i].repetitionCounter + 1;
         }
     }
 }
@@ -1383,13 +1377,13 @@ void Board::computeNewRepetition() {
  * Returns the amount this position has occurred before.
  * @return
  */
-int Board::getCurrentRepetitionCount() const { return getBoardStatus()->repetitionCounter; }
+int Board::getCurrentRepetitionCount() const { return m_boardStatusHistory.current().repetitionCounter; }
 
 /**
  * returns the 50-move counter which is used for draw detection.
  * @return
  */
-int Board::getCurrent50MoveRuleCount() const { return getBoardStatus()->fiftyMoveCounter / 2; }
+int Board::getCurrent50MoveRuleCount() const { return m_boardStatusHistory.current().fiftyMoveCounter / 2; }
 
 /*
  * returns the square to which e.p. is possible.
@@ -1397,7 +1391,7 @@ int Board::getCurrent50MoveRuleCount() const { return getBoardStatus()->fiftyMov
  * @return
  */
 Square Board::getEnPassantSquare() const {
-    const U64 ePT = getBoardStatus()->enPassantTarget;
+    const U64 ePT = m_boardStatusHistory.current().enPassantTarget;
     if (ePT == 0) {
         return -1;
     }
@@ -1497,6 +1491,11 @@ Score Board::evaluate(){
     return (+     evaluation_mg_scalar
                 - phase * (evaluation_mg_scalar - evaluation_eg_scalar))
             * (this->evaluator.evaluate(this->getActivePlayer()));
+}
+void Board::clearHistories() {
+    this->m_boardStatusHistory[0] = this->m_boardStatusHistory.current();
+    this->m_boardStatusHistory.size = 1;
+    this->evaluator.clearHistory();
 }
 
 template void Board::setPiece<true, true>(Square sq, Piece piece);

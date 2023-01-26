@@ -200,7 +200,7 @@ void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& eval
     AccumulatorTableEntry& entry = entries[view][entry_idx];
 
     // first retrieve the accumulator from the table and put that into the evaluator
-    std::memcpy(evaluator.history.back().summation[view], entry.accumulator.summation[view],
+    std::memcpy(evaluator.history->current().summation[view], entry.accumulator.summation[view],
                 sizeof(int16_t) * HIDDEN_SIZE);
 
     // go through each piece and compute the difference.
@@ -232,7 +232,7 @@ void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& eval
     }
     // this set has most likely been done on a reset. its handy to just put the new state
     // into the table
-    put(view, board, evaluator.history.back());
+    put(view, board, evaluator.history->current());
 }
 
 void nn::AccumulatorTable::reset() {
@@ -260,7 +260,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
     const int  idx = index(pieceType, pieceColor, square, side, kingSquare);
 
     const auto wgt = (avx_register_type_16*) (inputWeights[idx]);
-    const auto sum = (avx_register_type_16*) (history.back().summation[side]);
+    const auto sum = (avx_register_type_16*) (history->current().summation[side]);
     if constexpr (value) {
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
             sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
@@ -280,7 +280,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
 }
 
 void nn::Evaluator::reset(Board* board) {
-    history.resize(1);
+    history->reset();
     resetAccumulator(board, bb::WHITE);
     resetAccumulator(board, bb::BLACK);
 }
@@ -295,8 +295,8 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     }
     constexpr avx_register_type_16 reluBias {};
 
-    const auto acc_act = (avx_register_type_16*) history.back().summation[activePlayer];
-    const auto acc_nac = (avx_register_type_16*) history.back().summation[!activePlayer];
+    const auto acc_act = (avx_register_type_16*) history->current().summation[activePlayer];
+    const auto acc_nac = (avx_register_type_16*) history->current().summation[!activePlayer];
 
     // compute the dot product
     avx_register_type_32 res {};
@@ -314,25 +314,17 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
 }
 
 nn::Evaluator::Evaluator() {
-    this->history.push_back(Accumulator {});
+    
+    this->history->push(Accumulator {});
     this->accumulator_table->reset();
 }
 
-nn::Evaluator::Evaluator(const nn::Evaluator& evaluator) {
-    history = evaluator.history;
-}
-nn::Evaluator& nn::Evaluator::operator=(const nn::Evaluator& evaluator) {
-    this->history = evaluator.history;
-    return *this;
-}
+void nn::Evaluator::addNewAccumulation() { this->history->push(this->history->current()); }
 
-void nn::Evaluator::addNewAccumulation() { this->history.emplace_back(this->history.back()); }
-
-void nn::Evaluator::popAccumulation() { this->history.pop_back(); }
+void nn::Evaluator::popAccumulation() { this->history->pop(); }
 
 void nn::Evaluator::clearHistory() {
-    this->history.clear();
-    this->history.push_back(Accumulator {});
+    this->history->reset();
 }
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,

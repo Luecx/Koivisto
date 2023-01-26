@@ -105,25 +105,50 @@ struct AccumulatorTable {
     void reset();
 } __attribute__((aligned(128)));
 
+
+struct AccumulatorHistory{
+    Accumulator history[bb::MAX_INTERNAL_PLY+1]{};
+    int size{0};
+    
+    Accumulator& current(){
+        return history[size-1];
+    }
+    
+    inline Accumulator& at(uint32_t index){
+        return history[index];
+    }
+    
+    void push(const Accumulator& accumulator){
+        history[size++] = accumulator;
+    }
+    
+    void pop(){
+        size --;
+    }
+    
+    void reset(){
+        if(size > 1)
+            history[0] = current();
+        size = 1;
+    }
+} __attribute__((aligned(128)));
+
 struct Evaluator {
     // summations
-    std::vector<Accumulator> history;
-    std::unique_ptr<AccumulatorTable> accumulator_table =
+//    std::vector<Accumulator> history;
+
+    std::unique_ptr<AccumulatorHistory> history =
+        std::make_unique<AccumulatorHistory>(AccumulatorHistory());
+    std::shared_ptr<AccumulatorTable> accumulator_table =
         std::make_unique<AccumulatorTable>(AccumulatorTable());
 
     Evaluator();
-    
-    Evaluator(const Evaluator& evaluator);
-    
-    Evaluator& operator=(const Evaluator& evaluator);
     
     void addNewAccumulation();
     
     void popAccumulation();
     
     void clearHistory();
-    
-    
     
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,

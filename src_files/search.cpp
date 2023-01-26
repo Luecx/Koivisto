@@ -1342,8 +1342,8 @@ Score Search::probeWDL(Board* board) {
     U64 queens  = board->getPieceTypeBB<QUEEN >();
     U64 kings   = board->getPieceTypeBB<KING  >();
 
-    U64    fifty_mr     =   board->getBoardStatus()->fiftyMoveCounter;
-    bool   any_castling = !!(board->getBoardStatus()->castlingRights & MASK<4>);
+    U64    fifty_mr     =   board->getBoardStatus().fiftyMoveCounter;
+    bool   any_castling = !!(board->getBoardStatus().castlingRights & MASK<4>);
     Square ep_square    = std::max((Square) 0, board->getEnPassantSquare());  // board uses -1 as e.p.
     bool   whiteToMove  = board->getActivePlayer() == WHITE;
     
@@ -1399,8 +1399,8 @@ Move Search::probeDTZ(Board* board) {
     U64 queens  = board->getPieceBB<WHITE, QUEEN >() | board->getPieceBB<BLACK, QUEEN >();
     U64 kings   = board->getPieceBB<WHITE, KING  >() | board->getPieceBB<BLACK, KING  >();
     
-    U64    fifty_mr     =   board->getBoardStatus()->fiftyMoveCounter;
-    bool   any_castling = !!(board->getBoardStatus()->castlingRights & MASK<4>);
+    U64    fifty_mr     =   board->getBoardStatus().fiftyMoveCounter;
+    bool   any_castling = !!(board->getBoardStatus().castlingRights & MASK<4>);
     Square ep_square    = std::max((Square) 0, board->getEnPassantSquare());  // board uses -1 as e.p.
     Color  whiteToMove  = board->getActivePlayer() == WHITE;
 
