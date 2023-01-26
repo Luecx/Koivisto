@@ -124,7 +124,7 @@ EXE      := $(EXE_DIR)/$(EXE_NAME)
 # BUILD FLAGS
 # ---------------------------------------------------------------------------------------------------------------------
 
-override FLAGS := -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+override FLAGS := -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\" -g
 
 ifeq ($(VALGRIND),1)
 	PEXT := 0
