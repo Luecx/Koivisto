@@ -139,51 +139,6 @@ void nn::init() {
     memoryIndex += OUTPUT_SIZE * sizeof(int32_t);
 }
 
-int nn::index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Color view,
-              bb::Square kingSquare) {
-    constexpr int pieceTypeFactor  = 64;
-    constexpr int pieceColorFactor = 64 * 6;
-    constexpr int kingSquareFactor = 64 * 6 * 2;
-
-    const bool    kingSide         = bb::fileIndex(kingSquare) > 3;
-    const int     ksIndex          = kingSquareIndex(kingSquare, view);
-    bb::Square    relativeSquare   = view == bb::WHITE ? square : bb::mirrorVertically(square);
-
-    if (kingSide) {
-        relativeSquare = bb::mirrorHorizontally(relativeSquare);
-    }
-
-    // clang-format off
-    return relativeSquare
-           + pieceType * pieceTypeFactor
-           + (pieceColor == view) * pieceColorFactor
-           + ksIndex * kingSquareFactor;
-    // clang-format on
-}
-
-int nn::kingSquareIndex(bb::Square relativeKingSquare, bb::Color kingColor) {
-    // return zero if there is no king on the board yet ->
-    // requires manual reset
-    if (relativeKingSquare > 63)
-        return 0;
-    // clang-format off
-    constexpr int indices[bb::N_SQUARES] {
-        0,  1,  2,  3,  3,  2,  1,  0,
-        4,  5,  6,  7,  7,  6,  5,  4,
-        8,  9,  10, 11, 11, 10, 9,  8,
-        8,  9,  10, 11, 11, 10, 9,  8,
-        12, 12, 13, 13, 13, 13, 12, 12,
-        12, 12, 13, 13, 13, 13, 12, 12,
-        14, 14, 15, 15, 15, 15, 14, 14,
-        14, 14, 15, 15, 15, 15, 14, 14,
-    };
-    // clang-format on
-    if (kingColor == bb::BLACK) {
-        relativeKingSquare = bb::mirrorVertically(relativeKingSquare);
-    }
-    return indices[relativeKingSquare];
-}
-
 
 void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& evaluator) {
     const bb::Square king_sq   = bb::bitscanForward(board->getPieceBB(view, bb::KING));
@@ -230,7 +185,6 @@ void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& eval
     }
     
     std::memcpy(evaluator.history.back().summation[view], entry.accumulator.summation[view],sizeof(int16_t) * HIDDEN_SIZE);
-
 }
 
 void nn::AccumulatorTable::reset() {
