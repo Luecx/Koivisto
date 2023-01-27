@@ -554,32 +554,64 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
         this->changeActivePlayer();
         
-        if (isCastle(m)) {
-            // move the rook as well. castling rights are handled below
-            Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
-            Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-            this->unsetPiece(rookSquare);
-            this->setPiece(rookTarget, ROOK + 8 * color);
-        }
         
-        this->unsetPiece(sqFrom);
-        if (isCapture(m)) {
-            this->replacePiece(sqTo, pFrom);
-        } else {
-            this->setPiece(sqTo, pFrom);
-        }
-        
-        // check if it crossed squares
+        bool requires_accumulator_reset = false;
         if(     nn::kingSquareIndex(sqTo, color) !=
                 nn::kingSquareIndex(sqFrom, color)
-                ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
+            ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
+            requires_accumulator_reset = true;
+        }
+        
+        // normal handling if no reset is required
+        if(!requires_accumulator_reset){
+            if (isCastle(m)) {
+                // move the rook as well. castling rights are handled below
+                Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+                Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
+                this->unsetPiece(rookSquare);
+                this->setPiece(rookTarget, ROOK + 8 * color);
+            }
+        
+            this->unsetPiece(sqFrom);
+            if (isCapture(m)) {
+                this->replacePiece(sqTo, pFrom);
+            } else {
+                this->setPiece(sqTo, pFrom);
+            }
+        }else{
+            Square ourKingSq = bitscanForward(getPieceBB(color ,KING));
+            Square oppKingSq = bitscanForward(getPieceBB(!color,KING));
+
+            // handling for when only updates for the opponents accumulator are needed
+            if (isCastle(m)) {
+                // move the rook as well. castling rights are handled below
+                Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+                Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
+                this->unsetPiece<false>(rookSquare);
+                this->setPiece<false>(rookTarget, ROOK + 8 * color);
+
+                this->evaluator.setPieceOnSquareAccumulator<false>(!color, ROOK, color, rookSquare, oppKingSq);
+                this->evaluator.setPieceOnSquareAccumulator<true>(!color , ROOK, color, rookTarget, oppKingSq);
+            }
+            this->unsetPiece<false>(sqFrom);
+            this->evaluator.setPieceOnSquareAccumulator<false>(!color, KING, color, sqFrom, oppKingSq);
+            if (isCapture(m)) {
+                this->replacePiece<false>(sqTo, pFrom);
+                this->evaluator.setPieceOnSquareAccumulator<true>(!color, KING, color, sqTo, oppKingSq);
+                this->evaluator.setPieceOnSquareAccumulator<false>(!color, getCapturedPieceType(m), !color, sqTo, oppKingSq);
+            } else {
+                this->setPiece<false>(sqTo, pFrom);
+                this->evaluator.setPieceOnSquareAccumulator<true>(!color, KING, color, sqTo, oppKingSq);
+            }
+        }
+        
+        // reset accumulator of moving side if required
+        if(requires_accumulator_reset){
             this->evaluator.resetAccumulator(this, color);
         }
         
         // we need to compute the repetition count
         this->computeNewRepetition();
-        
-        
         return;
     }
         
