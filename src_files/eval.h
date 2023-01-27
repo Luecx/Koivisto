@@ -65,6 +65,7 @@ void init();
 // also takes the view from with we view at the board as well as the king square of the view side
 [[nodiscard]] int index(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square,
                         bb::Color view, bb::Square kingSquare);
+
 // the index is based on a king bucketing system. the relevant king bucket can be retrieved using
 // the function below
 [[nodiscard]] int kingSquareIndex(bb::Square kingSquare, bb::Color kingColor);
@@ -96,9 +97,6 @@ struct AccumulatorTableEntry {
 // used but is the fastest solution.
 struct AccumulatorTable {
     AccumulatorTableEntry entries[bb::N_COLORS][32] {};
-
-    // sets the specific accumulator to store the specified accumulator
-    void put(bb::Color view, Board* board, Accumulator& accumulator);
     
     void use(bb::Color view, Board* board, Evaluator& evaluator);
     
