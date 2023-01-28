@@ -1,4 +1,3 @@
-
 /****************************************************************************************************
  *                                                                                                  *
  *                                     Koivisto UCI Chess engine                                    *
@@ -17,10 +16,12 @@
  *                                                                                                  *
  ****************************************************************************************************/
 
-#include "attacks.h"
-#include "uci.h"
+#ifndef KOIVISTO_INFOSTRING_H
+#define KOIVISTO_INFOSTRING_H
 
-int main(int argc, char *argv[]) {
-    uci::mainloop(argc, argv);
-    return 0;
-}
+#include "bitboard.h"
+#include "pv.h"
+
+extern bool usePrettyInfoString;
+
+#endif    // KOIVISTO_INFOSTRING_H

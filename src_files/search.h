@@ -23,25 +23,24 @@
 #include "bitboard.h"
 #include "board.h"
 #include "history.h"
+#include "infostring.h"
+#include "newmovegen.h"
+#include "nn/eval.h"
+#include "pv.h"
 #include "timemanager.h"
 #include "transpositiontable.h"
-#include "eval.h"
-#include "pv.h"
-#include "newmovegen.h"
 
 #include <chrono>
 #include <cmath>
+#include <cstdint>
+#include <ctgmath>
 #include <ctime>
 #include <iostream>
-#include <cstdint>
 #include <string>
-#include <ctgmath>
 #include <thread>
 #include <vector>
 
 #define MAX_THREADS 256
-
-
 
 /**
  * data about each thread
@@ -129,14 +128,21 @@ class Search {
     void clearHistory();
     // clears transposition table
     void clearHash();
-    // sets threads to be used for smp
-    void setThreads(int threads);
+    // sets p_threadCount to be used for smp
+    void setThreads(int p_threadCount);
     // set the hash size for the transposition table
     void setHashSize(int hashSize);
     void stop();
 
-    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
-
+//    void printInfoString(bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend void printInfoString               (Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend void printInfoStringPretty         (Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend void printInfoStringUCI            (Search* search, bb::Depth depth, bb::Score score, PVLine& pvLine);
+    friend move::Move printInfoStringDTZ      (Search* search, Board* board, unsigned int tb_result, bb::Score score, int dtz);
+    friend move::Move printInfoStringDTZPretty(Search* search, Board* board, unsigned int tb_result, bb::Score score, int dtz);
+    friend move::Move printInfoStringDTZUCI   (Search* search, Board* board, unsigned int tb_result, bb::Score score, int dtz);
+    
+    
     // basic move functions
     move::Move               bestMove(Board* b, TimeManager* timeManager, int threadId = 0);
     [[nodiscard]] bb::Score  pvSearch(Board* b, bb::Score alpha, bb::Score beta, bb::Depth depth,

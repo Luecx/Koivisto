@@ -8,13 +8,13 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 CXX        = g++
 _LIBS_WL  := -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 _LIBS     := -pthread
-_CXXSRCS  := $(_SRC)/*.cpp
+_CXXSRCS  := $(_SRC)/*.cpp $(_SRC)/nn/*.cpp
 _CSRCS	  := $(_SRC)/syzygy/tbprobe.c
 _SRCS     := $(_CSRCS) $(_CXXSRCS)
 
 # engine name and version
 NAME       = Koivisto
-MINOR      = 0
+MINOR      = 1
 MAJOR      = 9
 MAKROS     = -DMINOR_VERSION=$(MINOR) -DMAJOR_VERSION=$(MAJOR)
 
@@ -119,12 +119,14 @@ EXE_DIR  := $(_ROOT)/bin
 # build exe name based of exe dir and exe name by default
 # can be manually overwritten
 EXE      := $(EXE_DIR)/$(EXE_NAME)
+EXE_DIR  := $(dir $(abspath $(EXE)))
+
 
 # ---------------------------------------------------------------------------------------------------------------------
 # BUILD FLAGS
 # ---------------------------------------------------------------------------------------------------------------------
 
-override FLAGS := -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\"
+override FLAGS := -std=c++17 -Wall -Wextra -Wshadow -DEVALFILE=\"$(EVALFILE)\" -g
 
 ifeq ($(VALGRIND),1)
 	PEXT := 0
@@ -309,7 +311,7 @@ build: updateNetwork overview
 		$(CXX) $(PGO_PRE_FLAGS)  $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
 		$(EXE_PGO) bench
 		$(CXX) $(PGO_POST_FLAGS) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
-		@rm -f *.gcda
+		@rm -f $(EXE_DIR)*.gcda
     else
 		$(CXX) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
     endif
