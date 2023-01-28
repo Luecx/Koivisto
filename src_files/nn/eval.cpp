@@ -75,6 +75,7 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
 
 void nn::Evaluator::reset(Board* board) {
     history.resize(1);
+    this->history_index = 0;
     resetAccumulator(board, bb::WHITE);
     resetAccumulator(board, bb::BLACK);
 }
@@ -110,6 +111,7 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
 
 nn::Evaluator::Evaluator() {
     this->history.push_back(Accumulator {});
+    this->history_index = 0;
     this->accumulator_table->reset();
 }
 
@@ -142,6 +144,7 @@ void nn::Evaluator::popAccumulation() {
 void nn::Evaluator::clearHistory() {
     this->history.clear();
     this->history.push_back(Accumulator {});
+    this->history_index = 0;
 }
 
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,
