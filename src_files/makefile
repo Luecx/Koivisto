@@ -8,7 +8,7 @@ _MAKE     := $(MAKE) --no-print-directory -C $(_THIS)
 CXX        = g++
 _LIBS_WL  := -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 _LIBS     := -pthread
-_CXXSRCS  := $(_SRC)/*.cpp
+_CXXSRCS  := $(_SRC)/*.cpp $(_SRC)/nn/*.cpp
 _CSRCS	  := $(_SRC)/syzygy/tbprobe.c
 _SRCS     := $(_CSRCS) $(_CXXSRCS)
 
@@ -119,6 +119,8 @@ EXE_DIR  := $(_ROOT)/bin
 # build exe name based of exe dir and exe name by default
 # can be manually overwritten
 EXE      := $(EXE_DIR)/$(EXE_NAME)
+EXE_DIR  := $(dir $(abspath $(EXE)))
+
 
 # ---------------------------------------------------------------------------------------------------------------------
 # BUILD FLAGS
@@ -309,7 +311,7 @@ build: updateNetwork overview
 		$(CXX) $(PGO_PRE_FLAGS)  $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
 		$(EXE_PGO) bench
 		$(CXX) $(PGO_POST_FLAGS) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
-		@rm -f *.gcda
+		@rm -f $(EXE_DIR)*.gcda
     else
 		$(CXX) $(FLAGS) $(_SRCS) $(MAKROS) $(_LIBS) -o $(EXE)
     endif
