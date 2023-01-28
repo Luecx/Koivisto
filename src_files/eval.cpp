@@ -276,3 +276,6 @@ template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb:
 template void nn::Evaluator::setPieceOnSquare<false>(bb::PieceType pieceType, bb::Color pieceColor,
                                                      bb::Square square, bb::Square wKingSquare,
                                                      bb::Square bKingSquare);
+
+template void nn::Evaluator::setPieceOnSquareAccumulator<false>(bb::Color side, bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Square kingSquare);
+template void nn::Evaluator::setPieceOnSquareAccumulator<true>(bb::Color side, bb::PieceType pieceType, bb::Color pieceColor, bb::Square square, bb::Square kingSquare);
