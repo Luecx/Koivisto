@@ -21,9 +21,9 @@
 
 #include "bitboard.h"
 #include "move.h"
-#include "util.h"
+#include "nn/eval.h"
 #include "transpositiontable.h"
-#include "eval.h"
+#include "util.h"
 #include "vector"
 
 #include <ostream>

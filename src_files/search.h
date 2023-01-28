@@ -23,20 +23,20 @@
 #include "bitboard.h"
 #include "board.h"
 #include "history.h"
+#include "infostring.h"
+#include "newmovegen.h"
+#include "nn/eval.h"
+#include "pv.h"
 #include "timemanager.h"
 #include "transpositiontable.h"
-#include "eval.h"
-#include "pv.h"
-#include "newmovegen.h"
-#include "infostring.h"
 
 #include <chrono>
 #include <cmath>
+#include <cstdint>
+#include <ctgmath>
 #include <ctime>
 #include <iostream>
-#include <cstdint>
 #include <string>
-#include <ctgmath>
 #include <thread>
 #include <vector>
 
