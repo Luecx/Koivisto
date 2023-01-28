@@ -63,7 +63,14 @@ void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pi
                                                 bb::Color pieceColor, bb::Square square,
                                                 bb::Square kingSquare) {
     const int  idx = index(pieceType, pieceColor, square, side, kingSquare);
-    addWeightsToAccumulator<value>(idx, history.back().summation[side]);
+    
+    if(!accumulator_is_initialised[side]){
+        addWeightsToAccumulator<value>(idx, history[history_index-1].summation[side], history[history_index].summation[side]);
+        accumulator_is_initialised[side] = true;
+    }
+    else{
+        addWeightsToAccumulator<value>(idx, history[history_index].summation[side]);
+    }
 }
 
 void nn::Evaluator::reset(Board* board) {
@@ -74,6 +81,7 @@ void nn::Evaluator::reset(Board* board) {
 
 void nn::Evaluator::resetAccumulator(Board* board, bb::Color color) {
     accumulator_table->use(color, board, *this);
+    accumulator_is_initialised[color] = true;
 }
 
 int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
@@ -82,8 +90,8 @@ int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
     }
     constexpr avx_register_type_16 reluBias {};
 
-    const auto acc_act = (avx_register_type_16*) history.back().summation[activePlayer];
-    const auto acc_nac = (avx_register_type_16*) history.back().summation[!activePlayer];
+    const auto acc_act = (avx_register_type_16*) history[history_index].summation[activePlayer];
+    const auto acc_nac = (avx_register_type_16*) history[history_index].summation[!activePlayer];
 
     // compute the dot product
     avx_register_type_32 res {};
@@ -107,15 +115,29 @@ nn::Evaluator::Evaluator() {
 
 nn::Evaluator::Evaluator(const nn::Evaluator& evaluator) {
     history = evaluator.history;
+    history_index = evaluator.history_index;
 }
 nn::Evaluator& nn::Evaluator::operator=(const nn::Evaluator& evaluator) {
     this->history = evaluator.history;
+    this->history_index = evaluator.history_index;
     return *this;
 }
 
-void nn::Evaluator::addNewAccumulation() { this->history.emplace_back(this->history.back()); }
+void nn::Evaluator::addNewAccumulation() {
+    history_index ++;
+    // enlarge history if required
+    if(history_index >= this->history.size()){
+        this->history.resize(history_index + 1);
+    }
+    accumulator_is_initialised[bb::WHITE] = false;
+    accumulator_is_initialised[bb::BLACK] = false;
+}
 
-void nn::Evaluator::popAccumulation() { this->history.pop_back(); }
+void nn::Evaluator::popAccumulation() {
+    history_index --;
+    accumulator_is_initialised[bb::WHITE] = true;
+    accumulator_is_initialised[bb::BLACK] = true;
+}
 
 void nn::Evaluator::clearHistory() {
     this->history.clear();
