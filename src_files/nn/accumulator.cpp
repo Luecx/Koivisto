@@ -1,6 +1,21 @@
-//
-// Created by Luecx on 28.01.2023.
-//
+/****************************************************************************************************
+*                                                                                                  *
+*                                     Koivisto UCI Chess engine                                    *
+*                                   by. Kim Kahre and Finn Eggers                                  *
+*                                                                                                  *
+*                 Koivisto is free software: you can redistribute it and/or modify                 *
+*               it under the terms of the GNU General Public License as published by               *
+*                 the Free Software Foundation, either version 3 of the License, or                *
+*                                (at your option) any later version.                               *
+*                    Koivisto is distributed in the hope that it will be useful,                   *
+*                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+*                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+*                           GNU General Public License for more details.                           *
+*                 You should have received a copy of the GNU General Public License                *
+*                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+*                                                                                                  *
+****************************************************************************************************/
+
 #include "accumulator.h"
 #include "../board.h"
 
@@ -48,7 +63,7 @@ void nn::AccumulatorTable::use(bb::Color view, Board* board, nn::Evaluator& eval
         }
     }
     
-    std::memcpy(evaluator.history.back().summation[view], entry.accumulator.summation[view],sizeof(int16_t) * HIDDEN_SIZE);
+    std::memcpy(evaluator.history[evaluator.history_index].summation[view], entry.accumulator.summation[view],sizeof(int16_t) * HIDDEN_SIZE);
 }
 
 void nn::AccumulatorTable::reset() {

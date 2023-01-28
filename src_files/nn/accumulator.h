@@ -1,6 +1,20 @@
-//
-// Created by Luecx on 28.01.2023.
-//
+/****************************************************************************************************
+*                                                                                                  *
+*                                     Koivisto UCI Chess engine                                    *
+*                                   by. Kim Kahre and Finn Eggers                                  *
+*                                                                                                  *
+*                 Koivisto is free software: you can redistribute it and/or modify                 *
+*               it under the terms of the GNU General Public License as published by               *
+*                 the Free Software Foundation, either version 3 of the License, or                *
+*                                (at your option) any later version.                               *
+*                    Koivisto is distributed in the hope that it will be useful,                   *
+*                  but WITHOUT ANY WARRANTY; without even the implied warranty of                  *
+*                   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  *
+*                           GNU General Public License for more details.                           *
+*                 You should have received a copy of the GNU General Public License                *
+*                 along with Koivisto.  If not, see <http://www.gnu.org/licenses/>.                *
+*                                                                                                  *
+****************************************************************************************************/
 
 #ifndef KOIVISTO_ACCUMULATOR_H
 #define KOIVISTO_ACCUMULATOR_H
@@ -45,30 +59,36 @@ struct AccumulatorTable {
     void reset();
 } __attribute__((aligned(128)));
 
+
+
 // adding weights to an accumulator
 template<bool V>
-inline void addWeightsToAccumulator(const int idx, int16_t* accumulator){
+inline void addWeightsToAccumulator(const int idx, int16_t* src, int16_t* target){
     const auto wgt = (avx_register_type_16*) (nn::inputWeights[idx]);
-    const auto sum = (avx_register_type_16*) (accumulator);
+    const auto inp = (avx_register_type_16*) (src);
+    const auto out = (avx_register_type_16*) (target);
     if constexpr (V) {
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_add_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_add_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_add_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_add_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_add_epi16(inp[i * 4 + 0], wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_add_epi16(inp[i * 4 + 1], wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_add_epi16(inp[i * 4 + 2], wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_add_epi16(inp[i * 4 + 3], wgt[i * 4 + 3]);
         }
     } else {
         for (int i = 0; i < HIDDEN_SIZE / STRIDE_16_BIT / 4; i++) {
-            sum[i * 4 + 0] = avx_sub_epi16(sum[i * 4 + 0], wgt[i * 4 + 0]);
-            sum[i * 4 + 1] = avx_sub_epi16(sum[i * 4 + 1], wgt[i * 4 + 1]);
-            sum[i * 4 + 2] = avx_sub_epi16(sum[i * 4 + 2], wgt[i * 4 + 2]);
-            sum[i * 4 + 3] = avx_sub_epi16(sum[i * 4 + 3], wgt[i * 4 + 3]);
+            out[i * 4 + 0] = avx_sub_epi16(inp[i * 4 + 0], wgt[i * 4 + 0]);
+            out[i * 4 + 1] = avx_sub_epi16(inp[i * 4 + 1], wgt[i * 4 + 1]);
+            out[i * 4 + 2] = avx_sub_epi16(inp[i * 4 + 2], wgt[i * 4 + 2]);
+            out[i * 4 + 3] = avx_sub_epi16(inp[i * 4 + 3], wgt[i * 4 + 3]);
         }
     }
 }
 
-
-
+// adding weights to an accumulator
+template<bool V>
+inline void addWeightsToAccumulator(const int idx, int16_t* accumulator){
+    addWeightsToAccumulator<V>(idx, accumulator, accumulator);
+}
 
 }
 

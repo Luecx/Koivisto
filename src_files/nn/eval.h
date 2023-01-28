@@ -34,6 +34,14 @@ struct Evaluator {
     std::vector<Accumulator> history;
     std::unique_ptr<AccumulatorTable> accumulator_table =
         std::make_unique<AccumulatorTable>(AccumulatorTable());
+    
+    // pointer to which accumulator in the history is the current accumulator so we dont need
+    // to use popback but instead increment /decrement a counter
+    uint32_t history_index = 0;
+    
+    // true if the accumulator is initialised, otherwise false and we need to use the previous
+    // depth accumulator as an input when updating accumulator
+    bool accumulator_is_initialised[bb::N_COLORS] = {false, false};
 
     Evaluator();
     
