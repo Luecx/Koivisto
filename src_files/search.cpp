@@ -438,9 +438,12 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
     
     // if the time is over, we fail hard to stop the search. We don't want to call the system clock
-    // too often for speed reasons, so we only apply this when the depth is larger than 6.
-    if ((depth > 6 && !timeManager->isTimeLeft(&td->searchData))) {
+    // too often for speed reasons, so we only apply this when the node count is a multiple of 1024
+    if (   td->nodes % 1024 == 0
+        && td->threadID     == 0
+        && !timeManager->isTimeLeft(&td->searchData)) {
         td->dropOut = true;
+        this->timeManager->stopSearch();
         return beta;
     }
     
