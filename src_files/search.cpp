@@ -419,8 +419,6 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     Color activePlayer = b->getActivePlayer();
     Color opponent     = !activePlayer;
     bool  pv            = (beta - alpha) != 1;
-    // increment the node counter for the current thread
-    td->nodes++;
 
     // force a stop when enough nodes have been searched
     if (   timeManager->node_limit.enabled
@@ -484,6 +482,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     if (depth == 0 || depth > MAX_PLY || ply > MAX_PVSEARCH_PLY) {
         return qSearch(b, alpha, beta, ply, td, inCheck);
     }
+
+    // increment the node counter for the current thread
+    td->nodes++;
 
     // we extract a lot of information about various things.
     SearchData* sd            = &td->searchData;
