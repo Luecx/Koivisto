@@ -30,13 +30,15 @@ constexpr int MAX_NOISY = 32;
 
 constexpr int MAX_HIST  = 512;
 
+using Stage = uint8_t;
+
 enum {
     PV_SEARCH,
     Q_SEARCH,
     Q_SEARCHCHECK,
 };
 
-enum {
+enum Stages : Stage{
     GET_HASHMOVE,
     GEN_NOISY,
     GET_GOOD_NOISY,

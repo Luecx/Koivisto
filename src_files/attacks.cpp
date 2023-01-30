@@ -27,6 +27,8 @@ using namespace bb;
 
 U64 attacks::ROOK_ATTACKS  [N_SQUARES][4096]{};
 U64 attacks::BISHOP_ATTACKS[N_SQUARES][ 512]{};
+U64 attacks::PAWN_ATTACKS  [N_SQUARES][N_COLORS]{};
+
 
 U64 populateMask(U64 mask, U64 index) {
     U64    res = 0;
@@ -73,6 +75,10 @@ void attacks::init() {
 #endif
             BISHOP_ATTACKS[n][index] = generateBishopAttacks(n, rel_occ);
         }
+        
+        // pawn attacks
+        PAWN_ATTACKS[n][WHITE] = shiftNorthWest(ONE << n) | shiftNorthEast(ONE << n);
+        PAWN_ATTACKS[n][BLACK] = shiftSouthWest(ONE << n) | shiftSouthEast(ONE << n);
     }
 }
 

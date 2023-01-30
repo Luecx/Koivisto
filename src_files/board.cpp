@@ -145,15 +145,17 @@ Board::Board(const std::string& fen) {
     if (split.size() >= 5)
         getBoardStatus()->fiftyMoveCounter = std::stoi(split[4]);
 
-    if (split.size() >= 6) 
+    if (split.size() >= 6)
         getBoardStatus()->moveCounter = std::stoi(split[5]);
     
     this->evaluator.reset(this);
+    this->updatePinnersAndCheckers();
     // note that we do not read information about move counts. This is usually not required for playing games.
 }
 
 Board::Board(const Board& board) {
     *this = board;
+    this->updatePinnersAndCheckers();
 }
 
 /**
@@ -185,10 +187,11 @@ Board& Board::operator=(const Board& board) {
     // next we copy the entire history of the board.
     m_boardStatusHistory.clear();
     for (int n = 0; n < static_cast<int>(board.m_boardStatusHistory.size()); n++) {
-        m_boardStatusHistory.push_back(board.m_boardStatusHistory.at(n).copy());
+        m_boardStatusHistory.push_back(board.m_boardStatusHistory.at(n));
     }
     
     this->evaluator.reset(this);
+    this->updatePinnersAndCheckers();
 
     return *this;
 }
@@ -276,13 +279,7 @@ U64 Board::zobrist() const { return getBoardStatus()->zobrist; }
  * Returns true if the given player is in check by the opponent.
  */
 bool Board::isInCheck(Color player) const {
-    // we do this by casting rays from the king position and checking if an opponent piece is on those rays
-    // which could attack the given ray.
-    if (player == WHITE) {
-        return isUnderAttack<BLACK>(bitscanForward(m_piecesBB[WHITE_KING]));
-    } else {
-        return isUnderAttack<WHITE>(bitscanForward(m_piecesBB[BLACK_KING]));
-    }
+    return !!getBoardStatus()->m_checkersBB;
 }
 
 /**
@@ -366,7 +363,7 @@ void Board::unsetPiece(Square sq) {
     // also adjust the zobrist key
     if constexpr (updateZobrist) {
         BoardStatus* st = getBoardStatus();
-        st->zobrist ^= getHash(p, sq);  
+        st->zobrist ^= getHash(p, sq);
     }
     
     // removing the piece from the square-wise piece table.
@@ -397,7 +394,7 @@ void Board::replacePiece(Square sq, Piece piece) {
     // also adjust the zobrist key
     if constexpr (updateZobrist) {
         BoardStatus* st = getBoardStatus();
-        st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+        st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
     }
     
     // update the evaluator
@@ -436,7 +433,7 @@ void Board::unsetPieceHash(Square sq) {
     // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);
     BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(p, sq);  
+    st->zobrist ^= getHash(p, sq);
 }
 
 /**
@@ -451,8 +448,60 @@ void Board::replacePieceHash(Square sq, Piece piece) {
     // we need to know first which piece is contained on the given square.
     Piece p = getPiece(sq);
     BoardStatus* st = getBoardStatus();
-    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));      
+    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
 }
+
+/**
+ * does exactly what you think it does
+ */
+void Board::updatePinnersAndCheckers(){
+    Color us = getActivePlayer();
+    Color them = !us;
+    
+    // get king square as well as occupied bitboard by us
+    Square kSq = bitscanForward(getPieceBB(us, KING));
+    U64 defenders = getTeamOccupiedBB(us);
+    U64 attackers = getTeamOccupiedBB(them);
+    
+    // get sliders of opponent
+    U64 vert_sliders = (getPieceBB(them, BISHOP) | getPieceBB(them, QUEEN));
+    U64 hor_sliders  = (getPieceBB(them, ROOK  ) | getPieceBB(them, QUEEN));
+    
+    // get static attacks to the king
+    U64 static_attacks = attacks::PAWN_ATTACKS  [kSq][us] & getPieceBB(them, PAWN) |
+                         attacks::KNIGHT_ATTACKS[kSq]     & getPieceBB(them, KNIGHT);
+    
+    // get potential dynamic attacks (check for blockers)
+    U64 slider_attacks = attacks::lookUpRookAttacks  (kSq, attackers) & hor_sliders |
+                         attacks::lookUpBishopAttacks(kSq, attackers) & vert_sliders;
+    
+    
+    // output bitboard for checkers and pinned pieces
+    U64 pinned = ZERO;
+    U64 checkers = static_attacks;
+    
+    // go through the sliders and detect amount of blockers
+    while(slider_attacks){
+        bb::Square sq = bitscanForward(slider_attacks);
+        
+        bb::U64 between = IN_BETWEEN_SQUARES[kSq][sq];
+        bb::U64 blockers = defenders & between;
+        
+        auto blocker_count = bitCount(blockers & between);
+        
+        if(blocker_count == 0){
+            setBit(checkers, sq);
+        }else if(blocker_count == 1){
+            setBit(pinned, bitscanForward(blockers));
+        }
+        
+        slider_attacks = lsbReset(slider_attacks);
+    }
+    
+    getBoardStatus()->m_checkersBB = checkers;
+    getBoardStatus()->m_pinnedBB = pinned;
+}
+
 
 /**
  * changes the active player. This does not deal with the zobrist key so this function
@@ -467,16 +516,17 @@ void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
  */
 template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     BoardStatus* previousStatus = getBoardStatus();
-    BoardStatus  newBoardStatus = {previousStatus->zobrist,           // zobrist will be changed later
-                                  0ULL,                              // reset en passant. might be set later
-                                  previousStatus->castlingRights,    // copy meta. might be changed
-                                  previousStatus->fiftyMoveCounter
-                                      + 1,    // increment fifty move counter. might be reset
-                                  1ULL,       // set rep to 1 (no rep)
-                                  previousStatus->moveCounter + getActivePlayer(),    // increment move counter
-                                  m};
+    m_boardStatusHistory.template emplace_back(BoardStatus{
+        previousStatus->zobrist,                 // zobrist will be changed later
+        0ULL,                                    // reset en passant. might be set later
+        previousStatus->castlingRights,          // copy meta. might be changed
+        previousStatus->fiftyMoveCounter + 1,    // increment fifty move counter. might be reset
+        1ULL,                                    // set rep to 1 (no rep)
+        previousStatus->moveCounter + getActivePlayer(),    // increment move counter
+        m,0,0});
     
-        
+    BoardStatus& newBoardStatus = m_boardStatusHistory.back();
+
     this->evaluator.addNewAccumulation();
     
     const Square   sqFrom = getSquareFrom(m);
@@ -516,12 +566,11 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         if (mType == DOUBLED_PAWN_PUSH) {
             newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
         }
-            
+        
         // promotions are handled differently because the new piece at the target square is not the piece that initially
         // moved.
         else if (isPromotion(m)) {
             // we handle this case seperately so we return after this finished.
-            m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
             this->changeActivePlayer();
             
             // setting m_piecesBB
@@ -533,9 +582,9 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
                 this->setPiece(sqTo, getPromotionPiece(m));
             }
             
+            updatePinnersAndCheckers();
             return;
         } else if (mType == EN_PASSANT) {
-            m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
             this->changeActivePlayer();
             
             unsetPiece(sqTo - 8 * factor);
@@ -543,6 +592,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             this->unsetPiece(sqFrom);
             this->setPiece(sqTo, pFrom);
             
+            this->updatePinnersAndCheckers();
             return;
         }
     } else if (getPieceType(pFrom) == KING) {
@@ -551,7 +601,6 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
         
         // we handle this case seperately so we return after this finished.
-        m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
         this->changeActivePlayer();
         
         
@@ -612,9 +661,10 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         
         // we need to compute the repetition count
         this->computeNewRepetition();
+        this->updatePinnersAndCheckers();
         return;
     }
-        
+    
     // revoke castling rights if rook moves and it is on the initial square
     else if (getPieceType(pFrom) == ROOK) {
         if (color == WHITE) {
@@ -631,8 +681,6 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             }
         }
     }
-    
-    m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
     
     // doing the initial move
     this->unsetPieceHash(sqFrom);
@@ -659,6 +707,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     
     this->changeActivePlayer();
     this->computeNewRepetition();
+    this->updatePinnersAndCheckers();
 }
 template void Board::move<false>(Move m, TranspositionTable* table);
 template void Board::move<true >(Move m, TranspositionTable* table);
@@ -708,16 +757,16 @@ void Board::undoMove() {
  */
 void Board::move_null() {
     const BoardStatus* previousStatus = getBoardStatus();
-    const BoardStatus  newBoardStatus = {previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
-                                         0ULL,
-                                         previousStatus->castlingRights,
-                                         previousStatus->fiftyMoveCounter + 1,
-                                         1ULL,
-                                         previousStatus->moveCounter + getActivePlayer(),
-                                         0ULL};
-    
-    m_boardStatusHistory.emplace_back(std::move(newBoardStatus));
+    m_boardStatusHistory.emplace_back(BoardStatus{previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,
+                                       ZERO,
+                                       previousStatus->castlingRights,
+                                       previousStatus->fiftyMoveCounter + 1,
+                                       ONE,
+                                       previousStatus->moveCounter + getActivePlayer(),
+                                       ZERO,ZERO,ZERO});
+    BoardStatus &newBoardStatus = m_boardStatusHistory.back();
     changeActivePlayer();
+    updatePinnersAndCheckers();
 }
 
 /**
@@ -1172,30 +1221,42 @@ bool Board::isLegal(Move m) {
     const Square sqTo   = getSquareTo(m);
     const bool   isCap  = isCapture(m);
     
-    const U64 occCopy = m_occupiedBB;
-    
-    unsetBit(m_occupiedBB, sqFrom);
-    setBit(m_occupiedBB, sqTo);
-    
-    bool isAttacked = false;
-    
-    if (getPieceType(getMovingPiece(m)) == KING) {
-        thisKing = sqTo;
+    bool new_return_value = true;
+    const U64 pinned = getBoardStatus()->m_pinnedBB;
+    const U64 checkers = getBoardStatus()->m_checkersBB;
+
+    // if the king is moving, we need to simply check the new square
+    if(getMovingPieceType(m) == KING){
+        const U64 occCopy = m_occupiedBB;
+        unsetBit(m_occupiedBB, sqFrom);
+        setBit(m_occupiedBB, sqTo);
+        bool isAttacked = isUnderAttack(sqTo, !this->getActivePlayer());
+        m_occupiedBB = occCopy;
+        return !isAttacked;
     }
     
-    if (isCap) {
-        Piece captured = getCapturedPiece(m);
-        
-        unsetBit(this->m_piecesBB[captured], sqTo);
-        isAttacked = isUnderAttack(thisKing, !this->getActivePlayer());
-        setBit(this->m_piecesBB[captured], sqTo);
-    } else {
-        isAttacked = isUnderAttack(thisKing, !this->getActivePlayer());
+    // if the moving piece is not a king but is pinned, the only move is one
+    // along the pinning ray as long as there are no checkers
+    // if there are checkers, there is no move for this piece
+    else if(getBit(pinned, sqFrom)){
+        U64 pinning_ray = PINNED_MOVEMENT_SQUARES[thisKing][sqFrom];
+        return getBit(pinning_ray, sqTo) && !checkers;
     }
-    
-    m_occupiedBB = occCopy;
-    
-    return !isAttacked;
+
+    // if the king is attacked from a single piece and the current piece is not pinned (checked above)
+    // the only valid move is either a capture of the attacker or putting itself in between
+    else if(bitCount(checkers) == 1){
+        Square attacker_sq = bitscanForward(checkers);
+        return (getBit(checkers, sqTo) || getBit(IN_BETWEEN_SQUARES[thisKing][attacker_sq], sqTo));
+    }
+
+    // we checked above if the king is moving, if its not but there is more than 1 checking piece,
+    // the move must be illegal
+    else if(bitCount(checkers) > 1){
+        return false;
+    }
+
+    return true;
 }
 
 /**

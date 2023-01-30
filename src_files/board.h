@@ -49,16 +49,6 @@ static constexpr bb::Score see_piece_vals[] {100, 325, 325, 500, 1000, 10000};
 // from a stack. this contains zobrist keys, en-passant information, castling rights etc.
 struct BoardStatus {
     public:
-    BoardStatus(const BoardStatus& a)
-        : zobrist(a.zobrist), enPassantTarget(a.enPassantTarget), castlingRights(a.castlingRights),
-          fiftyMoveCounter(a.fiftyMoveCounter), repetitionCounter(a.repetitionCounter), moveCounter(a.moveCounter),
-          move(a.move){}
-    
-    BoardStatus(bb::U64 p_zobrist, bb::U64 p_enPassantTarget, bb::U64 p_metaInformation, bb::U64 p_fiftyMoveCounter,
-                bb::U64 p_repetitionCounter, bb::U64 p_moveCounter, move::Move p_move)
-        : zobrist(p_zobrist), enPassantTarget(p_enPassantTarget), castlingRights(p_metaInformation),
-          fiftyMoveCounter(p_fiftyMoveCounter), repetitionCounter(p_repetitionCounter), moveCounter(p_moveCounter),
-          move(p_move){}
     
     bb::U64  zobrist{};
     bb::U64  enPassantTarget{};
@@ -68,30 +58,11 @@ struct BoardStatus {
     bb::U64  moveCounter{};
     move::Move move{};
     
-    bool operator==(const BoardStatus& rhs) const {
-        return  zobrist == rhs.zobrist &&
-                enPassantTarget == rhs.enPassantTarget &&
-                castlingRights == rhs.castlingRights &&
-                fiftyMoveCounter == rhs.fiftyMoveCounter &&
-                repetitionCounter == rhs.repetitionCounter &&
-                moveCounter == rhs.moveCounter &&
-                move == rhs.move;
-    }
+    // bitboard of all pieces giving check to the king which currently has to move
+    bb::U64 m_checkersBB{};
+    // bitboard of all pieces currently pinned (for the active side)
+    bb::U64 m_pinnedBB{};
     
-    bool operator!=(const BoardStatus& rhs) const { return !(rhs == *this); }
-    
-    friend std::ostream& operator<<(std::ostream& os, const BoardStatus& status) {
-        os << "zobrist: " << status.zobrist << " castlingRights: " << status.castlingRights
-           << " fiftyMoveCounter: " << status.fiftyMoveCounter << " repetitionCounter: " << status.repetitionCounter
-           << " move: " << status.move;
-        return os;
-    }
-    
-    [[nodiscard]] inline BoardStatus copy() const {
-        BoardStatus b {zobrist, enPassantTarget, castlingRights, fiftyMoveCounter, repetitionCounter, moveCounter,
-                       move};
-        return b;
-    }
 };
 
 class Board {
@@ -144,6 +115,8 @@ class Board {
     // replaces the piece on a given square. considers zobrist-key and all relevant fields.
     void replacePieceHash(bb::Square sq, bb::Piece piece);
     
+    // updates pinners and checkers
+    void updatePinnersAndCheckers();
     
     public:
     // the default constructor uses a fen-representation of the board. if nothing is specified, the starting position
