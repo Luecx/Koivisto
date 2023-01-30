@@ -73,7 +73,9 @@ void perft_res() {}
  */
 bb::U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     UCI_ASSERT(b);
-
+    
+    d1 = false;
+    
     bb::U64 zob = bb::ZERO;
     if (hash) {
         if (ply == 0) {

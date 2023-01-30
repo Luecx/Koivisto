@@ -1150,10 +1150,10 @@ bool Board::isLegal(Move m) {
     if (isEnPassant(m)) {
         this->move(m);
         bool isOk =
-            (attacks::lookUpRookAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
+               (attacks::lookUpRookAttacks  (thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentRookBitboard)) == 0
             && (attacks::lookUpBishopAttacks(thisKing, m_occupiedBB) & (opponentQueenBitboard | opponentBishopBitboard)) == 0;
         this->undoMove();
-        
+
         return isOk;
     } else if (isCastle(m)) {
         U64 secure = ZERO;

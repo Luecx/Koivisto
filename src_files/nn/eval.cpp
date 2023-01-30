@@ -54,35 +54,35 @@ inline int32_t sumRegisterEpi32(avx_register_type_32& reg) {
 template<bool value>
 void nn::Evaluator::setPieceOnSquare(bb::PieceType pieceType, bb::Color pieceColor, bb::Square square,
                                      bb::Square wKingSquare, bb::Square bKingSquare) {
-    setPieceOnSquareAccumulator<value>(bb::WHITE, pieceType, pieceColor, square, wKingSquare);
-    setPieceOnSquareAccumulator<value>(bb::BLACK, pieceType, pieceColor, square, bKingSquare);
+//    setPieceOnSquareAccumulator<value>(bb::WHITE, pieceType, pieceColor, square, wKingSquare);
+//    setPieceOnSquareAccumulator<value>(bb::BLACK, pieceType, pieceColor, square, bKingSquare);
 }
 
 template<bool value>
 void nn::Evaluator::setPieceOnSquareAccumulator(bb::Color side, bb::PieceType pieceType,
                                                 bb::Color pieceColor, bb::Square square,
                                                 bb::Square kingSquare) {
-    const int  idx = index(pieceType, pieceColor, square, side, kingSquare);
-    
-    if(!accumulator_is_initialised[side]){
-        addWeightsToAccumulator<value>(idx, history[history_index-1].summation[side], history[history_index].summation[side]);
-        accumulator_is_initialised[side] = true;
-    }
-    else{
-        addWeightsToAccumulator<value>(idx, history[history_index].summation[side]);
-    }
+//    const int  idx = index(pieceType, pieceColor, square, side, kingSquare);
+//
+//    if(!accumulator_is_initialised[side]){
+//        addWeightsToAccumulator<value>(idx, history[history_index-1].summation[side], history[history_index].summation[side]);
+//        accumulator_is_initialised[side] = true;
+//    }
+//    else{
+//        addWeightsToAccumulator<value>(idx, history[history_index].summation[side]);
+//    }
 }
 
 void nn::Evaluator::reset(Board* board) {
-    history.resize(1);
-    this->history_index = 0;
-    resetAccumulator(board, bb::WHITE);
-    resetAccumulator(board, bb::BLACK);
+//    history.resize(1);
+//    this->history_index = 0;
+//    resetAccumulator(board, bb::WHITE);
+//    resetAccumulator(board, bb::BLACK);
 }
 
 void nn::Evaluator::resetAccumulator(Board* board, bb::Color color) {
-    accumulator_table->use(color, board, *this);
-    accumulator_is_initialised[color] = true;
+//    accumulator_table->use(color, board, *this);
+//    accumulator_is_initialised[color] = true;
 }
 
 int nn::Evaluator::evaluate(bb::Color activePlayer, Board* board) {
