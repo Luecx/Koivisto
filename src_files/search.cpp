@@ -320,6 +320,12 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
     // start the main iterative deepening loop
     Depth depth;
     for (depth = 1; depth <= maxDepth; depth++) {
+        
+        // stop the search if the time manager thinks there isnt enough time left
+        if(threadId == 0 && !this->timeManager->canDoMoreSearch(depth)){
+            break;
+        }
+        
         // reset the pv table
         // this simply resets the length contained inside the pv table to 0.
         td->pvTable.reset();
@@ -371,6 +377,9 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // if the search finished due to timeout, we also need to stop here
         if (!this->timeManager->rootTimeLeft(timeManScore, evalScore))
             break;
+        
+        if(threadId == 0)
+            timeManager->informAboutProgress(depth);
     }
 
     // if the main thread finishes, we will record the data of this thread

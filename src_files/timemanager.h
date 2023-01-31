@@ -114,6 +114,10 @@ class TimeManager {
     // track the start time (in ms)
     bb::S64        start_time       {};
 
+    // track the time used for each depth to estimate if another search can be finished in time
+    bb::S64        depth_timings [bb::MAX_INTERNAL_PLY]{};
+    bb::S64        depth_estimate[bb::MAX_INTERNAL_PLY]{};
+    
     TimeManager();
 
     // sets and enables the depth limit of the search to the given value
@@ -150,6 +154,12 @@ class TimeManager {
     // ensures that. PER_MOVE is more conservative. This is ONLY active IF the match time limit is set
     // and used.
     void setMoveOverheadType(MoveOverheadType mode);
+    
+    // inform the time manager that a depth has been search fully
+    void informAboutProgress(bb::Depth depth);
+    
+    // checks if, based on the previous timings, enough time is left for another search
+    bool canDoMoreSearch(bb::Depth next_depth);
     
     // stops the search. this should be considered to check if time is left
     void stopSearch();

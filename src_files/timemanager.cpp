@@ -199,6 +199,35 @@ void TimeManager::setMoveOverheadType(MoveOverheadType mode) {
 }
 
 /**
+ * informs the time manager about a depth being fully searched
+ * @param depth : depth at which the incident occurred
+ */
+void TimeManager::informAboutProgress(bb::Depth depth){
+    depth_timings[depth] = elapsedTime();
+}
+
+/**
+ * checks if there is enough time left
+ * @param next_depth : the depth of the next search
+ */
+bool TimeManager::canDoMoreSearch(bb::Depth next_depth){
+    if(next_depth < 8) return true;
+    if(!match_time_limit.enabled) return true;
+    if(!move_time_limit.enabled) return true;
+    
+    bb::S64 raw_estimate = (depth_timings[next_depth-1] - depth_estimate[next_depth-2]) * 2;
+    bb::S64 time_estimate = std::max(depth_estimate[next_depth-1], raw_estimate);
+    
+    bb::S64 time_left     = move_time_limit.upper_time_bound - depth_timings[next_depth-1];
+    
+    if(time_left < time_estimate / 4){
+        return false;
+    }
+    return true;
+}
+
+
+/**
  * force stops the search by setting the force_stop variable to true
  * This will lead to any active search being immediately stopped.
  */
