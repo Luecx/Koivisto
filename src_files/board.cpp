@@ -1221,7 +1221,6 @@ bool Board::isLegal(Move m) {
     const Square sqTo   = getSquareTo(m);
     const bool   isCap  = isCapture(m);
     
-    bool new_return_value = true;
     const U64 pinned = getBoardStatus()->m_pinnedBB;
     const U64 checkers = getBoardStatus()->m_checkersBB;
 
@@ -1234,7 +1233,7 @@ bool Board::isLegal(Move m) {
         m_occupiedBB = occCopy;
         return !isAttacked;
     }
-    
+
     // if the moving piece is not a king but is pinned, the only move is one
     // along the pinning ray as long as there are no checkers
     // if there are checkers, there is no move for this piece

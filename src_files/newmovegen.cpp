@@ -458,7 +458,8 @@ void moveGen::generateNoisy() {
             generateKingMoves <BLACK, GEN_NOISY>(m_board, occupied, friendly, this);
         return;
     }else if(bitCount(checkers) == 1){
-        mask = checkers;
+        mask = checkers |
+               IN_BETWEEN_SQUARES[bitscanForward(checkers)][bitscanForward(m_board->getPieceBB(c, KING))];
     }
     
     if(c == WHITE){
@@ -485,22 +486,36 @@ void moveGen::generateQuiet() {
     const U64 friendly = m_board->getTeamOccupiedBB(c);
     const U64 occupied = m_board->getOccupiedBB();
 
+    U64 mask = ~ZERO;
+    U64 checkers = m_board->getBoardStatus()->m_checkersBB;
+    
+    // if more than 1 checker, we can only move with the king
+    if(bitCount(checkers) >= 2){
+        if(c == WHITE)
+            generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
+        else
+            generateKingMoves <BLACK, GEN_QUIET>(m_board, occupied, friendly, this);
+        return;
+    }else if(bitCount(checkers) == 1){
+        mask = IN_BETWEEN_SQUARES[bitscanForward(checkers)][bitscanForward(m_board->getPieceBB(c, KING))];
+    }
+    
     if(c == WHITE){
-        generatePawnMoves<WHITE, GEN_QUIET>(m_board, occupied, ~ZERO, this);
+        generatePawnMoves<WHITE, GEN_QUIET>(m_board, occupied, mask, this);
         
-        generatePieceMoves<KNIGHT, WHITE, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
-        generatePieceMoves<BISHOP, WHITE, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
-        generatePieceMoves<ROOK  , WHITE, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
-        generatePieceMoves<QUEEN , WHITE, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
+        generatePieceMoves<KNIGHT, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<BISHOP, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<ROOK  , WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<QUEEN , WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
         
         generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
     }else{
-        generatePawnMoves<BLACK, GEN_QUIET>(m_board, occupied, ~ZERO, this);
+        generatePawnMoves<BLACK, GEN_QUIET>(m_board, occupied, mask, this);
         
-        generatePieceMoves<KNIGHT, BLACK, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
-        generatePieceMoves<BISHOP, BLACK, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
-        generatePieceMoves<ROOK  , BLACK, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
-        generatePieceMoves<QUEEN , BLACK, GEN_QUIET>(m_board, occupied, friendly, ~ZERO, this);
+        generatePieceMoves<KNIGHT, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<BISHOP, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<ROOK  , BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<QUEEN , BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
         
         generateKingMoves <BLACK, GEN_QUIET>(m_board, occupied, friendly, this);
     }
