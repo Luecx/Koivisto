@@ -49,7 +49,9 @@ enum Stages : Stage{
     GET_BAD_NOISY,
     END,
     QS_EVASIONS,
+    PERFT,
 };
+
 
 class moveGen {
     private:
@@ -90,18 +92,24 @@ class moveGen {
     int lastSee;
     void                     init(SearchData* sd, Board* b, bb::Depth ply, move::Move hashMove, move::Move previous,
                                   move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
+    void                     init(Board* b);
     [[nodiscard]] move::Move next();
-    void                     addNoisy(move::Move m);
-    void                     addQuiet(move::Move m);
-    [[nodiscard]] move::Move nextNoisy();
-    [[nodiscard]] move::Move nextQuiet();
-    void                     addSearched(move::Move m);
-    void                     generateNoisy();
-    void                     generateQuiet();
-    void                     generateEvasions();
     void                     updateHistory(int weight);
     void                     skip();
     [[nodiscard]] bool       shouldSkip() const;
+    
+    void                     addNoisy(move::Move m);
+    void                     addQuiet(move::Move m);
+    void                     addSearched(move::Move m);
+    
+    
+    private:
+    [[nodiscard]] move::Move nextNoisy();
+    [[nodiscard]] move::Move nextQuiet();
+    void                     generateNoisy();
+    void                     generateQuiet();
+    void                     generateEvasions();
+    void                     generateAll();
 };
 
 #endif
