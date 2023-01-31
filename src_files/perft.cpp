@@ -17,10 +17,11 @@
  *                                                                                                  *
  ****************************************************************************************************/
 #include "perft.h"
-#include "uciassert.h"
+
 #include "move.h"
 #include "movegen.h"
-
+#include "newmovegen.h"
+#include "uciassert.h"
 
 move::MoveList**    perft_mvlist_buffer;
 TranspositionTable* perft_tt;
@@ -73,7 +74,7 @@ void perft_res() {}
  */
 bb::U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
     UCI_ASSERT(b);
-
+    
     bb::U64 zob = bb::ZERO;
     if (hash) {
         if (ply == 0) {
@@ -93,15 +94,11 @@ bb::U64 perft(Board* b, int depth, bool print, bool d1, bool hash, int ply) {
         return 1;
 
     
-//    b->getPseudoLegalMoves(perft_mvlist_buffer[depth]);
-    generatePerftMoves(b, perft_mvlist_buffer[depth]);
-    
-    //    generations ++;
+    moveGen movegen;
+    movegen.init(b);
 
-    for (int i = 0; i < perft_mvlist_buffer[depth]->getSize(); i++) {
-        move::Move m = perft_mvlist_buffer[depth]->getMove(i);
-        //        checks ++;
-
+    move::Move m;
+    while((m=movegen.next())){
         if (!b->isLegal(m)) {
             continue;
         }

@@ -21,6 +21,7 @@
 #include "uci.h"
 
 int main(int argc, char *argv[]) {
+
     uci::mainloop(argc, argv);
     return 0;
 }

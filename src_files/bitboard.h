@@ -218,9 +218,10 @@ constexpr U64 CASTLING_BLACK_KINGSIDE_SAFE  = CASTLING_WHITE_KINGSIDE_SAFE << (7
 extern U64 seed;
 
 
-extern U64  ALL_HASHES[N_PIECES][N_SQUARES];
+extern U64 ALL_HASHES[N_PIECES][N_SQUARES];
+extern U64 IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
+extern U64                PINNED_MOVEMENT_SQUARES[N_SQUARES][N_SQUARES];
 
-extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
 [[nodiscard]] inline Rank rankIndex(Square square_index) {
     return square_index >> 3;
 }
@@ -272,7 +273,7 @@ extern U64  IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
     return p & 0x7;
 }
 
-[[nodiscard]] inline Piece getPiece(Color c, PieceType pt) {
+[[nodiscard]] inline constexpr Piece getPiece(Color c, PieceType pt) {
     return c * 8 + pt;
 }
 

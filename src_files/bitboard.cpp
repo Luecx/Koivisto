@@ -23,6 +23,7 @@
 namespace bb {
 U64 ALL_HASHES[N_PIECES][N_SQUARES] = {};
 U64 IN_BETWEEN_SQUARES[N_SQUARES][N_SQUARES];
+U64  PINNED_MOVEMENT_SQUARES[N_SQUARES][N_SQUARES];
 
 U64 seed = 1293812938;
 
@@ -40,12 +41,12 @@ U64 randU64() {
 }
 
 void generateData() {
-    // in between squares
     for (Square n = A1; n <= H8; n++) {
         for (Square i = A1; i <= H8; i++) {
             if (i == n)
                 continue;
 
+            // in between squares
             U64 m   = ZERO;
             U64 occ = ZERO;
             setBit(occ, n);
@@ -65,8 +66,17 @@ void generateData() {
             }
 
             m &= ~occ;
-
             IN_BETWEEN_SQUARES[n][i] = m;
+            
+            // pinned squares (squares where pinned pieces can go to)
+            // index by king and piece itself
+            for(Direction d:{NORTH,SOUTH,WEST,EAST,NORTH_WEST,NORTH_EAST,SOUTH_WEST,SOUTH_EAST}){
+                U64 attacks = attacks::generateSlidingAttacks(n, d, ZERO);
+                if(attacks & occ){
+                    PINNED_MOVEMENT_SQUARES[n][i] = attacks;
+                    break;
+                }
+            }
         }
     }
 }

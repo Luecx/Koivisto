@@ -18,15 +18,11 @@
  ****************************************************************************************************/
 #include "newmovegen.h"
 #include "attacks.h"
+#include "movegen.h"
 
 using namespace attacks;
 using namespace bb;
 using namespace move;
-
-
-static const int piece_values[6] = {
-    90, 463, 474, 577, 1359, 0,
-};
 
 void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move previous, Move followup, int mode, Square threatSquare, U64 checkerSq) {
     m_sd            = sd;
@@ -52,6 +48,20 @@ void moveGen::init(SearchData* sd, Board* b, Depth ply, Move hashMove, Move prev
     m_cmh           = &CMH(sd, previous, c, 0);
     m_fmh           = &sd->fmh[followup ? getPieceTypeSqToCombination(followup) : 384][c][0];
     m_th            = &THREAT_HISTORY(sd, c, m_threatSquare, 0);}
+
+void moveGen::init(Board* b){
+    m_board = b;
+    c = b->getActivePlayer();
+    stage           = PERFT;
+    quietSize       = 0;
+    noisySize       = 0;
+    goodNoisyCount  = 0;
+    noisy_index     = 0;
+    quiet_index     = 0;
+    searched_index  = 0;
+    generateAll();
+}
+
 
 Move moveGen::next() {
     switch (stage) {
@@ -116,366 +126,517 @@ Move moveGen::next() {
                 return nextQuiet();
             stage = END;
             return 0;
+        
+        case PERFT:
+            if (noisy_index < noisySize)
+                return nextNoisy();
+            else if(quiet_index < quietSize){
+                return nextQuiet();
+            }
+            stage = END;
+            return 0;
     }
 
     return 0;
 }
 
 void moveGen::addNoisy(Move m) {
-    if (sameMove(m_hashMove, m))
-        return;
-    int score   = m_board->staticExchangeEvaluation(m);
-    noisySee[noisySize] = score;
-    //int mvvLVA  = piece_values[(getCapturedPieceType(m))];
-    if (score >= 0) {
-        score = 100000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare) + score  + 150 * (getSquareTo(m) == getSquareTo(m_previous));
-        goodNoisyCount++;
-    } else {
-        score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+    
+    if(stage == PERFT){
+        noisy[noisySize++] = m;
+    }else{
+        if (sameMove(m_hashMove, m))
+            return;
+        int score   = m_board->staticExchangeEvaluation(m);
+        noisySee[noisySize] = score;
+        //int mvvLVA  = piece_values[(getCapturedPieceType(m))];
+        if (score >= 0) {
+            score = 100000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare) + score  + 150 * (getSquareTo(m) == getSquareTo(m_previous));
+            goodNoisyCount++;
+        } else {
+            score = 10000 + m_sd->getHistories(m, c, m_previous, m_followup, m_threatSquare);
+        }
+        noisy[noisySize] = m;
+        noisyScores[noisySize++] = score;
     }
-    noisy[noisySize] = m;
-    noisyScores[noisySize++] = score;
 }
 
 void moveGen::addQuiet(Move m) {
-    if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
-        return;
-    quiets[quietSize] = m;
-    quietScores[quietSize++] = m_th[getSqToSqFromCombination(m)] 
-                             + m_cmh[getPieceTypeSqToCombination(m)] 
-                             + m_fmh[getPieceTypeSqToCombination(m)];
+    if(stage == PERFT){
+        quiets[quietSize++] = m;
+    }else{
+        if (sameMove(m_hashMove, m) || sameMove(m_killer1, m) || sameMove(m_killer2, m))
+            return;
+        quiets[quietSize] = m;
+        quietScores[quietSize++] = m_th [getSqToSqFromCombination(m)]
+                                 + m_cmh[getPieceTypeSqToCombination(m)]
+                                 + m_fmh[getPieceTypeSqToCombination(m)];
+    }
+    
 }
 
 Move moveGen::nextNoisy() {
-    if (m_skip) {
-        lastSee = noisySee[noisy_index];
+    
+    if(stage == PERFT){
         return noisy[noisy_index++];
+    }else{
+        if (m_skip) {
+            lastSee = noisySee[noisy_index];
+            return noisy[noisy_index++];
+        }
+        int bestNoisy = noisy_index;
+        for (int i = noisy_index + 1; i < noisySize; i++) {
+            if (noisyScores[i] > noisyScores[bestNoisy])
+                bestNoisy = i;
+        }
+        Move m  = noisy[bestNoisy];
+        lastSee = noisySee[bestNoisy];
+        noisySee[bestNoisy]     = noisySee[noisy_index];
+        noisyScores[bestNoisy]  = noisyScores[noisy_index];
+        noisy[bestNoisy]        = noisy[noisy_index++];
+        return m;
     }
-    int bestNoisy = noisy_index;
-    for (int i = noisy_index + 1; i < noisySize; i++) {
-        if (noisyScores[i] > noisyScores[bestNoisy])
-            bestNoisy = i;
-    }
-    Move m  = noisy[bestNoisy];
-    lastSee = noisySee[bestNoisy];
-    noisySee[bestNoisy]     = noisySee[noisy_index];
-    noisyScores[bestNoisy]  = noisyScores[noisy_index];
-    noisy[bestNoisy]        = noisy[noisy_index++];
-    return m;
+   
 }
 
 Move moveGen::nextQuiet() {
-    if (m_skip) {
-        for (int i = quiet_index; i < quietSize; i++) {
-            if ((m_checkerSq & (ONE << getSquareTo(quiets[i])))) {
-                quiet_index = i;
-                return quiets[quiet_index++];
+    if (stage == PERFT) {
+        return quiets[quiet_index++];
+    } else {
+        if (m_skip) {
+            for (int i = quiet_index; i < quietSize; i++) {
+                if ((m_checkerSq & (ONE << getSquareTo(quiets[i])))) {
+                    quiet_index = i;
+                    return quiets[quiet_index++];
+                }
             }
+            stage++;
+            return next();
         }
-        stage++;
-        return next();
+        int bestQuiet = quiet_index;
+        for (int i = quiet_index + 1; i < quietSize; i++) {
+            if (quietScores[i] > quietScores[bestQuiet])
+                bestQuiet = i;
+        }
+        Move m                 = quiets[bestQuiet];
+        quietScores[bestQuiet] = quietScores[quiet_index];
+        quiets[bestQuiet]      = quiets[quiet_index++];
+        return m;
     }
-    int bestQuiet = quiet_index;
-    for (int i = quiet_index + 1; i < quietSize; i++) {
-        if (quietScores[i] > quietScores[bestQuiet])
-            bestQuiet = i;
-    }
-    Move m = quiets[bestQuiet];
-    quietScores[bestQuiet]  = quietScores[quiet_index];
-    quiets[bestQuiet]       = quiets[quiet_index++];
-    return m;
 }
 
 void moveGen::addSearched(Move m) {
     searched[searched_index++] = m;
 }
 
-void moveGen::generateNoisy() {
-    const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
-    const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
+template<Color us, Stage stage, bool under_promo=false>
+inline void generatePawnMoves(Board* board, U64 occupied_bb, U64 mask_bb, moveGen* move_gen){
+    constexpr Color them = !us;
+    constexpr Piece piece = bb::getPiece(us, PAWN);
     
-    const Direction forward      = c == WHITE ? NORTH:SOUTH;
-    const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
-    const Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
+    // masks for promotions and non-promotions
+    constexpr U64 promo_mask = (us == WHITE ? RANK_8_BB : RANK_1_BB);
+    constexpr U64 non_promo_mask = (us == WHITE ? ~RANK_8_BB : ~RANK_1_BB);
     
-    const U64 opponents          = m_board->getTeamOccupiedBB(!c);
-    const U64 friendly           = m_board->getTeamOccupiedBB(c);
-
-    const U64 pawns              = m_board->getPieceBB(c, PAWN);
-    const U64 occupied           = m_board->getOccupiedBB();
+    // get piece bb
+    U64 piece_bb = board->getPieceBB<us, PAWN>();
     
-    const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
-    const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
-    const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
+    // enemy bb
+    const U64 enemy_bb = board->getTeamOccupiedBB<them>();
     
-    Piece movingPiece = c * 8 + PAWN;
-    
-    U64 nonPromoAttacks = opponents & ~relative_rank_8_bb;
-    Square target;
-    
-    // Pawn
-    U64 attacks = pawnsLeft & nonPromoAttacks;
-    while (attacks) {
-        target = bitscanForward(attacks);
-        addNoisy(genMove(target - left, target, CAPTURE, movingPiece, m_board->getPiece(target)));
-        attacks = lsbReset(attacks);
+    // adjust promotion possibility for quiet moves
+    if constexpr (stage == GEN_QUIET){
+        mask_bb |= (us == WHITE ? ~RANK_8_BB : ~RANK_1_BB);
     }
     
-    attacks = pawnsRight & nonPromoAttacks;
-    while (attacks) {
-        target = bitscanForward(attacks);
-        addNoisy(genMove(target - right, target, CAPTURE, movingPiece, m_board->getPiece(target)));
-        attacks = lsbReset(attacks);
-    }
-    
-    if (pawnsLeft & m_board->getBoardStatus()->enPassantTarget) {
-        target = m_board->getEnPassantSquare();
-        addNoisy(genMove(target - left, target, EN_PASSANT, movingPiece));
-    }
-    
-    if (pawnsRight & m_board->getBoardStatus()->enPassantTarget) {
-        target = m_board->getEnPassantSquare();
-        addNoisy(genMove(target - right, target, EN_PASSANT, movingPiece));
-    }
- 
-    if (pawns & relative_rank_7_bb) {
-        attacks = pawnsCenter & relative_rank_8_bb;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addNoisy(genMove(target - forward, target, QUEEN_PROMOTION, movingPiece));
-            attacks = lsbReset(attacks);
+    if(stage == GEN_NOISY){
+        
+        // inverse direction for left and right attacks
+        // used for pawn left and right attacks to compute origin square
+        constexpr Direction inv_la = us == WHITE ? SOUTH_EAST : NORTH_EAST;
+        constexpr Direction inv_ra = us == WHITE ? SOUTH_WEST : NORTH_WEST;
+        constexpr Direction inv_fw = us == WHITE ? SOUTH      : NORTH     ;
+        
+        // attacks to the left and right
+        U64 left    = us == WHITE ? shiftNorthWest(piece_bb) : shiftSouthWest(piece_bb);
+        U64 right   = us == WHITE ? shiftNorthEast(piece_bb) : shiftSouthEast(piece_bb);
+        U64 forward = us == WHITE ? shiftNorth    (piece_bb) : shiftSouth    (piece_bb);
+        
+        // e.p. left and right
+        U64 ep_left  = left  & board->getBoardStatus()->enPassantTarget;
+        U64 ep_right = right & board->getBoardStatus()->enPassantTarget;
+        
+        // remove attacks which dont actual attack enemies
+        left &= enemy_bb & mask_bb;
+        right &= enemy_bb & mask_bb;
+        // remove forwards if there is a piece in front
+        forward &= ~occupied_bb & mask_bb;
+        
+        // promotions left and right
+        U64 promo_left = left & promo_mask;
+        U64 promo_right = right & promo_mask;
+        // actual attacks left and right
+        U64 attacks_left = left & non_promo_mask;
+        U64 attacks_right = right & non_promo_mask;
+        // forward promos
+        U64 promos = forward & promo_mask & ~occupied_bb;
+        
+        
+        while (attacks_left) {
+            Square target = bitscanForward(attacks_left);
+            move_gen->addNoisy(genMove(target + inv_la, target,  CAPTURE, piece, board->getPiece(target)));
+            attacks_left = lsbReset(attacks_left);
+        }
+        while (attacks_right) {
+            Square target = bitscanForward(attacks_right);
+            move_gen->addNoisy(genMove(target + inv_ra, target,  CAPTURE, piece, board->getPiece(target)));
+            attacks_right = lsbReset(attacks_right);
+        }
+        if(ep_left){
+            Square sq_to = bitscanForward(ep_left);
+            move_gen->addNoisy(genMove(sq_to + inv_la, sq_to,  EN_PASSANT, piece));
+        }
+        if(ep_right){
+            Square sq_to = bitscanForward(ep_right);
+            move_gen->addNoisy(genMove(sq_to + inv_ra, sq_to,  EN_PASSANT, piece));
+        }
+        while (promos) {
+            Square target = bitscanForward(promos);
+            move_gen->addNoisy(genMove(target + inv_fw, target,  QUEEN_PROMOTION, piece));
+            promos = lsbReset(promos);
+        }
+        while (promo_left) {
+            Square target = bitscanForward(promo_left);
+            move_gen->addNoisy(genMove(target + inv_la, target,  QUEEN_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            promo_left = lsbReset(promo_left);
+        }
+        while (promo_right) {
+            Square target = bitscanForward(promo_right);
+            move_gen->addNoisy(genMove(target + inv_ra, target,  QUEEN_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            promo_right = lsbReset(promo_right);
         }
         
-        attacks = pawnsLeft & relative_rank_8_bb & opponents;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addNoisy(genMove(target - left, target, QUEEN_PROMOTION_CAPTURE , movingPiece, m_board->getPiece(target)));
+    }else{
+        const U64           quiet_squares  = ~occupied_bb & mask_bb;
+        constexpr U64       double_pp_mask = (us == WHITE ? RANK_4_BB : RANK_5_BB);
+
+        constexpr Direction inv_la         = us == WHITE ? SOUTH_EAST : NORTH_EAST;
+        constexpr Direction inv_ra         = us == WHITE ? SOUTH_WEST : NORTH_WEST;
+        constexpr Direction inv_fw         = us == WHITE ? SOUTH : NORTH;
+        constexpr Direction inv_fw2        = inv_fw * 2;
+        
+        // attacks to the left and right
+        U64 left     = (us == WHITE ? shiftNorthWest(piece_bb) : shiftSouthWest(piece_bb));
+        U64 right    = (us == WHITE ? shiftNorthEast(piece_bb) : shiftSouthEast(piece_bb));
+        U64 forward  = (us == WHITE ? shiftNorth    (piece_bb) : shiftSouth    (piece_bb)) & quiet_squares;
+        U64 forward2 = (us == WHITE ? shiftNorth    (forward ) : shiftSouth    (forward )) & double_pp_mask & quiet_squares;
+        
+        // remove attacks which dont actual attack enemies
+        left  &= enemy_bb & mask_bb;
+        right &= enemy_bb & mask_bb;
+
+        // all promotions
+        U64 promos      = forward & promo_mask & mask_bb;
+        U64 promo_left  = left    & promo_mask & mask_bb;
+        U64 promo_right = right   & promo_mask & mask_bb;
+
+        // pawn pushes
+        forward  &= non_promo_mask;
+        forward2 &= non_promo_mask;
+
+        while (forward) {
+            Square target = bitscanForward(forward);
+            move_gen->addQuiet(genMove(target + inv_fw, target, QUIET, piece));
+            forward = lsbReset(forward);
+        }
+        while (forward2) {
+            Square target = bitscanForward(forward2);
+            move_gen->addQuiet(genMove(target + inv_fw2, target, DOUBLED_PAWN_PUSH, piece));
+            forward2 = lsbReset(forward2);
+        }
+        while (promos) {
+            Square target = bitscanForward(promos);
+            if constexpr (under_promo)
+            move_gen->addQuiet(genMove(target + inv_fw, target,   ROOK_PROMOTION, piece));
+            move_gen->addQuiet(genMove(target + inv_fw, target, KNIGHT_PROMOTION, piece));
+            if constexpr (under_promo)
+            move_gen->addQuiet(genMove(target + inv_fw, target, BISHOP_PROMOTION, piece));
+            promos = lsbReset(promos);
+        }
+        while (promo_left) {
+            Square target = bitscanForward(promo_left);
+            if constexpr (under_promo)
+            move_gen->addQuiet(genMove(target + inv_la, target,   ROOK_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            move_gen->addQuiet(genMove(target + inv_la, target, KNIGHT_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            if constexpr (under_promo)
+            move_gen->addQuiet(genMove(target + inv_la, target, BISHOP_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            promo_left = lsbReset(promo_left);
+        }
+        while (promo_right) {
+            Square target = bitscanForward(promo_right);
+            if constexpr (under_promo)
+            move_gen->addQuiet(genMove(target + inv_ra, target,   ROOK_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            move_gen->addQuiet(genMove(target + inv_ra, target, KNIGHT_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            if constexpr (under_promo)
+            move_gen->addQuiet(genMove(target + inv_ra, target, BISHOP_PROMOTION_CAPTURE, piece, board->getPiece(target)));
+            promo_right = lsbReset(promo_right);
+        }
+        
+    }
+    
+}
+
+template<PieceType pt, Color us, Stage stage>
+inline void generatePieceMoves(Board* board, U64 occupied_bb, U64 friendly_bb,
+                               U64 mask_bb, moveGen* move_gen) {
+    // get piece bb
+    U64 piece_bb = board->getPieceBB<us, pt>();
+
+    // go through each piece
+    while(piece_bb){
+        Square sq_from = bitscanForward(piece_bb);
+
+        // get attacks
+        U64 attacks = ZERO;
+        if constexpr (pt == BISHOP || pt == QUEEN){
+            attacks |= lookUpBishopAttacks(sq_from, occupied_bb);
+        }
+        if constexpr (pt == ROOK || pt == QUEEN){
+            attacks |= lookUpRookAttacks(sq_from, occupied_bb);
+        }
+        if constexpr (pt == KNIGHT){
+            attacks |= KNIGHT_ATTACKS[sq_from];
+        }
+        // mask off all squares we dont look at anyway
+        attacks &= mask_bb;
+
+        if constexpr (stage == GEN_QUIET){
+            attacks &= ~occupied_bb;
+        }else{
+            attacks &= ~friendly_bb & occupied_bb;
+        }
+
+        while(attacks){
+            Square sq_to = bitscanForward(attacks);
+
+            if constexpr (stage == GEN_QUIET){
+                move_gen->addQuiet(genMove(sq_from, sq_to, QUIET, getPiece(us, pt)));
+            }else{
+                Piece cap_piece = board->getPiece(sq_to);
+                move_gen->addNoisy(genMove(sq_from, sq_to, CAPTURE, getPiece(us, pt), cap_piece));
+            }
+
             attacks = lsbReset(attacks);
         }
 
-        attacks = pawnsRight & relative_rank_8_bb & opponents;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addNoisy(genMove(target - right, target, QUEEN_PROMOTION_CAPTURE , movingPiece, m_board->getPiece(target)));
-            attacks = lsbReset(attacks);
+        piece_bb = lsbReset(piece_bb);
+    }
+}
+
+template<Color us, Stage stage>
+inline void generateKingMoves(Board* board, U64 occupied_bb, U64 friendly_bb, moveGen* move_gen){
+    constexpr Piece moving_piece = getPiece(us, KING);
+    
+    // get king square
+    const Square king_sq = bitscanForward(board->getPieceBB(us, KING));
+    
+    // normal moves
+    U64 attacks = KING_ATTACKS[king_sq];
+    
+    // mask off captures for quiets and evasions
+    if constexpr (stage == GEN_QUIET || stage == QS_EVASIONS){
+        attacks &= ~occupied_bb;
+    }
+    if constexpr (stage == GEN_NOISY){
+        attacks &= ~friendly_bb & occupied_bb;
+    }
+    
+    // get all the king moves
+    while (attacks) {
+        Square sq_to = bitscanForward(attacks);
+        if constexpr (stage == GEN_QUIET || stage == QS_EVASIONS){
+            move_gen->addQuiet(genMove(king_sq, sq_to, QUIET, moving_piece));
+        }
+        if constexpr (stage == GEN_NOISY){
+            Piece cap_piece = board->getPiece(sq_to);
+            move_gen->addNoisy(genMove(king_sq, sq_to, CAPTURE, moving_piece, cap_piece));
+        }
+        attacks = lsbReset(attacks);
+    }
+    
+    if constexpr(stage == GEN_QUIET){
+        if constexpr (us == WHITE) {
+            if (board->getCastlingRights(WHITE_QUEENSIDE_CASTLING)
+                && board->getPiece(A1) == WHITE_ROOK
+                && (occupied_bb & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
+                move_gen->addQuiet(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
+            }
+            if (board->getCastlingRights(WHITE_KINGSIDE_CASTLING)
+                && board->getPiece(H1) == WHITE_ROOK
+                && (occupied_bb & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
+                move_gen->addQuiet(genMove(E1, G1, KING_CASTLE, WHITE_KING));
+            }
+        } else {
+            if (board->getCastlingRights(BLACK_QUEENSIDE_CASTLING)
+                && board->getPiece(A8) == BLACK_ROOK
+                && (occupied_bb & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
+                move_gen->addQuiet(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
+            }
+            if (board->getCastlingRights(BLACK_KINGSIDE_CASTLING)
+                && board->getPiece(H8) == BLACK_ROOK
+                && (occupied_bb & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
+                move_gen->addQuiet(genMove(E8, G8, KING_CASTLE, BLACK_KING));
+            }
         }
     }
+}
 
+void moveGen::generateNoisy() {
+    const U64 friendly = m_board->getTeamOccupiedBB(c);
+    const U64 occupied = m_board->getOccupiedBB();
 
-    // Pieces
-    for(Piece p = KNIGHT; p <= QUEEN; p++){
-        U64 pieceOcc    = m_board->getPieceBB(c, p);
-        movingPiece = p + 8 * c;
-        while(pieceOcc){
-            Square square = bitscanForward(pieceOcc);
-            attacks = ZERO;
-            switch (p) {
-                case KNIGHT:
-                    attacks = KNIGHT_ATTACKS[square];
-                    break;
-                case BISHOP:
-                    attacks =
-                        lookUpBishopAttacks  (square, occupied);
-                    break;
-                case ROOK:
-                    attacks =
-                        lookUpRookAttacks    (square,occupied);
-                    break;
-                case QUEEN:
-                    attacks =
-                        lookUpBishopAttacks  (square, occupied) |
-                        lookUpRookAttacks    (square, occupied);
-                    break;
-            }
-            attacks &= ~friendly & opponents;
-
-            while(attacks){
-                target = bitscanForward(attacks);
-                addNoisy(genMove(square, target, CAPTURE, movingPiece, m_board->getPiece(target)));
-                
-                attacks = lsbReset(attacks);
-            }
-            pieceOcc = lsbReset(pieceOcc);
-        }
+    U64 mask = ~ZERO;
+    U64 checkers = m_board->getBoardStatus()->m_checkersBB;
+    
+    // if more than 1 checker, we can only capture with the king that one piece
+    // while escaping the other one
+    if(bitCount(checkers) >= 2){
+        if(c == WHITE)
+            generateKingMoves <WHITE, GEN_NOISY>(m_board, occupied, friendly, this);
+        else
+            generateKingMoves <BLACK, GEN_NOISY>(m_board, occupied, friendly, this);
+        return;
+    }else if(bitCount(checkers) == 1){
+        mask = checkers |
+               IN_BETWEEN_SQUARES[bitscanForward(checkers)][bitscanForward(m_board->getPieceBB(c, KING))];
     }
     
-
-    // King
-    movingPiece = KING + c * 8;
-    
-    U64 kings      = m_board->getPieceBB(c, KING);
-    
-    while (kings) {
-        Square s    = bitscanForward(kings);
-        attacks = KING_ATTACKS[s] & ~friendly & opponents;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addNoisy(genMove(s, target, CAPTURE, movingPiece, m_board->getPiece(target)));
-            
-            attacks = lsbReset(attacks);
-        }
-        kings = lsbReset(kings);
+    if(c == WHITE){
+        generatePawnMoves<WHITE, GEN_NOISY>(m_board, occupied, mask, this);
+        
+        generatePieceMoves<KNIGHT, WHITE, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<BISHOP, WHITE, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<ROOK  , WHITE, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<QUEEN , WHITE, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        
+        generateKingMoves <WHITE, GEN_NOISY>(m_board, occupied, friendly, this);
+    }else{
+        generatePawnMoves<BLACK, GEN_NOISY>(m_board, occupied, mask, this);
+        
+        generatePieceMoves<KNIGHT, BLACK, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<BISHOP, BLACK, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<ROOK  , BLACK, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<QUEEN , BLACK, GEN_NOISY>(m_board, occupied, friendly, mask, this);
+        generateKingMoves <BLACK, GEN_NOISY>(m_board, occupied, friendly, this);
     }
 }
 
 void moveGen::generateQuiet() {
-    const U64 relative_rank_8_bb = c == WHITE ? RANK_8_BB : RANK_1_BB;
-    const U64 relative_rank_4_bb = c == WHITE ? RANK_4_BB : RANK_5_BB;
+    const U64 friendly = m_board->getTeamOccupiedBB(c);
+    const U64 occupied = m_board->getOccupiedBB();
+
+    U64 mask = ~ZERO;
+    U64 checkers = m_board->getBoardStatus()->m_checkersBB;
+    
+    // if more than 1 checker, we can only move with the king
+    if(bitCount(checkers) >= 2){
+        if(c == WHITE)
+            generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
+        else
+            generateKingMoves <BLACK, GEN_QUIET>(m_board, occupied, friendly, this);
+        return;
+    }else if(bitCount(checkers) == 1){
+        mask = IN_BETWEEN_SQUARES[bitscanForward(checkers)][bitscanForward(m_board->getPieceBB(c, KING))];
+    }
+    
+    if(c == WHITE){
+        // mask for pawns contains the checkers since underpromotion captures exist
+        generatePawnMoves<WHITE, GEN_QUIET>(m_board, occupied, mask & checkers, this);
         
-    const U64 relative_rank_7_bb = c == WHITE ? RANK_7_BB : RANK_2_BB;
-    
-    const Direction forward      = c == WHITE ? NORTH:SOUTH;
-    const Direction right        = c == WHITE ? NORTH_EAST:SOUTH_EAST;
-    const Direction left         = c == WHITE ? NORTH_WEST:SOUTH_WEST;
-    
-    const U64 opponents          = m_board->getTeamOccupiedBB(!c);
-    const U64 friendly           = m_board->getTeamOccupiedBB(c);
-    
-    const U64 pawns              = m_board->getPieceBB(c, PAWN);
-    const U64 occupied           = m_board->getOccupiedBB();
-    
-    const U64 pawnsCenter = (c == WHITE ? shiftNorth (pawns) : shiftSouth(pawns)) & ~occupied;
-    const U64 pawnsLeft   =  c == WHITE ? shiftNorthWest(pawns) : shiftSouthWest(pawns);
-    const U64 pawnsRight  =  c == WHITE ? shiftNorthEast(pawns) : shiftSouthEast(pawns);
-    
-    Piece movingPiece = c * 8 + PAWN;
-
-    Square target;
-
-    // Pawn
-    U64 pawnPushes = pawnsCenter & ~relative_rank_8_bb;
-    U64 attacks = pawnPushes;
-    while (attacks) {
-        target = bitscanForward(attacks);
-        addQuiet(genMove(target - forward, target, QUIET, movingPiece));
-        attacks = lsbReset(attacks);
-    }
+        generatePieceMoves<KNIGHT, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<BISHOP, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<ROOK  , WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<QUEEN , WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
         
-    attacks = (c == WHITE ? shiftNorth(pawnPushes) : shiftSouth(pawnPushes)) & relative_rank_4_bb & ~occupied;
-    while (attacks) {
-        target = bitscanForward(attacks);
-        addQuiet(genMove(target - forward * 2, target, DOUBLED_PAWN_PUSH, movingPiece));
-        attacks = lsbReset(attacks);
-    }
-
-
-    if (pawns & relative_rank_7_bb) {
-        attacks = pawnsCenter & relative_rank_8_bb;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addQuiet(genMove(target - forward, target, KNIGHT_PROMOTION, movingPiece));
-            attacks = lsbReset(attacks);
-        }
+        generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
+    }else{
+        // mask for pawns contains the checkers since underpromotion captures exist
+        generatePawnMoves<BLACK, GEN_QUIET>(m_board, occupied, mask & checkers, this);
         
-        attacks = pawnsLeft & relative_rank_8_bb & opponents;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addQuiet(genMove(target - left, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
-            attacks = lsbReset(attacks);
-        }
-
-        attacks = pawnsRight & relative_rank_8_bb & opponents;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addQuiet(genMove(target - right, target, KNIGHT_PROMOTION_CAPTURE, movingPiece, m_board->getPiece(target)));
-            attacks = lsbReset(attacks);
-        }
-    }
-
-    // Piece
-    for(Piece p = KNIGHT; p <= QUEEN; p++){
-        U64 pieceOcc    = m_board->getPieceBB(c, p);
-        movingPiece = p + 8 * c;
-        while(pieceOcc){
-            Square square = bitscanForward(pieceOcc);
-            attacks   = ZERO;
-            switch (p) {
-                case KNIGHT:
-                    attacks = KNIGHT_ATTACKS[square];
-                    break;
-                case BISHOP:
-                    attacks =
-                        lookUpBishopAttacks  (square, occupied);
-                    break;
-                case ROOK:
-                    attacks =
-                        lookUpRookAttacks    (square,occupied);
-                    break;
-                case QUEEN:
-                    attacks =
-                        lookUpBishopAttacks  (square, occupied) |
-                        lookUpRookAttacks    (square, occupied);
-                    break;
-            }
-            attacks &= ~friendly;
-            attacks &= ~opponents;
-
-            while(attacks){
-                target = bitscanForward(attacks);
-                addQuiet(genMove(square, target, QUIET, movingPiece));
-                
-                attacks = lsbReset(attacks);
-            }
-            pieceOcc = lsbReset(pieceOcc);
-        }
-    }
-    
-    
-    // King
-    movingPiece = KING + c * 8;
-    
-    U64 kings      = m_board->getPieceBB(c, KING);
-    
-    while (kings) {
-        Square s    = bitscanForward(kings);
-        attacks = KING_ATTACKS[s] & ~friendly & ~opponents;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addQuiet(genMove(s, target, QUIET, movingPiece));
-            
-            attacks = lsbReset(attacks);
-        }
-    
-    
-        if (c == WHITE) {
-            if (m_board->getCastlingRights(WHITE_QUEENSIDE_CASTLING) && m_board->getPiece(A1) == WHITE_ROOK
-                && (occupied & CASTLING_WHITE_QUEENSIDE_MASK) == 0) {
-                addQuiet(genMove(E1, C1, QUEEN_CASTLE, WHITE_KING));
-            }
-            if (m_board->getCastlingRights(WHITE_KINGSIDE_CASTLING) && m_board->getPiece(H1) == WHITE_ROOK
-                && (occupied & CASTLING_WHITE_KINGSIDE_MASK) == 0) {
-                addQuiet(genMove(E1, G1, KING_CASTLE, WHITE_KING));
-            }
-        } else {
-            if (m_board->getCastlingRights(BLACK_QUEENSIDE_CASTLING) && m_board->getPiece(A8) == BLACK_ROOK
-                && (occupied & CASTLING_BLACK_QUEENSIDE_MASK) == 0) {
-                addQuiet(genMove(E8, C8, QUEEN_CASTLE, BLACK_KING));
-            }
-            if (m_board->getCastlingRights(BLACK_KINGSIDE_CASTLING) && m_board->getPiece(H8) == BLACK_ROOK
-                && (occupied & CASTLING_BLACK_KINGSIDE_MASK) == 0) {
-                addQuiet(genMove(E8, G8, KING_CASTLE, BLACK_KING));
-            }
-        }
-        kings = lsbReset(kings);
+        generatePieceMoves<KNIGHT, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<BISHOP, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<ROOK  , BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        generatePieceMoves<QUEEN , BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
+        
+        generateKingMoves <BLACK, GEN_QUIET>(m_board, occupied, friendly, this);
     }
 }
 
 void moveGen::generateEvasions() {
-    const U64 occupied  = m_board->getOccupiedBB();
-    Square target;
-    Piece movingPiece   = KING + c * 8;
-    U64 kings           = m_board->getPieceBB(c, KING);
-    
-    while (kings) {
-        Square s    = bitscanForward(kings);
-        U64 attacks = KING_ATTACKS[s] & ~occupied;
-        while (attacks) {
-            target = bitscanForward(attacks);
-            addQuiet(genMove(s, target, QUIET, movingPiece));
-            attacks = lsbReset(attacks);
-        }
-        kings = lsbReset(kings);
+    const U64 friendly = m_board->getTeamOccupiedBB(c);
+    const U64 occupied = m_board->getOccupiedBB();
+    if(c == WHITE){
+        generateKingMoves <WHITE, QS_EVASIONS>(m_board, occupied, friendly, this);
+    }else{
+        generateKingMoves <BLACK, QS_EVASIONS>(m_board, occupied, friendly, this);
     }
+}
+
+void moveGen::generateAll() {
+    const U64 friendly = m_board->getTeamOccupiedBB(c);
+    const U64 occupied = m_board->getOccupiedBB();
+
+    U64 mask_quiet = ~ZERO;
+    U64 mask_noisy = ~ZERO;
+    U64 checkers = m_board->getBoardStatus()->m_checkersBB;
+
+    // if more than 1 checker, we can only move with the king
+    if(bitCount(checkers) >= 2){
+        if(c == WHITE){
+            generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
+            generateKingMoves <WHITE, GEN_NOISY>(m_board, occupied, friendly, this);
+        }
+        else{
+            generateKingMoves <BLACK, GEN_QUIET>(m_board, occupied, friendly, this);
+            generateKingMoves <BLACK, GEN_NOISY>(m_board, occupied, friendly, this);
+        }
+        return;
+    } else if (bitCount(checkers) == 1) {
+        mask_quiet = IN_BETWEEN_SQUARES[bitscanForward(checkers)]
+                                       [bitscanForward(m_board->getPieceBB(c, KING))];
+        mask_noisy = checkers | mask_quiet;
+    }
+
+    if(c == WHITE){
+        generatePawnMoves<WHITE, GEN_QUIET, true>(m_board, occupied, mask_noisy, this);
+        generatePieceMoves<KNIGHT, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generatePieceMoves<BISHOP, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generatePieceMoves<ROOK  , WHITE, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generatePieceMoves<QUEEN , WHITE, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
+        
+        generatePawnMoves<WHITE, GEN_NOISY, true>(m_board, occupied, mask_noisy, this);
+        generatePieceMoves<KNIGHT, WHITE, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generatePieceMoves<BISHOP, WHITE, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generatePieceMoves<ROOK  , WHITE, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generatePieceMoves<QUEEN , WHITE, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generateKingMoves <WHITE, GEN_NOISY>(m_board, occupied, friendly, this);
+    }else{
+        generatePawnMoves<BLACK, GEN_QUIET, true>(m_board, occupied, mask_noisy, this);
+        generatePieceMoves<KNIGHT, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generatePieceMoves<BISHOP, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generatePieceMoves<ROOK  , BLACK, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generatePieceMoves<QUEEN , BLACK, GEN_QUIET>(m_board, occupied, friendly, mask_quiet, this);
+        generateKingMoves <BLACK, GEN_QUIET>(m_board, occupied, friendly, this);
+        
+        generatePawnMoves<BLACK, GEN_NOISY, true>(m_board, occupied, mask_noisy, this);
+        generatePieceMoves<KNIGHT, BLACK, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generatePieceMoves<BISHOP, BLACK, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generatePieceMoves<ROOK  , BLACK, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generatePieceMoves<QUEEN , BLACK, GEN_NOISY>(m_board, occupied, friendly, mask_noisy, this);
+        generateKingMoves <BLACK, GEN_NOISY>(m_board, occupied, friendly, this);
+    }
+    
 }
 
 void moveGen::updateHistory(int weight) {

@@ -30,13 +30,15 @@ constexpr int MAX_NOISY = 32;
 
 constexpr int MAX_HIST  = 512;
 
+using Stage = uint8_t;
+
 enum {
     PV_SEARCH,
     Q_SEARCH,
     Q_SEARCHCHECK,
 };
 
-enum {
+enum Stages : Stage{
     GET_HASHMOVE,
     GEN_NOISY,
     GET_GOOD_NOISY,
@@ -47,7 +49,9 @@ enum {
     GET_BAD_NOISY,
     END,
     QS_EVASIONS,
+    PERFT,
 };
+
 
 class moveGen {
     private:
@@ -88,18 +92,24 @@ class moveGen {
     int lastSee;
     void                     init(SearchData* sd, Board* b, bb::Depth ply, move::Move hashMove, move::Move previous,
                                   move::Move followup, int mode, bb::Square threatSquare, bb::U64 checkerSq = 0);
+    void                     init(Board* b);
     [[nodiscard]] move::Move next();
-    void                     addNoisy(move::Move m);
-    void                     addQuiet(move::Move m);
-    [[nodiscard]] move::Move nextNoisy();
-    [[nodiscard]] move::Move nextQuiet();
-    void                     addSearched(move::Move m);
-    void                     generateNoisy();
-    void                     generateQuiet();
-    void                     generateEvasions();
     void                     updateHistory(int weight);
     void                     skip();
     [[nodiscard]] bool       shouldSkip() const;
+    
+    void                     addNoisy(move::Move m);
+    void                     addQuiet(move::Move m);
+    void                     addSearched(move::Move m);
+    
+    
+    private:
+    [[nodiscard]] move::Move nextNoisy();
+    [[nodiscard]] move::Move nextQuiet();
+    void                     generateNoisy();
+    void                     generateQuiet();
+    void                     generateEvasions();
+    void                     generateAll();
 };
 
 #endif
