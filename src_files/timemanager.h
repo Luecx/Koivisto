@@ -89,6 +89,47 @@ struct MoveOverhead{
     bb::S64          time{0};
 };
 
+
+/**
+ * computes variance of search score result to estimate changes in scores
+ */
+struct RunningVariance {
+    std::vector<double> data;
+    double alpha = 0.8; // default decay factor
+    
+    void add(double x) {
+        data.push_back(x);
+    }
+
+    double variance() const{
+        if (data.empty()) {
+            return 0;
+        }
+
+        double mean = 0;
+        double weight_sum = 0;
+        for (int i = 0; i < data.size(); i++) {
+            double weight = pow(alpha, data.size() - i - 1);
+            weight_sum += weight;
+            mean += data[i] * weight;
+        }
+        mean /= weight_sum;
+        
+        double variance = 0;
+        for (int i = 0; i < data.size(); i++) {
+            double diff = data[i] - mean;
+            variance += pow(alpha, 2 * (data.size() - i - 1)) * diff * diff;
+        }
+        variance /= weight_sum;
+
+        return variance;
+    }
+    
+    double deviation() const{
+        return sqrt(variance());
+    }
+};
+
 /**
  * The TimeManager is responsible for managing the stopping criteria for the search.
  * Despite being named "TimeManager", it is also responsible for other criteria like depth and nodes.
@@ -113,7 +154,10 @@ class TimeManager {
     bool           force_stop       {};
     // track the start time (in ms)
     bb::S64        start_time       {};
-
+    
+    // track variance of search score
+    RunningVariance variance        {};
+    
     TimeManager();
 
     // sets and enables the depth limit of the search to the given value
@@ -153,7 +197,10 @@ class TimeManager {
     
     // stops the search. this should be considered to check if time is left
     void stopSearch();
-
+    
+    // inform about a depth being finished
+    void inform(bb::Depth depth, bb::Score score);
+    
     // returns true if there is enough time left. This is used by the principal variation search.
     [[nodiscard]] bool isTimeLeft(SearchData* sd = nullptr) const;
 

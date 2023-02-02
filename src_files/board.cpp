@@ -516,52 +516,57 @@ void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
  */
 template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     BoardStatus* previousStatus = getBoardStatus();
-    m_boardStatusHistory.template emplace_back(BoardStatus{
-        previousStatus->zobrist,                 // zobrist will be changed later
-        0ULL,                                    // reset en passant. might be set later
-        previousStatus->castlingRights,          // copy meta. might be changed
+    m_boardStatusHistory.template emplace_back(BoardStatus {
+        previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,    // zobrist will be changed later
+        0ULL,                                                  // reset en passant. might be set later
+        previousStatus->castlingRights,                        // copy meta. might be changed
         previousStatus->fiftyMoveCounter + 1,    // increment fifty move counter. might be reset
         1ULL,                                    // set rep to 1 (no rep)
         previousStatus->moveCounter + getActivePlayer(),    // increment move counter
-        m,0,0});
-    
+        m, 0, 0});
+
     BoardStatus& newBoardStatus = m_boardStatusHistory.back();
 
     this->evaluator.addNewAccumulation();
+
+    const Square    sqFrom = getSquareFrom(m);
+    const Square    sqTo   = getSquareTo(m);
+    const Piece     pFrom  = getMovingPiece(m);
+    const PieceType ptFrom = getMovingPieceType(m);
+    const MoveType  mType  = getType(m);
+    const Color     color  = getActivePlayer();
+    const int       factor = getActivePlayer() == WHITE ? 1 : -1;
     
-    const Square   sqFrom = getSquareFrom(m);
-    const Square   sqTo   = getSquareTo(m);
-    const Piece    pFrom  = getMovingPiece(m);
-    const MoveType mType  = getType(m);
-    const Color    color  = getActivePlayer();
-    const int      factor = getActivePlayer() == WHITE ? 1 : -1;
     
-    if (isCapture(m)) {
-        // reset fifty move counter if a piece has been captured
+    // reset fifty move counter if a piece has been captured
+    // or if a pawn moves
+    if (isCapture(m) || ptFrom == PAWN) {
         newBoardStatus.fiftyMoveCounter = 0;
-        
-        if (getPieceType(getPiece(sqTo)) == ROOK) {
-            if (color == BLACK) {
-                if (sqTo == A1) {
-                    newBoardStatus.castlingRights &= ~(ONE << (WHITE_QUEENSIDE_CASTLING));
-                } else if (sqTo == H1) {
-                    newBoardStatus.castlingRights &= ~(ONE << (WHITE_KINGSIDE_CASTLING));
-                }
-            } else {
-                if (sqTo == A8) {
-                    newBoardStatus.castlingRights &= ~(ONE << (BLACK_QUEENSIDE_CASTLING));
-                } else if (sqTo == H8) {
-                    newBoardStatus.castlingRights &= ~(ONE << (BLACK_KINGSIDE_CASTLING));
-                }
-            }
+    }
+    
+    // adjust castling rights
+    if(isCapture(m) && getCapturedPieceType(sqTo) == ROOK && isCastlingSquare(sqTo)){
+        // get index
+        auto castling_right = squareToCastlingRight(sqTo);
+        // unset bit and adjust zobrist
+        if(getBit(newBoardStatus.castlingRights, castling_right)){
+            newBoardStatus.zobrist ^= ZOBRIST_CASTLING_RIGHTS[castling_right];
+            unsetBit(newBoardStatus.castlingRights, castling_right);
+        }
+    }
+    // revoke castling rights if rook moves and it is on the initial square
+    if (ptFrom == ROOK && isCastlingSquare(sqFrom)) {
+        // get index
+        auto castling_right = squareToCastlingRight(sqFrom);
+        // unset bit and adjust zobrist
+        if(getBit(newBoardStatus.castlingRights, castling_right)){
+            newBoardStatus.zobrist ^= ZOBRIST_CASTLING_RIGHTS[castling_right];
+            unsetBit(newBoardStatus.castlingRights, castling_right);
         }
     }
     
-    newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
-    if (getPieceType(pFrom) == PAWN) {
-        // reset fifty move counter if pawn has moved
-        newBoardStatus.fiftyMoveCounter = 0;
-        
+    // consider pawns
+    else if (ptFrom == PAWN) {
         // if a pawn advances by 2 squares, enabled enPassant capture next move
         if (mType == DOUBLED_PAWN_PUSH) {
             newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
@@ -595,14 +600,20 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             this->updatePinnersAndCheckers();
             return;
         }
-    } else if (getPieceType(pFrom) == KING) {
+    }
+    
+    // consider kings
+    else if (getPieceType(pFrom) == KING) {
         // revoke castling rights if king moves
-        newBoardStatus.castlingRights &= ~(ONE << (color * 2));
-        newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
+        for(int castling_right : {(color * 2), (color * 2 + 1)}){
+            if(getBit(newBoardStatus.castlingRights, castling_right)){
+                newBoardStatus.zobrist ^= ZOBRIST_CASTLING_RIGHTS[castling_right];
+                unsetBit(newBoardStatus.castlingRights, castling_right);
+            }
+        }
         
         // we handle this case seperately so we return after this finished.
         this->changeActivePlayer();
-        
         
         bool requires_accumulator_reset = false;
         if(     nn::kingSquareIndex(sqTo, color) !=
@@ -663,23 +674,6 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
         this->computeNewRepetition();
         this->updatePinnersAndCheckers();
         return;
-    }
-    
-    // revoke castling rights if rook moves and it is on the initial square
-    else if (getPieceType(pFrom) == ROOK) {
-        if (color == WHITE) {
-            if (sqFrom == A1) {
-                newBoardStatus.castlingRights &= ~(ONE << (color * 2));
-            } else if (sqFrom == H1) {
-                newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
-            }
-        } else {
-            if (sqFrom == A8) {
-                newBoardStatus.castlingRights &= ~(ONE << (color * 2));
-            } else if (sqFrom == H8) {
-                newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
-            }
-        }
     }
     
     // doing the initial move

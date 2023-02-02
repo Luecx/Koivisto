@@ -207,6 +207,16 @@ void TimeManager::stopSearch() {
 }
 
 /**
+ * informs the time manager about a depth being finished with its score
+ * @param depth
+ * @param score
+ */
+void TimeManager::inform(bb::Depth depth, bb::Score score){
+    this->variance.add(score);
+}
+
+
+/**
  * returns true if there is enough time left. This is used by the principal variation search.
  * If it returns false, the search should stop.
  * @param sd : search_data object which contains relevant search information
@@ -257,7 +267,9 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     nodeScore = 110 - std::min(nodeScore, 90);
     // calculate the eval score as a value between 50 and 80
     evalScore = std::min(std::max(50, 50 + evalScore), 80);
-
+    // variance score
+    int var = std::clamp((int)std::round(this->variance.deviation()) + 25, 25,35);
+    
     U64 elapsed = elapsedTime();
     
     // check if there is enough time left based on the move time limit
@@ -272,7 +284,7 @@ bool TimeManager::rootTimeLeft(int nodeScore, int evalScore) const {
     // 100, we half the time to use. If it's lower than 30, it reaches a maximum of 1.4 times the
     // original time to use.
     if(    match_time_limit.enabled
-        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 65 < elapsed)
+        && match_time_limit.time_to_use * nodeScore / 100 * evalScore / 65 * var / 30.0 < elapsed)
         return false;
 
     return true;

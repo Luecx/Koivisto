@@ -40,6 +40,27 @@ enum CastlingRights{
 
 // zobrist key for white/black to move
 constexpr bb::U64 ZOBRIST_WHITE_BLACK_SWAP = 1;
+constexpr bb::U64 ZOBRIST_CASTLING_RIGHTS[4]{
+    0x9d39247e33776d41,
+    0x2af7398005aaa5c7,
+    0x44db015024623547,
+    0x9c15f73e62a76ae2
+};
+
+constexpr bool isCastlingSquare(bb::Square sq){
+    constexpr bb::U64 CORNER_MASK = 0x8100000000000081;
+    return (bb::ONE << sq) & CORNER_MASK;
+}
+
+constexpr uint32_t squareToCastlingRight(bb::Square square){
+    switch (square) {
+        case bb::A1: return WHITE_QUEENSIDE_CASTLING;
+        case bb::A8: return BLACK_QUEENSIDE_CASTLING;
+        case bb::H1: return WHITE_KINGSIDE_CASTLING;
+        case bb::H8: return BLACK_KINGSIDE_CASTLING;
+        default: return -1;
+    }
+}
 
 // static exchange evaluation piece values. we do not use the same values as for the evaluation.
 static constexpr bb::Score see_piece_vals[] {100, 325, 325, 500, 1000, 10000};
