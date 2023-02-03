@@ -545,7 +545,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     }
     
     // adjust castling rights
-    if(isCapture(m) && getCapturedPieceType(sqTo) == ROOK && isCastlingSquare(sqTo)){
+    if(isCapture(m) && getCapturedPieceType(m) == ROOK && isCastlingSquare(sqTo)){
         // get index
         auto castling_right = squareToCastlingRight(sqTo);
         // unset bit and adjust zobrist
