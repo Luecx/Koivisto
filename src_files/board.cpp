@@ -278,7 +278,7 @@ U64 Board::zobrist() const { return getBoardStatus()->zobrist; }
 /**
  * Returns true if the given player is in check by the opponent.
  */
-bool Board::isInCheck(Color player) const {
+bool Board::isInCheck() const {
     return !!getBoardStatus()->m_checkersBB;
 }
 

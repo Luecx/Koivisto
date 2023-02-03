@@ -140,7 +140,7 @@ class Board {
     [[nodiscard]] bb::U64 zobrist() const;
     
     // returns true if the given player is in check.
-    bool isInCheck(bb::Color player) const;
+    bool isInCheck() const;
     
     // returns true if the game is a draw by threefold or 50-move rule.
     // does not consider stalemates. this is handled during search as this requires information about each possible

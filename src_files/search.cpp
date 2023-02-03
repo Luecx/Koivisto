@@ -457,7 +457,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         //  standard implementation in Koi
         //   Weiss now also has a similar implementation to Koi, but its unclear if it is better than
         //   standard either.
-        if (b->getCurrent50MoveRuleCount() >= 50 && b->isInCheck(activePlayer)) {
+        if (b->getCurrent50MoveRuleCount() >= 50 && b->isInCheck()) {
             MoveList mv {};
             generatePerftMoves(b, &mv);
             for (int i = 0; i < mv.getSize(); i++) {
@@ -470,7 +470,8 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     }
 
     // check if the active player is in check. used for various pruning decisions.
-    bool inCheck = b->isInCheck(activePlayer);
+    bool inCheck = b->isInCheck();
+    bool inDoubleCheck = bitCount(b->getBoardStatus()->m_checkersBB) >= 2;
     
     // beside keeping track of the nodes, we need to keep track of the selective depth for this
     // thread.
@@ -929,9 +930,13 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         b->move<true>(m, table);
 
         // adjust the extension policy for checks.
-        if (extension == 0 && depth > 4 && b->isInCheck(opponent))
+        if (extension == 0 && depth > 4 && b->isInCheck())
             extension = 1;
 
+        if(depth > 4 && bitCount(b->getBoardStatus()->m_checkersBB) >= 2){
+            extension ++;
+        }
+        
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
             extension = 1;
 
@@ -1157,7 +1162,7 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
 
         b->move<true>(m, table);
 
-        bool  inCheckOpponent = b->isInCheck(b->getActivePlayer());
+        bool  inCheckOpponent = b->isInCheck();
 
         Score score           = -qSearch(b, -beta, -alpha, ply + ONE_PLY, td, inCheckOpponent);
 
