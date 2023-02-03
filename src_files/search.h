@@ -64,11 +64,6 @@ struct ThreadData {
     // pv information...
     PVTable pvTable{};
     
-//    // we use a triangular pv table to track the pv during search for each thread
-//    move::Move pv[bb::MAX_INTERNAL_PLY + 1][bb::MAX_INTERNAL_PLY + 1] {};
-//    // we also need to track the partial pv length of each subtree
-//    uint16_t   pvLen[bb::MAX_INTERNAL_PLY + 1];
-
     ThreadData();
 
     explicit ThreadData(int threadId);

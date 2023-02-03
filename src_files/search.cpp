@@ -727,7 +727,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
     // internal iterative deepening by Ed Schröder::
     // http://talkchess.com/forum3/viewtopic.php?f=7&t=74769&sid=64085e3396554f0fba414404445b3120
     // ***********************************************************************************************
-    if (depth >= 4 && !hashMove)
+    if (depth >= 4 && !hashMove && !inCheck)
         depth--;
 
     // ***********************************************************************************************
