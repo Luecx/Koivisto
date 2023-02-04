@@ -86,12 +86,12 @@ Board::Board(const std::string& fen) {
             Square sq = squareIndex(y, x);
             
             switch (toupper(c)) {
-                case 'P': setPiece<false>(sq, 0 + offset); break;
-                case 'N': setPiece<false>(sq, 1 + offset); break;
-                case 'B': setPiece<false>(sq, 2 + offset); break;
-                case 'R': setPiece<false>(sq, 3 + offset); break;
-                case 'Q': setPiece<false>(sq, 4 + offset); break;
-                case 'K': setPiece<false>(sq, 5 + offset); break;
+                case 'P': setPiece(sq, 0 + offset); break;
+                case 'N': setPiece(sq, 1 + offset); break;
+                case 'B': setPiece(sq, 2 + offset); break;
+                case 'R': setPiece(sq, 3 + offset); break;
+                case 'Q': setPiece(sq, 4 + offset); break;
+                case 'K': setPiece(sq, 5 + offset); break;
             }
             
             x++;
@@ -303,7 +303,6 @@ Piece Board::getPiece(Square sq) const { return m_pieceBoard[sq]; }
  * @param sq
  * @param piece
  */
-template<bool updateNN, bool updateZobrist>
 void Board::setPiece(Square sq, Piece piece) {
     // first we set the piece on the piece board
     m_pieceBoard[sq] = piece;
@@ -315,21 +314,10 @@ void Board::setPiece(Square sq, Piece piece) {
     m_piecesBB[piece] |= sqBB;
     m_teamOccupiedBB[piece / 8] |= sqBB;
     m_occupiedBB |= sqBB;
-    
-    // update the evaluator
-    if constexpr (updateNN) {
-        evaluator.setPieceOnSquare<true>(getPieceType(piece),
-                                         getPieceColor(piece),
-                                         sq,
-                                         bitscanForward(m_piecesBB[WHITE_KING]),
-                                         bitscanForward(m_piecesBB[BLACK_KING]));
-    }
 
     // also adjust the zobrist key
-    if constexpr (updateZobrist) {
-        BoardStatus* st = getBoardStatus();
-        st->zobrist ^= getHash(piece, sq);
-    }
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= getHash(piece, sq);
 }
 
 /**
@@ -337,7 +325,6 @@ void Board::setPiece(Square sq, Piece piece) {
  * Deals with zobrist-keys.
  * @param sq
  */
-template<bool updateNN, bool updateZobrist>
 void Board::unsetPiece(Square sq) {
     UCI_ASSERT(0 <= sq && sq <= 63);
     
@@ -348,23 +335,14 @@ void Board::unsetPiece(Square sq) {
     // as we need to remove bits from the occupancy bitboards, we use the inverse.
     const U64 sqBB = ~(ONE << sq);
     
-    // update the evaluator
-    if constexpr (updateNN){
-        evaluator.setPieceOnSquare<false>(getPieceType(p), getPieceColor(p), sq,
-                                          bitscanForward(m_piecesBB[WHITE_KING]),
-                                          bitscanForward(m_piecesBB[BLACK_KING]));
-    }
-    
     // actually removing bits from the occupancy bitboards.
     m_piecesBB[p] &= sqBB;
     m_teamOccupiedBB[p / 8] &= sqBB;
     m_occupiedBB &= sqBB;
     
     // also adjust the zobrist key
-    if constexpr (updateZobrist) {
-        BoardStatus* st = getBoardStatus();
-        st->zobrist ^= getHash(p, sq);
-    }
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= getHash(p, sq);
     
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = -1;
@@ -376,7 +354,6 @@ void Board::unsetPiece(Square sq) {
  * @param sq
  * @param piece
  */
-template<bool updateNN, bool updateZobrist>
 void Board::replacePiece(Square sq, Piece piece) {
     UCI_ASSERT(0 <= sq && sq <= 63);
     
@@ -392,63 +369,12 @@ void Board::replacePiece(Square sq, Piece piece) {
     m_teamOccupiedBB[piece / 8] |= sqBB;    // set
     
     // also adjust the zobrist key
-    if constexpr (updateZobrist) {
-        BoardStatus* st = getBoardStatus();
-        st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
-    }
+    BoardStatus* st = getBoardStatus();
+    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
     
-    // update the evaluator
-    if constexpr (updateNN){
-        evaluator.setPieceOnSquare<false>(getPieceType(p    ), getPieceColor(p    ), sq,
-                                          bitscanForward(m_piecesBB[WHITE_KING]),
-                                          bitscanForward(m_piecesBB[BLACK_KING]));
-        evaluator.setPieceOnSquare<true >(getPieceType(piece), getPieceColor(piece), sq,
-                                         bitscanForward(m_piecesBB[WHITE_KING]),
-                                         bitscanForward(m_piecesBB[BLACK_KING]));
-    }
 
     // removing the piece from the square-wise piece table.
     m_pieceBoard[sq] = piece;
-}
-
-/**
- * Sets the hash for piece on the given square.
- * Deals with zobrist-keys.
- * @param sq
- * @param piece
- */
-void Board::setPieceHash(Square sq, Piece piece) {
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(piece, sq);
-}
-
-/**
- * Unsets the hash for piece on the given square.
- * Deals with zobrist-keys.
- * @param sq
- */
-void Board::unsetPieceHash(Square sq) {
-    UCI_ASSERT(0 <= sq && sq <= 63);
-    
-    // we need to know first which piece is contained on the given square.
-    Piece p = getPiece(sq);
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= getHash(p, sq);
-}
-
-/**
- * Replaces the hash for piece on the given square with the given new piece.
- * Deals with zobrist-keys.
- * @param sq
- * @param piece
- */
-void Board::replacePieceHash(Square sq, Piece piece) {
-    UCI_ASSERT(0 <= sq && sq <= 63);
-    
-    // we need to know first which piece is contained on the given square.
-    Piece p = getPiece(sq);
-    BoardStatus* st = getBoardStatus();
-    st->zobrist ^= (getHash(p, sq) ^ getHash(piece, sq));
 }
 
 /**
@@ -517,7 +443,7 @@ void Board::changeActivePlayer() { m_activePlayer = 1 - m_activePlayer; }
 template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     BoardStatus* previousStatus = getBoardStatus();
     m_boardStatusHistory.template emplace_back(BoardStatus{
-        previousStatus->zobrist,                 // zobrist will be changed later
+        previousStatus->zobrist ^ ZOBRIST_WHITE_BLACK_SWAP,                 // zobrist will be changed later
         0ULL,                                    // reset en passant. might be set later
         previousStatus->castlingRights,          // copy meta. might be changed
         previousStatus->fiftyMoveCounter + 1,    // increment fifty move counter. might be reset
@@ -527,14 +453,39 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     
     BoardStatus& newBoardStatus = m_boardStatusHistory.back();
 
-    this->evaluator.addNewAccumulation();
+
+    const Square    sqFrom  = getSquareFrom(m);
+    const Square    sqTo    = getSquareTo(m);
+    const Piece     pFrom   = getMovingPiece(m);
+    const PieceType ptFrom  = getMovingPieceType(m);
+    const MoveType  mType   = getType(m);
+    const Color     color   = getActivePlayer();
+    const int       factor  = getActivePlayer() == WHITE ? 1 : -1;
+
+    Square          wKingSq = bitscanForward(m_piecesBB[WHITE_KING]);
+    Square          bKingSq = bitscanForward(m_piecesBB[BLACK_KING]);
+
+    Piece           pTo     = pFrom;
+    PieceType       ptTo    = ptFrom;
+    PieceType       ptCap   = getCapturedPieceType(m);
+
+    if(isPromotion(m)){
+        pTo = getPromotionPiece(m);
+        ptTo = getPromotionPieceType(m);
+    }
     
-    const Square   sqFrom = getSquareFrom(m);
-    const Square   sqTo   = getSquareTo(m);
-    const Piece    pFrom  = getMovingPiece(m);
-    const MoveType mType  = getType(m);
-    const Color    color  = getActivePlayer();
-    const int      factor = getActivePlayer() == WHITE ? 1 : -1;
+    // doing the initial move
+    this->unsetPiece(sqFrom);
+    if (isCapture(m)) {
+        if(isEnPassant(m)){
+            this->setPiece(sqTo, pTo);
+            this->unsetPiece(sqTo - 8 * factor);
+        }else{
+            this->replacePiece(sqTo, pTo);
+        }
+    } else {
+        this->setPiece(sqTo, pTo);
+    }
     
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
@@ -556,117 +507,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             }
         }
     }
-    
-    newBoardStatus.zobrist ^= ZOBRIST_WHITE_BLACK_SWAP;
-    if (getPieceType(pFrom) == PAWN) {
-        // reset fifty move counter if pawn has moved
-        newBoardStatus.fiftyMoveCounter = 0;
-        
-        // if a pawn advances by 2 squares, enabled enPassant capture next move
-        if (mType == DOUBLED_PAWN_PUSH) {
-            newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
-        }
-        
-        // promotions are handled differently because the new piece at the target square is not the piece that initially
-        // moved.
-        else if (isPromotion(m)) {
-            // we handle this case seperately so we return after this finished.
-            this->changeActivePlayer();
-            
-            // setting m_piecesBB
-            this->unsetPiece(sqFrom);
-            // do the "basic" move
-            if (isCapture(m)) {
-                this->replacePiece(sqTo, getPromotionPiece(m));
-            } else {
-                this->setPiece(sqTo, getPromotionPiece(m));
-            }
-            
-            updatePinnersAndCheckers();
-            return;
-        } else if (mType == EN_PASSANT) {
-            this->changeActivePlayer();
-            
-            unsetPiece(sqTo - 8 * factor);
-            
-            this->unsetPiece(sqFrom);
-            this->setPiece(sqTo, pFrom);
-            
-            this->updatePinnersAndCheckers();
-            return;
-        }
-    } else if (getPieceType(pFrom) == KING) {
-        // revoke castling rights if king moves
-        newBoardStatus.castlingRights &= ~(ONE << (color * 2));
-        newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
-        
-        // we handle this case seperately so we return after this finished.
-        this->changeActivePlayer();
-        
-        
-        bool requires_accumulator_reset = false;
-        if(     nn::kingSquareIndex(sqTo, color) !=
-                nn::kingSquareIndex(sqFrom, color)
-            ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
-            requires_accumulator_reset = true;
-        }
-        
-        // normal handling if no reset is required
-        if(!requires_accumulator_reset){
-            if (isCastle(m)) {
-                // move the rook as well. castling rights are handled below
-                Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
-                Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-                this->unsetPiece(rookSquare);
-                this->setPiece(rookTarget, ROOK + 8 * color);
-            }
-        
-            this->unsetPiece(sqFrom);
-            if (isCapture(m)) {
-                this->replacePiece(sqTo, pFrom);
-            } else {
-                this->setPiece(sqTo, pFrom);
-            }
-        }else{
-            Square ourKingSq = bitscanForward(getPieceBB(color ,KING));
-            Square oppKingSq = bitscanForward(getPieceBB(!color,KING));
-
-            // handling for when only updates for the opponents accumulator are needed
-            if (isCastle(m)) {
-                // move the rook as well. castling rights are handled below
-                Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
-                Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-                this->unsetPiece<false>(rookSquare);
-                this->setPiece<false>(rookTarget, ROOK + 8 * color);
-
-                this->evaluator.setPieceOnSquareAccumulator<false>(!color, ROOK, color, rookSquare, oppKingSq);
-                this->evaluator.setPieceOnSquareAccumulator<true>(!color , ROOK, color, rookTarget, oppKingSq);
-            }
-            this->unsetPiece<false>(sqFrom);
-            this->evaluator.setPieceOnSquareAccumulator<false>(!color, KING, color, sqFrom, oppKingSq);
-            if (isCapture(m)) {
-                this->replacePiece<false>(sqTo, pFrom);
-                this->evaluator.setPieceOnSquareAccumulator<true>(!color, KING, color, sqTo, oppKingSq);
-                this->evaluator.setPieceOnSquareAccumulator<false>(!color, getCapturedPieceType(m), !color, sqTo, oppKingSq);
-            } else {
-                this->setPiece<false>(sqTo, pFrom);
-                this->evaluator.setPieceOnSquareAccumulator<true>(!color, KING, color, sqTo, oppKingSq);
-            }
-        }
-        
-        // reset accumulator of moving side if required
-        if(requires_accumulator_reset){
-            this->evaluator.resetAccumulator(this, color);
-        }
-        
-        // we need to compute the repetition count
-        this->computeNewRepetition();
-        this->updatePinnersAndCheckers();
-        return;
-    }
-    
-    // revoke castling rights if rook moves and it is on the initial square
-    else if (getPieceType(pFrom) == ROOK) {
+    if (ptFrom == ROOK) {
         if (color == WHITE) {
             if (sqFrom == A1) {
                 newBoardStatus.castlingRights &= ~(ONE << (color * 2));
@@ -681,29 +522,33 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             }
         }
     }
-    
-    // doing the initial move
-    this->unsetPieceHash(sqFrom);
-    
-    
-    if (mType != EN_PASSANT && isCapture(m)) {
-        this->replacePieceHash(sqTo, pFrom);
-    } else {
-        this->setPieceHash(sqTo, pFrom);
+    else if (ptFrom == PAWN) {
+        // reset fifty move counter if pawn has moved
+        newBoardStatus.fiftyMoveCounter = 0;
+        
+        // if a pawn advances by 2 squares, enabled enPassant capture next move
+        if (mType == DOUBLED_PAWN_PUSH) {
+            newBoardStatus.enPassantTarget = (ONE << (sqFrom + 8 * factor));
+        }
     }
-
+    else if (ptFrom == KING) {
+        // revoke castling rights if king moves
+        newBoardStatus.castlingRights &= ~(ONE << (color * 2));
+        newBoardStatus.castlingRights &= ~(ONE << (color * 2 + 1));
+        
+        if (isCastle(m)) {
+            // move the rook as well. castling rights are handled below
+            Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+            Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
+            this->unsetPiece(rookSquare);
+            this->setPiece(rookTarget, ROOK + 8 * color);
+        }
+    }
+    
     if constexpr (prefetch)
         table->prefetch(getBoardStatus()->zobrist);
-
-    // doing the initial move
-    this->unsetPiece<true, false>(sqFrom);
     
-    
-    if (mType != EN_PASSANT && isCapture(m)) {
-        this->replacePiece<true, false>(sqTo, pFrom);
-    } else {
-        this->setPiece<true, false>(sqTo, pFrom);
-    }
+    evaluator.processMove(this, m);
     
     this->changeActivePlayer();
     this->computeNewRepetition();
@@ -730,23 +575,23 @@ void Board::undoMove() {
     const int      factor   = getActivePlayer() == 0 ? 1 : -1;
     
     if (mType == EN_PASSANT) {
-        setPiece<false>(sqTo - 8 * factor, (1 - color) * 8);
+        setPiece(sqTo - 8 * factor, (1 - color) * 8);
     }
     
     if (getPieceType(pFrom) == KING && isCastle(m)) {
         const Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
         const Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
-        setPiece  <false>(rookSquare, ROOK + 8 * color);
-        unsetPiece<false>(rookTarget);
+        setPiece  (rookSquare, ROOK + 8 * color);
+        unsetPiece(rookTarget);
     }
     
     if (mType != EN_PASSANT && isCap) {
-        replacePiece<false>(sqTo, captured);
+        replacePiece(sqTo, captured);
     } else {
-        unsetPiece  <false>(sqTo);
+        unsetPiece  (sqTo);
     }
     
-    setPiece<false>(sqFrom, pFrom);
+    setPiece(sqFrom, pFrom);
     
     m_boardStatusHistory.pop_back();
     this->evaluator.popAccumulation();
@@ -836,23 +681,6 @@ template<Color attacker> U64 Board::getAttackedSquares() const {
     }
     
     return att;
-}
-
-/**
- * returns a bitboard of the least valuable piece which is in the attadef bitboard.
- * The piece itself will be stored in the given piece variable.
- * @param attadef
- * @param bySide
- * @param piece
- * @return
- */
-U64 Board::getLeastValuablePiece(U64 attadef, Score bySide, Piece& piece) const {
-    for (piece = PAWN + bySide * 8; piece <= KING + bySide * 8; piece += 1) {
-        const U64 subset = attadef & m_piecesBB[piece];
-        if (subset)
-            return subset & -subset;    // single bit
-    }
-    return 0;    // empty set
 }
 
 /**
@@ -970,27 +798,6 @@ Score Board::staticExchangeEvaluation(Move m) const {
     }
 
     return gain[0];
-}
-
-/**
- * returns a bitboard with all squares highlighted which either attack or defend the given square
- * @param occupied
- * @param sq
- * @return
- */
-U64 Board::attacksTo(U64 p_occupied, Square sq) const {
-    const U64 sqBB = ONE << sq;
-    U64 knights, kings, bishopsQueens, rooksQueens;
-    knights     = m_piecesBB[WHITE_KNIGHT] | m_piecesBB[BLACK_KNIGHT];
-    kings       = m_piecesBB[WHITE_KING] | m_piecesBB[BLACK_KING];
-    rooksQueens = bishopsQueens = m_piecesBB[WHITE_QUEEN] | m_piecesBB[BLACK_QUEEN];
-    rooksQueens |= m_piecesBB[WHITE_ROOK] | m_piecesBB[BLACK_ROOK];
-    bishopsQueens |= m_piecesBB[WHITE_BISHOP] | m_piecesBB[BLACK_BISHOP];
-    
-    return ((shiftNorthWest(sqBB) | shiftNorthEast(sqBB)) & m_piecesBB[BLACK_PAWN])
-           | ((shiftSouthWest(sqBB) | shiftSouthEast(sqBB)) & m_piecesBB[WHITE_PAWN]) | (attacks::KNIGHT_ATTACKS[sq] & knights)
-           | (attacks::KING_ATTACKS[sq] & kings) | (attacks::lookUpBishopAttacks(sq, p_occupied) & bishopsQueens)
-           | (attacks::lookUpRookAttacks(sq, p_occupied) & rooksQueens);
 }
 
 /**
@@ -1591,17 +1398,3 @@ Score Board::evaluate(){
             * (this->evaluator.evaluate(this->getActivePlayer()));
 }
 
-template void Board::setPiece<true, true>(Square sq, Piece piece);
-template void Board::setPiece<true, false>(Square sq, Piece piece);
-template void Board::setPiece<false, true>(Square sq, Piece piece);
-template void Board::setPiece<false, false>(Square sq, Piece piece);
-
-template void Board::unsetPiece<true, true>(Square sq);
-template void Board::unsetPiece<true, false>(Square sq);
-template void Board::unsetPiece<false, true>(Square sq);
-template void Board::unsetPiece<false, false>(Square sq);
-
-template void Board::replacePiece<true, true>(Square sq, Piece piece);
-template void Board::replacePiece<true, false>(Square sq, Piece piece);
-template void Board::replacePiece<false, true>(Square sq, Piece piece);
-template void Board::replacePiece<false, false>(Square sq, Piece piece);

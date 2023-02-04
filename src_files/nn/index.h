@@ -23,6 +23,8 @@
 
 namespace nn{
 
+
+
 constexpr int kingSquareIndices[bb::N_SQUARES] {
     0,  1,  2,  3,  3,  2,  1,  0,
     4,  5,  6,  7,  7,  6,  5,  4,
@@ -41,7 +43,6 @@ constexpr int kingSquareIndices[bb::N_SQUARES] {
     UCI_ASSERT(kingSquare <= bb::H8);
     kingSquare = (56 * kingColor) ^ kingSquare;
     return kingSquareIndices[kingSquare];
-    
 }
 
 // computes the index for a piece (piece type) and its color on the specified square
@@ -59,6 +60,19 @@ constexpr int kingSquareIndices[bb::N_SQUARES] {
            + ksIndex * 64 * 6 * 2;
     // clang-format on
 }
+
+struct Index{
+    bb::PieceType pieceType;
+    bb::Color pieceColor;
+    bb::Square square;
+    bb::Square wKingSq;
+    bb::Square bKingSq;
+    
+    int operator()(bb::Color side){
+        return nn::index(pieceType, pieceColor, square, side,
+                         side == bb::WHITE ? wKingSq : bKingSq);
+    }
+} __attribute__((aligned(8)));
 
 
 }
