@@ -359,7 +359,7 @@ Move Search::bestMove(Board* b, TimeManager* timeman, int threadId) {
         // in relation to all the nodes searched so far (only thread local)
         int timeManScore = td->searchData.spentEffort[getSquareFrom(td->searchData.bestMove)]
                                                      [getSquareTo  (td->searchData.bestMove)]
-                           * 100 / td->nodes;
+                           * 100 /  std::max(ONE, td->nodes);
 
         int evalScore    = prevScore - score;
         
