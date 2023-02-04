@@ -147,6 +147,117 @@ void nn::Evaluator::clearHistory() {
     this->history_index = 0;
 }
 
+using namespace bb;
+using namespace move;
+
+void nn::Evaluator::processMove(Board* board, move::Move m) {
+    const Square    sqFrom  = getSquareFrom(m);
+    const Square    sqTo    = getSquareTo(m);
+    const PieceType ptFrom  = getMovingPieceType(m);
+    const MoveType  mType   = getType(m);
+    const Color     color   = getMovingPieceColor(m);
+    const int       factor  = color == WHITE ? 1 : -1;
+    
+    Square          wKingSq = bitscanForward(board->getPieceBB<WHITE, KING>());
+    Square          bKingSq = bitscanForward(board->getPieceBB<BLACK, KING>());
+    
+    PieceType       ptTo    = ptFrom;
+    PieceType       ptCap   = getCapturedPieceType(m);
+
+    this->addNewAccumulation();
+    
+    if (ptFrom == KING) {
+        // we handle this case seperately so we return after this finished.
+        bool requires_accumulator_reset = false;
+        if(     nn::kingSquareIndex(sqTo, color) !=
+                nn::kingSquareIndex(sqFrom, color)
+            ||  fileIndex(sqFrom) + fileIndex(sqTo) == 7){
+            requires_accumulator_reset = true;
+        }
+        // normal handling if no reset is required
+        if(!requires_accumulator_reset){
+            if (isCapture(m)) {
+                nn::setUnsetUnsetPiece(
+                    &history[history_index - 1],
+                    &history[history_index],
+                    Index{ptTo  ,  color, sqTo  , wKingSq, bKingSq},
+                    Index{ptFrom,  color, sqFrom, wKingSq, bKingSq},
+                    Index{ptCap , !color, sqTo  , wKingSq, bKingSq});
+            }else if (isCastle(m)){
+                Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+                Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
+                nn::setSetUnsetUnsetPiece(
+                    &history[history_index - 1],
+                    &history[history_index],
+                    Index {ptTo  , color, sqTo      , wKingSq, bKingSq},
+                    Index {ROOK  , color, rookTarget, wKingSq, bKingSq},
+                    Index {ptFrom, color, sqFrom    , wKingSq, bKingSq},
+                    Index {ROOK  , color, rookSquare, wKingSq, bKingSq});
+            }else{
+                nn::setUnsetPiece(&history[history_index - 1],
+                                  &history[history_index],
+                                  Index {ptTo, color, sqTo, wKingSq, bKingSq},
+                                  Index {ptFrom, color, sqFrom, wKingSq, bKingSq});
+            }
+        }else{
+            if (isCapture(m)) {
+                nn::setUnsetUnsetPiece(
+                    &history[history_index - 1],
+                    &history[history_index],
+                    !color,
+                    Index{ptTo  ,  color, sqTo  , wKingSq, bKingSq},
+                    Index{ptFrom,  color, sqFrom, wKingSq, bKingSq},
+                    Index{ptCap , !color, sqTo  , wKingSq, bKingSq});
+            }else if(isCastle(m)){
+                Square rookSquare = sqFrom + (mType == QUEEN_CASTLE ? -4 : 3);
+                Square rookTarget = sqTo + (mType == QUEEN_CASTLE ? 1 : -1);
+                nn::setSetUnsetUnsetPiece(
+                    &history[history_index - 1],
+                    &history[history_index],
+                    !color,
+                    Index {ptTo  , color, sqTo      , wKingSq, bKingSq},
+                    Index {ROOK  , color, rookTarget, wKingSq, bKingSq},
+                    Index {ptFrom, color, sqFrom    , wKingSq, bKingSq},
+                    Index {ROOK  , color, rookSquare, wKingSq, bKingSq});
+            }else{
+                nn::setUnsetPiece(&history[history_index - 1],
+                                  &history[history_index],
+                                  !color,
+                                  Index {ptTo, color, sqTo    , wKingSq, bKingSq},
+                                  Index {ptFrom, color, sqFrom, wKingSq, bKingSq});
+            }
+            resetAccumulator(board, color);
+        }
+    }
+    else{
+        if(isPromotion(m)){
+            ptTo = getPromotionPieceType(m);
+        }
+        if (isCapture(m)) {
+            if(isEnPassant(m)){
+                Square ep_cap_sq = sqTo - 8 * factor;
+                nn::setUnsetUnsetPiece(&history[history_index - 1],
+                                       &history[history_index],
+                                       Index {ptTo  ,  color, sqTo     , wKingSq, bKingSq},
+                                       Index {ptFrom,  color, sqFrom   , wKingSq, bKingSq},
+                                       Index {PAWN  , !color, ep_cap_sq, wKingSq, bKingSq});
+                
+            }else{
+                nn::setUnsetUnsetPiece(&history[history_index - 1],
+                                       &history[history_index],
+                                       Index {ptTo  , color, sqTo  , wKingSq, bKingSq},
+                                       Index {ptFrom, color, sqFrom, wKingSq, bKingSq},
+                                       Index {ptCap ,!color, sqTo  , wKingSq, bKingSq});
+            }
+        } else {
+            nn::setUnsetPiece(&history[history_index - 1],
+                              &history[history_index],
+                              Index {ptTo  , color, sqTo  , wKingSq, bKingSq},
+                              Index {ptFrom, color, sqFrom, wKingSq, bKingSq});
+        }
+    }
+}
+
 template void nn::Evaluator::setPieceOnSquare<true>(bb::PieceType pieceType, bb::Color pieceColor,
                                                     bb::Square square, bb::Square wKingSquare,
                                                     bb::Square bKingSquare);

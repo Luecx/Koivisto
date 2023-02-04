@@ -94,27 +94,16 @@ class Board {
     
     public:
     // sets the piece on a given square. considers zobrist-key and all relevant fields.
-    template<bool updateNN=true, bool updateZobrist=true>
     void setPiece(bb::Square sq, bb::Piece piece);
     
     // unsets the piece on a given square. considers zobrist-key and all relevant fields.
-    template<bool updateNN=true, bool updateZobrist=true>
     void unsetPiece(bb::Square sq);
     
     // replaces the piece on a given square. considers zobrist-key and all relevant fields.
-    template<bool updateNN=true, bool updateZobrist=true>
     void replacePiece(bb::Square sq, bb::Piece piece);
 
     private:
-    // sets the piece on a given square. considers zobrist-key and all relevant fields.
-    void setPieceHash(bb::Square sq, bb::Piece piece);
-    
-    // unsets the piece on a given square. considers zobrist-key and all relevant fields.
-    void unsetPieceHash(bb::Square sq);
-    
-    // replaces the piece on a given square. considers zobrist-key and all relevant fields.
-    void replacePieceHash(bb::Square sq, bb::Piece piece);
-    
+   
     // updates pinners and checkers
     void updatePinnersAndCheckers();
     
@@ -177,15 +166,9 @@ class Board {
     // computes the static exchange evaluation for a given move. used the cache if defined.
     [[nodiscard]] bb::Score staticExchangeEvaluation(move::Move m) const;
     
-    // returns a bitboard of all squares which attack a specific square. mainly used for see.
-    [[nodiscard]] bb::U64 attacksTo(bb::U64 occupied, bb::Square sq) const;
-    
     // returns a bitboard of all attacked squares by a given color
     template<bb::Color attacker>
     [[nodiscard]] bb::U64 getAttackedSquares() const;
-    
-    // returns the least value piece. mainly used for see as well.
-    [[nodiscard]] bb::U64 getLeastValuablePiece(bb::U64 attadef, bb::Score bySide, bb::Piece& piece) const;
     
     // returns a map of all absolute pinned pieces. stores the pieces which pin other pieces inside the given bitboard.
     template<bb::Color side>

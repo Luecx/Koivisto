@@ -19,9 +19,10 @@
 #ifndef KOIVISTO_EVAL_H
 #define KOIVISTO_EVAL_H
 
+#include "../move.h"
+#include "accumulator.h"
 #include "defs.h"
 #include "index.h"
-#include "accumulator.h"
 
 class Board;
 
@@ -55,14 +56,14 @@ struct Evaluator {
     
     void clearHistory();
     
-    
-    
     template<bool value>
     void setPieceOnSquare(bb::PieceType pieceType,
                           bb::Color pieceColor,
                           bb::Square square,
                           bb::Square wKingSquare,
                           bb::Square bKingSquare);
+    
+    void processMove(Board* board, move::Move move);
     
     template<bool value>
     void setPieceOnSquareAccumulator(bb::Color side,

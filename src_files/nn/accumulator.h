@@ -90,6 +90,118 @@ inline void addWeightsToAccumulator(const int idx, int16_t* accumulator){
     addWeightsToAccumulator<V>(idx, accumulator, accumulator);
 }
 
+inline void setSetUnsetUnsetPiece(Accumulator* input, Accumulator* output, bb::Color side, Index set1, Index set2,
+                               Index unset1, Index unset2) {
+    const auto set1_wgt   = (inputWeights[set1(side)]);
+    const auto set2_wgt   = (inputWeights[set2(side)]);
+    const auto unset1_wgt = (inputWeights[unset1(side)]);
+    const auto unset2_wgt = (inputWeights[unset2(side)]);
+
+    const auto inp        = (input->summation[side]);
+    const auto out        = (output->summation[side]);
+    
+    avx_register_type_16 regs[REG_COUNT] {};
+
+    for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+        auto wgt_set1   = (avx_register_type_16*) (&set1_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto wgt_set2   = (avx_register_type_16*) (&set2_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto wgt_unset1 = (avx_register_type_16*) (&unset1_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto wgt_unset2 = (avx_register_type_16*) (&unset2_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto acc_in     = (avx_register_type_16*) (&inp[c * CHUNK_UNROLL_SIZE]);
+        auto acc_out    = (avx_register_type_16*) (&out[c * CHUNK_UNROLL_SIZE]);
+
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_load_reg(&acc_in[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_add_epi16(regs[i], wgt_set1[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_add_epi16(regs[i], wgt_set2[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_sub_epi16(regs[i], wgt_unset1[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_sub_epi16(regs[i], wgt_unset2[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            avx_store_reg(&acc_out[i], regs[i]);
+    }
+}
+
+inline void setSetUnsetUnsetPiece(Accumulator* input, Accumulator* output, Index set1, Index set2,
+                               Index unset1, Index unset2) {
+    setSetUnsetUnsetPiece(input, output, bb::WHITE, set1, set2, unset1, unset2);
+    setSetUnsetUnsetPiece(input, output, bb::BLACK, set1, set2, unset1, unset2);
+}
+
+inline void setUnsetUnsetPiece(Accumulator* input, Accumulator* output, bb::Color side, Index set1,
+                             Index unset1, Index unset2) {
+    const auto set1_wgt  = (inputWeights[set1(side)]);
+    const auto unset1_wgt  = (inputWeights[unset1(side)]);
+    const auto unset2_wgt = (inputWeights[unset2(side)]);
+
+    const auto inp = (input ->summation[side]);
+    const auto out = (output->summation[side]);
+    
+    avx_register_type_16 regs[REG_COUNT]{};
+    
+    for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+        auto wgt_set1   = (avx_register_type_16*) (&set1_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto wgt_unset1 = (avx_register_type_16*) (&unset1_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto wgt_unset2 = (avx_register_type_16*) (&unset2_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto acc_in     = (avx_register_type_16*) (&inp[c * CHUNK_UNROLL_SIZE]);
+        auto acc_out    = (avx_register_type_16*) (&out[c * CHUNK_UNROLL_SIZE]);
+
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_load_reg(&acc_in[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_add_epi16(regs[i], wgt_set1[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_sub_epi16(regs[i], wgt_unset1[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_sub_epi16(regs[i], wgt_unset2[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            avx_store_reg(&acc_out[i], regs[i]);
+    }
+}
+
+inline void setUnsetUnsetPiece(Accumulator* input, Accumulator* output, Index set1,
+                             Index unset1, Index unset2) {
+    setUnsetUnsetPiece(input, output, bb::WHITE, set1, unset1, unset2);
+    setUnsetUnsetPiece(input, output, bb::BLACK, set1, unset1, unset2);
+}
+
+inline void setUnsetPiece(Accumulator* input, Accumulator* output, bb::Color side, Index set1,
+                               Index unset1) {
+    const auto set1_wgt  = (inputWeights[set1(side)]);
+    const auto unset1_wgt  = (inputWeights[unset1(side)]);
+    
+    const auto inp = (input ->summation[side]);
+    const auto out = (output->summation[side]);
+    
+    avx_register_type_16 regs[REG_COUNT]{};
+    
+    for (size_t c = 0; c < HIDDEN_SIZE / CHUNK_UNROLL_SIZE; c++) {
+        auto wgt_set1   = (avx_register_type_16*) (&set1_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto wgt_unset1 = (avx_register_type_16*) (&unset1_wgt[c * CHUNK_UNROLL_SIZE]);
+        auto acc_in     = (avx_register_type_16*) (&inp[c * CHUNK_UNROLL_SIZE]);
+        auto acc_out    = (avx_register_type_16*) (&out[c * CHUNK_UNROLL_SIZE]);
+
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_load_reg(&acc_in[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_add_epi16(regs[i], wgt_set1[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            regs[i] = avx_sub_epi16(regs[i], wgt_unset1[i]);
+        for (size_t i = 0; i < REG_COUNT; i++)
+            avx_store_reg(&acc_out[i], regs[i]);
+    }
+}
+
+inline void setUnsetPiece(Accumulator* input, Accumulator* output, Index set1,
+                               Index unset1) {
+    setUnsetPiece(input, output, bb::WHITE, set1, unset1);
+    setUnsetPiece(input, output, bb::BLACK, set1, unset1);
+}
+
+
 }
 
 
