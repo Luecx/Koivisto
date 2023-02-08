@@ -915,6 +915,9 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                &&  en.type == CUT_NODE) {
             extension = 1;
         }
+        if (!extension && sd->getHistories(m, activePlayer, b->getPreviousMove(), b->getPreviousMove(2), mainThreat) > 512
+                       && en.type == ALL_NODE && en.key == TT_KEY(zob) && EVAL_HISTORY(sd, activePlayer, ply) > alpha - 100)
+            extension = 1;
         
         U64   nodeCount = td->nodes;
         
