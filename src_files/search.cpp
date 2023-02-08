@@ -934,7 +934,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             extension = 1;
 
         if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
-            extension = 2;
+            extension = 1;
 
         // principal variation search recursion.
         if (legalMoves == 0) {
@@ -1049,7 +1049,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 bestMove = 0;
             }
             
-            if (depth > 7 && bestMove && (td->nodes - prevNodeCount) / 2 < bestNodeCount) {
+            if (depth > 7 && bestMove && (td->nodes - prevNodeCount) < bestNodeCount * 3) {
                 table->put(zob, scoreToTT(highestScore, ply), bestMove, FORCED_ALL_NODE, depth,
                            EVAL_HISTORY(sd, b->getActivePlayer(), ply));
             } else {
