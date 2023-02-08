@@ -719,6 +719,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 // Store the score and the move in the transposition table
                 table->put(zob, scoreToTT(qScore, ply), m, CUT_NODE, depth - 3, EVAL_HISTORY(sd, activePlayer, ply));
                 return betaCut;
+
             }
         }
     }
@@ -932,7 +933,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         if (extension == 0 && depth > 4 && b->isInCheck(opponent))
             extension = 1;
 
-        if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE)
+        if (sameMove(hashMove, m) && !pv && en.type > ALL_NODE && depth > 4)
             extension = 1;
 
         // principal variation search recursion.
