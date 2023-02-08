@@ -490,8 +490,7 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
     if (isCapture(m)) {
         // reset fifty move counter if a piece has been captured
         newBoardStatus.fiftyMoveCounter = 0;
-        
-        if (getPieceType(getPiece(sqTo)) == ROOK) {
+        if (getCapturedPieceType(m) == ROOK) {
             if (color == BLACK) {
                 if (sqTo == A1) {
                     newBoardStatus.castlingRights &= ~(ONE << (WHITE_QUEENSIDE_CASTLING));
@@ -544,7 +543,6 @@ template<bool prefetch> void Board::move(Move m, TranspositionTable* table) {
             this->setPiece(rookTarget, ROOK + 8 * color);
         }
     }
-    
     if constexpr (prefetch)
         table->prefetch(getBoardStatus()->zobrist);
     
