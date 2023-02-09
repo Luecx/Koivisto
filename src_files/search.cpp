@@ -1110,7 +1110,10 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
         }
         stand_pat = bestScore = en.eval;
     } else {
-        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply : b->evaluate();
+        stand_pat = bestScore = inCheck ? -MAX_MATE_SCORE + ply 
+      : ((isCapture(b->getPreviousMove()) && -EVAL_HISTORY(sd, !b->getActivePlayer(), ply - 1) < alpha) ? 
+        -EVAL_HISTORY(sd, !b->getActivePlayer(), ply - 1) - see_piece_vals[getCapturedPieceType(b->getPreviousMove())] 
+      : b->evaluate());
     }
 
     // we can also use the tt entry to adjust the evaluation.
