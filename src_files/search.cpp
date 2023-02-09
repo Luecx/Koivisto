@@ -1116,6 +1116,8 @@ Score Search::qSearch(Board* b, Score alpha, Score beta, Depth ply, ThreadData* 
       : b->evaluate());
     }
 
+    sd->setHistoricEval(stand_pat, b->getActivePlayer(), ply);
+
     // we can also use the tt entry to adjust the evaluation.
     if (en.key == TT_KEY(zob)) {
         // adjusting eval
