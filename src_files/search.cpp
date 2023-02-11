@@ -832,6 +832,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                     && sd->getHistories(m, activePlayer, b->getPreviousMove(),
                                         b->getPreviousMove(2), mainThreat)
                            < std::min(140 - 30 * (depth * (depth + isImproving)), 0)) {
+                    mGen->skip();
                     continue;
                 }
             }
