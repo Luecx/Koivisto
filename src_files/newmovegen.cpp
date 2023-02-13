@@ -245,10 +245,10 @@ inline void generatePawnMoves(Board* board, U64 occupied_bb, U64 mask_bb, moveGe
     const U64 enemy_bb = board->getTeamOccupiedBB<them>();
     
     // adjust promotion possibility for quiet moves
-    if constexpr (stage == GEN_QUIET){
-        mask_bb |= (us == WHITE ? ~RANK_8_BB : ~RANK_1_BB);
-    }
-    
+//    if constexpr (stage == GEN_QUIET){
+//        mask_bb |= (us == WHITE ? ~RANK_8_BB : ~RANK_1_BB);
+//    }
+//
     if(stage == GEN_NOISY){
         
         // inverse direction for left and right attacks
@@ -317,7 +317,7 @@ inline void generatePawnMoves(Board* board, U64 occupied_bb, U64 mask_bb, moveGe
         }
         
     }else{
-        const U64           quiet_squares  = ~occupied_bb & mask_bb;
+        const U64           quiet_squares  = ~occupied_bb;
         constexpr U64       double_pp_mask = (us == WHITE ? RANK_4_BB : RANK_5_BB);
 
         constexpr Direction inv_la         = us == WHITE ? SOUTH_EAST : NORTH_EAST;
@@ -341,8 +341,8 @@ inline void generatePawnMoves(Board* board, U64 occupied_bb, U64 mask_bb, moveGe
         U64 promo_right = right   & promo_mask & mask_bb;
 
         // pawn pushes
-        forward  &= non_promo_mask;
-        forward2 &= non_promo_mask;
+        forward  &= non_promo_mask & mask_bb;
+        forward2 &= non_promo_mask & mask_bb;
 
         while (forward) {
             Square target = bitscanForward(forward);
@@ -551,7 +551,7 @@ void moveGen::generateQuiet() {
     
     if(c == WHITE){
         // mask for pawns contains the checkers since underpromotion captures exist
-        generatePawnMoves<WHITE, GEN_QUIET>(m_board, occupied, mask & checkers, this);
+        generatePawnMoves<WHITE, GEN_QUIET>(m_board, occupied, mask | checkers, this);
         
         generatePieceMoves<KNIGHT, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
         generatePieceMoves<BISHOP, WHITE, GEN_QUIET>(m_board, occupied, friendly, mask, this);
@@ -561,7 +561,7 @@ void moveGen::generateQuiet() {
         generateKingMoves <WHITE, GEN_QUIET>(m_board, occupied, friendly, this);
     }else{
         // mask for pawns contains the checkers since underpromotion captures exist
-        generatePawnMoves<BLACK, GEN_QUIET>(m_board, occupied, mask & checkers, this);
+        generatePawnMoves<BLACK, GEN_QUIET>(m_board, occupied, mask | checkers, this);
         
         generatePieceMoves<KNIGHT, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);
         generatePieceMoves<BISHOP, BLACK, GEN_QUIET>(m_board, occupied, friendly, mask, this);

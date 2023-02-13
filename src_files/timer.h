@@ -10,27 +10,20 @@
 class Timer {
     public:
     // starts the timer
-    void tick();
+    void tick(){
+        start_time = std::chrono::high_resolution_clock::now();
+    }
     // stops the timer
-    void tock();
+    void tock(){
+        end_time = std::chrono::high_resolution_clock::now();
+    }
     // returns the elapsed time in milliseconds
-    [[nodiscard]] uint64_t elapsed() const;
+    [[nodiscard]] uint64_t elapsed() const{
+        return std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    }
     private:
     std::chrono::high_resolution_clock::time_point start_time;
     std::chrono::high_resolution_clock::time_point end_time;
 };
-
-void Timer::tick() {
-    start_time = std::chrono::high_resolution_clock::now();
-}
-
-void Timer::tock() {
-    end_time = std::chrono::high_resolution_clock::now();
-}
-
-uint64_t Timer::elapsed() const {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-}
-
 
 #endif    // KOIVISTO_TIMER_H
