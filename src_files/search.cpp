@@ -902,10 +902,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
         
         if (pv) {
             sd->sideToReduce = opponent;
-            sd->reduce       = false;
-            if (legalMoves == 0) {
-                sd->reduce = true;
-            }
+            sd->reduce = legalMoves == 0;
         } else if (depth < 8
                && !skipMove
                && !inCheck
