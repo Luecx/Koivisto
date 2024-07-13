@@ -953,9 +953,10 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
                 sd->sideToReduce = opponent;
             }
 
-            if (lmr && score > alpha)
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension,
+            if (lmr && score > alpha) {      
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension + (depth >= 8 && en.type == ALL_NODE && en.score < alpha - depth * 2),
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search
+            }
             if (score > alpha && score < beta)
                 score = -pvSearch(b, -beta, -alpha, depth - ONE_PLY + extension, ply + ONE_PLY,
                                   td, 0, behindNMP);    // re-search
