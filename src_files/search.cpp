@@ -954,7 +954,7 @@ Score Search::pvSearch(Board* b, Score alpha, Score beta, Depth depth, Depth ply
             }
 
             if (lmr && score > alpha) {      
-                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension + (depth >= 8 && en.type == ALL_NODE && en.score < alpha - depth * 2),
+                score = -pvSearch(b, -alpha - 1, -alpha, depth - ONE_PLY + extension + (depth >= 8 && en.type == ALL_NODE && en.score < alpha - depth * 2 && highestScore < alpha - depth * 2),
                                   ply + ONE_PLY, td, 0, behindNMP);    // re-search
             }
             if (score > alpha && score < beta)
