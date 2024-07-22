@@ -98,9 +98,9 @@ void uci::mainloop(int argc, char* argv[]) {
     for (int i = 0; i < 1024; i++) {
         std::cout << "weight_" << i << ", " << "int"
                                     << ", " << nn::hiddenWeights[0][i]
-                                    << ", " <<  std::max(std::abs(nn::hiddenWeights[0][i])/10, 1)
                                     << ", " << -5000
                                     << ", " <<  5000
+                                    << ", " <<  std::max(std::abs(nn::hiddenWeights[0][i])/10, 1)
                                     << ", " <<  0.002
                                     << std::endl;
     }
