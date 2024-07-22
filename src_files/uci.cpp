@@ -508,7 +508,7 @@ void uci::bench() {
         Board b(Benchmarks[i]);
 
         TimeManager manager{};
-        manager.setDepthLimit(13);
+        manager.setDepthLimit(9);
         searchObject.bestMove(&b, &manager);
         SearchOverview overview = searchObject.overview();
 
