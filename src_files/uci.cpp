@@ -26,6 +26,7 @@
 #include "timer.h"
 #include "uciassert.h"
 #include "infostring.h"
+#include "nn/weights.h"
 
 #include <fstream>
 #include <iostream>
@@ -94,6 +95,16 @@ void uci::mainloop(int argc, char* argv[]) {
               << " by K. Kahre, F. Eggers"
               << std::endl;
     
+    for (int i = 0; i < 1024; i++) {
+        std::cout << "weight_" << i << ", " << "int"
+                                    << ", " << nn::hiddenWeights[0][i]
+                                    << ", " << -5000
+                                    << ", " <<  5000
+                                    << ", " <<  std::max(nn::hiddenWeights[0][i]/10, 1)
+                                    << ", " <<  0.002
+                                    << std::endl;
+    }
+
     board = Board();
     std::atexit(uci::quit);
     std::string line;
@@ -218,11 +229,16 @@ void uci::processCommand(std::string str) {
     } else if (split.at(0) == "setoption") {
         if (split.size() < 5)
             return;
-
-        const std::string name  = getValue(split, "name");
-        const std::string value = getValue(split, "value");
-
-        uci::set_option(name, value);
+        if (str.find("weight_") != std::string::npos) {
+            std::string str2 = split.at(2);
+            int index = std::stoi(str2.substr(7));
+            const std::string value = split.at(4);
+            nn::hiddenWeights[0][index] = std::stoi(value);
+        } else {
+            const std::string name  = getValue(split, "name");
+            const std::string value = getValue(split, "value"); 
+            uci::set_option(name, value);
+        }
     } else if (split.at(0) == "go") {
         go(split, str);
     } else if (split.at(0) == "stop") {

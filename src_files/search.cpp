@@ -26,6 +26,7 @@
 #include "movegen.h"
 #include "newmovegen.h"
 #include "polyglot.h"
+#include "nn/weights.h"
 #include "syzygy/tbprobe.h"
 
 #include <thread>
