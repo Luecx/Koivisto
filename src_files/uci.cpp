@@ -100,8 +100,8 @@ void uci::mainloop(int argc, char* argv[]) {
                                     << ", " << nn::hiddenWeights[0][i]
                                     << ", " << -5000
                                     << ", " <<  5000
-                                    << ", " <<  std::max(std::abs(nn::hiddenWeights[0][i])/10, 1)
-                                    << ", " <<  0.0004
+                                    << ", " <<  std::max(std::abs(nn::hiddenWeights[0][i])/20, 1)
+                                    << ", " <<  0.0002
                                     << std::endl;
     }
 
