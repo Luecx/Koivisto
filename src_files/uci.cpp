@@ -138,6 +138,9 @@ void uci::uci() {
     std::cout << "option name SyzygyPath type string default" << std::endl;
     std::cout << "option name MoveOverhead type spin default 0 min 0 max 10000" << std::endl;
     std::cout << "option name MoveOverheadType type combo default PerMove var PerMove var PerGame" << std::endl;
+    for (int i = 0; i < 1024; i++) {
+        std::cout << "option name weight_"<< i << " type spin default 0 min -5000 max 5000" << std::endl;
+    }
     std::cout << "uciok" << std::endl;
 }
 
