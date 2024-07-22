@@ -95,7 +95,7 @@ void uci::mainloop(int argc, char* argv[]) {
               << " by K. Kahre, F. Eggers"
               << std::endl;
     
-    for (int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 256; i++) {
         std::cout << "weight_" << i << ", " << "int"
                                     << ", " << nn::hiddenWeights[0][i]
                                     << ", " << -5000
