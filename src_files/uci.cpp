@@ -100,7 +100,7 @@ void uci::mainloop(int argc, char* argv[]) {
                                     << ", " << nn::hiddenWeights[0][i]
                                     << ", " << -5000
                                     << ", " <<  5000
-                                    << ", " <<  20
+                                    << ", " <<  40
                                     << ", " <<  0.0004
                                     << std::endl;
     }
